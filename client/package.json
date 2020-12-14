@@ -1,6 +1,10 @@
 {
   "name": "Basestack",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Merritt-Brian/Basestack"
+  },
   "author": "Brian Merritt <Brian.Merritt@jhuapl.edu>",
   "description": ": Basestack analyzes and generates reports from Nanopore-based consensus",
   "license": "GPLv3.0",
@@ -13,9 +17,12 @@
     "build:win": "node .electron-vue/build.js && electron-builder --win",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
+    "publishOnly:linux": "electron-builder --linux AppImage -p always",
     "publish:linux": "node .electron-vue/build.js && electron-builder --linux AppImage -p always",
     "publish:mac-dmg": "node .electron-vue/build.js && electron-builder --mac  dmg -p always",
+    "publishOnly:mac-dmg": "electron-builder --mac  dmg -p always",
     "publish:win": "node .electron-vue/build.js && electron-builder --win -p always",
+    "publishOnly:win": "electron-builder --win -p always",
     "dev": "node .electron-vue/dev-runner.js",
     "e2e": "npm run pack && mocha test/e2e",
     "lint": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter src test",
@@ -107,6 +114,7 @@
     "vue-carousel": "^0.18.0",
     "vue-electron": "^1.0.6",
     "vue-js-toggle-button": "^1.3.3",
+    "vue-moment": "^4.1.0",
     "vue-multiselect": "^2.1.6",
     "vue-pdf": "^4.1.0",
     "vue-router": "^3.0.1",
