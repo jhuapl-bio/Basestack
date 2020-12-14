@@ -1,0 +1,13 @@
+name: basestack
+channels:
+  - conda-forge
+  - eumetsat
+  - anaconda
+  - bioconda
+  - defaults
+dependencies:
+  - nodejs
+  - pip
+  - make
+  - git
+  - curl

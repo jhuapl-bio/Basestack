@@ -1,0 +1,3 @@
+[submodule "client/src/modules/pipelines/minknow/MBARI-APL-Xavier"]
+	path = client/src/modules/pipelines/minknow/MBARI-APL-Xavier
+	url = git@github.com:Merritt-Brian/MBARI-APL-Xavier.git

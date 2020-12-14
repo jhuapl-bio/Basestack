@@ -1,0 +1,47 @@
+
+alias ls="ls --color=auto"
+alias ll="ls -l --color=auto"
+
+PS1='${debian_chroot:+($debian_chroot)}\[\033[01;33m\]\u@\h\[\033[00m\][\t]:\[\033[01;34m\]\W\[\033[00m\]\$ '
+
+export PATH=/home/user/idies/workspace/covid19/code/ncov/pipeline_scripts:$PATH
+
+export PATH=/home/user/idies/workspace/covid19/code/jdk-14/bin:$PATH
+
+export PATH=/home/user/.TinyTeX/bin/x86_64-linux:$PATH
+
+export XDG_CONFIG_HOME=/home/user/idies/workspace/covid19/config
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+
+__conda_setup="$('/opt/conda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+	eval "$__conda_setup"
+else
+	if [ -f "/opt/conda/etc/profile.d/conda.sh" ]; then
+		. "/opt/conda/etc/profile.d/conda.sh"
+	else
+		export PATH="/opt/conda/bin:$PATH"
+	fi
+fi
+unset __conda_setup
+source /opt/conda/etc/profile.d/conda.sh
+conda activate jhu-ncov
+
+# compile java libraries
+javac "/home/user/idies/workspace/covid19/code/ncov/pipeline_scripts/CoverageNormalization/src"/*.java
+javac "/home/user/idies/workspace/covid19/code/ncov/pipeline_scripts/VariantValidator/src"/*.java
+javac "/home/user/idies/workspace/covid19/code/vcfigv/src"/*.java
+
+# deal with primer scheme rename bugs
+
+primer_schemes=/home/user/idies/workspace/covid19/code/artic-ncov2019/primer_schemes
+
+samtools faidx "$primer_schemes/SARS-CoV-2/V3/nCoV-2019.reference.fasta"
+for f in "$primer_schemes/SARS-CoV-2/V3/"*; do ln -sf "$f" "${f/nCoV-2019/SARS-CoV-2}"; done
+ln -sf "$primer_schemes/SARS-CoV-2" "$primer_schemes/nCoV-2019"
+
+
+# copy 13-gene genome.json over into RAMPART directory (which has a default 9-gene genome.json currently)n
+cp /home/user/idies/workspace/covid19/ncov_reference/genome.json /home/user/idies/workspace/covid19/code/artic-ncov2019/rampart/genome.json

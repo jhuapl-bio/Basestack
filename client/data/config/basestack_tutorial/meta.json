@@ -1,0 +1,474 @@
+{
+    "Introduction": {
+        "sections": [
+            {
+                "video": "1Introduction.mp4",
+                "title": "1. Introduction",
+                "script": "1Script.docx",
+                "pdf": null,
+                "pptx": "20200921_Mod1.pptx",
+                "key": "Introduction",
+                "chapters": [
+                    {
+                        "title": "Introduction",
+                        "time": "0",
+                        "type": "default"
+                    }
+                ]
+            }
+        ]
+    },
+    "Background": {
+        "sections": [
+            {
+                "video": "2Background.mp4",
+                "title": "2. Background",
+                "script": null,
+                "pdf": "2Background.pdf",
+                "pptx": null,
+                "key": "Background",
+                "chapters": []
+            }
+        ]
+    },
+    "GenomicEpidemiology": {
+        "sections": [
+            {
+                "script": "3-Script.docx",
+                "video": "3GenomicEpidemiology.mp4",
+                "title": "3. Genomic Epidemology",
+                "pdf": "3-Slides.pdf",
+                "pptx": null,
+                "key": "GenomicEpidemiology",
+                "chapters": [
+                    {
+                        "title": "Introduction",
+                        "time": "0",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Start of Content",
+                        "time": "23",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Understading Phylogenetic Trees",
+                        "time": "86",
+                        "type": "default"
+                    },
+                    {
+                        "title": "What Questions Can Phylogenetic Analysis Answer?",
+                        "time": "204",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Connecting Phylogeny to Pathogen Transmission",
+                        "time": "308",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Genomic Epidemology: SARS-CoV-2 Examples",
+                        "time": "502",
+                        "type": "default"
+                    }
+                ]
+            }
+        ]
+    },
+    "Sequencing SARS-CoV-2": {
+        "sections": [
+            {
+                "title": "4.1 Overview",
+                "video": "4-1Sequencing SARS-CoV-2 Overview.mp4",
+                "script": null,
+                "pdf": "4-1 Sequencing SARS-CoV-2.pdf",
+                "pptx": null,
+                "key": "sequencingOverview",
+                "chapters": []
+            },
+            {
+                "title": "4.2 Deep Dive",
+                "video": "4-2Sequencing SARS-CoV-2 Protocol Deep Dive.mp4",
+                "script": null,
+                "pdf": "4-2 Sequencing SARS-CoV-2 Deep Dive.pdf",
+                "pptx": null,
+                "key": "sequencingDeepDive",
+                "chapters": []
+            }
+        ]
+    },
+    "MinION Loading": {
+        "sections": [
+            {
+                "title": "5. MinION Loading",
+                "video": "5-1MinIONLoading.mp4",
+                "script": null,
+                "pdf": null,
+                "pptx": null,
+                "key": "loadingMinion",
+                "chapters": []
+            }
+        ]
+    },
+    "IntroductionBioinformatics": {
+        "sections": [
+            {
+                "script": "6-Script.docx",
+                "pdf": "6-Slides.pdf",
+                "pptx": "6-Slides.pptx",
+                "video": "6IntroductionBioinformatics.mp4",
+                "title": "6. Introduction to Bioinformatics",
+                "key": "IntroductionBioinformatics",
+                "chapters": [
+                    {
+                        "title": "Introduction",
+                        "time": "0",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Start of Content",
+                        "time": "27",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Basecalling",
+                        "time": "118",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Demultiplexing",
+                        "time": "297",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Assembly",
+                        "time": "421",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Validating Consensus Sequences",
+                        "time": "659",
+                        "type": "default"
+                    }
+                ]
+            }
+        ]
+    },
+    "BioinformaticsII": {
+        "sections": [
+            {
+                "script": null,
+                "pdf": null,
+                "pptx": null,
+                "title": "7.1 Docker Install",
+                "video": "7.1-docker-install.mp4",
+                "key": "dockerinstall",
+                "chapters": [
+                    {
+                        "title": "Install Docker",
+                        "time": "0",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Install WSL2 (Some Types)",
+                        "time": "86",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Confirming Docker is running",
+                        "time": "180",
+                        "type": "default"
+                    }
+                ]
+            },
+            {
+                "script": null,
+                "pdf": null,
+                "pptx": null,
+                "title": "7.2 Basestack Install",
+                "video": "7.2-basestack-install.mp4",
+                "key": "basestackinstall",
+                "chapters": [
+                    {
+                        "title": "Extract Basestack",
+                        "time": "0",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Install Analysis Pipeline In Basestack",
+                        "time": "65",
+                        "type": "default"
+                    }
+                ]
+            },
+            {
+                "script": null,
+                "pdf": null,
+                "pptx": null,
+                "title": "7.3 Start Basestack",
+                "video": "7.3-start-basestack.mp4",
+                "key": "startbasestack",
+                "chapters": [
+                    {
+                        "title": "Begin a new job",
+                        "time": "26",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Examine Sequence Run Folder",
+                        "time": "173",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Begin a Consensus Job",
+                        "time": "287",
+                        "type": "default"
+                    }
+                ]
+            },
+            {
+                "script": null,
+                "pdf": null,
+                "pptx": null,
+                "title": "7.4 Consensus Modules",
+                "video": "7.4-consensus-modules.mp4",
+                "key": "consensusModules",
+                "chapters": [
+                    {
+                        "title": "Step 1. Barcode Demultiplexing",
+                        "time": "59",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Step 2. Length Filter",
+                        "time": "86",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Step 3. Amplicon Normalization",
+                        "time": "117",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Step 4. ",
+                        "time": "182",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Step 5. Post-Filtering",
+                        "time": "253",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Step 6. Final Report",
+                        "time": "349",
+                        "type": "default"
+                    }
+                ]
+            },
+            {
+                "script": null,
+                "pdf": null,
+                "pptx": null,
+                "title": "7.5 Consensus Report",
+                "video": "7.5-consensus-report.mp4",
+                "key": "consensusreports",
+                "chapters": [
+                    {
+                        "title": "Into to Report",
+                        "time": "0",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Run Summary",
+                        "time": "206",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Amplicon Summary",
+                        "time": "296",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Mutation Plots",
+                        "time": "473",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Post-Filter Flags",
+                        "time": "723",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Report Appendices",
+                        "time": "892",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Accessing Files",
+                        "time": "945",
+                        "type": "default"
+                    }
+                ]
+            }
+        ]
+    },
+    "BioinformaticsIII": {
+        "sections": [
+            {
+                "script": null,
+                "pdf": "8BioinformaticsIII.pdf",
+                "pptx": null,
+                "title": "8. Bioinformatics III",
+                "video": "8BioinformaticsIII.mp4",
+                "key": "bioinformaticsIII",
+                "chapters": [
+                    {
+                        "title": "Introduction",
+                        "time": "0",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Alignment Viewer and Editor Software",
+                        "time": "83",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Identify the Lineages of Study Sequences",
+                        "time": "125",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Accessing Sequences on GISAID",
+                        "time": "232",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Build Background Dataset",
+                        "time": "328",
+                        "type": "default"
+                    }
+                ]
+            }
+        ]
+    },
+    "BioinformaticsIV": {
+        "sections": [
+            {
+                "script": null,
+                "pdf": "9BioinformaticsIV.pdf",
+                "pptx": null,
+                "title": "9 Bioinformatics IV",
+                "video": "9BioinformaticsIV.mp4",
+                "key": "bioinformaticsIV",
+                "chapters": [
+                    {
+                        "title": "Introduction",
+                        "time": "0",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Select a reference genome",
+                        "time": "87",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Alignment software",
+                        "time": "181",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Inspection and manual editing of the alignment",
+                        "time": "308",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Hands-On",
+                        "time": "408",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Subsampling the background dataset",
+                        "time": "549",
+                        "type": "default"
+                    }
+                ]
+            }
+        ]
+    },
+    "Interpreting Phylogenetic Trees": {
+        "sections": [
+            {
+                "script": null,
+                "title": "10. Interpreting Phylogenetic Trees",
+                "video": "10InterpretingPhylogeneticTrees.mp4",
+                "pdf": null,
+                "pptx": "10Interpreting-Phylogenetic-Trees.pptx",
+                "key": "interpretingPhylogeneticTrees",
+                "chapters": [
+                    {
+                        "title": "Introduction",
+                        "time": "0",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Select a reference genome",
+                        "time": "87",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Alignment software",
+                        "time": "181",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Inspection and manual editing of the alignment",
+                        "time": "308",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Hands-On",
+                        "time": "408",
+                        "type": "default"
+                    },
+                    {
+                        "title": "Subsampling the background dataset",
+                        "time": "549",
+                        "type": "default"
+                    }
+                ]
+            }
+        ]
+    },
+    "Using Genomic Data to Understand SARS-CoV-2": {
+        "sections": [
+            {
+                "script": null,
+                "pdf": null,
+                "pptx": "Nelson1.pptx",
+                "title": "11.1 Using Genomic Data to Understand SARS-CoV-2",
+                "video": "11-1UsingGenomicData_to_UnderstandSARS-CoV-2.mp4",
+                "key": "understandingSARS-CoV-2",
+                "chapters": []
+            },
+            {
+                "script": null,
+                "pdf": null,
+                "pptx": "Nelson2.pptx",
+                "video": "11-2UsingGenomicData_to_UnderstandSARS-CoV-2.mp4",
+                "title": "11.2 How SARS-CoV-2 Invaded the World I",
+                "key": "invadedSARS-CoV-2",
+                "chapters": []
+            },
+            {
+                "script": null,
+                "pdf": null,
+                "video": "11-3UsingGenomicData_to_UnderstandSARS-CoV-2.mp4",
+                "pptx": "Nelson3.pptx",
+                "title": "11.3 How SARS-CoV-2 Invaded the World II",
+                "key": "invadedIISARS-CoV-2",
+                "chapters": []
+            }
+        ]
+    }
+}

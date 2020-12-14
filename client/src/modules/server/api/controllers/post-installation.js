@@ -1,0 +1,244 @@
+/*  
+   - # **********************************************************************
+   - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
+   - #
+   - # All Rights Reserved.
+   - # For any other permission, please contact the Legal Office at JHU/APL.
+   - # **********************************************************************
+  */
+import Docker from 'dockerode';
+import  docker  from "./docker.js"
+import  path  from "path"
+const fs  = require("fs")
+const zlib = require('zlib')
+const tar = require('tar-stream')
+const fs_promise = require("fs").promises
+const { store }  = require("../store/global")
+var { logger } = require("./logger");
+var { followStreamBuild } = require("./dockerLogs.js")
+const {copyFile, readFile, copyFolder, writeFolder, ammendJSON, writeFile } = require("./IO.js")
+
+export var install_images_offline = function(obj){
+	return new Promise(function(resolve,reject){
+		const image_name = obj.name
+		load_image(obj).then((error, response)=>{
+			if (error){
+				reject(error)
+			}
+			resolve('Loaded images offline')
+		}).catch((err)=>{
+			logger.error(`${err} function: install_images_offline()`)
+			reject(err)
+		})
+	})
+}
+var install_images_onlinePromise = function(obj){
+	return new Promise(function(resolve,reject){
+		load_image(obj).then((error, response)=>{
+			if (error){
+				reject(error)
+			}
+			resolve('Loaded images online')
+		}).catch((err)=>{
+			logger.error("%s function: install_images_onlinePromise()", err)
+			reject(err)
+		})
+	})	
+}
+
+
+export var install_images_online = function(img){
+	return new Promise(function(resolve,reject){
+		const image = store.config.images[img.name]
+		image.config = img.config
+		if (store.dockerStreamObjs[img.name]){
+			reject("Docker image already loading, canceling")
+		} else {
+			install_images_onlinePromise(image).then((response,error)=>{
+				if(error){
+					logger.error(`${error} function: install_images_online()`)
+					reject(error)
+				}
+				resolve("Now loading docker image: "+img.name)
+			}).catch((err)=>{
+				logger.error(`${err} function: install_images_online()`)
+				reject(err)
+			})			
+		}
+
+
+	})
+}
+
+
+export var prune_images = function(){
+	return new Promise(function(resolve,reject){
+		try{
+			(async ()=>{
+				let responseawait = await docker.pruneImages( { 'filters' : { 'dangling' : { 'false' : true } } } )
+			})()
+			.then((response, error)=>{
+				if(error){
+					reject(error)
+				}
+				resolve(response)
+			}).catch((error2)=>{
+				logger.error(`${error2} function: prune_images()`)
+				reject(error2)
+			})
+		} catch(err){
+			reject(err)
+		}
+	});
+}
+
+export var load_image  = function(obj){
+	return new Promise(function(resolve,reject){
+		try{
+			(async ()=>{
+				let stream;
+				if (!store.config.images[obj.name]){
+					reject("Image name not supported, make sure the image file is one of the supported names: " + Object.keys(store.config.images).join(", "))
+				}
+				store.config.images[obj.name].status.errors = null
+				store.config.images[obj.name].status.complete = false
+				store.config.images[obj.name].status.type = obj.type
+				if(obj.config.type =="offline"){
+					store.config.images[obj.name].status.stream =  ['Installing Offline Version for: '+obj.name, "Logging disabled for offline installation"]
+					store.config.images[obj.name].status.name= obj.name
+					store.config.images[obj.name].status.changed = false
+					store.config.images[obj.name].status.running = true
+					store.config.images[obj.name].status.complete = false
+	  				
+					docker.loadImage(
+						obj.path,
+						{quiet: false},
+	  					(err, stream)=>{
+	  						if (err){
+	  							console.log(err)
+	  							reject(err)
+	  						}  
+	  						if (stream){
+	  							followStreamBuild(stream, store.config.images[obj.name])
+	  						}
+	  					}
+					)
+					resolve()  
+				} else {
+					const buildargs = {
+						"USER_ID": store.meta.uid.toString(),
+						"GROUP_ID": store.meta.gid.toString(),
+						"ENVIRONMENT": store.meta.OS
+					}
+					let resource_extras = [];
+					let  srcFiles = [...obj.config.srcFiles]
+					const metaFile = path.join(store.meta.writePath, 'meta.json')
+					let resource_list = {};
+					let buildDir = obj.config.path
+					if (obj.config.resources){
+						let response = await copyFolder(store.config.images[obj.name].installation.path, store.config.images[obj.name].installation.resourcesPath)
+						let meta = await readFile(metaFile)
+						let resources = JSON.parse(meta).images[obj.name].resources
+						buildDir = store.config.images[obj.name].installation.resourcesPath
+						for (const [key, resource] of Object.entries(obj.config.resources)){
+							if (resource.type=='file'){
+								resource_extras.push(copyFile(resource.srcFormat.filepath, path.join(store.config.images[obj.name].installation.resourcesPath, resource.srcFormat.filename)))
+								buildargs[resource.key] = resource.srcFormat.filename
+								if (srcFiles.indexOf(resource.srcFormat.filename) <= -1){
+									srcFiles.push(resource.srcFormat.filename)
+								}
+							}
+							resource.src = null
+							resource_list[key] = resource.srcFormat
+								
+						}
+						resource_extras.push(
+							ammendJSON({
+								value: resource_list,
+								file: metaFile,
+								attribute: "images."+obj.name+".resources"
+							}).catch((err)=>{
+								logger.error(err)
+								throw err
+							})
+						)
+					}
+					Promise.all(resource_extras).then((response)=>{
+						docker.buildImage({
+								context: buildDir,
+		  						src: srcFiles,
+		  						AttachStdout: true,
+	 							AttachStderr: true,
+	 							Tty:false
+		  					},
+		  					{
+		  						t: obj.name,
+								buildargs: buildargs
+						})
+						.then((stream, error)=>{
+							store.dockerStreamObjs[obj.name]  = stream
+							
+							store.config.images[obj.name].status.stream = []
+							store.config.images[obj.name].status.changed=false
+							store.config.images[obj.name].status.running = true 
+							store.config.images[obj.name].status.complete = false
+	  						followStreamBuild(stream, store.config.images[obj.name])
+							resolve()
+						}).catch((errStream)=>{
+							logger.error("Err in building image %s", obj.config.srcFiles)
+							reject(errStream)
+						});
+					}).catch((err)=>{
+						logger.error("error in building image %s", obj.srcFiles)
+					})
+				}				
+			})().catch((errLog)=>{
+			 	logger.error("err in loggin build image %s", errLog)
+				reject(errLog)
+			})
+		} catch(err){
+			reject(err)
+		}
+	});
+}
+
+
+export var cancel_load_images = function(imageName){
+	return new Promise(function(resolve,reject){
+		try{
+			if (store.dockerStreamObjs[imageName]){
+				try{
+					store.dockerStreamObjs[imageName].destroy()
+				} catch (err3){
+					store.dockerStreamObjs[imageName] =null
+				}
+				store.dockerStreamObjs[imageName] =null
+				store.config.images[imageName].status.changed=false
+				store.config.images[imageName].status.running = false
+				store.config.images[imageName].status.complete = false
+				resolve()
+			} else {
+				reject("No build process  to cancel for: " + imageName)
+			}
+		} catch(err){
+			logger.error("%s",  err)
+			reject(err)
+		}
+	});
+}
+export var remove_images = function(imageName){
+	return new Promise(function(resolve,reject){
+		(async ()=>{
+			await docker.getImage(imageName).remove({
+			   force: true
+			  }, (err,response)=>{
+				if(err){
+					logger.error("%s Error in removing docker image: "+imageName, err)
+					reject(err)
+				} else {
+					resolve(response)
+				}
+			});	
+		})()
+	});
+}
