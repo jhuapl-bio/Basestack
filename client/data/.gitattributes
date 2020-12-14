@@ -1,0 +1,12 @@
+../src/renderer/assets/tutorials/10InterpretingPhylogeneticTrees.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/11-2UsingGenomicData_to_UnderstandSARS-CoV-2.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/11-3UsingGenomicData_to_UnderstandSARS-CoV-2.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/6IntroductionBioinformatics.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/8BioinformaticsIII.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/11-1UsingGenomicData_to_UnderstandSARS-CoV-2.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/1Introduction.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/2Background.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/3GenomicEpidemiology.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/4-1Sequencing[[:space:]]SARS-CoV-2[[:space:]]Overview.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/4-2Sequencing[[:space:]]SARS-CoV-2[[:space:]]Protocol[[:space:]]Deep[[:space:]]Dive.mp4 filter=lfs diff=lfs merge=lfs -text
+../src/renderer/assets/tutorials/9BioinformaticsIV.mp4 filter=lfs diff=lfs merge=lfs -text

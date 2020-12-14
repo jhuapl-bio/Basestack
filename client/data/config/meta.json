@@ -1,0 +1,173 @@
+{
+    "log": {
+        "path": "${writePath}/logs"
+    },
+    "images": {
+        "basestack_consensus": {
+            "status": null,
+            "title": "Consensus",
+            "name": "basestack_consensus",
+            "estimated_size": 14500,
+            "installation": {
+                "srcFiles": [
+                    "Dockerfile",
+                    "covid19",
+                    "environment.yml"
+                ],
+                "type": "online",
+                "file": null,
+                "active": false,
+                "resources": null,
+                "path": "${resourcePath}/basestack_consensus/installation/sciserver"
+            }
+        },
+        "basestack_tutorial": {
+            "status": null,
+            "name": "basestack_tutorial",
+            "title": "Workshop Tutorials",
+            "estimated_size": 1610,
+            "installation": {
+                "srcFiles": [
+                    "Dockerfile",
+                    "express.js"
+                ],
+                "type": "online",
+                "file": null,
+                "active": false,
+                "path": "${resourcePath}/basestack_tutorial/installation",
+                "meta": "${writePath}/basestack_tutorial/meta.json",
+                "resourcesPath": "${writePath}/basestack_tutorial/resources",
+	            "resources": {
+                    "aws_key": {
+                        "name": "AWS Key File",
+                        "key": "aws_key",
+                        "type": "file",
+                        "src": null,
+                        "srcFormat":null
+                    }
+                }
+	            
+            }
+        }
+    },
+    "modules": {
+        "introduction": {
+            "name": "introduction",
+            "icon": "home",
+            "title": "Home",
+            "component": "Introduction",
+            "module": false,
+            "tooltip": null,
+            "image": null
+        },
+        "moduleinstall": {
+            "name": "moduleinstall",
+            "icon": "cog",
+            "title": "Install Modules",
+            "component": "ModuleInstall",
+            "module": false,
+            "tooltip": "Install or Modify Modules as Docker Images",
+            "image": null
+        },
+        "basestack_consensus": {
+            "name": "basestack_consensus",
+            "title": "Consensus",
+            "icon": "dna",
+            "component": "BasestackConsensus",
+            "module": true,
+            "status": null,
+            "tooltip": "Generate consensus sequences and receive a report.",
+            "image": "basestack_consensus",
+            "meta": "${writePath}/basestack_consensus/meta.json",
+            "config": {
+                "estimated_size": 14500,
+                "initial": false,
+                "primerDir": "${resourcePath}/basestack_consensus/primer_schemes",
+                "historyPath": "${writePath}/basestack_consensus/histories"
+            }
+        },
+        "rampart": {
+            "name": "rampart",
+            "title": "RAMPART",
+            "icon": "viruses",
+            "component": "RAMPART",
+            "module": true,
+            "status": null,
+            "tooltip": "Fast annotation of input fastq files using the artic network",
+            "image": "basestack_consensus",
+            "meta": "${writePath}/rampart/meta.json",
+            "config": {
+                "annotationsPath": "",
+                "protocolDir": "${resourcePath}/rampart/protocols",
+                "basePath": "${resourcePath}/rampart",
+                "initial": false
+            }
+        },
+        "basestack_tutorial": {
+            "name": "basestack_tutorial",
+            "title": "Tutorial",
+            "icon": "video",
+            "component": "Tutorial",
+            "module": true,
+            "status": null,
+            "image": "basestack_tutorial",
+            "meta": "${writePath}/basestack_tutorial/meta.json",
+            "config": {
+                "base": "http://localhost",
+                "mp4": "mp4",
+                "material": "material",
+                "port": 8098,
+                "meta": "${resourcePath}/basestack_tutorial/meta.json",
+                "videoServerHostPort": "http://localhost:8098/mp4",
+                "basePath": "${resourcePath}/basestack_tutorial",
+                "force": true,
+                "initial": true
+            }
+        },
+        "igv": {
+            "name": "igv",
+            "icon": "globe",
+            "title": "IGV",
+            "component": "IGV",
+            "module": false,
+            "tooltip": "View the externally hosted (internet required) page from Integrative Genomics Viewer",
+            "image": null
+        },
+        "nextstrain": {
+            "name": "nextstrain",
+            "icon": "tree",
+            "title": "Nextstrain",
+            "component": "Nextstrain",
+            "module": false,
+            "tooltip": "Compare mutations on Nextstrain (internet access required)",
+            "image": null
+        },
+        "logs": {
+            "name": "logs",
+            "icon": "book-open",
+            "title": "Log Streams",
+            "component": "Logs",
+            "module": false,
+            "tooltip": "View currently running logs of processes",
+            "image": null
+        },
+        "about": {
+            "name": "about",
+            "icon": "address-card",
+            "title": "Contact",
+            "component": "About",
+            "module": false,
+            "tooltip": null,
+            "image": null
+        },
+        "system": {
+            "name": "system",
+            "icon": "cog",
+            "title": "System",
+            "component": "System",
+            "module": false,
+            "tooltip": "View your system information including available space, Docker status and more",
+            "image": null
+        }
+    }
+}
