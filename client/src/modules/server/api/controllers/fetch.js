@@ -279,7 +279,8 @@ export async function fetch_resources(){
 }
 export async function fetch_docker_status(){
 	try{
-		let response = await docker.info()
+		// let response = await docker.version()
+		let response = true
 		return response
 	} catch(err){
 		throw err
@@ -304,12 +305,14 @@ export async function fetch_status(){
 	}
 	try{
 		let docker_status = await fetch_docker_status()
+		console.log(docker_status, "<<<<")
 		response.docker = true
 	} catch(err){
 		// console.error(err)
 		response.docker = false
 		errors.push(err)
 	}
+	console.log(response.docker, "<<<<<<")
 	return response
 }
 
@@ -372,7 +375,9 @@ async function formatDockerLoads(){
 		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false)
 		config = config.replace(/\$\{writePath\}/g, meta.writePath)
 		config = config.replace(/\$\{resourcePath\}/g, meta.resourcePath)
-		config = JSON.parse(config)
+		config = config.replace(/\\/g, "/")
+		console.log(config.log)
+		config = JSON.parse(config, 'utf-8')
 		store.config.images = config.images
 		store.config.modules = config.modules
 		for (const key of Object.keys(store.config.images)){
@@ -398,12 +403,12 @@ async function formatDockerLoads(){
 					store.config.images[key].status.installed = false
 					store.config.images[key].status.inspect = null
 				})			
-			}, 2000);
+			}, 7000);
 		}
 		
 	}
 	catch(err){
-		logger.error(`Initiating storage of docker modules and images failes ${err}`)
+		logger.error(`Initiating storage of docker modules and images function formatDockerLoads() failed, error: ${err}`)
 		throw err
 	}
 }

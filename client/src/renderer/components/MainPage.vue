@@ -128,7 +128,7 @@ export default {
 			},
 			initial:true,
 			collapsed:false,
-    		tab: 0,
+    		tab: 1,
 	        entries: null,
 	        resources: null,
 	        docker:null,
@@ -158,7 +158,7 @@ export default {
 			this.getStatus().then(()=>{
 				setInterval(()=>{
 					$this.getStatus()
-				}, 1000)
+				}, 5000)
 			})
 		}).catch((err)=>{
 			console.error(err)

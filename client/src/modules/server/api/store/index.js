@@ -22,7 +22,6 @@ else {
 }
 resourcePath = path.join(globalPath, "data", "config")
 
-
 let uid = 1000; let gid = 1000;
 if (process.getuid){
 	uid  = process.getuid()
