@@ -16,18 +16,15 @@
 1. Download Basestack from:
 	- https://drive.google.com/drive/u/0/folders/1bk0VRREYviGZjUbyY9rrcg6nOETDluqq
 	- The NIH/Fogarty Box Drive:
-2. Choose your download based on your operating system:
+2. Choose your download based on your operating system from the Releases page:
 	- Windows
-		- RECOMMENDED - Basestack Setup 1.0.0.zip (~1.5GB)
+		- RECOMMENDED - Basestack Setup 1.0.0.setup.exe (~80MB)
 			- Basestack will be installed in your applications listing similar to Microsoft Office or Adobe. THIS STEP REQUIRES ADMIN ACCESS TO YOUR LAPTOP TO INSTALL SOFTWARE
-		- Basestack-Unpacked-Windows.zip (~1.5GB, No Admin Access)
-			- Basestack will need to be double-clicked from a folder each time.
 	- Mac
 		- Basestack-1.0.0.dmg (~2.0 GB)
 			- Basestack will be installed into `/Applications`
 	- Linux
-		-  RECOMMENDED - Basestack-1.0.0.AppImage (~1.5GB)
-		- Basestack-Unpacked-Linux.tar.gz (~1.5GB)
+		-  RECOMMENDED - Basestack-1.0.0.AppImage (~100MBB)
 	- Expect to use about 14GB after full installation of the analysis pipeline.
 3. Extract the zip or .tar.gz file (If compressed)
 	- Note: Make sure you fully extract the file and don't just double-click on it
@@ -39,6 +36,7 @@
 	- Mac: Basestack.dmg
 		- Simply drag + drop (when the window appears) into `/Applications`
 	- Linux: Basestack-1.0.0.AppImage
+		- You'll likely need to change permissions to allow execution in properties or just `chmod 755 ...AppImage`
 
 ## 3. Download Analysis Pipeline(s)
 

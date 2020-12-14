@@ -412,9 +412,13 @@ function createWindow () {
 }
 
 app.on('ready', ()=>{
-    createWindow()
+  try{
+    createWindow();
     autoUpdater.checkForUpdatesAndNotify();
-  })
+   } catch(err){
+      logger.error(err)
+   }
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
