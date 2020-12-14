@@ -35,10 +35,6 @@ export async function initialize(params){
 		// let re = await setup_data()''
 
 
-		
-		let response = await fetch_modules()
-
-
 		let userMeta = path.join(store.meta.writePath, "meta.json")
 		let metaExists = await checkFileExist(store.meta.writePath, "meta.json", true)
 		if (!metaExists){
@@ -48,6 +44,7 @@ export async function initialize(params){
 			};
 			await writeFile(userMeta, JSON.stringify(metaContent, null, 4))
 		} 
+		let response = await fetch_modules()
 		let meta = await readFile(path.join(store.meta.writePath, "meta.json"))
 		meta = JSON.parse(meta)
 		for (const [key, image] of Object.entries(store.config.images)){
