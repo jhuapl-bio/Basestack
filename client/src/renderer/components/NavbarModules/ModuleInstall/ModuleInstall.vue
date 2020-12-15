@@ -62,7 +62,7 @@
 					     	</div>
 					 	</b-col>
 			            <b-col sm="4" style="text-align:center" v-else> 
-			            	<span class="center-align-icon"  v-tooltip="{
+			            	<span class="center-align-icon"  v-if="docker" v-tooltip="{
 					            content: 'Install Method: '+stagedInstallation[key].installation.type,
 					            placement: 'top',
 					            classes: ['info'],

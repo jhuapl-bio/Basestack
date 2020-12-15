@@ -53,6 +53,7 @@
                 @updateImages="updateImages"
                 class="contentDiv"
                 v-bind:images="images"
+                v-bind:docker="docker"
                 v-bind:modules="modules"
                 >
               </ModuleInstall>
@@ -78,7 +79,7 @@
   import ModuleInstall from "@/components/NavbarModules/ModuleInstall/ModuleInstall"
   export default {
     name: 'installhelp',
-    props: ['modules', 'images'],
+    props: ['modules', 'images', 'docker'],
     components: {
       ModuleInstall,
     },
