@@ -27,8 +27,8 @@ export const logger = createLogger({
     // - Write to all logs with level `info` and below to `combined.log` 
     // - Write all logs error (and below) to `error.log`.
     //
-    new transports.File({ filename: meta.errorLogFile, level: 'error',  options: { flags: 'w' } }),
-    new transports.File({ filename: meta.logFile,  options: { flags: 'w' } })
+    new transports.File({ filename: meta.errorLogFile, maxsize: 10000000,  maxFiles: 1, level: 'error', tailable:true, options: { flags: 'a' } }),
+    new transports.File({ filename: meta.logFile, maxsize: 10000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
   ]
 });
 

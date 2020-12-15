@@ -18,7 +18,6 @@
     <div v-if="selectedElement.installation.type =='online' && selectedElement.installation.resources">
     	<div v-for="[indexr, resource] of Object.entries(selectedElement.installation.resources)" :key="indexr" >
     		<div v-if="resource.type =='file'">
-    			{{resource.src}}
     			<label style="text-align:center" class="typo__label">{{resource.name}}</label>
     			<b-form-file 
 	                 v-model="resource.src"
