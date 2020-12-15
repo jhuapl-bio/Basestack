@@ -255,7 +255,7 @@ function createWindow () {
   mainWindow.loadURL(winURL)
   autoUpdater.autoDownload = false
   function sendStatusToWindow(text) {
-    log.info(text);
+    logger.info(text);
     dialog.showMessageBox(mainWindow, {
       type: 'info',
       defaultId: 0,
@@ -268,7 +268,7 @@ function createWindow () {
     sendStatusToWindow('Error in auto-updater. ' + err);
   })
   autoUpdater.on('update-available', (info) => {
-    log.info(info)
+    logger.info(info)
     let message = 'Would you like to install it?';
     dialog.showMessageBox(mainWindow, {
       type: 'question',
@@ -278,10 +278,10 @@ function createWindow () {
       detail: message
     }, response => {
       if(response === 0) {
-        log.info(response)
+        logger.info(response)
         autoUpdater.downloadUpdate()
       } else {
-        log.info(response)
+        logger.info(response)
       }
     });
   })
@@ -291,11 +291,25 @@ function createWindow () {
     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
     sendStatusToWindow(log_message);
   })
-  autoUpdater.on('update-downloaded', (info) => {
-    sendStatusToWindow('Update downloaded');
+  autoUpdater.on('update-downloaded', (info, err) => {
+    logger.error(err)
+    logger.info(info)
+    try{
+      sendStatusToWindow('Update downloaded');
+    } catch(err) {
+      console.error(err)
+      throw new Error("Could not download update, check error logs")
+    }
   });
-  autoUpdater.on('checking-for-update', () => {
-    logger.info('Checking for Basestack update...');
+  autoUpdater.on('checking-for-update', (info, err) => {
+    logger.error(err)
+    logger.info(info)
+    try{
+      logger.info('Checking for Basestack update...');
+    } catch (err) {
+      logger.error(err)
+      throw new Error("Could not check for Basestack Update, check internet access and logs")
+    }
   })
   autoUpdater.on('update-not-available', (info) => {
     logger.info('Basestack update not available.');
@@ -306,21 +320,7 @@ function createWindow () {
 
   mainWindow.on("close", (e)=>{
     // e.preventDefault();
-    try{
-        cancel_container({module: 'rampart', silent:true})
-    } catch(err){
-      console.log(err)
-    }
-    try{
-        cancel_container({module: 'basestack_consensus', silent:true})
-    } catch(err){
-      console.log(err)
-    }
-    try{
-        cancel_container({module: 'basestack_tutorial', silent: true})
-    } catch(err){
-      console.log(err)
-    }
+    
 
   //options object for dialog.showMessageBox(...)
     let options = {}
@@ -357,57 +357,27 @@ function createWindow () {
 
 
 
-    
-    // https://stackoverflow.com/a/40790310/11572828,
-  //   console.log(process.NODE_ENV)
-  //   if(process.env.NODE_ENV !== 'production'){
-  //     console.log("enside the close loop now")
-  //     dialog.showMessageBox(mainWindow,options, (res,checked)=>{
-  //       console.log(checked, res, "dsfdsfjdksfjkjk")
-  //       if (res === 0 || res === 1) {
-  //          // mainWindow.destroy()
-  //          console.log("response", res)
-  //         if (res === 0){
-  //           let removal_message = ""
-  //           logger.info("Exiting consensus generation")
-  //           try {
-  //             cancel_artic_consensus_promise()
-  //             logger.info("Completed cancel artic_consensus")
-  //             removal_message += "Removed artic_consensus pipeline"
-  //           } catch(err2){
-  //             logger.error(err2.message)
-  //           }
-  //           try {
-  //             cancel_RAMPART_promise()
-  //             logger.info("Removed Rampart pipeline")
-  //             removal_message += "Removed rampart"
-  //           } catch (err2){
-  //             logger.error(err2.message)
-  //           }
-  //           console.log("tried to the end")
-  //           mainWindow.destroy()
-  //         } else {
-  //           console.log("else")
-  //           mainWindow.destroy()
-  //         }
-  //       } 
-  //       elses if (res === 2){
-  //         logger.info("Asked to quit, decided not to exit")
-  //       }
-  //     });
-  //   }
-  //   else{
-  //     console.log("no matter")
-  //     mainWindow.destroy()
-  //   }
 
   })
 
 
   mainWindow.on('closed', (e) => {
-     // cancel_RAMPART_promise()
-     // cancel_artic_consensus_promise()
-     mainWindow= null
+    try{
+        cancel_container({module: 'rampart', silent:true})
+    } catch(err){
+      console.log(err)
+    }
+    try{
+        cancel_container({module: 'basestack_consensus', silent:true})
+    } catch(err){
+      console.log(err)
+    }
+    try{
+        cancel_container({module: 'basestack_tutorial', silent: true})
+    } catch(err){
+      console.log(err)
+    }
+    mainWindow= null
   })
 }
 
