@@ -101,13 +101,7 @@ export async function initialize(params){
 		throw err
 	}
 }
-async function setup_data(){
-	try{
-		await writeFolder(store.meta.writePath)
-	} catch (err){
-		throw err
-	}
-}
+
 
 async function initialize_module_object(container_name){
 	let obj;
