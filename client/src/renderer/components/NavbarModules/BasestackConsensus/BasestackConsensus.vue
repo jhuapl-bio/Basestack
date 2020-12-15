@@ -834,7 +834,7 @@ export default {
 		},
 		formatDirectoryString(files){
 			files = files.filter((d)=>{
-				if(d.hasOwnProperty('$path')){
+				if(d['$path']){
 					return true
 				}
 
@@ -858,7 +858,7 @@ export default {
 			let root;
 			let dirName;
 			const files = val.filter((d)=>{
-				if(d.hasOwnProperty('$path')){
+				if(d['$path']){
 					return true
 				} else {
 					d.$path = d.webkitRelativePath

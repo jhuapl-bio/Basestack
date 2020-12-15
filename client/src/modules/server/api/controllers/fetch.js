@@ -151,7 +151,7 @@ export async function fetch_videos_meta(){
 		const keys = Object.keys(meta)
 		for(let i = 0; i < keys.length; i++){
 			const key = keys[i]
-			if(srcMeta.hasOwnProperty(key)){
+			if(srcMeta[key]){
 				const sections = meta[key].sections
 				for(let j =0; j < sections.length; j++){
 					const section = sections[j]
@@ -274,6 +274,7 @@ export async function fetch_resources(){
 		let disk = await si.fsSize()
 		return {cpu: cpu, mem: mem, disk: disk}
 	} catch(err){
+		logger.error(err)
 		throw err
 	}
 }
@@ -283,6 +284,7 @@ export async function fetch_docker_status(){
 		let response = true
 		return response
 	} catch(err){
+		logger.error(err)
 		throw err
 	}
 }
@@ -293,7 +295,6 @@ export async function fetch_status(){
 	try{
 		response = await fetch_modules()
 	} catch(err){
-		// console.error(err)
 		errors.push(err)
 	}
 	try{
@@ -305,14 +306,12 @@ export async function fetch_status(){
 	}
 	try{
 		let docker_status = await fetch_docker_status()
-		console.log(docker_status, "<<<<")
 		response.docker = true
 	} catch(err){
 		// console.error(err)
 		response.docker = false
 		errors.push(err)
 	}
-	console.log(response.docker, "<<<<<<")
 	return response
 }
 
@@ -403,7 +402,7 @@ async function formatDockerLoads(){
 					store.config.images[key].status.installed = false
 					store.config.images[key].status.inspect = null
 				})			
-			}, 7000);
+			}, 2000);
 		}
 		
 	}
