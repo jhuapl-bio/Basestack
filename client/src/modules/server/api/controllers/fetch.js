@@ -499,7 +499,7 @@ async function formatDockerLoads(){
 					store.config.images[key].status.installed = false
 					store.config.images[key].status.inspect = null
 				})			
-			}, 7000);
+			}, 2000);
 		}
 		
 	}
