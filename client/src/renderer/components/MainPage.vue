@@ -134,6 +134,7 @@ export default {
 	        docker:null,
 	        modules: null,
 	        images: null,
+	        intervalChecking: false
 		}
 	},
 	computed: {
@@ -157,7 +158,9 @@ export default {
 		this.init().then((response)=>{
 			this.getStatus().then(()=>{
 				setInterval(()=>{
-					$this.getStatus()
+					if (!this.intervalChecking){
+						$this.getStatus()
+					}
 				}, 1000)
 			})
 		}).catch((err)=>{
@@ -200,13 +203,14 @@ export default {
       },
       async getStatus(){
       	try{
+      		this.intervalChecking = true
 	      	let response = await FileService.getModules()
 			this.$set(this, 'images', response.data.data.images.entries)
 			this.$set(this, 'modules', response.data.data.modules.entries)
 			this.$set(this, 'resources', response.data.data.resources)
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
-			// console.log(response.data.data.images.entries.basestack_tutorial)
+			console.log(response.data.data.resources.disk)
 			const modules = response.data.data.modules.entries
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
@@ -236,11 +240,12 @@ export default {
 	                text:  completed.join(', ') 
 	            }) 
 			}
-	      	this.initial = false
-	      	return 1
 		} catch(err){
 			this.initial=false
 			throw err
+		} finally {
+	      	this.initial = false
+			this.intervalChecking = false
 		}
       },
       updateHistory(val){

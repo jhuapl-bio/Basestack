@@ -8,14 +8,16 @@
   -->
 <template>
   <div id="moduleinstall"  style="overflow-y:auto">
-  	<div class="text-center" v-if="!docker">  
-    	<h4 >Docker is not running or installed</h4>
+  	<div class="text-center" >  
+    	<h4 v-if="!docker">Docker is not running or installed</h4>
+    	<Memory v-if="resources" v-bind:resources="resources"></Memory>
+      	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
   	</div>
 	<b-row v-if="images">
     	<b-col sm="6" >
     	  <h4 style="text-align:center">Not Installed</h4>
           	<div v-for="[key, element] of Object.entries(available)" :key="key" >
-		          <li class="list-group-item"  >
+		          <li class="list-group-item"  @mouseover="hoverElement = element" @mouseout="hoverElement = null">
 	        		<b-row >
 	        			<b-col sm="12" style="overflow-wrap: anywhere; text-align:center ">
 	        				<span style="text-align:center">{{element.title}}</span>
@@ -287,12 +289,16 @@
     import FileService from '../../../services/File-service.js'
     import {HalfCircleSpinner} from 'epic-spinners'
     import ModuleConfig from "@/components/NavbarModules/ModuleInstall/ModuleConfig"
+    import Disk from "@/components/NavbarModules/System/Disk";
+  	import Memory from "@/components/NavbarModules/System/Memory";
     import path from 'path'
 	export default {
 		name: 'moduleinstall',
 	    components: {
 	    	HalfCircleSpinner, 
-	    	ModuleConfig
+	    	ModuleConfig,
+	    	Disk,
+	    	Memory
 	    },
 	    props: ['modules', "images", "resources", "docker"],
 
@@ -318,7 +324,8 @@
 	      	stagedInstallation: {},
 	      	offlineImage: null,
 	      	meta: {},
-	      	stopLog: false
+	      	stopLog: false,
+	      	hoverElement: null
 		  }
 		},
 
