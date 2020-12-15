@@ -62,7 +62,7 @@
 					     	</div>
 					 	</b-col>
 			            <b-col sm="4" style="text-align:center" v-else> 
-			            	<span class="center-align-icon" v-if="docker" v-tooltip="{
+			            	<span class="center-align-icon"  v-if="docker" v-tooltip="{
 					            content: 'Install Method: '+stagedInstallation[key].installation.type,
 					            placement: 'top',
 					            classes: ['info'],
@@ -558,10 +558,10 @@
 	    		if (this.stagedInstallation[element.name].installation.resources){
 	    			
 	    			for (const [key, value ] of Object.entries(this.stagedInstallation[element.name].installation.resources)){
-	    				if (value.type == 'file' && value.src){
+	    				if (value.type == 'file' && (value.src)){
 	    					value['srcFormat'] = { filename: value.src.name, filepath: value.src.path }
 	    				}
-	    				if (!value.src){
+	    				if (!value.srcFormat){
 	    					errors.push(key)
 	    				}
 	    			}

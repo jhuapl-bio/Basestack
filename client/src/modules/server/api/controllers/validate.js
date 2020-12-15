@@ -232,6 +232,7 @@ export async function validate_run_dir(runDir){
 			runDir: runDir
 		}
 	} catch(err){
+		logger.error(err)
 		throw err
 	}
 }

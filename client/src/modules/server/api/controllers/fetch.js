@@ -151,7 +151,7 @@ export async function fetch_videos_meta(){
 		const keys = Object.keys(meta)
 		for(let i = 0; i < keys.length; i++){
 			const key = keys[i]
-			if(srcMeta.hasOwnProperty(key)){
+			if(srcMeta[key]){
 				const sections = meta[key].sections
 				for(let j =0; j < sections.length; j++){
 					const section = sections[j]
@@ -274,14 +274,17 @@ export async function fetch_resources(){
 		let disk = await si.fsSize()
 		return {cpu: cpu, mem: mem, disk: disk}
 	} catch(err){
+		logger.error(err)
 		throw err
 	}
 }
 export async function fetch_docker_status(){
 	try{
-		let response = await docker.info()
+		// let response = await docker.version()
+		let response = true
 		return response
 	} catch(err){
+		logger.error(err)
 		throw err
 	}
 }
@@ -292,7 +295,6 @@ export async function fetch_status(){
 	try{
 		response = await fetch_modules()
 	} catch(err){
-		// console.error(err)
 		errors.push(err)
 	}
 	try{
@@ -372,7 +374,9 @@ async function formatDockerLoads(){
 		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false)
 		config = config.replace(/\$\{writePath\}/g, meta.writePath)
 		config = config.replace(/\$\{resourcePath\}/g, meta.resourcePath)
-		config = JSON.parse(config)
+		config = config.replace(/\\/g, "/")
+		console.log(config.log)
+		config = JSON.parse(config, 'utf-8')
 		store.config.images = config.images
 		store.config.modules = config.modules
 		for (const key of Object.keys(store.config.images)){
@@ -403,7 +407,7 @@ async function formatDockerLoads(){
 		
 	}
 	catch(err){
-		logger.error(`Initiating storage of docker modules and images failes ${err}`)
+		logger.error(`Initiating storage of docker modules and images function formatDockerLoads() failed, error: ${err}`)
 		throw err
 	}
 }

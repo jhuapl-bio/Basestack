@@ -59,7 +59,7 @@ export class Tutorial{
 			}
 			const section = params.section
 			let arrSorted = []
-			if(metaContent.bookmark.hasOwnProperty(section.key)){
+			if(metaContent.bookmark[section.key]){
 				let arr = metaContent.bookmark[section.key]
 				let index = arr.map(e => e.title).indexOf(params.title);
 				if (index != -1){
@@ -93,7 +93,7 @@ export class Tutorial{
 		metaContent = metaContent.modules.basestack_tutorial
 		const section = params.section
 		let arrSorted=[];
-		if(metaContent.bookmark.hasOwnProperty(section.key)){
+		if(metaContent.bookmark[section.key]){
 			let chapters = metaContent.bookmark[section.key]
 			let index = chapters.map(e => e.title).indexOf(params.title);
 			if (index == -1){
