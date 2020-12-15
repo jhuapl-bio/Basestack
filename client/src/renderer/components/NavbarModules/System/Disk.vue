@@ -3,6 +3,7 @@
     class="text-center"
     :fields="fields_disk"
     :items="resources.disk"
+    :sticky-header="true"
   >
     <template  v-slot:cell(used)="row">
     <p>{{convert_gb(row.item.used, 'B')}}</p>
@@ -91,5 +92,8 @@
   .item .value {
     color: #35495e;
     font-weight: bold;
+  }
+  .rowClass {
+    height: 10px;
   }
 </style>
