@@ -25,6 +25,7 @@
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
     "publishOnly:linux": "electron-builder --linux AppImage -p always",
+    "publishUpdate:linux": "electron-builder --linux AppImage -p always",
     "publish:linux": "node .electron-vue/build.js && electron-builder --linux AppImage -p always",
     "publishOnly:linux": "electron-builder --linux AppImage -p always",
     "publish:mac-dmg": "node .electron-vue/build.js && electron-builder --mac  dmg -p always",
