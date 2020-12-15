@@ -104,12 +104,10 @@ ENV PATH="/home/user/idies/workspace/covid19/code/ont-guppy-cpu/bin:${PATH}"
 # copy 13-gene genome.json over into RAMPART directory (which has a 9-gene file by default)
 RUN cp /home/user/idies/workspace/covid19/ncov_reference/genome.json /home/user/idies/workspace/covid19/code/artic-ncov2019/rampart/genome.json
 
-RUN chown -R $USER_ID:$GROUP_ID /home/user
 
 # install TeX libraries
-USER user
-RUN wget -qO- "https://yihui.org/tinytex/install-bin-unix.sh" | sh \
-    && export PATH=/home/user/.TinyTeX/bin/x86_64-linux:$PATH \
+RUN wget -qO- "https://yihui.org/tinytex/install-bin-unix.sh" | sh 
+RUN export PATH=/home/user/.TinyTeX/bin/x86_64-linux:$PATH \
     && tlmgr path add \
     && tlmgr install mnsymbol \
     && tlmgr install multirow \
@@ -127,4 +125,5 @@ RUN wget -qO- "https://yihui.org/tinytex/install-bin-unix.sh" | sh \
 RUN cat /home/user/idies/workspace/covid19/bashrc >> ~/.bashrc
 RUN chmod -R 755 /home/user/idies/workspace/covid19/code/ncov/pipeline_scripts/
 WORKDIR /home/user/idies/workspace/covid19
+USER user
 
