@@ -9,47 +9,9 @@
         :items="[info_table]"
       >
       </b-table>
-      <b-table
-        striped
-        hover
-        class="text-center"
-        :fields="fields_mem"
-        :items="[resources.mem]"
-      >
-      <template  v-slot:cell(total)="row">
-        <p>{{convert_gb(row.item.total, 'B')}}</p>
-      </template>
-      <template  v-slot:cell(active)="row">
-        <p>{{convert_gb(row.item.active, 'B')}}</p>
-      </template>
-      <template  v-slot:cell(available)="row">
-        <p>{{convert_gb(row.item.available, 'B')}}</p>
-      </template>
-      </b-table>
-      <b-table
-        striped
-        hover
-        class="text-center"
-        :fields="fields_cpu"
-        :items="[resources.cpu]"
-      >
-
-      </b-table>
-      <b-table
-        striped
-        hover
-        class="text-center"
-        :fields="fields_disk"
-        :items="resources.disk"
-      >
-        <template  v-slot:cell(used)="row">
-        <p>{{convert_gb(row.item.used, 'B')}}</p>
-        </template>
-        <template  v-slot:cell(size)="row">
-          <p>{{convert_gb(row.item.size, 'B')}}</p>
-        </template>
-      </b-table>
-
+      <CPU v-if="resources" v-bind:resources="resources"></CPU>
+      <Memory v-if="resources" v-bind:resources="resources"></Memory>
+      <Disk v-if="resources" v-bind:resources="resources"></Disk>
       <!-- <b-form-text class="text-center" disabled> -->
       <div class="text-center">  
         <span v-if="!docker">Docker is not running or installed</span>
@@ -62,8 +24,16 @@
 </template>
 
 <script>
+  import CPU from "@/components/NavbarModules/System/CPU";
+  import Disk from "@/components/NavbarModules/System/Disk";
+  import Memory from "@/components/NavbarModules/System/Memory";
   export default {
     props: ['resources', 'docker'],
+    components: {
+      CPU,
+      Memory,
+      Disk
+    },
     data () {
       return {
         fields_system: [
@@ -95,68 +65,12 @@
           os: require('os').platform(),
           vue: require('vue/package.json').version
         },
-        fields_cpu:[
-          {
-            key: 'brand',
-            label: 'CPU Brand'
-          },
-          {
-            key: 'cores',
-            label: 'Cores'
-          },
-          {
-            key: 'manufacturer',
-            label: 'Manufacturer'
-          }
-        ],
-        fields_mem: [
-          {
-            key: 'total',
-            label: 'Total Mem (GB)'
-          },
-          {
-            key: 'active',
-            label: 'Using Mem (GB)'
-          },
-          {
-            key: 'available',
-            label: 'Available Mem (GB)'
-          }
-        ],
-        fields_disk: [
-          {
-            key: 'fs',
-            label: 'Partition'
-          },
-          {
-            key: 'mount',
-            label: 'Mount'
-          },
-          {
-            key: 'use',
-            label: '% Used'
-          },
-          {
-            key: 'used',
-            label: 'Used (GB)'
-          },
-          {
-            key: 'size',
-            label: 'Size (GB)'
-          },
-        ]
       }
     },
     mounted(){
     },
     methods: {
-      convert_gb(size, val){
-        if (val =='MB'){
-          return size / 1000 
-        } else {
-          return (size / 1000000000).toFixed(2)
-        }
-      }
+
     }
   };
 </script>

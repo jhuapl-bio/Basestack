@@ -55,6 +55,7 @@
                 v-bind:images="images"
                 v-bind:docker="docker"
                 v-bind:modules="modules"
+                v-bind:resources="resources"
                 >
               </ModuleInstall>
             </slide>
@@ -79,7 +80,7 @@
   import ModuleInstall from "@/components/NavbarModules/ModuleInstall/ModuleInstall"
   export default {
     name: 'installhelp',
-    props: ['modules', 'images', 'docker'],
+    props: ['modules', 'images', 'docker', 'resources'],
     components: {
       ModuleInstall,
     },
