@@ -299,7 +299,7 @@
             this.updateData()
             setTimeout(() => {
               this.forceRerender()
-             },5000);  
+             },8000);  
           }).catch((err) => {
             // this.$store.dispatchPromise("PULSATE", {box: "rampart", pulse: true, type: "pulseError"}).catch(() => null);
             if (err.response.status === 409) {
