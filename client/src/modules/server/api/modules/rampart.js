@@ -150,10 +150,16 @@ export class RAMPART{
 			        }
 				}	
 
-				// let command = ['bash', '-c', '  python3 -m http.server']
-				let command = ['bash', '-c', 'cd '+ tmpannotationsDir +' && ls && source activate /opt/conda/envs/artic-ncov2019 && rampart --protocol '
-				+ json +' --annotatedPath ' + tmpannotationsDir +
-				' --basecalledPath '+ tmpfastqDir +' --referencesPath '+ references];
+				// let command = ['bash', '-c', 'conda list']
+				let command = ['bash', '-c',
+				`cd ${tmpannotationsDir}\
+				&& source /home/user/idies/workspace/covid19/bashrc\
+				&& conda activate artic-ncov2019\
+				&& rampart\
+				--protocol ${json}\
+				--annotatedPath ${tmpannotationsDir}\
+				--basecalledPath ${tmpfastqDir}\
+				--referencesPath ${references}`];
 				removeAnnotations ? command[2] += " --clearAnnotated": '';
 				resolve({options: options, command: command, payload: {annotationsDir: annotationObj, protocolDir: data.protocolDir }})
 			})().catch((err)=>{
