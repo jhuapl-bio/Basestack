@@ -30,7 +30,7 @@
     	</div>
     </div>
     <div v-if="!selectedElement.status.installed">
-    	<span>Estimated Size: {{convert_gb(selectedElement.estimated_size, 'MB')}} GB</span>
+    	<span>Estimated Size: {{selectedElement.estimated_size}} GB</span>
     </div>
     <div v-if="selectedElement.status.installed && selectedElement.status.inspect">
     	<span>Installed Size: {{convert_gb(selectedElement.status.inspect.Size, 'B')}} GB</span>
