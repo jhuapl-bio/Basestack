@@ -13,9 +13,9 @@
       {{convert_gb(row.item.active, 'B')}}
     </template>
     <template  v-slot:cell(available)="row">
-      <span v-if="row.item.available < 1000000000" class="center-align-icon warn-icon" style="margin:auto; text-align:center" >
+      <span v-if="row.item.available < 2000000000" class="center-align-icon warn-icon" style="margin:auto; text-align:center" >
         <font-awesome-icon v-tooltip="{
-        content: 'Low available memory detected (<1GB), some pipelines or installs may fail',
+        content: 'Low available memory detected (<2GB), starting pipelines or module builds may fail',
         placement: 'top',
         classes: ['warning'],
         trigger: 'hover',

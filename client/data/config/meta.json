@@ -7,12 +7,10 @@
             "status": null,
             "title": "Consensus",
             "name": "basestack_consensus",
-            "estimated_size": 14.5,
+            "estimated_size": 10.6,
             "installation": {
                 "srcFiles": [
-                    "Dockerfile",
-                    "covid19",
-                    "environment.yml"
+                    "Dockerfile"
                 ],
                 "type": "online",
                 "file": null,
@@ -25,7 +23,7 @@
             "status": null,
             "name": "basestack_tutorial",
             "title": "Workshop Tutorials",
-            "estimated_size": 1.61,
+            "estimated_size": 2.42,
             "installation": {
                 "srcFiles": [
                     "Dockerfile",

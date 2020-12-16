@@ -13,44 +13,45 @@
 ## 2 Install Basestack
 
 
-1. Download Basestack from:
-	- https://drive.google.com/drive/u/0/folders/1bk0VRREYviGZjUbyY9rrcg6nOETDluqq
-	- The NIH/Fogarty Box Drive:
+1. Download Basestack from either:
+	1.  https://github.com/Merritt-Brian/Basestack/releases RECOMMENDED
+	2.  https://drive.google.com/drive/folders/1ad2U3zBTHXfly3_ybLUxJBarvHXCPS2Z
 2. Choose your download based on your operating system from the Releases page:
 	- Windows
-		- RECOMMENDED - Basestack Setup 1.0.0.setup.exe (~80MB)
+		- Basestack Setup 1.0.0.setup.exe (~80 MB)
 			- Basestack will be installed in your applications listing similar to Microsoft Office or Adobe. THIS STEP REQUIRES ADMIN ACCESS TO YOUR LAPTOP TO INSTALL SOFTWARE
 	- Mac
-		- Basestack-1.0.0.dmg (~2.0 GB)
+		- Basestack-1.0.0.dmg 
 			- Basestack will be installed into `/Applications`
 	- Linux
-		-  RECOMMENDED - Basestack-1.0.0.AppImage (~100MBB)
-	- Expect to use about 14GB after full installation of the analysis pipeline.
-3. Extract the zip or .tar.gz file (If compressed)
+		-  Basestack-1.0.0.AppImage (~100 MB)
+	- Expect to use about 14GB after full installation of all analysis pipelines available.
+3. (OPTIONAL - If installed from gDrive) Extract the zip or .tar.gz file (If compressed)
 	- Note: Make sure you fully extract the file and don't just double-click on it
 4. Start Basestack by opening (double-clicking) the following file:
 	- Windows: 
-		- EITHER: Basestack Setup 1.0.0.exe
+		- Basestack Setup ${version}.exe
 			- You'll be prompted to select the install location
-		- OR: Basestack.exe (Unpacked)
 	- Mac: Basestack.dmg
-		- Simply drag + drop (when the window appears) into `/Applications`
-	- Linux: Basestack-1.0.0.AppImage
-		- You'll likely need to change permissions to allow execution in properties or just `chmod 755 ...AppImage`
+		- Drag + drop (when the window appears) into `/Applications`
+	- Linux: Basestack-${version}.AppImage
+		- You'll likely need to change permissions to allow execution in properties e.g. `chmod 755 ...AppImage` or `chmod +x ...AppImage`
 
 ## 3. Download Analysis Pipeline(s)
 
-- Once Basestack opens up, click 'Settings' in the left panel.
-- Click 'Install Docker Image files Online'
+- Once Basestack opens up, click 'Module Install' in the left panel.
+- Click 'Install' (play-circle)
+	- You may choose online or offline method. Online is default. Seem more information below in [Section A3](#a3-download-analyis-pipelines)
 - Click 'OK' on the small notification window that opens up.
 - Follow the *Docker Install Log* to monitor progress and see when the analysis pipeline is ready for use (about 30-45 minutes on a fast internet connection)
-- Download the `test-data.zip` file available in the same gDrive location as the software OR from the NIH/Fogarty Box Drive
+- Download the `test-data.zip` file available in the same gDrive location as the software
 
 ## 4. Troubleshooting
 - If you run into issues with the online install, you may want to download (or otherwise obtain) the offline install package
-- Using the above download links, download the artic.tar.gz (~4.7GB)
-- Drag or Browse to that file on the 'Settings' tab under the offline install link
-- Click 'Install Docker Image files Offline'
+- Using the above download links, download the appropriate docker images you'd like e.g. basestack_consensus.tar.gz (~5.2GB)
+- With the 'Module Install' tab, select the gear icon and switch install method to 'offline'
+- Drag or Browse to that file on YOUR SYSTEM into the appropriate file input space
+- Click 'Install' (play-circle button)
 - See below Appendices for more detailed installation instructions.
 
 ## Appendices
@@ -219,7 +220,7 @@ Select *Settings* and Select *Offline* or *Online* Installation of Docker Images
 	- Click *Install Docker image files Online*. This process can take upwards of 45 minutes depending on internet speeds. please be patient. Once complete, you will receive a notification that the image(s) are ready and you can begin analysis!
 		- If you have slow internet speed you may get a message that the image failed to build. Attempt to retry the build process a few more times and see if it works. This usually happens after the first output line has been given and is dependent on how fast your communication with Docker Hub is.
 2. Offline: Does not require stable internet. Builds the docker images from a large docker image. Recommended method for OFFLINE usage only.
-	- Download `artic.tar.gz` from the source location (described in section 2 above).
+	- Download your offline image `basestack_consensus` from the source location (described in section 2 above).
 	- If you're using a Mac or Linux Operating system for the offline image, you must have write/read access to the UID/GID: 1000/1000
 	- Once the app is opened, drag+drop the file (or browser to it by clicking the offline input box) into the offline install box (next to gear icon). Click *Install Docker image files offline*. This process can take some time but a notification will pop up when done. If this doesn't work, please choose the *Online* method described above (Option 1)
 		![Step 1](./docs/images/offlineInstallDocker.png "Docker Build Offline (little/no internet)")
@@ -479,23 +480,18 @@ build from source (instructions)
 ## Uninstalling
 
 Docker Image(s):
-	- In Basestack, go to `Settings`
-	- Select: `Remove Docker Images`
+	- In Basestack, go to `Module Install`
+	- Select: `Remove Docker Images` (trash-bin icon)
 		- This will only remove Basestack-specific images
 Basestack: 
 	- Windows
-		- UNPACKED 
-			- Delete the Basestack-Unpacked-Windows Folder
-			- Remove `C:\Users\<you>\AppData\Local\Basestack Name`
-		- Application 
-			- `Add or remove programs` -> Select Basestack -> `Uninstall` 
+		- `Add or remove programs` -> Select Basestack -> `Uninstall` 
 	- Mac
 		- Drag `~/Library/Application Support/Basestack` to the Bin
 	- Linux 
-		1. Remove the Basestack.AppImage Folder or Executable
+		1. Remove the Basestack.${version}.AppImage Folder or Executable
 		2. Remove the directory: `~/.config/Basestack`
 User Data:
     - Mac OS: `~/Library/Application Support/Basestack (taken from the name property in package.json)>`
     - Windows: `C:\Users\<you>\AppData\Local\Basestack Name`
     - Linux: `~/.config/Basestack`
->>>>>>> master

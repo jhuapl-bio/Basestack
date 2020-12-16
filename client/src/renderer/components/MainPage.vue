@@ -210,7 +210,6 @@ export default {
 			this.$set(this, 'resources', response.data.data.resources)
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
-			console.log(response.data.data.resources.disk)
 			const modules = response.data.data.modules.entries
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
