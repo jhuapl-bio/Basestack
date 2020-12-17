@@ -280,8 +280,8 @@ export async function fetch_resources(){
 }
 export async function fetch_docker_status(){
 	try{
-		// let response = await docker.version()
-		let response = true
+		let response = await docker.version()
+		// let response = true
 		return response
 	} catch(err){
 		logger.error(err)
