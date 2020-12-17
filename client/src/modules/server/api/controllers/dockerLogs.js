@@ -66,8 +66,10 @@ export const followStreamContainer = async function(stream, obj){
 		try{
 			obj.status.stream.push(formatBuffer(data))
 		} catch(err){
-			console.error(err, "error in getting data")
+			logger.error("error in getting data %s", err)
 			throw err
+		} finally{
+			obj.status.stream = obj.status.stream.splice(-150)
 		}
 	})
 	stream.on("error", (err)=>{
@@ -123,6 +125,8 @@ export const followStreamBuild = async function(stream, obj){
 				} 
 			} catch(err){
 				obj.status.stream.push((event));  
+			} finally{
+				obj.status.stream = obj.status.stream.splice(-150)
 			}
 			if (event.error){
 				obj.status.errors = event.error
