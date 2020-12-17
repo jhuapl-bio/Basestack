@@ -26,23 +26,19 @@ RUN conda install -y python=3 \
 ARG USER_ID
 ARG GROUP_ID
 ARG ENVIRONMENT
-RUN cat /etc/group
-RUN if [[ $ENVIRONMENT != "WIN" ]]; then \
-        if [[ ! $(grep -q $GROUP_ID /etc/group) ]]; then \
+RUN if [[ $ENVIRONMENT != "WIN" ]]; then\
+        if [[ ! $(grep :${GROUP_ID}: /etc/group) ]]; then \
             addgroup --gid $GROUP_ID user; \
-    else \
-        if [[ ! $(grep -q 1000 /etc/group) ]]; then \
-            addgroup --gid 1000 user;\
-        fi;\
-    fi 
+        else \
+            if [[ ! $(grep 1000 /etc/group) ]]; then \
+                addgroup --gid 1000 user;\
+            fi\
+        fi\
+    fi
 RUN if [[ $ENVIRONMENT != "WIN" ]]; then \
-        if [[ ! $(grep -q 1000 /etc/group) ]]; then \
-            adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user;\
-        fi\
+        useradd -o -m  -u $USER_ID -g $GROUP_ID  user;\
     else \
-        if [[ ! $(grep -q 1000 /etc/group) ]]; then \
-            adduser --disabled-password --gecos '' --uid 1000 --gid 1000 user;\
-        fi\
+        useradd -o -m -g 1000 -u 1000 user;\
     fi 
 
 # configure directory structure exactly as it is on SciServer for ease of transition
