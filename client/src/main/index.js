@@ -305,7 +305,7 @@ function createWindow () {
       quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
     } catch(err) {
       logger.error(`Download update failed to finish. ${err}`)
-      throw new Error("Could not download update, check error logs")
+      // throw new Error("Could not download update, check error logs")
     }
   });
   autoUpdater.on('checking-for-update', (info, err) => {
@@ -314,7 +314,7 @@ function createWindow () {
     } catch (err) {
       logger.error(err)
       logger.error("error in check basestack update")
-      throw new Error("Could not check for Basestack Update, check internet access and logs")
+      // throw new Error("Could not check for Basestack Update, check internet access and logs")
     }
   })
   autoUpdater.on('update-not-available', (info) => {
@@ -392,7 +392,9 @@ app.on('ready', ()=>{
   (async () => {
     try{
       createWindow();   
-      autoUpdater.checkForUpdates()  
+      if (process.env.NODE_ENV == 'production'){
+        autoUpdater.checkForUpdates()  
+      }
     } catch(error){
       logger.error("error in check updates")
       logger.error(error)
