@@ -36,8 +36,8 @@ RUN if [[ $ENVIRONMENT != "WIN" ]]; then \
 # configure directory structure exactly as it is on SciServer for ease of transition
 
 USER user
+
 RUN mkdir -p /home/user/idies/workspace/covid19/code \
-    && chown $USER_ID:$GROUP_ID /home/user/idies/workspace/covid19/code \
     && chmod g+s /home/user/idies/workspace/covid19/code
 
 # install openjdk
