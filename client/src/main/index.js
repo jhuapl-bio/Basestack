@@ -297,7 +297,7 @@ function createWindow () {
     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
     logger.info("%s <-- Update Download progress", log_message)
-    sendStatusToWindow(log_message);
+    // sendStatusToWindow(log_message);
   })
   autoUpdater.on('update-downloaded', (info, err) => {
     try{
