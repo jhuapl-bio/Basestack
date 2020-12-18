@@ -636,6 +636,7 @@ function createWindow () {
     
   })
 }
+autoUpdater.autoDownload = false
 
 
 
