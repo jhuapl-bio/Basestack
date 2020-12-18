@@ -26,16 +26,7 @@ RUN conda install -y python=3 \
 ARG USER_ID
 ARG GROUP_ID
 ARG ENVIRONMENT
-RUN addgroup --gid $GROUP_ID user  2>/dev/null;
-RUN if [[ $ENVIRONMENT != "WIN" ]]; then\
-        if [[ ! $(grep :${GROUP_ID}: /etc/group) ]]; then \
-            addgroup --gid $GROUP_ID user; \
-        else \
-            if [[ ! $(grep 1000 /etc/group) ]]; then \
-                addgroup --gid 1000 user;\
-            fi\
-        fi\
-    fi
+RUN groupadd -f -g $GROUP_ID user;
 RUN if [[ $ENVIRONMENT != "WIN" ]]; then \
         useradd -o -m  -u $USER_ID -g $GROUP_ID  user;\
     else \
