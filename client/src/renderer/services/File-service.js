@@ -135,6 +135,9 @@ class FileService {
   selectTag(params){
     return Api().post("http://localhost:5003/tags/select", params)  
   }
+  updateSocket(params){
+    return Api().post("http://localhost:5003/docker/socket", params)            
+  }
 
 }
 export default new FileService();

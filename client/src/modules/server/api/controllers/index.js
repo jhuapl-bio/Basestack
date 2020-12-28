@@ -154,6 +154,25 @@ export async function updateDockerSocket(socket){
 	}
 }
 
+export async function updateDockerSocket(socket){
+	try{
+		console.log(socket, docker)
+		docker  = new Docker({socketPath: socket})
+		await ammendJSON({
+			value: socket,
+			file: path.join(store.meta.writePath, "meta.json"),
+			attribute: 'docker.socket'
+		}).catch((err)=>{
+			logger.error(err)
+			throw err
+		})
+		return 
+	} catch(err){
+		logger.error(err)
+		throw err
+	}
+}
+
 
 async function initialize_module_object(container_name){
 	let obj;

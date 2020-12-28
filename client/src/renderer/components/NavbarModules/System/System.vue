@@ -43,6 +43,7 @@
     },
     data () {
       return {
+        dockerSocket: '',
         fields_system: [
           {
             key: 'basestack',
