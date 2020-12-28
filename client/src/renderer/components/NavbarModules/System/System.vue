@@ -14,8 +14,11 @@
       <Disk v-if="resources" v-bind:resources="resources"></Disk>
       <!-- <b-form-text class="text-center" disabled> -->
       <div class="text-center">  
-        <span v-if="!docker">Docker is not running or installed</span>
+        <span v-if="!docker.status">Docker is not running or installed</span>
         <span v-else>Docker is installed and running</span>
+        <b-form-input v-model="dockerSocket" placeholder=""></b-form-input>
+        <b-button @click="updateSocket()">Update Socket</b-button>
+        <span>Current Socket Configuration: {{ docker.socket }}</span>
       </div>
       <!-- </b-form-text> -->
 
@@ -27,6 +30,7 @@
   import CPU from "@/components/NavbarModules/System/CPU";
   import Disk from "@/components/NavbarModules/System/Disk";
   import Memory from "@/components/NavbarModules/System/Memory";
+  import FileService from '@/services/File-service.js'
   export default {
     props: ['resources', 'docker'],
     components: {
@@ -36,6 +40,7 @@
     },
     data () {
       return {
+        dockerSocket: '',
         fields_system: [
           {
             key: 'basestack',
@@ -70,7 +75,18 @@
     mounted(){
     },
     methods: {
-
+      async updateSocket(socket){
+        
+        try{
+          let response = await FileService.updateSocket({
+            socket: this.dockerSocket
+          })
+          console.log(response)
+        } catch(err){
+          console.error(err)
+        }
+        
+      }
     }
   };
 </script>

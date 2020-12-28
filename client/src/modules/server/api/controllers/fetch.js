@@ -306,10 +306,16 @@ export async function fetch_status(){
 	}
 	try{
 		let docker_status = await fetch_docker_status()
-		response.docker = true
+		console.log(docker)
+		response.docker = {
+			status: true,
+			socket: docker.modem.socketPath
+		}
 	} catch(err){
-		// console.error(err)
-		response.docker = false
+		response.docker = {
+			status: true,
+			socket: docker.modem.socketPath
+		}
 		errors.push(err)
 	}
 	return response
@@ -398,7 +404,7 @@ async function formatDockerLoads(){
 					store.config.images[key].status.installed = response.status
 					store.config.images[key].status.inspect = response.image
 				})().catch((err)=>{
-					console.error(err)
+					logger.error(err)
 					store.config.images[key].status.installed = false
 					store.config.images[key].status.inspect = null
 				})			
