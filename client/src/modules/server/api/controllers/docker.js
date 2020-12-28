@@ -9,5 +9,6 @@
 var Docker = require('dockerode');
 
 var docker = new Docker();
+docker = new Docker({socketPath: '/run/user/1000/docker.sock'});
 
 export default docker

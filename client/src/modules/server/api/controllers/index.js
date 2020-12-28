@@ -27,7 +27,9 @@ const { DockerObj } = require("../modules/docker.js")
 const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
 const { RAMPART } = require('../modules/rampart')
-import  docker  from "./docker.js"
+let  docker   = require("./docker.js")
+
+
 
 export async function initialize(params){
 	// logger.info("%s <------ initialize", store.meta)
@@ -40,13 +42,29 @@ export async function initialize(params){
 		if (!metaExists){
 			let metaContent = {
 				modules: {},
-				images: {}
+				images: {},
+				docker: {}
 			};
 			await writeFile(userMeta, JSON.stringify(metaContent, null, 4))
 		} 
-		let response = await fetch_modules()
-		let meta = await readFile(path.join(store.meta.writePath, "meta.json"))
+		
+
+		let meta = await readFile(userMeta)
 		meta = JSON.parse(meta)
+		let attributes = ['modules', 'images', 'docker']
+		for (let i = 0; i < attributes.length; i++){
+			if (!meta[attributes[i]]){
+				await ammendJSON({
+					value: {},
+					file: userMeta,
+					attribute: attributes[i]
+				}).catch((err)=>{
+					logger.error(err)
+					throw err
+				})
+			}
+		}
+		let response = await fetch_modules()
 		for (const [key, image] of Object.entries(store.config.images)){
 			if (!meta.images[key]){
 				await ammendJSON({
@@ -98,6 +116,25 @@ export async function initialize(params){
 		return response
 	} catch(err){
 		logger.error(`Error in initializing the app with modules, ${err}, function: initialize()`)
+		throw err
+	}
+}
+
+export async function updateDockerSocket(socket){
+	try{
+		console.log(socket, docker)
+		docker  = new Docker({socketPath: socket})
+		await ammendJSON({
+			value: socket,
+			file: path.join(store.meta.writePath, "meta.json"),
+			attribute: 'docker.socket'
+		}).catch((err)=>{
+			logger.error(err)
+			throw err
+		})
+		return 
+	} catch(err){
+		logger.error(err)
 		throw err
 	}
 }

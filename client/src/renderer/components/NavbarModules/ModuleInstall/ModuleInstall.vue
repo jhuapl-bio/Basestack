@@ -9,7 +9,7 @@
 <template>
   <div id="moduleinstall"  style="overflow-y:auto">
   	<div class="text-center" >  
-    	<h4 v-if="!docker">Docker is not running or installed</h4>
+    	<h4 v-if="!docker.status">Docker is not running or installed</h4>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
   	</div>
@@ -64,7 +64,7 @@
 					     	</div>
 					 	</b-col>
 			            <b-col sm="4" style="text-align:center" v-else> 
-			            	<span class="center-align-icon"  v-if="docker" v-tooltip="{
+			            	<span class="center-align-icon"  v-if="docker.status" v-tooltip="{
 					            content: 'Install Method: '+stagedInstallation[key].installation.type,
 					            placement: 'top',
 					            classes: ['info'],
@@ -177,7 +177,7 @@
 			            </span>
 		            </b-col>
 		            <b-col sm="3" style="text-align:center" > 
-		            	<span class="center-align-icon configure" v-if="docker"
+		            	<span class="center-align-icon configure" v-if="docker.status"
 		            	v-on:click="selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)"
 		            	v-tooltip="{
 				            content: 'Update Module',
