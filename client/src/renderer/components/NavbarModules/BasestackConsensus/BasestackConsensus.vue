@@ -268,7 +268,7 @@
 							        <span  
 							        	style="text-align:center"  > Fastq Dir
 							        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-							        	title="Fastq directory contain your fastq files. Files must have .fastq extensions"  />
+							        	title="Fastq directory contain your fastq files. Files must have .fastq extensions and be contained at a depth of 1 only"  />
 						      		</span>
 							    </template>
 							</b-table>
@@ -557,7 +557,7 @@
 		</div>
 		
     </b-form>
-	<p class="typo__p" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config and run_info set.</p>
+	<p class="typo__p" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, and run_info set.</p>
   </div>
 </template>
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
@@ -634,6 +634,7 @@ export default {
 					filename: 'manifest.txt'
 				},
 			},
+			baseRunDir: null,
 			fastqDir: null,
 			name: null,
 			fastqFiles: [],
@@ -674,6 +675,7 @@ export default {
 	},
 	async mounted() {
 		// await this.fetchPrimers()
+		this.baseRunDir = this.runDir
         await this.fetchHistories()
 
         this.selectedHistory = this.histories[this.histories.length - 1]
@@ -884,6 +886,12 @@ export default {
 		 	dirName = root
 		 	this.runDir.path = root
     		if (this.isNew){
+    			this.selectedHistory.runDir.fastqDir = {
+					path: null,
+					name: null,
+					files: [],
+					validation: false
+				}
 	    		await this.validateRunDirContents(this.runDir).then((response)=>{
 	    			this.runDir = response.runDir
 		    		this.selectedHistory.runDir = response.runDir

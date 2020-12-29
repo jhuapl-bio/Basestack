@@ -127,7 +127,7 @@ export default {
 			},
 			initial:true,
 			collapsed:false,
-    		tab: 0,
+    		tab: 2,
 	        entries: null,
 	        resources: null,
 	        docker:null,
@@ -176,9 +176,7 @@ export default {
               title:  "",
               html: $this.patchNotes.message,
               didOpen: () => {
-		 		console.log($this.patchNotes)
               	if ($this.patchNotes.loading){
-              		console.log("-----------------")
               		$this.$swal.showLoading()
               	}
     		  }
