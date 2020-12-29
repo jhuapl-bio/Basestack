@@ -252,6 +252,7 @@ function createWindow () {
   mainWindow.webContents.session.clearCache(function(){
   //some callback.
   });
+  console.log(process.env)
   mainWindow.loadURL(winURL)
   let quitUpdateInstall = false;
   function sendStatusToWindow(text) {

@@ -8,6 +8,15 @@
   -->
 <template>
   <div id="nextstrain">
+    <button class="btn tabButton" v-on:click="forceRerender()"
+        v-tooltip="{
+          content: 'If Rampart does not appear given a success message, try to refresh here. If still no update, check Log Streams.',
+          placement: 'top',
+          classes: ['info'],
+          trigger: 'hover',
+          targetClasses: ['it-has-a-tooltip'],
+          }"
+      ><div class="in-line-Button" ><span><font-awesome-icon  icon="sync"/></span><span> Refresh</span></div></button>
      <object id ="nextstrainObj" type="text/html" data="https://nextstrain.org/ncov/global">
     </object>      
   </div>
@@ -23,7 +32,7 @@ import FileService from '../../../services/File-service.js'
     props: ['data'],
     data(){
       return {
-        fastqDir:null
+        fastqDir:null,
       }
     },
     computed: {
@@ -38,7 +47,10 @@ import FileService from '../../../services/File-service.js'
     methods: {
       open (link) {
         this.$electron.shell.openExternal(link)
-      }
+      },
+      forceRerender(){
+        this.$forceUpdate();
+      },
     },
   };
 </script>

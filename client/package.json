@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -10,18 +10,25 @@
   "license": "GPLv3.0",
   "main": "./dist/electron/main.js",
   "scripts": {
-    "build": "node .electron-vue/build.js && electron-builder",
+    "build": "node .electron-vue/build.js",
     "build:linux": "node .electron-vue/build.js && electron-builder --linux AppImage",
     "build:mac-zip": "node .electron-vue/build.js && electron-builder --mac  zip",
+    "package:mac-zip": "electron-builder --mac zip",
+    "package:mac": "electron-builder --mac",
+    "package:mac-pkg": "electron-builder --mac pkg",
+    "package:mac-dmg": "electron-builder --mac dmg",
     "build:mac-dmg": "node .electron-vue/build.js && electron-builder --mac  dmg",
+    "build:mac": "node .electron-vue/build.js && electron-builder --mac",
     "build:win": "node .electron-vue/build.js && electron-builder --win",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
-    "publishOnly:linux": "electron-builder --linux AppImage -p always",
-    "publishUpdate:linux": "electron-builder --linux AppImage -p always",
     "publish:linux": "node .electron-vue/build.js && electron-builder --linux AppImage -p always",
+    "publishOnly:linux": "electron-builder --linux AppImage -p always",
     "publish:mac-dmg": "node .electron-vue/build.js && electron-builder --mac  dmg -p always",
+    "publish:mac": "node .electron-vue/build.js && electron-builder -p always",
     "publishOnly:mac-dmg": "electron-builder --mac  dmg -p always",
+    "publishOnly:mac-zip": "electron-builder --mac zip -p always",
+    "publishOnly:mac": "electron-builder --mac -p always",
     "publish:win": "node .electron-vue/build.js && electron-builder --win -p always",
     "publishOnly:win": "electron-builder --win -p always",
     "dev": "node .electron-vue/dev-runner.js",
@@ -53,8 +60,10 @@
         ]
       }
     ],
+    "afterSign": "notarize.js",
     "dmg": {
       "icon": "build/icons/icon.icns",
+      "sign": false,
       "contents": [
         {
           "x": 410,
@@ -70,7 +79,12 @@
       ]
     },
     "mac": {
-      "icon": "build/icons/icon.icns"
+      "icon": "build/icons/icon.icns",
+      "target": "default",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlement.mac.plist",
+      "entitlementsInherit": "build/entitlement.mac.plist"
     },
     "win": {
       "icon": "\"build/icons/icon_256x256.png\""
@@ -155,8 +169,8 @@
     "electron-builder": "^22.8.1",
     "electron-debug": "^1.5.0",
     "electron-devtools-installer": "^2.2.4",
+    "electron-notarize": "^1.0.0",
     "eslint": "^7.15.0",
-    "eslint-plugin-vue": "^6.2.2",
     "eslint-config-standard": "^11.0.0",
     "eslint-friendly-formatter": "^4.0.1",
     "eslint-loader": "^2.2.1",
@@ -165,6 +179,7 @@
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.8.0",
     "eslint-plugin-standard": "^3.1.0",
+    "eslint-plugin-vue": "^6.2.2",
     "file-loader": "^1.1.11",
     "html-webpack-plugin": "^3.2.0",
     "inject-loader": "^4.0.1",
