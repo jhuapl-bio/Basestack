@@ -565,6 +565,11 @@ function createWindow () {
   
 
 
+  });
+  
+  
+
+
 
   mainWindow.on("close", (e)=>{
     // e.preventDefault();
