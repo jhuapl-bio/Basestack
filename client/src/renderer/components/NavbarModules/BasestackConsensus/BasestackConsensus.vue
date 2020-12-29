@@ -247,7 +247,7 @@
 					                  v-if="row.item.runDir.path && row.item.custom"
 									  v-model="row.item.runDir.fastqDir" 
 									  :searchable="false" :close-on-select="false" :preselect-first="true" track-by="name" label="name" :show-labels="false" placeholder="Pick a value" :options="selectedHistory.runDir.possibleFastqFolders"
-									  select-label="Select folder" :allow-empty="true"
+									  select-label="Select folder" :allow-empty="false"
 									  >
 									</multiselect>	
 									<b-form-input required v-else disabled
