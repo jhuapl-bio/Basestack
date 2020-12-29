@@ -281,6 +281,7 @@ export async function validate_run_dir(params){
 		response.forEach((d,i)=>{
 			validFolders[i].files = (d.length ? d.length : null)
 		})
+		console.log(validFolders)
 		runDir.possibleFastqFolders  = validFolders
 		if (validFolders.length == 0){
 			runDir.fastqDir.files = 0
