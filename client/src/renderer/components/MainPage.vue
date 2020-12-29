@@ -99,7 +99,6 @@ import About from "@/components/NavbarModules/About/About"
 import Tutorial from "@/components/NavbarModules/Tutorial/Tutorial"
 import {HalfCircleSpinner} from 'epic-spinners'
 import FileService from '@/services/File-service.js'
-
 export default {
 	name: 'mainpage',
 	components:{
@@ -134,7 +133,8 @@ export default {
 	        docker:null,
 	        modules: null,
 	        images: null,
-	        intervalChecking: false
+	        intervalChecking: false,
+	        patchNotes: null,
 		}
 	},
 	computed: {
@@ -149,7 +149,8 @@ export default {
 		    		annotationsDir: this.annotationsFolder,
 		    		newState: this.newState,
 		    		history: this.history
-		    	}
+		    	},
+		    	patchNotes: null
 	    	}
 	  }
 	},
@@ -166,9 +167,23 @@ export default {
 		}).catch((err)=>{
 			console.error(err)
 		})
-		
-
-
+	 	this.$electron.ipcRenderer.on('mainNotification', (evt, message)=>{
+	 		$this.patchNotes = message
+		 	this.$swal.fire({
+              position: 'center',
+              icon: $this.patchNotes.icon,
+              showConfirmButton:true,
+              title:  "",
+              html: $this.patchNotes.message,
+              didOpen: () => {
+		 		console.log($this.patchNotes)
+              	if ($this.patchNotes.loading){
+              		console.log("-----------------")
+              		$this.$swal.showLoading()
+              	}
+    		  }
+            })
+	 	})
 	},
 
 	methods: {
