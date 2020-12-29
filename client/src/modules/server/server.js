@@ -15,7 +15,7 @@ const port = 5003
 import  router  from "./api/routes/index.js"
 const path = require('path')
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended:false, limit: '50mb'}));
+app.use(bodyParser.urlencoded({extended:false, limit: '500mb'}));
 
 
 // Reset all on reload 
