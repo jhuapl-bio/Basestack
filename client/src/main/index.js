@@ -1,6 +1,7 @@
 'use strict'
 
 const { app, ipcMain, BrowserWindow, Menu, dialog } = require('electron')
+import promiseIpc from 'electron-promise-ipc';
 const isMac = process.platform === 'darwin'
 const version = '1.0'
 process.env.version_basestack = version
@@ -252,76 +253,96 @@ function createWindow () {
   mainWindow.webContents.session.clearCache(function(){
   //some callback.
   });
-  console.log(process.env)
   mainWindow.loadURL(winURL)
-  let quitUpdateInstall = false;
-  function sendStatusToWindow(text) {
-    logger.info(text);
-    dialog.showMessageBox(mainWindow, {
-      type: 'info',
-      defaultId: 0,
-      buttons: ['Ok'],
-      message: 'Info',
-      detail: text
-    });
-  }
-  autoUpdater.on('error', (err) => {
-    sendStatusToWindow('Error in auto-updater. ' + err);
-  })
-  autoUpdater.on('update-available', (info) => {
-    console.log(info)
-    logger.info(info)
-    logger.info("update available")
-    let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
-    const options = {
-        type: 'question',
-        buttons: ['Install', 'Skip'],
+  mainWindow.webContents.on('did-finish-load', function () {
+    let quitUpdateInstall = false;
+    function sendStatusToWindow(text) {
+      logger.info(text);
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
         defaultId: 0,
-        title: 'Update Available',
-        message: message,
-        detail: '',
-        checkboxLabel: 'Auto-restart after download?',
-        checkboxChecked: false,
-    };
-    dialog.showMessageBox(null, options).then((response) => { 
-      logger.info("%s update choice -> %s", response)
-      if (response.response == 0){
-         autoUpdater.downloadUpdate()
-         if (response.checkboxChecked ){
-           quitUpdateInstall = true;
-         }
+        buttons: ['Ok'],
+        message: 'Info',
+        detail: text
+      });
+    }
+    autoUpdater.on('error', (err) => {
+      sendStatusToWindow('Error in auto-updater. ' + err);
+    })
+    autoUpdater.on('update-available', (info) => {
+      logger.info(info)
+      logger.info("update available")
+      let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
+      const options = {
+          type: 'question',
+          buttons: ['Install', 'Skip'],
+          defaultId: 0,
+          title: 'Update Available',
+          message: message,
+          detail: '',
+          checkboxLabel: 'Auto-restart after download?',
+          checkboxChecked: false,
+      };
+      dialog.showMessageBox(null, options).then((response) => { 
+        logger.info("%s update choice -> %s", response)
+        if (response.response == 0){
+           autoUpdater.downloadUpdate()
+           mainWindow.webContents.send('mainNotification', {
+             icon: '',
+             loading: true,
+             message: `Downloading Update`
+           })
+           if (response.checkboxChecked ){
+             quitUpdateInstall = true;
+           }
+        }
+      });
+    })
+    autoUpdater.on('download-progress', (progressObj) => {
+      let log_message = "Download speed: " + progressObj.bytesPerSecond;
+      log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+      log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+      logger.info("%s <-- Update Download progress", log_message)
+      // sendStatusToWindow(log_message);
+      mainWindow.webContents.send('mainNotification', {
+         type: 'info',
+         message: log_message,
+      })
+    })
+
+    autoUpdater.on('update-downloaded', (info, err) => {
+      try{
+        // sendStatusToWindow(`Update downloaded. Restart the application to apply install changes \n Updates: ${info.releaseNotes}`);
+        // mainWindow.webContents.send('mainNotification', `Update downloaded. Restart the application to apply install changes \n Updates: ${info.releaseNotes}`)
+        mainWindow.webContents.send('mainNotification', {
+          icon: 'success',
+          message: `Update downloaded. Restart the application to apply install changes \n ${info.releaseNotes}`,
+        })
+        quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
+      } catch(err) {
+        logger.error(`Download update failed to finish. ${err}`)
+        // throw new Error("Could not download update, check error logs")
       }
     });
-  })
-  autoUpdater.on('download-progress', (progressObj) => {
-    let log_message = "Download speed: " + progressObj.bytesPerSecond;
-    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-    logger.info("%s <-- Update Download progress", log_message)
-    // sendStatusToWindow(log_message);
-  })
-  autoUpdater.on('update-downloaded', (info, err) => {
-    try{
-      sendStatusToWindow('Update downloaded. Restart the application to apply install changes');
-      quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
-    } catch(err) {
-      logger.error(`Download update failed to finish. ${err}`)
-      // throw new Error("Could not download update, check error logs")
-    }
-  });
-  autoUpdater.on('checking-for-update', (info, err) => {
-    try{
-      logger.info('Checking for Basestack update...');
-    } catch (err) {
-      logger.error(err)
-      logger.error("error in check basestack update")
-      // throw new Error("Could not check for Basestack Update, check internet access and logs")
-    }
-  })
-  autoUpdater.on('update-not-available', (info) => {
-    logger.info('Basestack update not available.');
-  })
+    autoUpdater.on('checking-for-update', (info, err) => {
+      try{
+        logger.info('Checking for Basestack update...');
+      } catch (err) {
+        logger.error(err)
+        logger.error("error in check basestack update")
+        // throw new Error("Could not check for Basestack Update, check internet access and logs")
+      }
+    })
+    autoUpdater.on('update-not-available', (info) => {
+      logger.info('Basestack update not available.');
+    })
 
+
+
+
+  });
+  
+  
 
 
 
@@ -394,7 +415,7 @@ app.on('ready', ()=>{
     try{
       createWindow();   
       if (process.env.NODE_ENV == 'production'){
-        autoUpdater.checkForUpdates()  
+        autoUpdater.checkForUpdatesAndNotify()  
       }
     } catch(error){
       logger.error("error in check updates")
