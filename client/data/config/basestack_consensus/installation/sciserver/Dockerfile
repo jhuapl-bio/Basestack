@@ -1,6 +1,6 @@
 FROM continuumio/miniconda3
 # continuumio/miniconda3 is FROM debian:latest
-
+RUN echo "Version 1.1"
 # Make RUN commands use `bash --login` (always source ~/.bashrc on each RUN)
 SHELL ["/bin/bash", "--login", "-c"]
 
