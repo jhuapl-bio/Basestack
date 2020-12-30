@@ -124,7 +124,7 @@ export var load_image  = function(obj){
 	  					}
 					)
 					resolve()  
-				} else {
+				} else if (store.config.images[obj.name].private) { // the repo is private and needs to be installed from a locally contained dockerfile
 					const buildargs = {
 						"USER_ID": store.meta.uid.toString(),
 						"GROUP_ID": store.meta.gid.toString(),
@@ -191,6 +191,21 @@ export var load_image  = function(obj){
 					}).catch((err)=>{
 						logger.error("error in building image %s", obj.srcFiles)
 					})
+				} else { //The repo is public and docker pullable
+					// var auth  = { key: "10644ba4-7c89-41b0-ae0d-d888ea3906d4" }
+					docker.pull(obj.installation)
+					.then((stream, error)=>{
+						store.dockerStreamObjs[obj.name]  = stream
+						store.config.images[obj.name].status.stream = []
+						store.config.images[obj.name].status.changed=false
+						store.config.images[obj.name].status.running = true 
+						store.config.images[obj.name].status.complete = false
+  						followStreamBuild(stream, store.config.images[obj.name])
+						resolve()
+					}).catch((errStream)=>{
+						logger.error("Err in building image %s", obj.config.srcFiles)
+						reject(errStream)
+					});
 				}				
 			})().catch((errLog)=>{
 			 	logger.error("err in loggin build image %s", errLog)
