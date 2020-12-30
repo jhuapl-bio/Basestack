@@ -562,6 +562,7 @@
 	    		let promises = []
 	    		element.pause = false
 	    		let errors = [];
+	    		console.log("1", this.stagedInstallation)
 	    		if (this.stagedInstallation[element.name].installation.resources){
 	    			
 	    			for (const [key, value ] of Object.entries(this.stagedInstallation[element.name].installation.resources)){
@@ -579,10 +580,12 @@
 	    			// 	return d
 	    			// })
 	    		}
+	    		console.log("2")
 	    		if (errors.length > 0){
 	    			this.error_alert(errors.join(","), "Error in online resources needing to be provided!")
 	    			this.showConfig = true
 	    		} else{
+	    			console.log("3", this.stagedInstallation)
 		            await FileService.loadImages(
 	    				{
 	    					config: this.stagedInstallation[element.name].installation,
