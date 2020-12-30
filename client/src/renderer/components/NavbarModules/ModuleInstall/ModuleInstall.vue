@@ -743,6 +743,7 @@
 				    cancelButtonText: "No, keep them."
 				})
 				.then(function(isConfirm) {
+					console.log(image, i)
 			      if (isConfirm.dismiss != 'cancel') {
 			      	try{
 		    			$this.$swal({
