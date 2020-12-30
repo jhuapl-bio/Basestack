@@ -699,6 +699,7 @@
 	    				}
 	    			}
 	    		}
+	    		console.log("2")
 	    		if (errors.length > 0){
 	    			this.error_alert(errors.join(","), "Error in online resources needing to be provided!")
 	    			this.showConfig = true
