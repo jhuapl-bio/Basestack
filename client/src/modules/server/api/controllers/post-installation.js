@@ -193,7 +193,7 @@ export var load_image  = function(obj){
 					})
 				} else { //The repo is public and docker pullable
 					// var auth  = { key: "10644ba4-7c89-41b0-ae0d-d888ea3906d4" }
-					docker.pull(obj.installation)
+					docker.pull(obj.installation.path)
 					.then((stream, error)=>{
 						store.dockerStreamObjs[obj.name]  = stream
 						store.config.images[obj.name].status.stream = []
