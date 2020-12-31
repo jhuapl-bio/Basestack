@@ -82,7 +82,7 @@ export async function initialize(params){
 				let obj = await initialize_module_object(container_name)
 				if (value.config.initial && response.images.entries[value.image].installed){
 					let response = await obj.cancel()
-					let response_start = await start_module({module: container_name})
+					let response_start = await start_module({module: container_name, tag: "latest"})
 				}
 			}	
 		}

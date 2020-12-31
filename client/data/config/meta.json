@@ -17,7 +17,9 @@
                 "file": null,
                 "active": false,
                 "resources": null,
-                "path": "jhuaplbio/artic:latest"
+                "path": "jhuaplbio/artic:latest",
+                "tags": []
+
             }
         },
         "basestack_tutorial": {
@@ -35,6 +37,7 @@
                 "file": null,
                 "active": false,
                 "path": "${resourcePath}/basestack_tutorial/installation",
+                "tags": [],
                 "meta": "${writePath}/basestack_tutorial/meta.json",
                 "resourcesPath": "${writePath}/basestack_tutorial/resources",
 	            "resources": {

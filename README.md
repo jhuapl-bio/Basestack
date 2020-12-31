@@ -9,7 +9,18 @@
 		- https://docs.docker.com/docker-for-mac/ 
 	* Linux (Ubuntu)
 		- https://docs.docker.com/engine/install/ubuntu/
-
+		- Post-Installation Steps:
+			1. Create Docker group
+				a. `sudo groupadd docker`
+			2. Add your user to the docker group
+				a. `sudo usermod -aG docker <your username>
+			3. Create Docker container namespace
+				a. `echo '{"userns-remap": "default"}' | sudo tee -a /etc/docker/daemon.json`
+					- If you dont have the file already created (isn't created by default)
+				b. OR modify `/etc/docker/daemon.json` with your username as described here: https://docs.docker.com/engine/security/userns-remap/
+			4. Restart Docker 
+				a. `sudo service docker restart`
+				b. OR Restart your computer/session
 ## 2 Install Basestack
 
 
