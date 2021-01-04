@@ -67,7 +67,7 @@ export class BasestackConsensus{
 				]
 				let options = {
 					name: "basestack_consensus",
-					user: store.meta.uid.toString() + ":"+store.meta.gid.toString(),
+					// user: store.meta.uid.toString() + ":"+store.meta.gid.toString(),
 				    "HostConfig": {
 				    	"AutoRemove": true,
 				        "Binds": [
@@ -90,7 +90,7 @@ export class BasestackConsensus{
 				let command = [
 					"bash", 
 					"-c", 
-					`bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
+					`ls -lh /root/idies/workspace/covid19/sequencing_runs/example-run && bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
 				]
 				// command = [
 				// 	"bash", 

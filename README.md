@@ -15,7 +15,7 @@
 			2. Add your user to the docker group
 				a. `sudo usermod -aG docker <your username>
 			3. Create Docker container namespace
-				a. `echo '{"userns-remap": "default"}' | sudo tee -a /etc/docker/daemon.json`
+				a. `echo "{\"userns-remap\": \"$USER\"}" | sudo tee -a /etc/docker/daemon.json`
 					- If you dont have the file already created (isn't created by default)
 				b. OR modify `/etc/docker/daemon.json` with your username as described here: https://docs.docker.com/engine/security/userns-remap/
 			4. Restart Docker 
