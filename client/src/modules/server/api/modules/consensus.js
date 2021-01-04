@@ -62,7 +62,7 @@ export class BasestackConsensus{
 				let volumes = [ reportDir.path, tmpreportDir,
 					baseDir, tmpbaseDir,
 					path.join(reportDir.path, "meta"), tmpMeta,
-					consensusDir, tmpConsensusDir,
+					// consensusDir, tmpConsensusDir,
 					fastqDir, tmpfastqDir
 				]
 				let options = {
@@ -75,29 +75,28 @@ export class BasestackConsensus{
 				                volumes[2]+":"+volumes[3],
 				                volumes[4]+":"+volumes[5],
 				                volumes[6]+":"+volumes[7],
-				                volumes[8]+":"+volumes[9],
+				                // volumes[8]+":"+volumes[9],
 				        ],	
 				    },
 			        "Volumes": {
 			        	[tmpreportDir]: {},
 			        	[tmpfastqDir]: {},
 			        	[tmpMeta]: {},
-			        	[tmpConsensusDir]: {},
-			        	[tmpfastqDir]: {}
+			        	// [tmpConsensusDir]: {},
+			        	// [tmpfastqDir]: {}
 			        }
 				}	
 
 				let command = [
 					"bash", 
 					"-c", 
-					`ls -lh /root/idies/workspace/covid19/sequencing_runs/example-run && bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
+					`mkdir /root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline && bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
 				]
-				// command = [
-				// 	"bash", 
-				// 	"-c", 
-				// 	`groupadd -f -g ${store.meta.gid.toString()} user && \
-				// 	echo yes `
-				// ]
+				let command = [
+					"bash", 
+					"-c", 
+					`touch /root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline/test.txt `
+				]
 
 				resolve({options: options, command: command })
 
