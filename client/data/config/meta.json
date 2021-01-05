@@ -3,11 +3,12 @@
         "path": "${writePath}/logs"
     },
     "images": {
-        "basestack_consensus": {
+        "jhuaplbio/artic": {
             "status": null,
             "title": "Consensus",
-            "name": "basestack_consensus",
+            "name": "jhuaplbio/artic",
             "estimated_size": 10.6,
+            "private": false,
             "installation": {
                 "srcFiles": [
                     "Dockerfile"
@@ -16,7 +17,9 @@
                 "file": null,
                 "active": false,
                 "resources": null,
-                "path": "${resourcePath}/basestack_consensus/installation/sciserver"
+                "path": "jhuaplbio/artic:latest",
+                "tags": []
+
             }
         },
         "basestack_tutorial": {
@@ -24,6 +27,7 @@
             "name": "basestack_tutorial",
             "title": "Workshop Tutorials",
             "estimated_size": 2.42,
+            "private": true,
             "installation": {
                 "srcFiles": [
                     "Dockerfile",
@@ -33,6 +37,7 @@
                 "file": null,
                 "active": false,
                 "path": "${resourcePath}/basestack_tutorial/installation",
+                "tags": [],
                 "meta": "${writePath}/basestack_tutorial/meta.json",
                 "resourcesPath": "${writePath}/basestack_tutorial/resources",
 	            "resources": {
@@ -75,7 +80,7 @@
             "module": true,
             "status": null,
             "tooltip": "Generate consensus sequences and receive a report.",
-            "image": "basestack_consensus",
+            "image": "jhuaplbio/artic",
             "meta": "${writePath}/basestack_consensus/meta.json",
             "config": {
                 "estimated_size": 14500,
@@ -92,7 +97,7 @@
             "module": true,
             "status": null,
             "tooltip": "Fast annotation of input fastq files using the artic network",
-            "image": "basestack_consensus",
+            "image": "jhuaplbio/artic",
             "meta": "${writePath}/rampart/meta.json",
             "config": {
                 "annotationsPath": "",

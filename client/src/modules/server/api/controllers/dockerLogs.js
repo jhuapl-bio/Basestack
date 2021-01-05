@@ -122,7 +122,10 @@ export const followStreamBuild = async function(stream, obj){
 	    	try{
 	    		if (event.stream != undefined){	
 					obj.status.stream.push((event.stream)); 
-				} 
+				} else if (event.status != undefined && event.progress){
+					// logger.info(JSON.strinfigy(event))
+					obj.status.stream.push((`${event.status} ${event.progress}`)); 					
+				}
 			} catch(err){
 				obj.status.stream.push((event));  
 			} finally{
@@ -158,7 +161,6 @@ export const attachStream = async function(container,container_name, obj){
 export const initDockerLogs = function(container, container_name, obj){
 	return new Promise(function(resolve,reject){
 		try {
-			console.log("init docker logs", container_name)
 			container.logs({stdout:true, stderr:true}, function(err, logs){
 				if (err){
 					reject(err)

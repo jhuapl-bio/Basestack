@@ -76,7 +76,7 @@ class FileService {
     return Api().post("http://localhost:5003/install/images"+params.config.type, params)    
   }
   removeImages(imageName){
-    return Api().post("http://localhost:5003/install/removeImages/"+imageName)    
+    return Api().post("http://localhost:5003/install/removeImages/", {imageName: imageName})    
   }
   logImageInstall(params){
     return Api().get("http://localhost:5003/install/imageInstallLogs/" +  params.imageName)    

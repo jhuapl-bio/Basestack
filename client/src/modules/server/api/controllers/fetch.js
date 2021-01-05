@@ -328,10 +328,6 @@ export async function fetch_modules(){
 		}
 		let completed = []
 		for (const [key, value] of Object.entries(store.config.images)){
-			// if (value.status.errors){
-			// 	errors.images.push({name: modules[key].title, error:value.status.errors})
-			// 	store.config.images[key].status.errors = null
-			// }
 			if (value.status.complete && value.status.installed){
 				completed.push(modules[key].title)
 				store.config.images[key].status.complete = false
@@ -343,10 +339,6 @@ export async function fetch_modules(){
 				store.config.modules[key].status = store.modules[key].status
 				store.config.modules[key].status.stream = store.config.modules[key].status.stream.splice(-200)
 				store.config.modules[key].status.installed = store.config.images[value.image].status.installed
-				// if (value.status.errors){
-				// 	errors.modules.push({name: store.config.modules[key].title, error:value.status.errors})
-				// 	store.config.modules[key].status.errors = null
-				// }
 			}
 		}
 		return {
@@ -375,7 +367,6 @@ async function formatDockerLoads(){
 		config = config.replace(/\$\{writePath\}/g, meta.writePath)
 		config = config.replace(/\$\{resourcePath\}/g, meta.resourcePath)
 		config = config.replace(/\\/g, "/")
-		console.log(config.log)
 		config = JSON.parse(config, 'utf-8')
 		store.config.images = config.images
 		store.config.modules = config.modules
@@ -398,7 +389,7 @@ async function formatDockerLoads(){
 					store.config.images[key].status.installed = response.status
 					store.config.images[key].status.inspect = response.image
 				})().catch((err)=>{
-					console.error(err)
+					logger.error(err)
 					store.config.images[key].status.installed = false
 					store.config.images[key].status.inspect = null
 				})			
