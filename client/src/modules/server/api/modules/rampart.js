@@ -117,7 +117,6 @@ export class RAMPART{
 
 				let options = {
 					name: "rampart",
-					user: store.meta.uid.toString() + ":"+store.meta.gid.toString(),
 			        "ExposedPorts": {
 			            "80/tcp": {},
 			            "3001/tcp": {},
@@ -150,10 +149,10 @@ export class RAMPART{
 			        }
 				}	
 
-				// let command = ['bash', '-c', 'conda list']
+				// let command = ['bash', '-c', `id -u && groups`]
 				let command = ['bash', '-c',
 				`cd ${tmpannotationsDir}\
-				&& source /home/user/idies/workspace/covid19/bashrc\
+				&& source /root/idies/workspace/covid19/bashrc\
 				&& conda activate artic-ncov2019\
 				&& rampart\
 				--protocol ${json}\
