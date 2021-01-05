@@ -20,12 +20,13 @@
 			4. Create Docker container namespace
 				a. `echo "{\"userns-remap\": \"$USER\"}" | sudo tee -a /etc/docker/daemon.json`
 					- If you dont have the file already created (isn't created by default)
-				b. Manually add your user by following the instructions here: https://docs.docker.com/engine/security/userns-remap/
+				b. Manually add your user by following the instructions here: https://docs.docker.com/engine/security/userns-remap/.
+					- You can disable the `userns-remap` functionality by deleting the `daemon.json` file described above or removing the line attributed to your user
 			5. Check that the subgid and subuid files are correct. Order of these lines matters in that the `<username>:<uid>:1` must come first in each file
-				a. `cat /etc/subuid`
+				a.1. `cat /etc/subuid`
 					-`<username>:<uid>:1`
 					-`<username>:100000:65536`
-				b. `cat /etc/subgid`
+				a.2. `cat /etc/subgid`
 					-`<username>:<uid>:1`
 					-`<username>:100000:65536` 
 			6. Restart Docker 
