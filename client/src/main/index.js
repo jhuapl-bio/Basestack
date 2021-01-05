@@ -363,7 +363,7 @@ function createWindow () {
     autoUpdater.on('update-not-available', (info) => {
       logger.info('Basestack update not available.');
       releaseNotes=info.releaseNotes
-      mainWindow.webContents.send('releaseNotes', releaseNotes)
+      mainWindow.webContents.send('releaseNotes', info.releaseNotes)
     })
 
 
