@@ -476,10 +476,10 @@ router.post("/install/pruneImages", (req,res,next)=>{ //this method needs to be 
 		}	
 	})()
 })
-router.post("/install/removeImages/:imageName", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+router.post("/install/removeImages", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	( async function() {
 		try {
-			await remove_images(req.params.imageName).then((response)=>{
+			await remove_images(req.body.imageName).then((response)=>{
 				logger.info("Success in removing images")
 					res.status(200).json({status: 200, message: "Completed removal of images", data: response });
 				}).catch((err)=>{

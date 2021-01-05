@@ -9,7 +9,28 @@
 		- https://docs.docker.com/docker-for-mac/ 
 	* Linux (Ubuntu)
 		- https://docs.docker.com/engine/install/ubuntu/
-
+		- Post-Installation Steps:
+			1. Create Docker group
+				a. `sudo groupadd docker`
+			2. Add your user to the docker group
+				a. `sudo usermod -aG docker $USER`
+			3. Ensure all root-created files map as your user id in docker containers and volumes (Do both of these)
+				a.1. `echo $USER:$(id -u):1 | sudo tee -a /etc/subuid`
+				a.2. `echo $USER:$(id -g):1 | sudo tee -a /etc/subgid`
+			4. Create Docker container namespace
+				a. `echo "{\"userns-remap\": \"$USER\"}" | sudo tee -a /etc/docker/daemon.json`
+					- If you dont have the file already created (isn't created by default)
+				b. Manually add your user by following the instructions here: https://docs.docker.com/engine/security/userns-remap/
+			5. Check that the subgid and subuid files are correct. Order of these lines matters in that the `<username>:<uid>:1` must come first in each file
+				a. `cat /etc/subuid`
+					-`<username>:<uid>:1`
+					-`<username>:100000:65536`
+				b. `cat /etc/subgid`
+					-`<username>:<uid>:1`
+					-`<username>:100000:65536` 
+			6. Restart Docker 
+				a. `sudo service docker restart`
+				b. OR Restart your computer/session
 ## 2 Install Basestack
 
 
