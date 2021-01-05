@@ -110,6 +110,7 @@
     mounted(){
       const $this = this;
       this.$electron.ipcRenderer.on('releaseNotes', (evt, message)=>{
+        console.log(message, "<<<<")
         $this.releaseNotes = message
       })
     },
