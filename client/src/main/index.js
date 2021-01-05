@@ -344,7 +344,7 @@ function createWindow () {
           message: `Update downloaded. Restart the application to apply install changes \n ${info.releaseNotes}`,
         })
         releaseNotes=info.releaseNotes
-        mainWindow.webContents.send('releaseNotes', releaseNotes)
+        mainWindow.webContents.send('releaseNotes', info.releaseNotes)
         quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
       } catch(err) {
         logger.error(`Download update failed to finish. ${err}`)
@@ -363,7 +363,7 @@ function createWindow () {
     autoUpdater.on('update-not-available', (info) => {
       logger.info('Basestack update not available.');
       releaseNotes=info.releaseNotes
-      mainWindow.webContents.send('releaseNotes', releaseNotes)
+      mainWindow.webContents.send('releaseNotes', info.releaseNotes)
     })
 
 
