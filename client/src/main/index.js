@@ -39,7 +39,7 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
   process.env.version_basestack = autoUpdater.currentVersion
 } else {
-  process.env.version_basestack = "NULL"
+  process.env.version_basestack = "Development"
 }
 
 let mainWindow
@@ -306,6 +306,8 @@ function createWindow () {
           checkboxLabel: 'Auto-restart after download?',
           checkboxChecked: false,
       };
+      releaseNotes=info.releaseNotes
+      mainWindow.webContents.send('releaseNotes', releaseNotes)
       dialog.showMessageBox(null, options).then((response) => { 
         logger.info("%s update choice -> %s", response)
         if (response.response == 0){

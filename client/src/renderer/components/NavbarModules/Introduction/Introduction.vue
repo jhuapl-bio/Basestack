@@ -22,6 +22,7 @@
                   <font-awesome-icon    icon="question-circle" size="sm"  />
                 </span>
                 <div style="width:100%; padding-top: 20px" class="logDiv">
+                  <h3>Version: {{version}}</h3>
                   <h3>Release Notes</h3>
                   <hr>
                   <p v-html="releaseNotes"></p>
@@ -93,6 +94,7 @@
         activeBtn:1,
         perPage: 1,
         releaseNotes: "",
+        version: process.env.version_basestack,
         help:false
       }
     },
