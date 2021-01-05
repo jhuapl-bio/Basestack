@@ -31,6 +31,7 @@ if(process.getgid){
 }
 const dockerStagePath = path.join(resourcePath, 'installation');
 export var meta = {
+	appVersion: null,
 	writePath: writePath,
 	globalPath: globalPath,
 	resourcePath: resourcePath,

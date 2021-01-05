@@ -1,10 +1,8 @@
 'use strict'
 
-const { app, ipcMain, BrowserWindow, Menu, dialog } = require('electron')
+const { app, ipcMain, BrowserWindow, Menu, dialog, shell } = require('electron')
 import promiseIpc from 'electron-promise-ipc';
 const isMac = process.platform === 'darwin'
-const version = '1.0'
-process.env.version_basestack = version
 
 if (!process.env.APPDATA){
   process.env.APPDATA = app.getPath('userData')
@@ -18,7 +16,7 @@ const {
 
 const path = require("path")
 // const {  show_MinKnow, show_sublime, show_aliview, show_spreaD3, show_BEAUTI, show_BEAST, show_figtree, show_tempest, show_tracer } = require('./menu.js')
-const  store  = require("../modules/server/api/store/global.js")
+const { store } = require("../modules/server/api/store/global.js")
 
 require("../renderer/store")
 
@@ -39,9 +37,13 @@ const {fs} = require("fs")
  */
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+  process.env.version_basestack = autoUpdater.currentVersion
+} else {
+  process.env.version_basestack = "NULL"
 }
 
 let mainWindow
+let releaseNotes = "None Available";
 let { open_server,close_server } = require("../modules/server/server.js")
 open_server()
 // logger.info(JSON.stringify(process.env, null, 4))
@@ -203,6 +205,27 @@ var menu = Menu.buildFromTemplate([
     ]
   },
   {
+    label: 'Logs and Info',
+    submenu: [
+      {
+        label: 'Open Logs',
+        click() { shell.openPath(store.meta.logFolder)  }
+      },
+      {
+        label: 'View Release Notes',
+        click() {  
+          logger.info("Getting release notes")
+          mainWindow.webContents.send('mainNotification', {
+            icon: 'info',
+            message: `${releaseNotes}`,
+          })
+          mainWindow.webContents.send('releaseNotes', releaseNotes)
+          logger.info(`${autoUpdater.currentVersion} --> ${releaseNotes}`)
+        }
+      },
+    ]
+  },
+  {
     role: 'help',
     submenu: [
       {
@@ -277,7 +300,7 @@ function createWindow () {
           type: 'question',
           buttons: ['Install', 'Skip'],
           defaultId: 0,
-          title: 'Update Available',
+          title: 'Update Available from https://github.com/jhuapl-bio/Basestack/releases',
           message: message,
           detail: '',
           checkboxLabel: 'Auto-restart after download?',
@@ -318,6 +341,8 @@ function createWindow () {
           icon: 'success',
           message: `Update downloaded. Restart the application to apply install changes \n ${info.releaseNotes}`,
         })
+        releaseNotes=info.releaseNotes
+        mainWindow.webContents.send('releaseNotes', releaseNotes)
         quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
       } catch(err) {
         logger.error(`Download update failed to finish. ${err}`)
@@ -335,6 +360,8 @@ function createWindow () {
     })
     autoUpdater.on('update-not-available', (info) => {
       logger.info('Basestack update not available.');
+      releaseNotes=info.releaseNotes
+      mainWindow.webContents.send('releaseNotes', releaseNotes)
     })
 
 
