@@ -46,7 +46,8 @@
                         "key": "aws_key",
                         "type": "file",
                         "src": null,
-                        "srcFormat":null
+                        "srcFormat":null,
+                        "tooltip": "new_user_credential.tsv file provided in the google drive for workshop attendees"
                     }
                 }
 	            
