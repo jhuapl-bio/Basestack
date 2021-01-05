@@ -10,7 +10,6 @@
   <div id="installhelp">
     <b-row>
       <b-col sm="12">
-          
         <div class="col-sm mt-12 mt-sm-0" >
           <carousel :perPage="perPage" :navigationEnabled="false" direction="down">
             <slide>
@@ -22,6 +21,11 @@
                 <span class="center-align-icon; " >Need Help installing Basestack? Please swipe right for more information
                   <font-awesome-icon    icon="question-circle" size="sm"  />
                 </span>
+                <div style="width:100%; padding-top: 20px" class="logDiv">
+                  <h3>Release Notes</h3>
+                  <hr>
+                  <p v-html="releaseNotes"></p>
+                </div>
               </div>
             </slide>
             <slide class="text-center">
@@ -88,6 +92,7 @@
       return {
         activeBtn:1,
         perPage: 1,
+        releaseNotes: "",
         help:false
       }
     },
@@ -101,6 +106,10 @@
       }
     },
     mounted(){
+      const $this = this;
+      this.$electron.ipcRenderer.on('releaseNotes', (evt, message)=>{
+        $this.releaseNotes = message
+      })
     },
     computed: {
       docker_install(){
