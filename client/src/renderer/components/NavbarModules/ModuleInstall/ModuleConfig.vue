@@ -19,6 +19,8 @@
     	<div v-for="[indexr, resource] of Object.entries(selectedElement.installation.resources)" :key="indexr" >
     		<div v-if="resource.type =='file'">
     			<label style="text-align:center" class="typo__label">{{resource.name}}</label>
+		        <font-awesome-icon class="help" icon="question-circle"  v-if="resource.tooltip" v-b-tooltip.hover.top 
+		        	:title="resource.tooltip"/>
     			<b-form-file 
 	                 v-model="resource.src"
 	                 style="max-width: 100%"
@@ -26,6 +28,7 @@
 	                 drop-placeholder="Place File here"
 	                 >
 	            </b-form-file> 
+	            
     		</div>
     	</div>
     </div>
