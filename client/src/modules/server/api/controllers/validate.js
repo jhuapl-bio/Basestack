@@ -69,9 +69,13 @@ export async function validateVideo(videoPath){
 		})().catch((err)=>{logger.error("%s %s", "Not valid video: ", videoPath); resolve(false);})
 	})
 }
-export async function getRecursiveFiles(path){
+export async function getRecursiveFiles(path, pattern){
 	return new Promise((resolve, reject)=>{
-		let files = glob(path + '/**/*', (err, files)=>{
+		let glob_pattern = "/**/*";
+		if (pattern){
+			glob_pattern = pattern;
+		}
+		let files = glob(path + glob_pattern, (err, files)=>{
 			if (err){
 				reject(err)
 			}
@@ -210,7 +214,7 @@ export async function validate_run_dir(runDir){
 		})
 		let promises = []
 		validFolders.forEach((d)=>{
-			promises.push(getRecursiveFiles(d.path))
+			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
 		})
 		response = await Promise.all(promises)
 		response.forEach((d,i)=>{
