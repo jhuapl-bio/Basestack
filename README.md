@@ -35,9 +35,7 @@
 ## 2 Install Basestack
 
 
-1. Download Basestack from either:
-	1.  https://github.com/Merritt-Brian/Basestack/releases RECOMMENDED
-	2.  https://drive.google.com/drive/folders/1ad2U3zBTHXfly3_ybLUxJBarvHXCPS2Z
+1. Download Basestack from https://github.com/Merritt-Brian/Basestack/releases
 2. Choose your download based on your operating system from the Releases page:
 	- Windows
 		- Basestack Setup 1.0.0.setup.exe (~80 MB)
