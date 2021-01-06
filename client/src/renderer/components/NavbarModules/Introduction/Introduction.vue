@@ -91,7 +91,6 @@
                   </template>
                 </b-table>
                 <div style="width:100%; padding-top: 20px" class="logDiv">
-                  <h3>Version: {{version}}</h3>
                   <h3>Release Notes</h3>
                   <hr>
                   <p v-html="releaseNotes.releaseNotes"></p>

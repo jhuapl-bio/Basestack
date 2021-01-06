@@ -699,7 +699,6 @@
 	    				}
 	    			}
 	    		}
-	    		console.log("2")
 	    		if (errors.length > 0){
 	    			this.error_alert(errors.join(","), "Error in online resources needing to be provided!")
 	    			this.showConfig = true
@@ -743,7 +742,6 @@
 				    cancelButtonText: "No, keep them."
 				})
 				.then(function(isConfirm) {
-					console.log(image, i)
 			      if (isConfirm.dismiss != 'cancel') {
 			      	try{
 		    			$this.$swal({

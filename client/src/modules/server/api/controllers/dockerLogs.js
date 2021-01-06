@@ -139,6 +139,7 @@ export const followStreamBuild = async function(stream, obj){
 	    function onProgress(event) {
 	    	try{
 	    		if (event.stream != undefined){	
+	    			// logger.info(`stream. ${event.stream}`)
 					obj.status.stream.push((event.stream)); 
 					dockerlogger.info("%s", event.stream)
 				} else if (event.status != undefined){
