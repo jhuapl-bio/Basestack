@@ -63,7 +63,19 @@
 								          style="margin: auto"
 								          :color="'#2b57b9'"
 								     /><p style="margin:auto; text-align:center">Running</p>
-						    	</span>	
+						    	</span>
+						    	<span 
+									v-if="!modules.basestack_consensus.status.running && modules.basestack_consensus.status.errors" 
+									class="center-align-icon warn-icon" 
+									style="float:right; margin:auto; text-align:center" v-tooltip="{
+						            content: 'Error in module, check logs',
+						            placement: 'top',
+						            classes: ['info'],
+						            trigger: 'hover',
+						            targetClasses: ['it-has-a-tooltip'],
+						            }">
+			            			<font-awesome-icon icon="times-circle" size="sm" />
+				            	</span>	
 								<b-button class="btn tabButton tabButton-stop" v-on:click="cancel_artic_pipeline()">
 									<div class="in-line-Button" >
 										<span>
@@ -446,7 +458,7 @@
 								>
 							        <template  v-slot:cell(barcode)="row">
 								    	<b-form-input
-								          v-model="selectedHistory.runDir.manifest.entries[row.index].barcode"
+								          v-model.trim="selectedHistory.runDir.manifest.entries[row.index].barcode"
 								          label="barcode"
 								          @input="changeBarcode($event, row.index)"
 						                  class="formGroup-input"
@@ -458,7 +470,7 @@
 								    </template>
 								    <template  v-slot:cell(id)="row">
 								    	<b-form-input
-								          v-model="selectedHistory.runDir.manifest.entries[row.index].id"
+								          v-model.trim="selectedHistory.runDir.manifest.entries[row.index].id"
 								          label="barcode"
 								          @input="changeID($event, row.index)"
 						                  class="formGroup-input"
@@ -908,15 +920,27 @@ export default {
 		customRunLabel({name, label}){
 			return name ? name : 'New Report'
 		},
+		replaceChars(val){
+			return val.replace(/[^A-Z0-9-]/gi,'-')
+		},
 		stateManifestID(id){
 			if (id == "NTC"){
 				return null
 			}
-			const ntc_found = this.selectedHistory.runDir.manifest.entries.filter((d)=>{
-				return d.id == "NTC"
+			let ntc_found = false;
+			this.selectedHistory.runDir.manifest.entries.map((d,i)=>{
+				if (d.id){
+					this.$set(this.selectedHistory.runDir.manifest.entries[i], 'id', this.replaceChars(this.selectedHistory.runDir.manifest.entries[i].id))
+				}
+				if (d.barcode){
+					this.$set(this.selectedHistory.runDir.manifest.entries[i], 'barcode', this.replaceChars(this.selectedHistory.runDir.manifest.entries[i].barcode))
+				}
+				if (d.id =="NTC"){
+					ntc_found = true
+				}
+				return d
 			})
-
-			return ntc_found.length > 0 ? null : false 
+			return ntc_found ? null : false 
 		},
 		async changeRunDir(val, type){
 			let root;
@@ -955,7 +979,6 @@ export default {
 					validation: false
 				}
 			}
-			console.log("changed run dir")
     		await this.validateRunDirContents(this.runDir).then((response)=>{
     			this.runDir = response.runDir
 	    		this.selectedHistory.runDir = response.runDir
@@ -971,7 +994,6 @@ export default {
 				FileService.validateRunDirContents({
 					runDir: runDir
 				}).then((response)=>{
-					console.log(response)
 					// $this.validatingRunDir = false
 					return resolve(response.data.data)
 				}).catch((err)=>{

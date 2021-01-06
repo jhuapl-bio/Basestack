@@ -67,6 +67,7 @@ export const followStreamContainer = async function(stream, obj){
 			obj.status.stream.push(formatBuffer(data))
 		} catch(err){
 			logger.error("error in getting data %s", err)
+			obj.status.errors = formatBuffer(err)
 			throw err
 		} finally{
 			obj.status.stream = obj.status.stream.splice(-150)
@@ -90,6 +91,7 @@ export const followStreamContainer = async function(stream, obj){
     		obj.status.errors = formatBuffer(err)
     	}finally {
     		obj.status.running = false
+    		// obj.status.errors = "Error found Test"
     		if (obj.status.errors){
     			obj.status.stream.push(obj.status.errors)
     		}
@@ -173,6 +175,7 @@ export const initDockerLogs = function(container, container_name, obj){
 				if (err){
 					reject(err)
 				} else {
+					obj.status.errors = null
 					obj.status.stream.push(formatBuffer(logs));
 					(async ()=>{
 	 					let stream = await attachStream(container, container_name, obj)
