@@ -160,7 +160,7 @@
 				            classes: ['info'],
 				            trigger: 'hover',
 				            targetClasses: ['it-has-a-tooltip'],
-				            }" v-on:click="cancelDockerInstall(element)">
+				            }" v-on:click="stagedInstallation[key].installation.type == 'online' ? cancelDockerInstall(element) : restartApp(element.name)">
 			            	<font-awesome-icon class="configure" icon="stop-circle" size="sm" />
 			            </span> 
 					</b-col>
@@ -546,7 +546,11 @@
 		            	this.error_alert("No offline file selected", "Error in loading offline Docker image!")
 		            	return
 		            }
-	    			this.available[i].log = ['Building '+name+' from a compressed file, this may take some time...']
+		            if (this.available[i]){
+		    			this.available[i].log = ['Building '+name+' from a compressed file, this may take some time...']
+		            } else if(this.installed[i]){
+		    			this.installed[i].log = ['Building '+name+' from a compressed file, this may take some time...']
+		            }
 	    			await FileService.loadImages(
 	    				{
 	    					name: element.name,
