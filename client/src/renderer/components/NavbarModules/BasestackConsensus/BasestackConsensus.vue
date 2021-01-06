@@ -169,7 +169,7 @@
 							            }"
 		                        	/>
 						    	</span>	
-						    	<span v-else-if="row.item.status[0] < row.item.status[1] && selectedHistory.reportDir.modules[selectedHistory.reportDir.modules.length - 1].status[0] < 1 && selectedHistory.running" 
+						    	<span v-else-if="row.item.status[0] < row.item.status[1] && selectedHistory.reportDir.modules[selectedHistory.reportDir.modules.length - 1].status[0] < 1 && selectedHistory.running && modules.basestack_consensus.status.running" 
 		                        style="margin:auto; text-align: center"
 						    	>
 				                  	<half-circle-spinner
