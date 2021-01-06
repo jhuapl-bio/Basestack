@@ -224,6 +224,7 @@ export var cancel_load_images = function(imageName){
 			if (store.dockerStreamObjs[imageName]){
 				try{
 					store.dockerStreamObjs[imageName].destroy()
+					store.config.images[imageName].status.stream.push("Canceled Image Build Process")
 				} catch (err3){
 					store.dockerStreamObjs[imageName] =null
 				}

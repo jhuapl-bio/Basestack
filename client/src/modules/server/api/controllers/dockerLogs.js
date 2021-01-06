@@ -93,6 +93,9 @@ export const followStreamContainer = async function(stream, obj){
     		if (obj.status.errors){
     			obj.status.stream.push(obj.status.errors)
     		}
+    		else {
+	    		obj.status.stream.push("Process complete")
+    		}
 	    	stream.destroy();
     	}
 	})
@@ -112,6 +115,9 @@ export const followStreamBuild = async function(stream, obj){
 	    	}finally {
 	    		if (obj.status.errors){
 	    			obj.status.stream.push(obj.status.errors)
+	    		} 
+	    		else {
+		    		obj.status.stream.push("Process complete")
 	    		}
 	    		obj.status.running = false
 		    	stream.destroy();
@@ -121,12 +127,14 @@ export const followStreamBuild = async function(stream, obj){
 	    function onProgress(event) {
 	    	try{
 	    		if (event.stream != undefined){	
+	    			// logger.info(`stream. ${event.stream}`)
 					obj.status.stream.push((event.stream)); 
-				} else if (event.status != undefined && event.progress){
-					// logger.info(JSON.strinfigy(event))
-					obj.status.stream.push((`${event.status} ${event.progress}`)); 					
+				} else if (event.status != undefined){
+					// logger.info(JSON.stringify(event))
+					obj.status.stream.push((`${event.status} ${(event.progress ? event.progress : '')}`)); 					
 				}
 			} catch(err){
+				logger.error(err)
 				obj.status.stream.push((event));  
 			} finally{
 				obj.status.stream = obj.status.stream.splice(-150)
