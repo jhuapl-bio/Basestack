@@ -45,6 +45,7 @@
   "build": {
     "productName": "Basestack",
     "appId": "Basestack App",
+    "afterSign": "notarize.js",
     "directories": {
       "output": "build"
     },
@@ -60,9 +61,8 @@
         ]
       }
     ],
-    "afterSign": "notarize.js",
     "dmg": {
-      "icon": "build/icons/icon.icns",
+      "icon": "build/icons/icon_osx.icns",
       "sign": false,
       "contents": [
         {
@@ -79,8 +79,8 @@
       ]
     },
     "mac": {
-      "icon": "build/icons/icon.icns",
-      "target": "default",
+      "icon": "build/icons/icon_osx.icns",
+      "target": ["dmg", "zip"],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlement.mac.plist",

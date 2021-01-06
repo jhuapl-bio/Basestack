@@ -14,3 +14,5 @@ node_modules
 !data/tutorials
 !data/dockerbuild/
 src/renderer/assets/tutorial/
+!build/entitlement.mac.plist
+!build/notarize.js
