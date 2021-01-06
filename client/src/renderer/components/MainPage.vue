@@ -127,7 +127,7 @@ export default {
 			},
 			initial:true,
 			collapsed:false,
-    		tab: 1,
+    		tab: 2,
 	        entries: null,
 	        resources: null,
 	        docker:null,
@@ -169,7 +169,6 @@ export default {
 		})
 	 	this.$electron.ipcRenderer.on('mainNotification', (evt, message)=>{
 	 		$this.patchNotes = message
-	 		console.log(message)
 		 	this.$swal.fire({
               position: 'center',
               icon: $this.patchNotes.icon,

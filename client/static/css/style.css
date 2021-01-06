@@ -296,6 +296,9 @@ body {
   color:#a60139;
   overflow-wrap: break-word;
 }
+.warning-div{
+  overflow-wrap: break-word;
+}
 
 .custom-file-label{
   overflow: hidden;
