@@ -101,6 +101,7 @@ export const followStreamContainer = async function(stream, obj, container){
     		obj.status.errors = formatBuffer(err)
     	}finally {
     		obj.status.running = false
+    		// obj.status.errors = "Error found Test"
     		if (obj.status.errors){
     			obj.status.stream.push(obj.status.errors)
     		}
