@@ -69,7 +69,6 @@
         "to": "data/server/server.js"
       }
     ],
-    "afterSign": "notarize.js",
     "dmg": {
       "icon": "build/icons/icon_osx.icns",
       "sign": false,
