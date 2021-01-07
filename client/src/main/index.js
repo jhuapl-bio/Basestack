@@ -218,11 +218,7 @@ var menu = Menu.buildFromTemplate([
   {
     label: "Check for Updates",
     click() { 
-      if(process.env.NODE_ENV == 'production'){
-         autoUpdater.checkForUpdatesAndNotify()   
-      } else {
-        logger.info(`Development mode enabled, skipping check for updates`)
-      }
+      checkUpdates()
     }
   },
   {
@@ -269,7 +265,14 @@ Menu.setApplicationMenu(menu);
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
-
+function checkUpdates(){
+  if(process.env.NODE_ENV == 'production'){
+    logger.info("Check for Basestack updates and notify")
+    autoUpdater.checkForUpdatesAndNotify()   
+  } else {
+    logger.info(`Development mode enabled, skipping check for updates`)
+  }
+}
 function createWindow () {
   /**
    * Initial window options
@@ -301,6 +304,9 @@ function createWindow () {
   mainWindow.webContents.send('releaseNotes', releaseNotes)
   ipcMain.on("queryRelease", (event, arg) => {
     event.reply('releaseNotes', releaseNotes)
+  })
+  ipcMain.on("checkUpdates", (event, arg) => {
+    checkUpdates()
   })
   mainWindow.webContents.on('did-finish-load', function () {
     let quitUpdateInstall = false;
@@ -467,10 +473,7 @@ app.on('ready', ()=>{
   (async () => {
     try{
       createWindow();   
-      if (process.env.NODE_ENV == 'production'){
-        logger.info("Check for Basestack updates and notify")
-        autoUpdater.checkForUpdatesAndNotify()  
-      }
+      checkUpdates()
     } catch(error){
       logger.error("error in check updates")
       logger.error(error)

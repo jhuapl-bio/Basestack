@@ -30,6 +30,19 @@
                   <template  v-slot:cell(current_version)>
                   <p>{{current_version}}</p>
                   </template>
+                  <template  v-slot:cell(checkUpdates)>
+                    <span class="center-align-icon;"
+                            v-tooltip="{
+                              content: 'If changelog not showing or a new update might be available, select this',
+                              placement: 'top',
+                              classes: ['info'],
+                              trigger: 'hover',
+                              targetClasses: ['it-has-a-tooltip'],
+                              }"
+                          >
+                            <font-awesome-icon class="configure"  @click="checkUpdates()" icon="cog" size="sm"  />
+                      </span> 
+                  </template>
                 </b-table>
                 <div style="width:100%; padding-top: 20px" class="logDiv">
                   <h3>Release Notes</h3>
@@ -117,6 +130,10 @@
           {
             key: 'releaseDate',
             label: 'Release Date'
+          },
+          {
+            key:'checkUpdates',
+            label: 'Check Updates'
           }
         ]
       }
@@ -128,6 +145,9 @@
       },
       updateImages(val){
         this.$emit("updateImages", val)
+      },
+      checkUpdates(){
+        this.$electron.ipcRenderer.send("checkUpdates", "")
       }
     },
     mounted(){
