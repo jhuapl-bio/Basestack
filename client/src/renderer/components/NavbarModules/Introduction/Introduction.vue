@@ -40,7 +40,20 @@
                               targetClasses: ['it-has-a-tooltip'],
                               }"
                           >
-                            <font-awesome-icon class="configure"  @click="checkUpdates()" icon="cog" size="sm"  />
+                            <font-awesome-icon class="configure"  @click="checkUpdates()" icon="circle-notch" size="sm"  />
+                      </span> 
+                  </template>
+                  <template  v-slot:cell(feature_tracker)>
+                    <span class="center-align-icon;"
+                            v-tooltip="{
+                              content: 'Open GitHub to see all issues and upcoming features or requests for Basestack',
+                              placement: 'top',
+                              classes: ['info'],
+                              trigger: 'hover',
+                              targetClasses: ['it-has-a-tooltip'],
+                              }"
+                          >
+                            <font-awesome-icon class="configure"  @click="open_link('https://github.com/jhuapl-bio/Basestack/issues', $event)" icon="archive" size="sm"  />
                       </span> 
                   </template>
                 </b-table>
@@ -134,6 +147,10 @@
           {
             key:'checkUpdates',
             label: 'Check Updates'
+          },
+          {
+            key: 'feature_tracker',
+            label: 'Feature Tracker'
           }
         ]
       }
