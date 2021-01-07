@@ -84,7 +84,9 @@ export class DockerObj {
 						let exists;
 						exists = await $this.check_container_exists(name)
 						if (!exists){
+							logger.info(1)
 							const opt  = await $this.obj.build(params);//build up the params for docker to run appropriately
+							logger.info(2)
 							options = opt.options;
 							command = opt.command
 							store.docker.createContainer({
