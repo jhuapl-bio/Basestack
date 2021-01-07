@@ -216,6 +216,16 @@ var menu = Menu.buildFromTemplate([
     ]
   },
   {
+    label: "Check for Updates",
+    click() { 
+      if(process.env.NODE_ENV == 'production'){
+         autoUpdater.checkForUpdatesAndNotify()   
+      } else {
+        logger.info(`Development mode enabled, skipping check for updates`)
+      }
+    }
+  },
+  {
     label: 'Logs and Info',
     submenu: [
       {
@@ -378,11 +388,8 @@ function createWindow () {
         logger.error(err)
       }
       logger.info('Basestack update not available.');
-      logger.info(1)
       releaseNotes=info
-      logger.info(2)
       // logger.info(`${JSON.stringify(info)}`)
-      logger.info(3)
       mainWindow.webContents.send('releaseNotes', releaseNotes)
     })
     
