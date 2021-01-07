@@ -298,6 +298,19 @@ Note that this will map all of your processes INSIDE the docker containers to yo
 
 <hr>
 
+
+<hr>
+
+#### Permisson denied (Linux)
+
+Please ensure that you follow the correct [instructions](#1-install-docker) here to using `userns-remap`
+
+Note that this will map all of your processes INSIDE the docker containers to your user id if used properly. You will need sudo to delete any files or folders that are causing issues.
+
+<hr>
+
+</details>
+
 ### A2 Install Basestack
 
 Please choose one of the 2 following methods of install for your use case
