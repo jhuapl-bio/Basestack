@@ -28,22 +28,33 @@ const {autoUpdater} = require("electron-updater");
 
 
 const {fs} = require("fs")
-// autoUpdater.logger = log;
-// autoUpdater.logger.transports.file.level = 'info';
-
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'debug';
+log.info('App starting...');
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
+let releaseNotes;
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
   process.env.version_basestack = autoUpdater.currentVersion
+  releaseNotes = {
+    releaseNotes: "None Available",
+    version: "Not Available",
+    releaseDate: "NA"
+  };
 } else {
   process.env.version_basestack = "Development"
+  releaseNotes = {
+    releaseNotes: "None Available",
+    version: "Development",
+    releaseDate: "NA"
+  };
 }
 
 let mainWindow
-let releaseNotes = "None Available";
+
 let { open_server,close_server } = require("../modules/server/server.js")
 open_server()
 // logger.info(JSON.stringify(process.env, null, 4))
@@ -217,10 +228,10 @@ var menu = Menu.buildFromTemplate([
           logger.info("Getting release notes")
           mainWindow.webContents.send('mainNotification', {
             icon: 'info',
-            message: `${releaseNotes}`,
+            message: `${releaseNotes.releaseNotes}`,
           })
           mainWindow.webContents.send('releaseNotes', releaseNotes)
-          logger.info(`${autoUpdater.currentVersion} --> ${releaseNotes}`)
+          // logger.info(`${autoUpdater.currentVersion} --> ${JSON.stringify(releaseNotes)}`)
         }
       },
     ]
@@ -277,8 +288,13 @@ function createWindow () {
   //some callback.
   });
   mainWindow.loadURL(winURL)
+  mainWindow.webContents.send('releaseNotes', releaseNotes)
+  ipcMain.on("queryRelease", (event, arg) => {
+    event.reply('releaseNotes', releaseNotes)
+  })
   mainWindow.webContents.on('did-finish-load', function () {
     let quitUpdateInstall = false;
+    logger.info("Basestack is finished loading")
     function sendStatusToWindow(text) {
       logger.info(text);
       dialog.showMessageBox(mainWindow, {
@@ -290,6 +306,7 @@ function createWindow () {
       });
     }
     autoUpdater.on('error', (err) => {
+      logger.error(err)
       sendStatusToWindow('Error in auto-updater. ' + err);
     })
     autoUpdater.on('update-available', (info) => {
@@ -306,7 +323,8 @@ function createWindow () {
           checkboxLabel: 'Auto-restart after download?',
           checkboxChecked: false,
       };
-      releaseNotes=info.releaseNotes
+      releaseNotes=info
+
       mainWindow.webContents.send('releaseNotes', releaseNotes)
       dialog.showMessageBox(null, options).then((response) => { 
         logger.info("%s update choice -> %s", response)
@@ -336,39 +354,38 @@ function createWindow () {
     })
 
     autoUpdater.on('update-downloaded', (info, err) => {
+      if (err){
+        logger.error(err)
+      }
       try{
-        // sendStatusToWindow(`Update downloaded. Restart the application to apply install changes \n Updates: ${info.releaseNotes}`);
-        // mainWindow.webContents.send('mainNotification', `Update downloaded. Restart the application to apply install changes \n Updates: ${info.releaseNotes}`)
         mainWindow.webContents.send('mainNotification', {
           icon: 'success',
           message: `Update downloaded. Restart the application to apply install changes \n ${info.releaseNotes}`,
         })
-        releaseNotes=info.releaseNotes
-        mainWindow.webContents.send('releaseNotes', info.releaseNotes)
+        releaseNotes=info
+        mainWindow.webContents.send('releaseNotes', releaseNotes)
         quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
       } catch(err) {
         logger.error(`Download update failed to finish. ${err}`)
         // throw new Error("Could not download update, check error logs")
       }
     });
-    autoUpdater.on('checking-for-update', (info, err) => {
-      try{
-        logger.info('Checking for Basestack update...');
-      } catch (err) {
+    autoUpdater.on('checking-for-update', () => {
+      logger.info('Checking for Basestack update...');
+    })
+    autoUpdater.on('update-not-available', (info, err) => {
+      if (err){
         logger.error(err)
-        logger.error("error in check basestack update")
-        // throw new Error("Could not check for Basestack Update, check internet access and logs")
       }
-    })
-    autoUpdater.on('update-not-available', (info) => {
       logger.info('Basestack update not available.');
-      releaseNotes=info.releaseNotes
-      mainWindow.webContents.send('releaseNotes', info.releaseNotes)
+      logger.info(1)
+      releaseNotes=info
+      logger.info(2)
+      // logger.info(`${JSON.stringify(info)}`)
+      logger.info(3)
+      mainWindow.webContents.send('releaseNotes', releaseNotes)
     })
-
-
-
-
+    
   });
   
   
@@ -444,6 +461,7 @@ app.on('ready', ()=>{
     try{
       createWindow();   
       if (process.env.NODE_ENV == 'production'){
+        logger.info("Check for Basestack updates and notify")
         autoUpdater.checkForUpdatesAndNotify()  
       }
     } catch(error){

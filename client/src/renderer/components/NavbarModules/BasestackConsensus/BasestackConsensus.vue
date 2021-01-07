@@ -54,6 +54,28 @@
 										</span>
 										<span>Make Consensus</span></div>
 								</b-button>
+								<span v-else-if="selectedHistory.loaded && modules.basestack_consensus.status.running"
+		                       		style="margin:auto; text-align: center; min-width:20%; display:flex"
+						    	>	
+				                  	<looping-rhombuses-spinner
+								          :animation-duration="4000"
+								          :size="20"
+								          style="margin: auto"
+								          :color="'#2b57b9'"
+								     /><p style="margin:auto; text-align:center">Running</p>
+						    	</span>
+						    	<span 
+									v-if="!modules.basestack_consensus.status.running && modules.basestack_consensus.status.errors" 
+									class="center-align-icon warn-icon" 
+									style="float:right; margin:auto; text-align:center" v-tooltip="{
+						            content: 'Error in module, check logs',
+						            placement: 'top',
+						            classes: ['info'],
+						            trigger: 'hover',
+						            targetClasses: ['it-has-a-tooltip'],
+						            }">
+			            			<font-awesome-icon icon="times-circle" size="sm" />
+				            	</span>	
 								<b-button class="btn tabButton tabButton-stop" v-on:click="cancel_artic_pipeline()">
 									<div class="in-line-Button" >
 										<span>
@@ -147,7 +169,7 @@
 							            }"
 		                        	/>
 						    	</span>	
-						    	<span v-else-if="row.item.status[0] < row.item.status[1] && selectedHistory.reportDir.modules[selectedHistory.reportDir.modules.length - 1].status[0] < 1 && selectedHistory.running" 
+						    	<span v-else-if="row.item.status[0] < row.item.status[1] && selectedHistory.reportDir.modules[selectedHistory.reportDir.modules.length - 1].status[0] < 1 && selectedHistory.running && modules.basestack_consensus.status.running" 
 		                        style="margin:auto; text-align: center"
 						    	>
 				                  	<half-circle-spinner
@@ -254,7 +276,8 @@
 					                 	:value="row.item.runDir.fastqDir.name"
 					                 	class="formGroup-input"
 					                 	>
-					                </b-form-input>								 
+					                </b-form-input>	
+					                <p style="text-align:center" v-if="row.item.runDir.fastqDir.files">Total # of Fastq Files: {{row.item.runDir.fastqDir.files}}</p>							 
 							    </template>
 							    <template #head(RunDir)>
 							        <span  
@@ -262,6 +285,24 @@
 							        	Run Dir
 							        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
 							        	title="Run Folders contain fastq directories along with manifest, run_info, and run_config files" />
+							        	<span class="center-align-icon success-icon" style="float:right" v-tooltip="{
+								            content: 'Validating Run Directory',
+								            placement: 'top',
+								            classes: ['info'],
+								            trigger: 'hover',
+								            targetClasses: ['it-has-a-tooltip'],
+								            }" v-if="validatingRunDir">
+							            	<half-circle-spinner
+									          :animation-duration="1000"
+									          style="
+									          		margin:auto;
+									          		
+											  "
+											  :size="20"
+									          :color="'#2b57b9'"
+									     	/>Validating Run Folder
+								     	</span>
+
 						      		</span>
 							    </template>
 							    <template #head(FastqDir)>
@@ -350,31 +391,13 @@
 									:items="[selectedHistory.runDir.run_config]"
 								>
 									<template  v-slot:cell(primers)="row">
-							            <b-form-textarea
-								          v-model="row.item.primers"
-								          label="Primers"
-								          type="text"
-								          required
-			           				      :disabled="!isNew"
-						                  class="formGroup-input"
-						                  :state="stateValidationEmpty(row.item.primers)"
-								          placeholder="ncov-2019/V3"
-								    	></b-form-textarea>
+										<b-form-select class="formGroup-input" v-model="row.item.primers"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.primers"></b-form-select>
 									 </template>
 									<template  v-slot:cell(basecalling)="row">
-										<b-form-textarea
-								          v-model="row.item.basecalling"
-								          label="Basecalling"
-								          type="text"
-						                  class="formGroup-input"
-								          required
-			           				      :disabled="!isNew"
-						                  :state="stateValidationEmpty(row.item.basecalling)"
-								          placeholder="dna_r9.4.1_450bps_hac.cfg"
-								    	></b-form-textarea>
+										<b-form-select class="formGroup-input" v-model="row.item.basecalling"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.basecalling"></b-form-select>
 								    </template>
 									<template  v-slot:cell(barcoding)="row">
-								    	<b-form-textarea
+								    	<!-- <b-form-textarea
 								          v-model="row.item.barcoding"
 								          label="Barcoding"
 								          type="text"
@@ -383,7 +406,8 @@
 						                  class="formGroup-input"
 						                  :state="stateValidationEmpty(row.item.barcoding)"
 								          placeholder="barcode_arrs_nb12.cfg"
-								    	></b-form-textarea>										 
+								    	></b-form-textarea>	 -->
+								    	<b-form-select class="formGroup-input" v-model="row.item.barcoding"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.barcoding"></b-form-select>			 
 								    </template>
 								    <template  v-slot:cell(filename)="row">
 								    	<b-form-textarea
@@ -434,7 +458,7 @@
 								>
 							        <template  v-slot:cell(barcode)="row">
 								    	<b-form-input
-								          v-model="selectedHistory.runDir.manifest.entries[row.index].barcode"
+								          v-model.trim="selectedHistory.runDir.manifest.entries[row.index].barcode"
 								          label="barcode"
 								          @input="changeBarcode($event, row.index)"
 						                  class="formGroup-input"
@@ -446,7 +470,7 @@
 								    </template>
 								    <template  v-slot:cell(id)="row">
 								    	<b-form-input
-								          v-model="selectedHistory.runDir.manifest.entries[row.index].id"
+								          v-model.trim="selectedHistory.runDir.manifest.entries[row.index].id"
 								          label="barcode"
 								          @input="changeID($event, row.index)"
 						                  class="formGroup-input"
@@ -514,42 +538,74 @@
 											<font-awesome-icon icon="plus"/>
 										</span>
 									</b-button>
-									<span v-else style="text-align:center">One Row MUST contain an NTC as an ID</span>
+									<span v-else style="text-align:center">Set one Barcode as NB00 (or other unused name) for the NTC</span>
 
 						    	</div>
 							</b-input-group-append>
+							<b-input-group-append>
+								<b-table
+						          show-empty
+						          small
+						          label=""
+						          :hidden="!isNew"
+						          style="width: 100%"
+				                  class="formGroup-input"
+						          :items="[1]"
+						          :fields="['Barcode', 'SampleID', 'Count', 'Adjust']"
+								  sticky-header="300px"						        
+								>
+									<template slot="label">
+									    <span  
+								        	style="text-align:center"  >
+								        	Define Standard Manifest Scheme
+								        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+								        	title="Select a Barcode Name (e.g. NB) and Sample ID. Increments by 1" />
+							      		</span>
+									</template>
+									<template  v-slot:cell(Barcode)>
+										<b-form-textarea :disabled="!isNew"
+					                 		v-model="placeHolderBarcode"
+					                 		class="formGroup-input"
+					                 	>
+					                	</b-form-textarea>								 
+								    </template>
+								    <template  v-slot:cell(Count)>
+										<b-form-select class="formGroup-input" :disabled="!isNew" v-model="placeHolderManifestCount"   :options="[12, 24, 96]"></b-form-select>							 
+								    </template>
+								    <template  v-slot:cell(SampleID)>
+										<b-form-textarea 
+					                 	v-model="placeHolderSampleID"
+					                 	class="formGroup-input" :disabled="!isNew"
+					                 	>
+					                	</b-form-textarea>						 
+								    </template>
+								    <template  v-slot:cell(Adjust)>
+										<span :hidden="!isNew" class="center-align-icon;"
+						            		v-tooltip="{
+									            content: 'Adjust The Placeholder Manifest',
+									            placement: 'top',
+									            classes: ['info'],
+									            trigger: 'hover',
+									            targetClasses: ['it-has-a-tooltip'],
+									            }"
+						            	>
+						            		<font-awesome-icon class="configure"  @click="adjustManifest()" icon="cog" size="sm"  />
+									    </span>					 
+								    </template>
+								</b-table>
+								
+							</b-input-group-append>
 						    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.minLength">Specify one or more barcode</div>
-						    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.stateManifestID">Specify one row having NTC</div>
+						    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.stateManifestID">
+						    	<span  
+						        	style="text-align:center"  >
+						        	No NTC present
+						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+						        	title="One Sample ID must have NTC (No Template Control)" />
+						      	</span>
+							</div>
+							
 						</b-form-group>
-					    <!-- <b-form-group
-				            label="Primer Folder"
-				            label-cols-sm="2"
-				            label-align-sm="right"
-				            label-size="sm"
-				            label-for="filterInput"
-				            class="mb-0"
-				          >
-						    <b-input-group-append>
-								  <multiselect 
-								  v-model="primerDir" 
-								  :disabled="!isNew"
-								  select-label="Select Primer Scheme" deselect-label="Click again to remove" track-by="fullname" label="fullname" placeholder="Select primer directory" @input="changePrimerSelectType" :options="preload_primerDirs" :searchable="false" :allow-empty="true">
-								    <template slot="singleLabel" slot-scope="{ option }"><span>{{ option.fullname }}</span></template>
-								  </multiselect>
-								  <div v-show="togglePrimerSelect == 'manual'" style="width:100%; height:100%"  class="custom-file"  >
-					                <b-form-file  class="custom-file-input" ref="primer_file" id="primer_file"
-					                 aria-describedby="primer_file" 
-					                 directory
-							         v-model="primerFiles"
-					                 multiple
-					                 webkitdirectory
-					                 :disabled="!isNew"
-					                 no-traverse></b-form-file>
-					                <label class="custom-file-label" for="primer_file"><span ref="primer_file_text">Browse</span></label>
-						          </div>
-						    </b-input-group-append>
-						</b-form-group>
-			            <div class="error" style="text-align:left" v-if="!$v.primerDir.required">A Primer Directory is required</div> -->
 				    </div>
 				</b-col>
 			</b-row>
@@ -568,6 +624,7 @@ import { required, minLength } from 'vuelidate/lib/validators'
 import Multiselect from 'vue-multiselect'
 import path from "path"
 import {HalfCircleSpinner} from 'epic-spinners'
+import { LoopingRhombusesSpinner } from 'epic-spinners'
 const  stateManifestID = ((values) => {	
 	const ntc_found = values.filter((d)=>{
 		return d.id == "NTC"
@@ -579,7 +636,8 @@ export default {
 	name: 'basestackconsensus',
 	components: {
 		Multiselect,
-		HalfCircleSpinner
+		HalfCircleSpinner,
+		LoopingRhombusesSpinner
 	},
 	computed: {
 		stateRunFolder(){
@@ -620,7 +678,7 @@ export default {
 				fastqDir: {
 					path: null,
 					name: null,
-					files: [],
+					files: null,
 					validation: false
 				},
 				run_config: {
@@ -634,6 +692,7 @@ export default {
 					filename: 'manifest.txt'
 				},
 			},
+			validatingRunDir: false,
 			baseRunDir: null,
 			fastqDir: null,
 			name: null,
@@ -670,14 +729,16 @@ export default {
 	        tableInterval:null,
 	        fetchStatus: false,
 
-	        srcMd: null
+	        srcMd: null,
+	        placeHolderSampleID: 'Sample',
+	        placeHolderBarcode: 'NB',
+	        placeHolderManifestCount: 12
 		}
 	},
 	async mounted() {
 		// await this.fetchPrimers()
 		this.baseRunDir = this.runDir
         await this.fetchHistories()
-
         this.selectedHistory = this.histories[this.histories.length - 1]
 	},
     validations: {
@@ -800,6 +861,19 @@ export default {
         	return files.length === 1 ? `${files[0].flat(2).length} files selected` : `${files.length} files selected`
 
       	},
+      	adjustManifest(){
+      		if (this.placeHolderManifestCount){
+      			let manifests_entries = []
+      			for (let i =1; i <= this.placeHolderManifestCount; i++){
+
+      				manifests_entries.push({
+      					id: `${this.placeHolderSampleID}${(i < 10 ? "0"+i.toString() : i)}`, 
+      					barcode: `${this.placeHolderBarcode}${(i < 10 ? "0"+i.toString() : i)}`
+      				})
+      			}
+	      		this.selectedHistory.runDir.manifest.entries = manifests_entries
+      		}
+      	},
 		changeBarcode(val, index){
 			this.$set(this.selectedHistory.runDir.manifest.entries, index, {id:this.selectedHistory.runDir.manifest.entries[index].id, barcode:val})
 		},
@@ -846,15 +920,27 @@ export default {
 		customRunLabel({name, label}){
 			return name ? name : 'New Report'
 		},
+		replaceChars(val){
+			return val.replace(/[^A-Z0-9-]/gi,'-')
+		},
 		stateManifestID(id){
 			if (id == "NTC"){
 				return null
 			}
-			const ntc_found = this.selectedHistory.runDir.manifest.entries.filter((d)=>{
-				return d.id == "NTC"
+			let ntc_found = false;
+			this.selectedHistory.runDir.manifest.entries.map((d,i)=>{
+				if (d.id){
+					this.$set(this.selectedHistory.runDir.manifest.entries[i], 'id', this.replaceChars(this.selectedHistory.runDir.manifest.entries[i].id))
+				}
+				if (d.barcode){
+					this.$set(this.selectedHistory.runDir.manifest.entries[i], 'barcode', this.replaceChars(this.selectedHistory.runDir.manifest.entries[i].barcode))
+				}
+				if (d.id =="NTC"){
+					ntc_found = true
+				}
+				return d
 			})
-
-			return ntc_found.length > 0 ? null : false 
+			return ntc_found ? null : false 
 		},
 		async changeRunDir(val, type){
 			let root;
@@ -892,41 +978,42 @@ export default {
 					files: [],
 					validation: false
 				}
-	    		await this.validateRunDirContents(this.runDir).then((response)=>{
-	    			this.runDir = response.runDir
-		    		this.selectedHistory.runDir = response.runDir
-	    		}).catch((err)=>{
-	    			console.error(err, "error in validation")
-	    		})
-    		} 
+			}
+    		await this.validateRunDirContents(this.runDir).then((response)=>{
+    			this.runDir = response.runDir
+	    		this.selectedHistory.runDir = response.runDir
+    		}).catch((err)=>{
+    			console.error(err, "error in validation")
+    		})
 
 		},
 		validateRunDirContents(runDir){
 			const $this = this
+			// this.validatingRunDir = true
 			return new Promise(function(resolve,reject){
 				FileService.validateRunDirContents({
 					runDir: runDir
 				}).then((response)=>{
+					// $this.validatingRunDir = false
 					return resolve(response.data.data)
 				}).catch((err)=>{
 					console.error("error in validating run dir", err.response.data.message)
 					$this.fastqFiles  = []
-
-					// this.$swal.fire({
-					// 	position: 'center',
-					// 	icon: 'error',
-					// 	showConfirmButton:true,
-		   //              title:  error.response.data.message
-					// })
+					// $this.validatingRunDir = false
 					reject(err.response.data.message)
 				})
 			})
 		},
-		updateHistory(element){
+		async updateHistory(element){
 			if (this.isNew){
 				this.fastqFiles = this.stagedFastqFiles
 			}
 			this.selectedHistory = (element.custom ? this.customHistory : element)
+			await this.validateRunDirContents(this.selectedHistory.runDir).then((response)=>{
+	    		this.selectedHistory.runDir = response.runDir
+    		}).catch((err)=>{
+    			console.error(err, "error in validation")
+    		})
 		},
 		async setToggle(dir, dirValue, dispatch, dispatchValue){
 			// this.data[dispatch] = dispatchValue

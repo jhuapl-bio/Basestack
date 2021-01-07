@@ -8,7 +8,7 @@
   */
 var { logger } = require("./logger.js")
 const {readTableFile,getFiles, getFolders } = require("../controllers/IO.js")
-
+import glob from "glob"
 const fs  = require("fs")
 import  path  from "path"
 export async function validatePrimerVersions(primerDir,primerNameDir, fullpathVersion){
@@ -69,9 +69,22 @@ export async function validateVideo(videoPath){
 		})().catch((err)=>{logger.error("%s %s", "Not valid video: ", videoPath); resolve(false);})
 	})
 }
+export async function getRecursiveFiles(path, pattern){
+	return new Promise((resolve, reject)=>{
+		let glob_pattern = "/**/*";
+		if (pattern){
+			glob_pattern = pattern;
+		}
+		let files = glob(path + glob_pattern, (err, files)=>{
+			if (err){
+				reject(err)
+			}
+			resolve(files)
+		});
+	})
+}
 
-
-export async function checkFileExist(dir, extension, silent){
+export async function checkFileExist(dir, extension, silent, recursive){
 	return new Promise((resolve, reject)=>{
 		if(dir){
 			fs.exists(dir, function(exists){
@@ -81,16 +94,22 @@ export async function checkFileExist(dir, extension, silent){
 							logger.error(err)
 							reject(err)
 						} else {
-							var targetFiles = items.filter(function(file) {
-							    return path.basename(file).includes(extension);
-							});
-							if (silent){
-								targetFiles.length === 0 ? resolve(false) : ''																					
-							} else {
-								targetFiles.length === 0 ? resolve(new Error("No "+ extension+" files found in specified directory: " + dir)) : ''													
-							} 
+							(async ()=>{
+								if (recursive){
+									items = await getRecursiveFiles(dir)
+								}
+								let targetFiles = items.filter(function(file) {
+									return path.basename(file).includes(extension);
+								});
 
-							resolve(true)
+								if (silent){
+									targetFiles.length === 0 ? resolve(false) : ''																					
+								} else {
+									targetFiles.length === 0 ? resolve(new Error("No "+ extension+" files found in specified directory: " + dir)) : ''													
+								} 
+								resolve(true)
+							})()
+								
 						}
 					})
 			    } else {
@@ -181,7 +200,7 @@ export async function validate_run_dir(runDir){
 		let possibleFolders  = await getFolders(runDir_path)
 		let validFolders = []; let checkExists = [];
 		for (let i = 0; i < possibleFolders.length; i++){
-			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq", true))
+			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq", true, true))
 		}
 		let response = await Promise.all(checkExists)
 		validFolders = possibleFolders.filter((d,i)=>{
@@ -195,7 +214,7 @@ export async function validate_run_dir(runDir){
 		})
 		let promises = []
 		validFolders.forEach((d)=>{
-			promises.push(getFiles(d.path))
+			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
 		})
 		response = await Promise.all(promises)
 		response.forEach((d,i)=>{
@@ -228,7 +247,6 @@ export async function validate_run_dir(runDir){
 			})
 			runDir.manifest.validation = manifestExists
 		}
-		console.log("return final____")
 		return {
 			runDir: runDir
 		}

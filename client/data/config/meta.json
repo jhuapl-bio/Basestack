@@ -88,6 +88,53 @@
                 "initial": false,
                 "primerDir": "${resourcePath}/basestack_consensus/primer_schemes",
                 "historyPath": "${writePath}/basestack_consensus/histories"
+            },
+            "resources": {
+                "run_config":{
+                    "barcoding": [
+                        "barcode_arrs_16s.cfg",
+                        "barcode_arrs_dual_nb24_pcr96.cfg",
+                        "barcode_arrs_lwb.cfg",
+                        "barcode_arrs_nb12.cfg",
+                        "barcode_arrs_nb24.cfg",
+                        "barcode_arrs_nb96.cfg",
+                        "barcode_arrs_pcr12.cfg",
+                        "barcode_arrs_pcr96.cfg",
+                        "barcode_arrs_rab.cfg",
+                        "barcode_arrs_rbk096.cfg",
+                        "barcode_arrs_rbk4.cfg",
+                        "barcode_arrs_rbk.cfg",
+                        "barcode_arrs_rlb.cfg",
+                        "barcode_arrs_vmk2.cfg",
+                        "barcode_arrs_vmk.cfg",
+                        "configuration.cfg",
+                        "configuration_dual.cfg"
+                    ],
+                    "basecalling" : [
+                        "dna_r10.3_450bps_fast.cfg",
+                        "dna_r10.3_450bps_fast_prom.cfg",
+                        "dna_r10.3_450bps_hac.cfg",
+                        "dna_r10.3_450bps_hac_prom.cfg",
+                        "dna_r10_450bps_fast.cfg",
+                        "dna_r10_450bps_hac.cfg",
+                        "dna_r9.4.1_450bps_fast.cfg",
+                        "dna_r9.4.1_450bps_fast_prom.cfg",
+                        "dna_r9.4.1_450bps_hac.cfg",
+                        "dna_r9.4.1_450bps_hac_prom.cfg",
+                        "dna_r9.4.1_450bps_hac_prom_fw205.cfg",
+                        "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg",
+                        "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac_prom.cfg",
+                        "dna_r9.5_450bps_1d2_raw.cfg",
+                        "dna_r9.5_450bps.cfg",
+                        "rna_r9.4.1_70bps_fast.cfg",
+                        "rna_r9.4.1_70bps_fast_prom.cfg",
+                        "rna_r9.4.1_70bps_hac.cfg",
+                        "rna_r9.4.1_70bps_hac_prom.cfg"
+                    ],
+                    "primers": [
+                        "nCoV-2019/V3"
+                    ]
+                }
             }
         },
         "rampart": {

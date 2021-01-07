@@ -120,6 +120,15 @@
 				            }">
 		            		<font-awesome-icon icon="times-circle" size="sm" />
 		            	</span>
+		            	<span class="center-align-icon"  v-tooltip="{
+				            content: 'The module is attempting an update',
+				            placement: 'top',
+				            classes: ['info'],
+				            trigger: 'hover',
+				            targetClasses: ['it-has-a-tooltip'],
+				            }" style="float:right" v-else-if="element.status.running" >
+			            	<font-awesome-icon icon="circle-notch" size="sm" />
+			            </span>
 	    				<span class="center-align-icon success-icon" style="float:right" v-else v-tooltip="{
 				            content: 'This module is installed and operable',
 				            placement: 'top',
@@ -144,24 +153,16 @@
 		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
 					    </span>
 					</b-col>
-					<b-col sm="3"  v-else style="text-align:center"> 
-		            	<div v-tooltip="{
-				            content: 'This module is currently updating',
+					<b-col sm="3"  v-else style="text-align:center">
+						<span class="center-align-icon"  v-tooltip="{
+				            content: 'Cancel Install for: '+element.title,
 				            placement: 'top',
 				            classes: ['info'],
 				            trigger: 'hover',
 				            targetClasses: ['it-has-a-tooltip'],
-				            }" style="margin:auto" class="">
-			            	<half-circle-spinner
-					          :animation-duration="1000"
-					          style="
-					          		margin:auto;
-					          		
-							  "
-							  :size="20"
-					          :color="'#2b57b9'"
-					     	/>
-				     	</div>
+				            }" v-on:click="stagedInstallation[key].installation.type == 'online' ? cancelDockerInstall(element) : restartApp(element.name)">
+			            	<font-awesome-icon class="configure" icon="stop-circle" size="sm" />
+			            </span> 
 					</b-col>
 		            <b-col sm="3" style="text-align:center" > 
 		            	<span class="center-align-icon configure"  v-tooltip="{
@@ -176,7 +177,7 @@
 			            	</span>
 			            </span>
 		            </b-col>
-		            <b-col sm="3" style="text-align:center" > 
+		            <b-col sm="3" style="text-align:center" v-if="!element.status.running"> 
 		            	<span class="center-align-icon configure" v-if="docker"
 		            	v-on:click="selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)"
 		            	v-tooltip="{
@@ -189,6 +190,25 @@
 		            	>	
 			            	<font-awesome-icon  class="configure" icon="level-up-alt" size="sm" />
 			            </span>
+		            </b-col>
+		            <b-col sm="3" style="text-align:center" v-else> 
+		            	<span class="center-align-icon success-icon" style="float:right" v-tooltip="{
+				            content: 'This module is currently updating',
+				            placement: 'top',
+				            classes: ['info'],
+				            trigger: 'hover',
+				            targetClasses: ['it-has-a-tooltip'],
+				            }" >
+			            	<half-circle-spinner
+					          :animation-duration="1000"
+					          style="
+					          		margin:auto;
+					          		
+							  "
+							  :size="20"
+					          :color="'#2b57b9'"
+					     	/>
+				     	</span>
 		            </b-col>
 		            <b-col sm="3" style="text-align:center" > 
 			        	<span class="center-align-icon configure"  v-tooltip="{
@@ -526,7 +546,11 @@
 		            	this.error_alert("No offline file selected", "Error in loading offline Docker image!")
 		            	return
 		            }
-	    			this.available[i].log = ['Building '+name+' from a compressed file, this may take some time...']
+		            if (this.available[i]){
+		    			this.available[i].log = ['Building '+name+' from a compressed file, this may take some time...']
+		            } else if(this.installed[i]){
+		    			this.installed[i].log = ['Building '+name+' from a compressed file, this may take some time...']
+		            }
 	    			await FileService.loadImages(
 	    				{
 	    					name: element.name,
@@ -562,7 +586,6 @@
 	    		let promises = []
 	    		element.pause = false
 	    		let errors = [];
-	    		console.log("1", this.stagedInstallation)
 	    		if (this.stagedInstallation[element.name].installation.resources){
 	    			
 	    			for (const [key, value ] of Object.entries(this.stagedInstallation[element.name].installation.resources)){
@@ -573,19 +596,11 @@
 	    					errors.push(key)
 	    				}
 	    			}
-	    			// this.stagedInstallation[element.name].installation.resources = this.stagedInstallation[element.name].installation.resources.map((d)=>{
-	    			// 	if (d.type == 'file' && d.src){
-	    			// 		d['srcFormat'] = { filename: d.src.name, filepath: d.src.path }
-	    			// 	}
-	    			// 	return d
-	    			// })
 	    		}
-	    		console.log("2")
 	    		if (errors.length > 0){
 	    			this.error_alert(errors.join(","), "Error in online resources needing to be provided!")
 	    			this.showConfig = true
 	    		} else{
-	    			console.log("3", this.stagedInstallation)
 		            await FileService.loadImages(
 	    				{
 	    					config: this.stagedInstallation[element.name].installation,
@@ -621,7 +636,6 @@
 				    cancelButtonText: "No, keep them."
 				})
 				.then(function(isConfirm) {
-					console.log(image, i)
 			      if (isConfirm.dismiss != 'cancel') {
 			      	try{
 		    			$this.$swal({
