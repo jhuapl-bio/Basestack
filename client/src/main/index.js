@@ -216,6 +216,12 @@ var menu = Menu.buildFromTemplate([
     ]
   },
   {
+    label: "Check for Updates",
+    click() { 
+      checkUpdates()
+    }
+  },
+  {
     label: 'Logs and Info',
     submenu: [
       {
@@ -234,6 +240,10 @@ var menu = Menu.buildFromTemplate([
           // logger.info(`${autoUpdater.currentVersion} --> ${JSON.stringify(releaseNotes)}`)
         }
       },
+      {
+        label: 'Open Issue/Feature Tracker',
+        click(){shell.openExternal('https://github.com/jhuapl-bio/Basestack/issues')}
+      }
     ]
   },
   {
@@ -259,7 +269,14 @@ Menu.setApplicationMenu(menu);
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
-
+function checkUpdates(){
+  if(process.env.NODE_ENV == 'production'){
+    logger.info("Check for Basestack updates and notify")
+    autoUpdater.checkForUpdatesAndNotify()   
+  } else {
+    logger.info(`Development mode enabled, skipping check for updates`)
+  }
+}
 function createWindow () {
   /**
    * Initial window options
@@ -292,6 +309,9 @@ function createWindow () {
   ipcMain.on("queryRelease", (event, arg) => {
     event.reply('releaseNotes', releaseNotes)
   })
+  ipcMain.on("checkUpdates", (event, arg) => {
+    checkUpdates()
+  })
   mainWindow.webContents.on('did-finish-load', function () {
     let quitUpdateInstall = false;
     logger.info("Basestack is finished loading")
@@ -321,7 +341,7 @@ function createWindow () {
           message: message,
           detail: '',
           checkboxLabel: 'Auto-restart after download?',
-          checkboxChecked: false,
+          checkboxChecked: true,
       };
       releaseNotes=info
 
@@ -378,11 +398,8 @@ function createWindow () {
         logger.error(err)
       }
       logger.info('Basestack update not available.');
-      logger.info(1)
       releaseNotes=info
-      logger.info(2)
       // logger.info(`${JSON.stringify(info)}`)
-      logger.info(3)
       mainWindow.webContents.send('releaseNotes', releaseNotes)
     })
     
@@ -460,10 +477,7 @@ app.on('ready', ()=>{
   (async () => {
     try{
       createWindow();   
-      if (process.env.NODE_ENV == 'production'){
-        logger.info("Check for Basestack updates and notify")
-        autoUpdater.checkForUpdatesAndNotify()  
-      }
+      checkUpdates()
     } catch(error){
       logger.error("error in check updates")
       logger.error(error)
