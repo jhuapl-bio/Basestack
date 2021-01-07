@@ -68,22 +68,13 @@
               <h3 >Install Docker</h3>
               <video preload="auto" ref="videoRef" type="video/mp4" :src="docker_install" id="video-container" style="width: 100% !important; max-height:40vh; vertical-align: top" controls ></video>
               <p>Watch a brief overview of how to install Docker</p>
-            </slide>
-            <slide>
               <p>
                 More information can be found on proper installation procedures at:
+                <a class="center-y-img" href="" v-on:click="open_link('https://github.com/jhuapl-bio/Basestack#basestack',$event)">GitHub</a>
               </p>
-                <ul>
-                  <li>
-                    <a class="center-y-img" href="" v-on:click="open_link('https://github.com/Merritt-Brian/Basestack',$event)">GitHub</a>
-                  </li>
-                  <li>
-                    <a class="center-y-img" href="" v-on:click="open_link('https://drive.google.com/drive/u/0/folders/1ad2U3zBTHXfly3_ybLUxJBarvHXCPS2Z',$event)">Google Drive</a>
-                  </li>
-                </ul>
-                <p>
-                  Next, install modules by selecting that option in the left-hand tab or by continuing to the right
-                </p>
+              <p>
+                Next, install modules by selecting that option in the left-hand tab or by continuing to the right
+              </p>
             </slide>
             <slide>
                 <p>
