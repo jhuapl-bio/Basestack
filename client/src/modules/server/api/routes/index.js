@@ -91,9 +91,12 @@ router.post("/modules/start", (req,res,next)=>{
 			let response = await start_module(req.body)
 			logger.info("%s %s", "Success in starting module", response.message)
 			res.status(200).json({status: 200, message: response.message, exists: response.exists, payload: response.payload });
-		})()
+		})().catch((err2)=>{
+			logger.error(`Error in module start ${err2} `)
+			res.status(419).send({status: 419, message: error_alert(err2) });
+		})
 	} catch(err){
-		logger.error(err)
+		logger.error(`Error in module start ${err} `)
 		res.status(419).send({status: 419, message: error_alert(err) });
 	}
 })

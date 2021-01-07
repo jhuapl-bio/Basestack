@@ -1123,7 +1123,7 @@ export default {
 						position: 'center',
 						icon: (response.data.exists ? 'warning' : 'success' ),
 						showConfirmButton:true,
-		                title:  response.data.message
+		                html:  response.data.message
 					});	
 					this.selectedHistory.running = true	        	
 		        }).catch((error)=>{
@@ -1131,7 +1131,7 @@ export default {
 						position: 'center',
 						icon: 'error',
 						showConfirmButton:true,
-		                title:  error.response.data.message + "."
+		                html:  error.response.data.message + "."
 					});
 		        })		
 

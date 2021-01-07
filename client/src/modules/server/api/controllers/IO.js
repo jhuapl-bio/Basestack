@@ -17,7 +17,6 @@ import parse  from 'csv-parser'
 function set(attribute, value, obj) {
     var depth = obj;  // a moving reference to internal objects within obj
     var depth_attributes = attribute.split('.');
-    // console.log(">",attribute,value)
     for(var i = 0; i < depth_attributes.length; i++) {
        if (i == depth_attributes.length - 1){
            depth[depth_attributes[i]] = value
@@ -56,7 +55,7 @@ export async function itemType(filepath){
 	return new Promise((resolve, reject)=>{
 		fs.lstat(filepath, (err, stats) => { 
 			if (err) {
-		    	console.log(err); 
+		    	logger.error(err); 
 				reject(err);
 			}
 		  	else { 
@@ -83,7 +82,7 @@ export async function getFolders(filepath){
 				Promise.all(folder_checks).then((response)=>{
 					resolve(response.filter((d)=>{return d.directory}))
 				}).catch((err)=>{
-					console.error(err)
+					logger.error(err)
 					resolve([])
 				})
 			}
@@ -177,7 +176,7 @@ export async function writeFile(filepath, content){
 						resolve("Success in bookmarking file")
 				})
 			}).catch((errmkdrir)=>{
-				console.error(errmkdrir); reject(errmkdrir)
+				logger.error(errmkdrir); reject(errmkdrir)
 			})	
 	})
 }
@@ -186,7 +185,7 @@ export async function writeFolder(directory){
 			mkdirp(directory).then(response=>{
 				resolve()
 			}).catch((errmkdrir)=>{
-				console.error(errmkdrir); reject(errmkdrir)
+				logger.error(errmkdrir); reject(errmkdrir)
 			})	
 	})
 }
@@ -195,7 +194,7 @@ export async function copyFile(source, destination){
 	return new Promise((resolve, reject)=>{
 		fs.copyFile(source, destination, (error)=>{
 			if(error){
-				console.error(error,"error in copyfile")
+				logger.error(error,"error in copyfile")
 				reject(error)
 			}
 			resolve()
@@ -208,7 +207,7 @@ export async function copyFolder(source, destination){
 	return new Promise((resolve, reject)=>{
 		ncp(source, destination, (error)=>{
 			if(error){
-				console.error(error,"error in copyfolder")
+				logger.error(error,"error in copyfolder")
 				reject(error)
 			}
 			resolve()
