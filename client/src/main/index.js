@@ -240,6 +240,10 @@ var menu = Menu.buildFromTemplate([
           // logger.info(`${autoUpdater.currentVersion} --> ${JSON.stringify(releaseNotes)}`)
         }
       },
+      {
+        label: 'Open Issue/Feature Tracker',
+        click(){shell.openExternal('https://github.com/jhuapl-bio/Basestack/issues')}
+      }
     ]
   },
   {
