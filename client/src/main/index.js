@@ -337,7 +337,7 @@ function createWindow () {
           message: message,
           detail: '',
           checkboxLabel: 'Auto-restart after download?',
-          checkboxChecked: false,
+          checkboxChecked: true,
       };
       releaseNotes=info
 
