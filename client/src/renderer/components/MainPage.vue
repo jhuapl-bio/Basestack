@@ -15,7 +15,7 @@
         	active-nav-item-class="activeTabButton"
         	style="height: 100vh; " 
         	vertical
-        	v-if="!initial"
+        	v-if="!initial "
         	
         >
           <b-tab  
@@ -127,7 +127,7 @@ export default {
 			},
 			initial:true,
 			collapsed:false,
-    		tab: 2,
+    		tab: 0,
 	        entries: null,
 	        resources: null,
 	        docker:null,

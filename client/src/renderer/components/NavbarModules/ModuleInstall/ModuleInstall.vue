@@ -235,7 +235,7 @@
 		        	<span>Clean Installs</span>
 	        		<font-awesome-icon class="help" icon="question-circle" 
 	        			v-tooltip="{
-					        content: 'Prune ALL dangling docker images. Helps save on space',
+					        content: 'Prune ALL dangling docker images AND steopped containers. Helps save on space',
 					        placement: 'top',
 					        classes: ['warning'],
 					        trigger: 'hover',
@@ -490,6 +490,7 @@
 				.then(function(isConfirm) {
 			      if (isConfirm.dismiss != 'cancel') {
 			        FileService.pruneImages().then((message, error)=>{
+			        	console.log(message)
 						if (error){
 				            $this.error_alert(error.response.data.message, "Error in pruning dockers")
 						} else{
@@ -497,7 +498,8 @@
 				              position: 'center',
 				              icon: 'success',
 				              showConfirmButton:true,
-				              title:  "Pruned Dangling Docker Images"
+				              title:  "Pruned Dangling Docker Images",
+				              html: `Space Reclaimed: ${message.data.data.SpaceReclaimed}`
 				            })
 						}
 					}).catch((err)=>{

@@ -248,23 +248,28 @@ export async function fetch_histories(){
 		const fullpathHistory = path.join(historyPath, histories[i])
 		let validHistory = await validateHistory(fullpathHistory,histories[i])
 		if(validHistory){
-			await readFile(path.join(fullpathHistory, "report-meta.json"), false).then((content, error)=>{
-				if (error){
-					throw error
-				}
-				let contentobj = JSON.parse(content)
-				if (store.config.modules['basestack_consensus'] 
-		    		&& store.config.modules['basestack_consensus'].streamObj 
-		    		&& store.config.modules['basestack_consensus'].run.name == contentobj.name){
-		    		contentobj.running = true
-		    	} else {
-		    		contentobj.running = false
-		    	}
-				response.push(contentobj)
-			}) //This is a problem
+			try{
+				await readFile(path.join(fullpathHistory, "report-meta.json"), false).then((content, error)=>{
+					if (error){
+						logger.error(`${error}`)
+					} else {
+						let contentobj = JSON.parse(content)
+						if (store.config.modules['basestack_consensus'] 
+				    		&& store.config.modules['basestack_consensus'].streamObj 
+				    		&& store.config.modules['basestack_consensus'].run.name == contentobj.name){
+				    		contentobj.running = true
+				    	} else {
+				    		contentobj.running = false
+				    	}
+						response.push(contentobj)
+					}
+					
+				}) //This is a problem
+			} catch(err){
+				logger.error(`${err} <-- Couldn't read file`)
+			}
 		}
 	}
-	// console.log("fetch histories", historyPath, store.config.modules['basestack_consensus'].config)
 	return response
 }
 export async function fetch_resources(){

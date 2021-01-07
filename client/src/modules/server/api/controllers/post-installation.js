@@ -71,25 +71,16 @@ export var install_images_online = function(img){
 }
 
 
-export var prune_images = function(){
-	return new Promise(function(resolve,reject){
-		try{
-			(async ()=>{
-				let responseawait = await docker.pruneImages( { 'filters' : { 'dangling' : { 'false' : true } } } )
-			})()
-			.then((response, error)=>{
-				if(error){
-					reject(error)
-				}
-				resolve(response)
-			}).catch((error2)=>{
-				logger.error(`${error2} function: prune_images()`)
-				reject(error2)
-			})
-		} catch(err){
-			reject(err)
-		}
-	});
+export var prune_images = async function(){
+	try{
+		let responseContainers = await docker.pruneContainers()
+		let responseawait = await docker.pruneImages( { 'filters' : { 'dangling' : { 'true' : true } } } )
+		return responseawait
+	}
+	catch(err){
+		logger.error(`${err} function: prune_images()`)
+		throw err
+	}
 }
 
 export var load_image  = function(obj){
@@ -245,16 +236,32 @@ export var cancel_load_images = function(imageName){
 export var remove_images = function(imageName){
 	return new Promise(function(resolve,reject){
 		(async ()=>{
-			await docker.getImage(imageName).remove({
-			   force: true
-			  }, (err,response)=>{
-				if(err){
-					logger.error("%s Error in removing docker image: "+imageName, err)
-					reject(err)
-				} else {
-					resolve(response)
-				}
-			});	
-		})()
+			let promises = [];
+			imageName = imageName +":latest"
+			let containers = await docker.listContainers({ 'filters' : { 'ancestor' : [ imageName ] }} )
+			for (let i = 0; i < containers.length; i++){
+				// docker.getContainer(containers[i].Id).remove({force:true})
+				promises.push(docker.getContainer(containers[i].Id).remove({force:true}))
+			}
+			Promise.all(promises).then(()=>{
+				docker.getImage(imageName).remove({
+				   force: true
+				  }, (err,response)=>{
+					if(err){
+						logger.error("%s Error in removing docker image: "+imageName, err)
+						reject(err)
+					} else {
+						resolve(response)
+					}
+				});	
+			}).catch((err)=>{
+				logger.error(err)
+				reject(err)
+			})
+			
+		})().catch((err)=>{
+			logger.error(err)
+			reject(err)
+		})
 	});
 }

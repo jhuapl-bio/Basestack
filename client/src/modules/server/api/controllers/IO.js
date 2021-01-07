@@ -111,8 +111,9 @@ export async function readFile(filepath, split){
 			  if (err){
 			  	logger.error("%s %s %s", "Error in reading the file: ", filepath, err)
 			  	reject(err)
+			  } else {
+				resolve(split ? data.toString().split("\n") : data.toString())
 			  }
-			  resolve(split ? data.toString().split("\n") : data.toString())
 		  });		
 	})
 }
