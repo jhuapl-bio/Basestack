@@ -21,11 +21,20 @@
                 <span class="center-align-icon; " >Need Help installing Basestack? Please swipe right for more information
                   <font-awesome-icon    icon="question-circle" size="sm"  />
                 </span>
+                <b-table
+                  class="text-center"
+                  :fields="releaseNotificationFields"
+                  :items="[releaseNotes]"
+                  :sticky-header="true"
+                >
+                  <template  v-slot:cell(current_version)>
+                  <p>{{current_version}}</p>
+                  </template>
+                </b-table>
                 <div style="width:100%; padding-top: 20px" class="logDiv">
-                  <h3>Version: {{version}}</h3>
                   <h3>Release Notes</h3>
                   <hr>
-                  <p v-html="releaseNotes"></p>
+                  <p v-html="releaseNotes.releaseNotes"></p>
                 </div>
               </div>
             </slide>
@@ -93,9 +102,23 @@
       return {
         activeBtn:1,
         perPage: 1,
-        releaseNotes: "",
-        version: process.env.version_basestack,
-        help:false
+        releaseNotes: {},
+        current_version: process.env.version_basestack,
+        help:false,
+        releaseNotificationFields: [
+          {
+            key: 'version',
+            label: 'Available Version'
+          },
+          {
+            key: 'current_version',
+            label: 'Installed Version'
+          },
+          {
+            key: 'releaseDate',
+            label: 'Release Date'
+          }
+        ]
       }
     },
     methods: {
@@ -110,9 +133,9 @@
     mounted(){
       const $this = this;
       this.$electron.ipcRenderer.on('releaseNotes', (evt, message)=>{
-        console.log(message, "<<<<")
         $this.releaseNotes = message
       })
+      this.$electron.ipcRenderer.send("queryRelease", "")
     },
     computed: {
       docker_install(){

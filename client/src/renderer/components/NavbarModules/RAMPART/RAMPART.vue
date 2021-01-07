@@ -28,8 +28,6 @@
             <template  v-slot:cell(Protocol)="row" >
               <multiselect v-if="row.item.runDir" v-model="selectedHistory.protocolDir" select-label="Select Protocol Directory" deselect-label="" track-by="fullname" label="fullname" placeholder="Select protocol directory" :options="preload_protocolDirs" :searchable="false" :allow-empty="true">
               </multiselect>     
-              <!-- <b-form-select v-if="selectedHistory.runDir" v-model="protocolDir" :options="preload_protocolDirs" text-field="key" value-field="value"  :select-size="(preload_protocolDirs.length)"></b-form-select> -->
-
             </template>
             <template #head(RunDir)>
                 <span  
@@ -95,6 +93,18 @@
             trigger: 'hover',
             targetClasses: ['it-has-a-tooltip'],
             }" ><div class="in-line-Button" ><span><font-awesome-icon  icon="hourglass-start"/></span><span> Run Rampart</span></div></button>
+            <span 
+              v-if="modules.rampart.status.errors" 
+              class="center-align-icon warn-icon" 
+              style="float:right" v-tooltip="{
+                    content: 'Error in module, check logs',
+                    placement: 'top',
+                    classes: ['info'],
+                    trigger: 'hover',
+                    targetClasses: ['it-has-a-tooltip'],
+                    }">
+                    <font-awesome-icon icon="times-circle" size="sm" />
+            </span> 
       </b-col>
       <b-col sm="4">                    
         <button class="btn tabButton tabButton-stop"   v-on:click="cancelRAMPART()"><div class="in-line-Button" ><span><font-awesome-icon  icon="stop-circle"/></span><span> Stop Rampart</span></div></button>

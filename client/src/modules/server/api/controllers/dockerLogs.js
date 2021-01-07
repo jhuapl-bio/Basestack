@@ -67,6 +67,7 @@ export const followStreamContainer = async function(stream, obj){
 			obj.status.stream.push(formatBuffer(data))
 		} catch(err){
 			logger.error("error in getting data %s", err)
+			obj.status.errors = formatBuffer(err)
 			throw err
 		} finally{
 			obj.status.stream = obj.status.stream.splice(-150)
@@ -90,8 +91,12 @@ export const followStreamContainer = async function(stream, obj){
     		obj.status.errors = formatBuffer(err)
     	}finally {
     		obj.status.running = false
+    		// obj.status.errors = "Error found Test"
     		if (obj.status.errors){
     			obj.status.stream.push(obj.status.errors)
+    		}
+    		else {
+	    		obj.status.stream.push("Process complete")
     		}
 	    	stream.destroy();
     	}
@@ -112,6 +117,9 @@ export const followStreamBuild = async function(stream, obj){
 	    	}finally {
 	    		if (obj.status.errors){
 	    			obj.status.stream.push(obj.status.errors)
+	    		} 
+	    		else {
+		    		obj.status.stream.push("Process complete")
 	    		}
 	    		obj.status.running = false
 		    	stream.destroy();
@@ -121,12 +129,14 @@ export const followStreamBuild = async function(stream, obj){
 	    function onProgress(event) {
 	    	try{
 	    		if (event.stream != undefined){	
+	    			// logger.info(`stream. ${event.stream}`)
 					obj.status.stream.push((event.stream)); 
-				} else if (event.status != undefined && event.progress){
-					// logger.info(JSON.strinfigy(event))
-					obj.status.stream.push((`${event.status} ${event.progress}`)); 					
+				} else if (event.status != undefined){
+					// logger.info(JSON.stringify(event))
+					obj.status.stream.push((`${event.status} ${(event.progress ? event.progress : '')}`)); 					
 				}
 			} catch(err){
+				logger.error(err)
 				obj.status.stream.push((event));  
 			} finally{
 				obj.status.stream = obj.status.stream.splice(-150)
@@ -165,6 +175,7 @@ export const initDockerLogs = function(container, container_name, obj){
 				if (err){
 					reject(err)
 				} else {
+					obj.status.errors = null
 					obj.status.stream.push(formatBuffer(logs));
 					(async ()=>{
 	 					let stream = await attachStream(container, container_name, obj)
