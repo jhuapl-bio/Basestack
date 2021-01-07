@@ -239,7 +239,7 @@
 									:fields="['RunDir', 'FastqDir']"
 									:items="[selectedHistory]"
 								>
-								<template  v-slot:cell(RunDir)="row">
+								<template  v-slot:cell(RunDir)="row" style="display:flex">
 							          <b-form-file 
 					                 	 v-if="row.item.custom"
 						                 ref="seq_file" 
@@ -285,24 +285,31 @@
 							        	Run Dir
 							        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
 							        	title="Run Folders contain fastq directories along with manifest, run_info, and run_config files" />
-							        	<span class="center-align-icon success-icon" style="float:right" v-tooltip="{
+							        	<span class="center-align-icon" style="float:middle; display:flex" v-tooltip="{
 								            content: 'Validating Run Directory',
 								            placement: 'top',
 								            classes: ['info'],
 								            trigger: 'hover',
 								            targetClasses: ['it-has-a-tooltip'],
 								            }" v-if="validatingRunDir">
-							            	<half-circle-spinner
-									          :animation-duration="1000"
-									          style="
-									          		margin:auto;
-									          		
-											  "
-											  :size="20"
-									          :color="'#2b57b9'"
-									     	/>Validating Run Folder
+							            	<looping-rhombuses-spinner
+										          :animation-duration="4000"
+										          :size="10"
+										          style="margin: auto"
+										          :color="'#2b57b9'"
+										     />
 								     	</span>
-
+								     	<span v-if="selectedHistory.runDir.path" class="center-align-icon;"
+						            		v-tooltip="{
+									            content: 'Open Run Folder',
+									            placement: 'top',
+									            classes: ['info'],
+									            trigger: 'hover',
+									            targetClasses: ['it-has-a-tooltip'],
+									            }"
+						            	>
+						            		<font-awesome-icon class="configure"  @click="open(selectedHistory.runDir.path, $event)" icon="archive" size="sm"  />
+									    </span>	
 						      		</span>
 							    </template>
 							    <template #head(FastqDir)>
@@ -543,6 +550,14 @@
 						    	</div>
 							</b-input-group-append>
 							<b-input-group-append>
+								<template slot="label">
+								    <span  
+							        	style="text-align:center"  >
+							        	Define Standard Manifest Scheme
+							        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+							        	title="Select a Barcode Name (e.g. NB) and Sample ID. Increments by 1" />
+						      		</span>
+								</template>
 								<b-table
 						          show-empty
 						          small
@@ -554,14 +569,6 @@
 						          :fields="['Barcode', 'SampleID', 'Count', 'Adjust']"
 								  sticky-header="300px"						        
 								>
-									<template slot="label">
-									    <span  
-								        	style="text-align:center"  >
-								        	Define Standard Manifest Scheme
-								        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-								        	title="Select a Barcode Name (e.g. NB) and Sample ID. Increments by 1" />
-							      		</span>
-									</template>
 									<template  v-slot:cell(Barcode)>
 										<b-form-textarea :disabled="!isNew"
 					                 		v-model="placeHolderBarcode"
@@ -604,7 +611,50 @@
 						        	title="One Sample ID must have NTC (No Template Control)" />
 						      	</span>
 							</div>
-							
+						</b-form-group>
+						<b-form-group
+				            label="Run Specifics"
+				            label-cols-sm="2"
+				            label-align-sm="center"
+				            label-size="sm"
+				            id="manifest_label"
+				            label-for="filterInput"
+				            class="mb-0 formGroup"						           
+				          >
+				          	<template slot="label">
+							    <span  
+						        	style="text-align:center"  >
+						        	Specifics
+					      		</span>
+							</template>
+							<b-input-group-append>
+								
+								<b-table
+						          show-empty
+						          small
+						          label=""
+						          v-if="selectedHistory.runDir.specifics"
+						          style="width: 100%"
+				                  class="formGroup-input"
+						          :items="[selectedHistory.runDir.specifics]"
+						          :fields="specifics_table_fields"
+								  sticky-header="300px"						        
+								>
+									<template v-slot:cell()="cell">
+										<span 
+											:class="[cell.value.exists ? 'center-align-icon success-icon' : 'center-align-icon  warn-icon']" 
+											style="margin:auto; text-align:center" v-tooltip="{
+								            content: 'Presence in Run Directory?',
+								            placement: 'top',
+								            classes: ['info'],
+								            trigger: 'hover',
+								            targetClasses: ['it-has-a-tooltip'],
+								            }">
+					            			<font-awesome-icon :icon="cell.value.exists ? 'check' : 'times-circle'" size="sm" />
+						            	</span>								 
+								    </template>
+								</b-table>
+							</b-input-group-append>
 						</b-form-group>
 				    </div>
 				</b-col>
@@ -613,7 +663,7 @@
 		</div>
 		
     </b-form>
-	<p class="typo__p" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, and run_info set.</p>
+	<p class="typo__p" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
   </div>
 </template>
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
@@ -666,6 +716,11 @@ export default {
           		{key: 'id', label: 'ID', sortable: false, class: 'text-center'},
           		{key: 'adm', label: 'Action', sortable: false, class: 'text-center'},
 			],
+			specifics_table_fields: [
+				{key: 'throughput', label: 'Throughput', sortable: false, class: 'text-center'},
+				{key: 'seq_summary', label: 'Sequencing Summary', sortable: false, class: 'text-center'},
+				{key: 'drift_correction', label: 'Drift Correction', sortable: false, class: 'text-center'},
+			],
 			showBookmarkTooltip: false,
 			runDir:{
 				path: null,
@@ -691,6 +746,11 @@ export default {
 					entries: [],
 					filename: 'manifest.txt'
 				},
+				specifics: {
+					throughput: {exists: false, name: null},
+					seq_summary: {exists: false, name: null},
+					drift_correction: {exists: false, name: null}
+				}
 			},
 			validatingRunDir: false,
 			baseRunDir: null,
@@ -784,6 +844,23 @@ export default {
         				required
         			}
         		},
+        		specifics: {
+        			throughput: {
+        				exists: {
+        					checked: value => value === true
+        				}
+        			},
+        			seq_summary: {
+        				exists: {
+        					checked: value => value === true
+        				}
+        			},
+        			drift_correction: {
+        				exists: {
+        					checked: value => value === true
+        				}
+        			}
+        		},
         		path:{
         			required
         		}
@@ -793,9 +870,6 @@ export default {
         	},
 
       },
-      // primerDir: {
-      //   required
-      // },
     },
     beforeDestroy(){
         clearInterval(this.tableInterval)
@@ -852,6 +926,7 @@ export default {
 		open (link) {
 			this.$emit("open", link)
       	},
+
       	hideTooltipLater() {
 	      setTimeout(() => {
 	        this.showBookmarkTooltip = false;
@@ -859,7 +934,6 @@ export default {
 	    },
       	formatNames(files) {
         	return files.length === 1 ? `${files[0].flat(2).length} files selected` : `${files.length} files selected`
-
       	},
       	adjustManifest(){
       		if (this.placeHolderManifestCount){
@@ -989,17 +1063,17 @@ export default {
 		},
 		validateRunDirContents(runDir){
 			const $this = this
-			// this.validatingRunDir = true
+			this.validatingRunDir = true
 			return new Promise(function(resolve,reject){
 				FileService.validateRunDirContents({
 					runDir: runDir
 				}).then((response)=>{
-					// $this.validatingRunDir = false
+					$this.validatingRunDir = false
 					return resolve(response.data.data)
 				}).catch((err)=>{
 					console.error("error in validating run dir", err.response.data.message)
 					$this.fastqFiles  = []
-					// $this.validatingRunDir = false
+					$this.validatingRunDir = false
 					reject(err.response.data.message)
 				})
 			})
@@ -1139,7 +1213,7 @@ export default {
 		},
 		bookmarkParams: async function(){
 			if (this.$v.$invalid){
-				return
+				this.submitStatus = 'ERROR'
 			}
 			else{
 				await FileService.bookmarkSelections({
