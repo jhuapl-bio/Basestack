@@ -98,8 +98,9 @@ export async function checkFileExist(dir, extension, silent, recursive){
 								if (recursive){
 									items = await getRecursiveFiles(dir)
 								}
+								const re = new RegExp(extension);
 								let targetFiles = items.filter(function(file) {
-									return path.basename(file).includes(extension);
+									return re.test(path.basename(file))
 								});
 
 								if (silent){
@@ -180,12 +181,32 @@ export async function validate_run_dir(runDir){
 		manifest: {
 			exists: false,
 			valid: false
+		},
+		seq_summary:{
+			exists: false,
+			valid: true
+		},
+		throughput: {
+			exists: false,
+			valid: true
+		},
+		drift_correction: {
+			exists: false,
+			valid: true
 		}
+
+	}
+	runDir.specifics = {
+		throughput: {exists: false, name: null},
+		seq_summary: {exists: false, name: null},
+		drift_correction: {exists: false, name: null}
 	}
 	runDir.fastqDir.validation = false
 	runDir.run_config.validation = false
 	runDir.run_info.validation = false
 	runDir.manifest.validation = false
+	
+
 	runDir.basename = basename
 	let files = []; let content;
 	try{
@@ -196,11 +217,13 @@ export async function validate_run_dir(runDir){
 		const run_configExists = await checkFileExist(runDir_path, run_config, true)
 		const run_infoExists = await checkFileExist(runDir_path, run_info, true)
 		const manifestExists = await checkFileExist(runDir_path, manifest, true)
-		
+		const throughputExists = await checkFileExist(runDir_path, 'throughput_.*.csv', true)
+		const seq_summaryExists  = await checkFileExist(runDir_path, 'sequencing_summary.*txt', true)
+		const drift_correctionExists = await checkFileExist(runDir_path, 'drift_correction.*csv', true)
 		let possibleFolders  = await getFolders(runDir_path)
 		let validFolders = []; let checkExists = [];
 		for (let i = 0; i < possibleFolders.length; i++){
-			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq", true, true))
+			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq$", true, true))
 		}
 		let response = await Promise.all(checkExists)
 		validFolders = possibleFolders.filter((d,i)=>{
@@ -220,7 +243,6 @@ export async function validate_run_dir(runDir){
 		response.forEach((d,i)=>{
 			validFolders[i].files = (d.length ? d.length : null)
 		})
-		console.log(validFolders)
 		runDir.possibleFastqFolders  = validFolders
 		if (validFolders.length > 0){
 			runDir.fastqDir = validFolders[0]
@@ -247,6 +269,13 @@ export async function validate_run_dir(runDir){
 			})
 			runDir.manifest.validation = manifestExists
 		}
+		(throughputExists ? validation.throughput.exists = true : '');
+		(drift_correctionExists ?  validation.drift_correction.exists = true : '');
+		(seq_summaryExists ? validation.seq_summary.exists = true : '');
+		
+		runDir.specifics.throughput.exists = validation.throughput.exists
+		runDir.specifics.drift_correction.exists = validation.drift_correction.exists
+		runDir.specifics.seq_summary.exists = validation.seq_summary.exists
 		return {
 			runDir: runDir
 		}
