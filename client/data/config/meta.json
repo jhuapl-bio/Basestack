@@ -1,6 +1,6 @@
 {
     "log": {
-        "path": "${writePath}/logs"
+        "path": "${dataPath}/logs"
     },
     "images": {
         "jhuaplbio/artic": {

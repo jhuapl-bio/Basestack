@@ -369,6 +369,7 @@ async function formatDockerLoads(){
 	try{
 		const meta = store.meta
 		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false)
+		config = config.replace(/\$\{dataPath\}/g, meta.writePath)
 		config = config.replace(/\$\{writePath\}/g, meta.writePath)
 		config = config.replace(/\$\{resourcePath\}/g, meta.resourcePath)
 		config = config.replace(/\\/g, "/")
