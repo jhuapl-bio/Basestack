@@ -23,14 +23,12 @@ require("../renderer/store")
 
 const {logger } = require("../modules/server/api/controllers/logger.js")
 
-const log = require('electron-log');
 const {autoUpdater} = require("electron-updater");
 
 
 const {fs} = require("fs")
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'debug';
-log.info('App starting...');
+autoUpdater.logger = logger;
+// autoUpdater.logger.transports.file.level = 'info';
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -235,6 +233,7 @@ var menu = Menu.buildFromTemplate([
           mainWindow.webContents.send('mainNotification', {
             icon: 'info',
             message: `${releaseNotes.releaseNotes}`,
+            disable_popup: true
           })
           mainWindow.webContents.send('releaseNotes', releaseNotes)
           // logger.info(`${autoUpdater.currentVersion} --> ${JSON.stringify(releaseNotes)}`)
@@ -326,7 +325,7 @@ function createWindow () {
       });
     }
     autoUpdater.on('error', (err) => {
-      logger.error(err)
+      logger.error(`Error in auto-updater. ${err}`)
       sendStatusToWindow('Error in auto-updater. ' + err);
     })
     autoUpdater.on('update-available', (info) => {
@@ -353,7 +352,8 @@ function createWindow () {
            mainWindow.webContents.send('mainNotification', {
              icon: '',
              loading: true,
-             message: `Downloading Update`
+             message: `Downloading Update`,
+             disable_popup: true
            })
            if (response.checkboxChecked ){
              quitUpdateInstall = true;
@@ -370,6 +370,7 @@ function createWindow () {
       mainWindow.webContents.send('mainNotification', {
          type: 'info',
          message: log_message,
+         disable_popup: true
       })
     })
 
@@ -395,7 +396,7 @@ function createWindow () {
     })
     autoUpdater.on('update-not-available', (info, err) => {
       if (err){
-        logger.error(err)
+        logger.error(`${err} err in update not available messaging`)
       }
       logger.info('Basestack update not available.');
       releaseNotes=info

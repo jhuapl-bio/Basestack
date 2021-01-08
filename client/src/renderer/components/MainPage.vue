@@ -169,7 +169,7 @@ export default {
 		})
 	 	this.$electron.ipcRenderer.on('mainNotification', (evt, message)=>{
 	 		$this.patchNotes = message
-		 	this.$swal.fire({
+	 		const settings = {
               position: 'center',
               icon: $this.patchNotes.icon,
               showConfirmButton:true,
@@ -180,7 +180,17 @@ export default {
               		$this.$swal.showLoading()
               	}
     		  }
-            })
+            }
+            if (message.disable_popup) { 
+           		settings.showClass = {
+				    popup: '',
+				    icon: ''
+				}
+			  	settings.hideClass = {
+			    	popup: '',
+			  	}
+	 		}
+		 	this.$swal.fire(settings)
 	 	})
 	},
 
