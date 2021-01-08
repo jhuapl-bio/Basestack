@@ -197,9 +197,9 @@ export async function validate_run_dir(runDir){
 
 	}
 	runDir.specifics = {
-		throughput: {exists: false, name: null},
-		seq_summary: {exists: false, name: null},
-		drift_correction: {exists: false, name: null}
+		throughput: {exists: false, name: null, required: false},
+		seq_summary: {exists: false, name: null, required: true},
+		drift_correction: {exists: false, name: null, required: false}
 	}
 	runDir.fastqDir.validation = false
 	runDir.run_config.validation = false
