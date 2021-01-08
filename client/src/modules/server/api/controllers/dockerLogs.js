@@ -9,7 +9,7 @@
 import Docker from 'dockerode';
 import docker  from "./docker.js"
 import path  from "path"
-const {logger} = require("./logger.js")
+const {logger, dockerlogger} = require("./logger.js")
 const { store }  = require("../store/global.js")
 
 export async function check_container_exists(container_name){
@@ -65,8 +65,10 @@ export const followStreamContainer = async function(stream, obj){
 	stream.on("data", (data)=>{
 		try{
 			obj.status.stream.push(formatBuffer(data))
+			dockerlogger.info("%s", formatBuffer(data))
 		} catch(err){
 			logger.error("error in getting data %s", err)
+			dockerlogger.error("error in getting data %s", err)
 			obj.status.errors = formatBuffer(err)
 			throw err
 		} finally{
@@ -76,9 +78,11 @@ export const followStreamContainer = async function(stream, obj){
 	stream.on("error", (err)=>{
 		try{
 			obj.status.stream.push(formatBuffer(err))
+			dockerlogger.info("%s", formatBuffer(err))
 			obj.status.errors = formatBuffer(err)
 		} catch(err){
 			logger.error("%s", err)
+			dockerlogger.error("%s", err)
 		}
 	})
 	stream.on("end", (data)=>{
@@ -88,10 +92,10 @@ export const followStreamContainer = async function(stream, obj){
     	} catch (err){
     		obj.status.running = false
     		logger.error("%s", err)
+    		dockerlogger.error("%s", err)
     		obj.status.errors = formatBuffer(err)
     	}finally {
     		obj.status.running = false
-    		// obj.status.errors = "Error found Test"
     		if (obj.status.errors){
     			obj.status.stream.push(obj.status.errors)
     		}
@@ -113,6 +117,7 @@ export const followStreamBuild = async function(stream, obj){
 	    		obj.exists = true
 	    	} catch (err){
 	    		logger.error("%s", err)
+	    		dockerlogger.error("%s", err)
 	    		obj.status.running = false
 	    	}finally {
 	    		if (obj.status.errors){
@@ -129,14 +134,15 @@ export const followStreamBuild = async function(stream, obj){
 	    function onProgress(event) {
 	    	try{
 	    		if (event.stream != undefined){	
-	    			// logger.info(`stream. ${event.stream}`)
 					obj.status.stream.push((event.stream)); 
+					dockerlogger.info("%s", event.stream)
 				} else if (event.status != undefined){
-					// logger.info(JSON.stringify(event))
 					obj.status.stream.push((`${event.status} ${(event.progress ? event.progress : '')}`)); 					
+					dockerlogger.info(`${event.status} ${(event.progress ? event.progress : '')}`)
 				}
 			} catch(err){
 				logger.error(err)
+				dockerlogger.error(err)
 				obj.status.stream.push((event));  
 			} finally{
 				obj.status.stream = obj.status.stream.splice(-150)
