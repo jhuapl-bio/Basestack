@@ -39,6 +39,7 @@ export var meta = {
 	errorLogFile: path.join(writePath, "logs","error.log"),
 	logFile: path.join(writePath, "logs","logger.log"),
 	logFolder: path.join(writePath, "logs"),
+	dockerLogFile: path.join(writePath, "logs", "dockerLog.log"),
 	dockerImagesPath: dockerStagePath,
 	gid: gid,
 	uid: uid,
