@@ -242,7 +242,17 @@ export default {
               		$this.$swal.showLoading()
               	}
     		  }
-            })
+            }
+            if (message.disable_popup) { 
+           		settings.showClass = {
+				    popup: '',
+				    icon: ''
+				}
+			  	settings.hideClass = {
+			    	popup: '',
+			  	}
+	 		}
+		 	this.$swal.fire(settings)
 	 	})
 	},
 

@@ -67,6 +67,7 @@ export const followStreamContainer = async function(stream, obj, container){
 		try{
 			// stream.emit("error", new Error("bazinga"))
 			obj.status.stream.push(formatBuffer(data))
+			dockerlogger.info("%s", formatBuffer(data))
 		} catch(err){
 			logger.error("error in getting data %s", err)
 			dockerlogger.error("error in getting data %s", err)
@@ -101,7 +102,6 @@ export const followStreamContainer = async function(stream, obj, container){
     		obj.status.errors = formatBuffer(err)
     	}finally {
     		obj.status.running = false
-    		// obj.status.errors = "Error found Test"
     		if (obj.status.errors){
     			obj.status.stream.push(obj.status.errors)
     		}
@@ -140,7 +140,6 @@ export const followStreamBuild = async function(stream, obj){
 	    function onProgress(event) {
 	    	try{
 	    		if (event.stream != undefined){	
-	    			// logger.info(`stream. ${event.stream}`)
 					obj.status.stream.push((event.stream)); 
 					dockerlogger.info("%s", event.stream)
 				} else if (event.status != undefined){
