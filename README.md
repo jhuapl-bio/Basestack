@@ -61,18 +61,19 @@
 
 - Once Basestack opens up, click 'Module Install' in the left panel.
 - Click 'Install' (play-circle)
-	- You may choose online or offline method. Online is default. Seem more information below in [Section A3](#a3-download-analyis-pipelines)
+	- You may choose online or offline method. Online is default. See more information below in [Section A3](#a3-download-analyis-pipelines)
 - Click 'OK' on the small notification window that opens up.
 - Follow the *Docker Install Log* to monitor progress and see when the analysis pipeline is ready for use (about 30-45 minutes on a fast internet connection)
-- Download the `test-data.zip` file available in the same gDrive location as the software
+- Download the [`test-data.zip`](https://drive.google.com/file/d/1zrgwheJxhMTvd7zu0fuRhVYYM0aGY5XS/view?usp=sharing) file available [here](https://drive.google.com/drive/folders/1ad2U3zBTHXfly3_ybLUxJBarvHXCPS2Z)
 
 ## 4. Troubleshooting
+- Request or view feature changes at our [issue tracker](https://github.com/jhuapl-bio/Basestack/issues)
 - If you run into issues with the online install, you may want to download (or otherwise obtain) the offline install package
-- Using the above download links, download the appropriate docker images you'd like e.g. basestack_consensus.tar.gz (~5.2GB)
-- With the 'Module Install' tab, select the gear icon and switch install method to 'offline'
-- Drag or Browse to that file on YOUR SYSTEM into the appropriate file input space
-- Click 'Install' (play-circle button)
-- See below Appendices for more detailed installation instructions.
+	- Using the above download links, download the appropriate docker images you'd like e.g. basestack_consensus.tar.gz (~5.2GB)
+	- With the 'Module Install' tab, select the gear icon and switch install method to 'offline'
+	- Drag or Browse to that file on YOUR SYSTEM into the appropriate file input space
+	- Click 'Install' (play-circle button)
+- See below Appendices for more detailed installation instructions. 
 
 ## Appendices
 
@@ -116,9 +117,33 @@
 
 <hr>
 
+#### A1.2 Confirm Docker is Running
+
+<details>
+<summary>View</summary>
+
+##### Windows
+
+In your taskbar (lower-right), if you hover over the icon you should see the message displayed below. Right-clicking will give additional options
+
+![Step 1](./docs/images/Docker4.PNG "Title")
+
+
+##### Linux or Mac
+
+Open a terminal and type `docker info`. You should see information about your `docker` service
+
+![Step 1](./docs/images/docker_info.PNG "Title")
+
+
+</details>
+
 #### Common Errors
 
-##### 'You are not allowed to use Docker, you must be in the "docker-users" group'
+<details>
+<summary>View</summary>
+
+##### 'You are not allowed to use Docker, you must be in the "docker-users" group' (Windows)
 
 ![Step 1](./docs/images/computerManagement.PNG "Title")
 
@@ -140,6 +165,19 @@
 	- You will need to log out and back into your account for this to take effect
 
 
+
+<hr>
+
+#### Permisson denied (Linux)
+
+Please ensure that you follow the correct [instructions](#1-install-docker) here to using `userns-remap`
+
+Note that this will map all of your processes INSIDE the docker containers to your user id if used properly. You will need sudo to delete any files or folders that are causing issues.
+
+<hr>
+
+</details>
+
 ### A2 Install Basestack
 
 Please choose one of the 2 following methods of install for your use case
@@ -150,7 +188,7 @@ RECOMMENDED for most users
 	* Double Click Your Executable
 		- Windows: Basestack.exe
 		- Linux: Basestack.AppImage
-		- OSX:  Basestack.dmg (under construction)
+		- OSX:  Basestack.dmg 
 
 For example, on Windows, your directory will look like: 
 

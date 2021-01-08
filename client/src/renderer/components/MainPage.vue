@@ -15,7 +15,7 @@
         	active-nav-item-class="activeTabButton"
         	style="height: 100vh; " 
         	vertical
-        	v-if="!initial"
+        	v-if="!initial "
         	
         >
           <b-tab  
