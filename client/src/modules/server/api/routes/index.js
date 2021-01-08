@@ -419,7 +419,7 @@ router.post("/install/imagesOffline", (req,res,next)=>{ //this method needs to b
 		try {
 			
 				let response = await install_images_offline(req.body)
-				logger.info("Success in loading images")
+				logger.info(`Success in beginning to load image: ${req.body.name}`)
 				res.status(200).json({status: 200, message: "Completed docker offline load", data: null });			
 			
 		} catch(err2){
@@ -435,7 +435,7 @@ router.post("/install/imagesOnline", (req,res,next)=>{ //this method needs to be
 	(async function(){
 		try {
 			let response = await install_images_online(req.body)
-			logger.info("Success in loading images")
+			logger.info(`Success in beginning to load image: ${req.body.name}`)
 			res.status(200).json({status: 200, message: "Completed docker online load", data: response });
 		} catch(err2){
 			logger.error("%s %s", "Error in loading images2", err2)
