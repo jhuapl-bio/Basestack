@@ -111,7 +111,7 @@
 			  		</span>
 		  		</span>
 		  	</div>
-			<div class="tutorial-nav" >
+			<div class="tutorial-nav" v-if="modules.basestack_tutorial.status.running">
 					<div v-for="module in videos" class="align-top" :key="module.name" >
 						<div  class="modules align-top" style=" cursor:pointer; text-align:right !important;" @click="selectedVideo = video; selectedModule = module;" v-for="video in module.sections" :key="video.fullpath"  >
 							<b-row>

@@ -5,11 +5,11 @@ WORKDIR /src/
 
 
 RUN apt-get -y update
-RUN apt-get install -y wget curl unzip groff dos2unix 
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash
-RUN apt-get install -y nodejs
-RUN apt-get update
-RUN npm install express
+RUN apt-get install -y wget curl unzip groff dos2unix \
+	&& curl -sL https://deb.nodesource.com/setup_10.x | bash \
+	&& apt-get install -y nodejs \
+	&& apt-get update \
+	&& npm install express
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip  awscliv2.zip && \
