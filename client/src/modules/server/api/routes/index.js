@@ -32,8 +32,8 @@ const {
 	fetch_videos_meta, 
 	fetch_video,
 	fetch_histories,
-	fetch_status
-
+	fetch_status,
+	fetch_external_dockers
 	} = require("../controllers/fetch.js")
 
 const { 
@@ -321,7 +321,21 @@ router.get("/videos/fetchMeta", (req,res,next)=>{ //this method needs to be rewo
 		}	
 	})().catch((err)=>{})
 })
-
+router.post("/tags/fetch", (req,res,next)=>{ 
+	(async function(){
+		try {
+			fetch_external_dockers(req.body).then((response)=>{
+				res.status(200).json({status: 200, message: "Returning compelted fetch", data: response });
+				}).catch((err1)=>{
+					logger.error(err1)
+					res.status(419).send({status: 419, message: "There was an error in fetch tags. Check Logs"});
+				})			
+		} catch(err3){
+			logger.error(err3)
+			res.status(419).send({status: 419, message: error_alert(err3) });
+		}	
+	})().catch((err2)=>{console.error(err2)})
+})
 
 router.post("/videos/fetch", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	try {
