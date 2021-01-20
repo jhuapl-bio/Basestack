@@ -127,7 +127,7 @@ export default {
 			},
 			initial:true,
 			collapsed:false,
-    		tab: 0,
+    		tab: 1,
 	        entries: null,
 	        resources: null,
 	        docker:null,
@@ -264,6 +264,7 @@ export default {
 			}
 		} catch(err){
 			this.initial=false
+			this.intervalChecking = false
 			throw err
 		} finally {
 	      	this.initial = false

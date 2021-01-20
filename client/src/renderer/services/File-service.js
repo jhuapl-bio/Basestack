@@ -105,6 +105,9 @@ class FileService {
   fetchMeta(){
     return Api().get("http://localhost:5003/meta/fetch")                
   }
+  fetchDockerTags(name){
+    return Api().get("http://localhost:5003/tags/fetch", name)                    
+  }
 
 }
 export default new FileService();
