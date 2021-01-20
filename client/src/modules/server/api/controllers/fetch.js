@@ -520,6 +520,7 @@ async function formatDockerLoads(){
 				if (!checking){
 					(async function(){
 						checking = true
+						console.log("Key", key)
 						let response =  await check_image(key)
 						store.config.images[key].status.installed = response.status
 						store.config.images[key].status.errors = response.error
