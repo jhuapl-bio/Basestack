@@ -151,7 +151,7 @@
 					            targetClasses: ['it-has-a-tooltip'],
 					            }"
 		            	>
-		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
+		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement = null; selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
 					    </span>
 					</b-col>
 					<b-col sm="3"  v-else style="text-align:center">
@@ -404,6 +404,12 @@
 					}
 					if (!this.stagedInstallation[key]){
 						this.stagedInstallation[key] = value
+			
+					} else{
+						this.stagedInstallation[key].available_images = value.available_images	
+						this.stagedInstallation[key].status = value.status		
+						this.stagedInstallation[key].tags = value.tags		
+						// this.stagedInstallation[key].selectedTag = value.selectedTag		
 					}
 				}
 				if (this.selectedElement){
