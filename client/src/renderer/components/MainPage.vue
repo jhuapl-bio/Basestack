@@ -127,7 +127,7 @@ export default {
 			},
 			initial:true,
 			collapsed:false,
-    		tab: 1,
+    		tab: 0,
 	        entries: null,
 	        resources: null,
 	        docker:null,
@@ -169,7 +169,7 @@ export default {
 		})
 	 	this.$electron.ipcRenderer.on('mainNotification', (evt, message)=>{
 	 		$this.patchNotes = message
-	 		const settings = {
+		 	this.$swal.fire({
               position: 'center',
               icon: $this.patchNotes.icon,
               showConfirmButton:true,
@@ -180,17 +180,7 @@ export default {
               		$this.$swal.showLoading()
               	}
     		  }
-            }
-            if (message.disable_popup) { 
-           		settings.showClass = {
-				    popup: '',
-				    icon: ''
-				}
-			  	settings.hideClass = {
-			    	popup: '',
-			  	}
-	 		}
-		 	this.$swal.fire(settings)
+            })
 	 	})
 	},
 
@@ -264,7 +254,6 @@ export default {
 			}
 		} catch(err){
 			this.initial=false
-			this.intervalChecking = false
 			throw err
 		} finally {
 	      	this.initial = false

@@ -7,7 +7,6 @@
    - # **********************************************************************
   */
 const fs = require("fs")
-const fetch = require('node-fetch');
 const { checkFileExist, checkFolderExistsReject, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
 var   { store }  = require("../store/global.js")
@@ -16,7 +15,7 @@ const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO
 const si = require('systeminformation');
 import Docker from 'dockerode';
 import  docker  from "./docker.js"
-const moment = require("moment")
+
 
 export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathVersion){
 	return new Promise((resolve, reject)=>{
@@ -193,44 +192,30 @@ export async function fetch_videos_meta(){
 
 
 
-async function check_image_promise(imageName){
+async function check_image_promise(image){
 	return new Promise((resolve, reject)=>{
 		try{
 			(async ()=>{
-				// logger.info(imageName.replace(":latest", ""))
-				// let getImage = await docker.getImage(image.replace(":latest", "")).inspect()
-				let getImages = await docker.listImages({ 'filters' : { 'reference' : [ imageName.replace(":latest", "") ] }})
-				let tags = []
-				for (const image of getImages) {
-				  if (image.RepoTags && image.RepoTags.length > 0){
-				  	// console.log(imageName, image.RepoDigests, image.Id)
-				  	tags = tags.concat(image.RepoTags.map((d,i)=>{
-				  		return {Id: image.Id, name: d, digest: (image.RepoDigests ? image.RepoDigests[i].replace(imageName, "") : null)}
-				  	}))
-				  }
-				}
+				let getImage = await docker.getImage(image).inspect()
 				resolve({
-					tags: tags,
-					imageName: imageName,
-					error: null,
+					image: getImage,
+					imageName: image,
 					status: true
 				})
 				
 			})().catch((error)=>{
-				console.error(error, "error in checking image exist", imageName)
+				// console.error(error, "error in checking image exist")
 				resolve({
-					tags: [],
-					imageName: imageName,
-					error: error,
+					image: error,
+					imageName: image,
 					status: false
 				})
 			});
 		} catch(err){
-			logger.error("%s %s", err, " error in retrieving imageName: "+imageName)
+			logger.error("%s %s", err, " error in retrieving imageName: "+image)
 			resolve({
-				tags: [],
-				imageName: imageName,
-				error: err,
+				image: err,
+				imageName: image,
 				status: false
 			})
 		}
@@ -242,8 +227,6 @@ async function check_image_promise(imageName){
 export async function check_image(image){
 	return new Promise((resolve, reject)=>{
 		check_image_promise(image).then((response)=>{
-			// console.log(response)
-			// logger.info(`${response.images} image get`)
 			resolve(response)			
 		}).catch((err)=>{
 			console.error(err, "error in promises fetch images")
@@ -308,28 +291,6 @@ export async function fetch_docker_status(){
 	} catch(err){
 		logger.error(err)
 		throw err
-	}
-}
-export async function fetch_external_dockers(key){
-	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags`
-	try{
-		logger.info(url)
-		store.config.images[key].status.fetching_available_images = true
-		let response =  await fetch(url)
-		const json = await response.json()
-		let latest = null;
-		if (json.results){
-			latest = json.results.filter((d)=>{
-				return d.name == 'latest'
-			})[0].images[0].digest
-		}
-		store.config.images[key].latest_digest = latest  
-		store.config.images[key].available_images = json.results
-	} catch(err){
-		logger.error(err)
-	} finally{
-		logger.info("Checked the presence of "+key)
-		store.config.images[key].status.fetching_available_images = false
 	}
 }
 export async function fetch_status(){
@@ -408,7 +369,6 @@ async function formatDockerLoads(){
 	try{
 		const meta = store.meta
 		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false)
-		config = config.replace(/\$\{dataPath\}/g, meta.writePath)
 		config = config.replace(/\$\{writePath\}/g, meta.writePath)
 		config = config.replace(/\$\{resourcePath\}/g, meta.resourcePath)
 		config = config.replace(/\\/g, "/")
@@ -425,36 +385,19 @@ async function formatDockerLoads(){
 				complete: false,
 				errors : null,
 				installed: false,
-				inspect: null,
-				fetching_available_images: false
-			}
-			if (!store.config.images[key].private){
-				fetch_external_dockers(key)
-			}
-			if (!store.config.images[key].available_images){
-				store.config.images[key].available_images = [{name: 'latest'}]
+				inspect: null
 			}
 			store.dockerStreamObjs[key] = null
-			let checking = false
 			store.statusIntervals.images[key] = setInterval(function(){ 
-				if (!checking){
-					(async function(){
-						checking = true
-						let response =  await check_image(key)
-						store.config.images[key].status.installed = response.status
-						store.config.images[key].status.errors = response.error
-						store.config.images[key].tags = response.tags
-						store.config.images[key].selectedTag = (response.tags.length > 0 ? response.tags[0] : null)
-						checking = false
-					})().catch((err)=>{
-						logger.error(err)
-						store.config.images[key].status.installed = false
-						// store.config.images[key].status.errors = err
-						store.config.images[key].tags = []
-						store.config.images[key].selectedTag = null
-						checking = false
-					})
-				}			
+				(async function(){
+					let response =  await check_image(key)
+					store.config.images[key].status.installed = response.status
+					store.config.images[key].status.inspect = response.image
+				})().catch((err)=>{
+					logger.error(err)
+					store.config.images[key].status.installed = false
+					store.config.images[key].status.inspect = null
+				})			
 			}, 2000);
 		}
 		
