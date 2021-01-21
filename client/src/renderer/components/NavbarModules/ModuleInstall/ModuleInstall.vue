@@ -504,12 +504,6 @@
 					}
 					if (!this.stagedInstallation[key]){
 						this.stagedInstallation[key] = value
-			
-					} else{
-						this.stagedInstallation[key].available_images = value.available_images	
-						this.stagedInstallation[key].status = value.status		
-						this.stagedInstallation[key].tags = value.tags		
-						// this.stagedInstallation[key].selectedTag = value.selectedTag		
 					}
 				}
 				if (this.selectedElement){

@@ -935,12 +935,22 @@ export default {
         			}
         		},
         		specifics: {
+        			throughput: {
+        				exists: {
+        					checked: value => value === true
+        				}
+        			},
         			seq_summary: {
         				exists: {
         					checked: value => value === true 
         				},
         				errors: {
         					checked: value => value && value.length == 0 
+        				}
+        			},
+        			drift_correction: {
+        				exists: {
+        					checked: value => value === true
         				}
         			}
         		},

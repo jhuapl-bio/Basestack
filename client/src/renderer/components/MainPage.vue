@@ -171,7 +171,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 1,
+    		tab: 0,
 	        entries: null,
 	        resources: null,
 	        docker: {},
@@ -242,17 +242,7 @@ export default {
               		$this.$swal.showLoading()
               	}
     		  }
-            }
-            if (message.disable_popup) { 
-           		settings.showClass = {
-				    popup: '',
-				    icon: ''
-				}
-			  	settings.hideClass = {
-			    	popup: '',
-			  	}
-	 		}
-		 	this.$swal.fire(settings)
+            })
 	 	})
 	},
 

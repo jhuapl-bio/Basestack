@@ -211,7 +211,7 @@ export async function fetch_external_dockers(key){
 	}
 }
 
-async function check_image_promise(imageName){
+async function check_image_promise(image){
 	return new Promise((resolve, reject)=>{
 		try{
 			(async ()=>{
@@ -229,27 +229,24 @@ async function check_image_promise(imageName){
 					}
 				}
 				resolve({
-					tags: tags,
-					imageName: imageName,
-					error: null,
+					image: getImage,
+					imageName: image,
 					status: true
 				})
 				
 			})().catch((error)=>{
-				console.error(error, "error in checking image exist", imageName)
+				// console.error(error, "error in checking image exist")
 				resolve({
-					tags: [],
-					imageName: imageName,
-					error: error,
+					image: error,
+					imageName: image,
 					status: false
 				})
 			});
 		} catch(err){
-			logger.error("%s %s", err, " error in retrieving imageName: "+imageName)
+			logger.error("%s %s", err, " error in retrieving imageName: "+image)
 			resolve({
-				tags: [],
-				imageName: imageName,
-				error: err,
+				image: err,
+				imageName: image,
 				status: false
 			})
 		}
@@ -262,8 +259,6 @@ export async function check_image(image){
 	return new Promise((resolve, reject)=>{
 
 		check_image_promise(image).then((response)=>{
-			// console.log(response)
-			// logger.info(`${response.images} image get`)
 			resolve(response)			
 		}).catch((err)=>{
 			console.error(err, "error in promises fetch images")
@@ -356,28 +351,6 @@ export async function fetch_docker_status(){
 	} catch(err){
 		logger.error(`${err} <-- error in fetching docker status via ping`)
 		throw err
-	}
-}
-export async function fetch_external_dockers(key){
-	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags`
-	try{
-		logger.info(url)
-		store.config.images[key].status.fetching_available_images = true
-		let response =  await fetch(url)
-		const json = await response.json()
-		let latest = null;
-		if (json.results){
-			latest = json.results.filter((d)=>{
-				return d.name == 'latest'
-			})[0].images[0].digest
-		}
-		store.config.images[key].latest_digest = latest  
-		store.config.images[key].available_images = json.results
-	} catch(err){
-		logger.error(err)
-	} finally{
-		logger.info("Checked the presence of "+key)
-		store.config.images[key].status.fetching_available_images = false
 	}
 }
 export async function fetch_status(){
@@ -517,24 +490,15 @@ async function formatDockerLoads(){
 				fetch_external_dockers(key)
 			}
 			store.statusIntervals.images[key] = setInterval(function(){ 
-				if (!checking){
-					(async function(){
-						checking = true
-						let response =  await check_image(key)
-						store.config.images[key].status.installed = response.status
-						store.config.images[key].status.errors = response.error
-						store.config.images[key].tags = response.tags
-						store.config.images[key].selectedTag = (response.tags.length > 0 ? response.tags[0] : null)
-						checking = false
-					})().catch((err)=>{
-						logger.error(err)
-						store.config.images[key].status.installed = false
-						// store.config.images[key].status.errors = err
-						store.config.images[key].tags = []
-						store.config.images[key].selectedTag = null
-						checking = false
-					})
-				}			
+				(async function(){
+					let response =  await check_image(key)
+					store.config.images[key].status.installed = response.status
+					store.config.images[key].status.inspect = response.image
+				})().catch((err)=>{
+					logger.error(err)
+					store.config.images[key].status.installed = false
+					store.config.images[key].status.inspect = null
+				})			
 			}, 2000);
 		}
 		
