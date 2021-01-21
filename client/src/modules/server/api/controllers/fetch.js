@@ -199,18 +199,13 @@ async function check_image_promise(imageName){
 			(async ()=>{
 				// logger.info(imageName.replace(":latest", ""))
 				// let getImage = await docker.getImage(image.replace(":latest", "")).inspect()
-				// console.log(imageName)
 				let getImages = await docker.listImages({ 'filters' : { 'reference' : [ imageName.replace(":latest", "") ] }})
 				let tags = []
 				for (const image of getImages) {
 				  if (image.RepoTags && image.RepoTags.length > 0){
 				  	// console.log(imageName, image.RepoDigests, image.Id)
 				  	tags = tags.concat(image.RepoTags.map((d,i)=>{
-					  	// console.log((image.RepoDigests ? image.RepoDigests[i] : null))
-					  	console.log(image.RepoTags, image.RepoDigests)
-					  	if (image.RepoDigests){
-					  		console.log(image.RepoDigests[i], i, imageName)
-					  	}
+					  	console.log((image.RepoDigests ? image.RepoDigests[i] : null))
 				  		return {Id: image.Id, name: d, digest: (image.RepoDigests ? image.RepoDigests[i].replace(imageName, "") : null)}
 				  	}))
 				  }
@@ -446,7 +441,6 @@ async function formatDockerLoads(){
 				if (!checking){
 					(async function(){
 						checking = true
-						console.log("Key", key)
 						let response =  await check_image(key)
 						store.config.images[key].status.installed = response.status
 						store.config.images[key].status.errors = response.error
