@@ -246,18 +246,21 @@ export class BasestackConsensus{
 		  	//write the meta data file for the run
 		  	
 		  	//
-		  	let tsv_file_content = "plate\t"+runDir.run_info.plate+"\n"+'row\t'+ runDir.run_info.row 
+		  	console.log(runDir.run_info)
+		  	let tsv_file_content = runDir.run_info.desc + "\n"
 		  	logger.info("%s", "Bookmark run info")
-		  	await writeFile(path.join(metaDir, runDir.run_info.filename), tsv_file_content).then((response)=>{
+		  	await writeFile(path.join(metaDir, runDir.run_info.filename), tsv_file_content+"\n").then((response)=>{
 		  		logger.info("%s %s", "Success in writing runInfo file")
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
+		  	console.log(tsv_file_content)
 		  	
 		  	tsv_file_content = "primers\t"+runDir.run_config.primers+"\n"+
 		  	'basecalling\t'+ runDir.run_config.basecalling+"\n" +
-		  	'barcoding\t'+ runDir.run_config.barcoding 
+		  	'barcoding\t'+ runDir.run_config.barcoding +"\n"
+		  	console.log(tsv_file_content)
 
 		  	logger.info("%s", "Bookmark run config")
-		  	await writeFile(path.join(metaDir, runDir.run_config.filename), tsv_file_content ).then((response)=>{
+		  	await writeFile(path.join(metaDir, runDir.run_config.filename), tsv_file_content +"\n" ).then((response)=>{
 		  		logger.info("%s %s", "Success in writing runInfo file")
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 		  	tsv_file_content = runDir.manifest.entries.map((d)=>{
