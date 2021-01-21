@@ -51,8 +51,6 @@ let mainConfig = {
     path: path.join(__dirname, '../dist/electron')
   },
   plugins: [
-    new webpack.NoEmitOnErrorsPlugin(),
-
   ],
   resolve: {
     extensions: ['.js', '.json', '.node']
@@ -75,6 +73,7 @@ if (process.env.NODE_ENV !== 'production') {
  * Adjust mainConfig for production settings
  */
 if (process.env.NODE_ENV === 'production') {
+  // mainConfig.entry.main = [path.join(__dirname, '../src/modules/index.server.js')].concat(mainConfig.entry.main)
   mainConfig.plugins.push(
     new MinifyPlugin(),
     new webpack.DefinePlugin({

@@ -91,46 +91,31 @@ function startRenderer (devClient) {
       }
     )
 
-    // server.listen(9080)
+    server.listen(9080)
   })
 }
 function startServer (devClient){
   return new Promise((resolve, reject) => {
-    // let { open_server,close_server } = require("../src/modules/server/server.js")
-    // open_server()
-    // resolve()
-    console.log(serverConfig.entry.server)
-    serverConfig.entry.app = [path.join(__dirname, '../src/modules/index.server.js')].concat(serverConfig.entry.app)
+    serverConfig.entry.server = path.join(__dirname, '../src/modules/index.server.js')
     serverConfig.mode = 'development'
     const compiler = webpack(serverConfig)
     hotMiddleware = webpackHotMiddleware(compiler, {
       log: false,
       heartbeat: 2500,
     })
+    compiler.hooks.watchRun.tapAsync('watch-run', (compilation, done) => {
+      logStats('Server', chalk.white.bold('compiling...'))
+      hotMiddleware.publish({ action: 'compiling' })
+      done()
+    })
 
     compiler.hooks.done.tap('done', stats => {
-      logStats('Renderer', stats)
+      logStats('Server', stats)
     })
-    const server = new WebpackDevServer(
-      compiler,
-
-      {
-        contentBase: path.join(__dirname, '../*'),
-        quiet: true,
-
-        before (app, ctx) {
-          app.use(hotMiddleware)
-          ctx.middleware.waitUntilValid(() => {
-            resolve()
-          })
-        },
-        watchOptions: {
-          ignored: '**/.*' 
-        },
-      }
-    )
-    console.log("---server end 0------")
-    server.listen(5003)
+    compiler.watch({}, (err, stats) => {
+      logStats('Server', stats)
+      resolve()
+    })
   })
 }
 
@@ -236,10 +221,9 @@ function init () {
 
   Promise.all([
     startServer(devClient), 
-    // startRenderer(devClient), 
+    startRenderer(devClient), 
     startMain(devClient)])
     .then(() => {
-      console.log("starting electron")
       startElectron()
     })
     .catch(err => {

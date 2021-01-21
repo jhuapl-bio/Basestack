@@ -13,6 +13,7 @@ const Multispinner = require('multispinner')
 const mainConfig = require('./webpack.main.config')
 const rendererConfig = require('./webpack.renderer.config')
 const webConfig = require('./webpack.web.config')
+const serverConfig = require('./webpack.server.config')
 
 const doneLog = chalk.bgGreen.white(' DONE ') + ' '
 const errorLog = chalk.bgRed.white(' ERROR ') + ' '
@@ -35,6 +36,9 @@ function build () {
   del.sync(['dist/electron/*', '!.gitkeep'])
 
   const tasks = ['main', 'renderer']
+  // const tasks = ['server', 'main']
+  // const tasks = ['main']
+  // const tasks = ['main', 'server', 'renderer']
   const m = new Multispinner(tasks, {
     preText: 'building',
     postText: 'process'
@@ -52,7 +56,8 @@ function build () {
   pack(mainConfig).then(result => {
     results += result + '\n\n'
     m.success('main')
-  }).catch(err => {
+  })
+  .catch(err => {
     m.error('main')
     console.log(`\n  ${errorLog}failed to build main process`)
     console.error(`\n${err}\n`)
@@ -68,6 +73,20 @@ function build () {
     console.error(`\n${err}\n`)
     process.exit(1)
   })
+
+
+  // pack(serverConfig).then(result => {
+  //   results += result + '\n\n'
+  //   m.success('server')
+  // }).catch(err => {
+  //   m.error('server')
+  //   console.log(`\n  ${errorLog}failed to build server process`)
+  //   console.error(`\n${err}\n`)
+  //   process.exit(1)
+  // })
+
+
+  
 
 }
 
