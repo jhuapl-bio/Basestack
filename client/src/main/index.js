@@ -9,25 +9,19 @@ if (!process.env.APPDATA){
 }
 
 
-const { 
- cancel_container
- } = require('../modules/server/api/controllers/index.js')
-
 
 const path = require("path")
 // const {  show_MinKnow, show_sublime, show_aliview, show_spreaD3, show_BEAUTI, show_BEAST, show_figtree, show_tempest, show_tracer } = require('./menu.js')
-const { store } = require("../modules/server/api/store/global.js")
 
 require("../renderer/store")
 
 
-const {logger } = require("../modules/server/api/controllers/logger.js")
 
 const {autoUpdater} = require("electron-updater");
 
 
 const {fs} = require("fs")
-autoUpdater.logger = logger;
+// autoUpdater.logger = logger;
 // autoUpdater.logger.transports.file.level = 'info';
 /**
  * Set `__static` path to static files in production
@@ -53,9 +47,18 @@ if (process.env.NODE_ENV !== 'development') {
 
 let mainWindow
 
-let { open_server,close_server } = require("../modules/server/server.js")
-open_server()
+// let { open_server,close_server } = require("../modules/server/server.js")
+// open_server()
+// const { 
+//  cancel_container
+//  } = require('../modules/server/api/controllers/index.js')
+// // const {logger } = require("../modules/server/api/controllers/logger.js")
+// const { store } = require("../modules/server/api/store/global.js")
+
+
+
 // logger.info(JSON.stringify(process.env, null, 4))
+
 var menu = Menu.buildFromTemplate([
   // {
   //     label: 'Quick Launch Software',
@@ -163,10 +166,10 @@ var menu = Menu.buildFromTemplate([
   {
     label: 'Restart',
     submenu: [
-      {
-        label: 'Refresh Server',
-        click() {  close_server(); open_server();  }
-      },
+      // {
+      //   label: 'Refresh Server',
+      //   click() {  close_server(); open_server();  }
+      // },
       {
         label: 'Restart App',
         click() {  
@@ -222,14 +225,14 @@ var menu = Menu.buildFromTemplate([
   {
     label: 'Logs and Info',
     submenu: [
-      {
-        label: 'Open Logs',
-        click() { shell.openPath(store.meta.logFolder)  }
-      },
+      // {
+      //   label: 'Open Logs',
+      //   click() { shell.openPath(store.meta.logFolder)  }
+      // },
       {
         label: 'View Release Notes',
         click() {  
-          logger.info("Getting release notes")
+          // logger.info("Getting release notes")
           mainWindow.webContents.send('mainNotification', {
             icon: 'info',
             message: `${releaseNotes.releaseNotes}`,
@@ -270,10 +273,10 @@ const winURL = process.env.NODE_ENV === 'development'
   : `file://${__dirname}/index.html`
 function checkUpdates(){
   if(process.env.NODE_ENV == 'production'){
-    logger.info("Check for Basestack updates and notify")
+    // logger.info("Check for Basestack updates and notify")
     autoUpdater.checkForUpdatesAndNotify()   
   } else {
-    logger.info(`Development mode enabled, skipping check for updates`)
+    // logger.info(`Development mode enabled, skipping check for updates`)
   }
 }
 function createWindow () {
@@ -313,9 +316,9 @@ function createWindow () {
   })
   mainWindow.webContents.on('did-finish-load', function () {
     let quitUpdateInstall = false;
-    logger.info("Basestack is finished loading")
+    // logger.info("Basestack is finished loading")
     function sendStatusToWindow(text) {
-      logger.info(text);
+      // logger.info(text);
       dialog.showMessageBox(mainWindow, {
         type: 'info',
         defaultId: 0,
@@ -325,12 +328,12 @@ function createWindow () {
       });
     }
     autoUpdater.on('error', (err) => {
-      logger.error(`Error in auto-updater. ${err}`)
+      // logger.error(`Error in auto-updater. ${err}`)
       sendStatusToWindow('Error in auto-updater. ' + err);
     })
     autoUpdater.on('update-available', (info) => {
-      logger.info(info)
-      logger.info("update available")
+      // logger.info(info)
+      // logger.info("update available")
       let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
       const options = {
           type: 'question',
@@ -346,7 +349,7 @@ function createWindow () {
 
       mainWindow.webContents.send('releaseNotes', releaseNotes)
       dialog.showMessageBox(null, options).then((response) => { 
-        logger.info("%s update choice -> %s", response)
+        // logger.info("%s update choice -> %s", response)
         if (response.response == 0){
            autoUpdater.downloadUpdate()
            mainWindow.webContents.send('mainNotification', {
@@ -365,7 +368,7 @@ function createWindow () {
       let log_message = "Download speed: " + progressObj.bytesPerSecond;
       log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
       log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-      logger.info("%s <-- Update Download progress", log_message)
+      // logger.info("%s <-- Update Download progress", log_message)
       // sendStatusToWindow(log_message);
       mainWindow.webContents.send('mainNotification', {
          type: 'info',
@@ -376,7 +379,7 @@ function createWindow () {
 
     autoUpdater.on('update-downloaded', (info, err) => {
       if (err){
-        logger.error(err)
+        // logger.error(err)
       }
       try{
         mainWindow.webContents.send('mainNotification', {
@@ -387,18 +390,18 @@ function createWindow () {
         mainWindow.webContents.send('releaseNotes', releaseNotes)
         quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
       } catch(err) {
-        logger.error(`Download update failed to finish. ${err}`)
+        // logger.error(`Download update failed to finish. ${err}`)
         // throw new Error("Could not download update, check error logs")
       }
     });
     autoUpdater.on('checking-for-update', () => {
-      logger.info('Checking for Basestack update...');
+      // logger.info('Checking for Basestack update...');
     })
     autoUpdater.on('update-not-available', (info, err) => {
       if (err){
-        logger.error(`${err} err in update not available messaging`)
+        // logger.error(`${err} err in update not available messaging`)
       }
-      logger.info('Basestack update not available.');
+      // logger.info('Basestack update not available.');
       releaseNotes=info
       // logger.info(`${JSON.stringify(info)}`)
       mainWindow.webContents.send('releaseNotes', releaseNotes)
@@ -454,21 +457,21 @@ function createWindow () {
 
 
   mainWindow.on('closed', (e) => {
-    try{
-        cancel_container({module: 'rampart', silent:true})
-    } catch(err){
-      console.log(err)
-    }
-    try{
-        cancel_container({module: 'basestack_consensus', silent:true})
-    } catch(err){
-      console.log(err)
-    }
-    try{
-        cancel_container({module: 'basestack_tutorial', silent: true})
-    } catch(err){
-      console.log(err)
-    }
+    // try{
+    //     cancel_container({module: 'rampart', silent:true})
+    // } catch(err){
+    //   console.log(err)
+    // }
+    // try{
+    //     cancel_container({module: 'basestack_consensus', silent:true})
+    // } catch(err){
+    //   console.log(err)
+    // }
+    // try{
+    //     cancel_container({module: 'basestack_tutorial', silent: true})
+    // } catch(err){
+    //   console.log(err)
+    // }
     mainWindow= null
   })
 }
@@ -480,8 +483,8 @@ app.on('ready', ()=>{
       createWindow();   
       checkUpdates()
     } catch(error){
-      logger.error("error in check updates")
-      logger.error(error)
+      // logger.error("error in check updates")
+      // logger.error(error)
     } 
   })()
     
