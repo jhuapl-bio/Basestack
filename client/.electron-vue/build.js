@@ -93,6 +93,20 @@ function build () {
 
   
 
+
+  // pack(serverConfig).then(result => {
+  //   results += result + '\n\n'
+  //   m.success('server')
+  // }).catch(err => {
+  //   m.error('server')
+  //   console.log(`\n  ${errorLog}failed to build server process`)
+  //   console.error(`\n${err}\n`)
+  //   process.exit(1)
+  // })
+
+
+  
+
 }
 
 function pack (config) {
