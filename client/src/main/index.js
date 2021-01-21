@@ -1,6 +1,10 @@
 'use strict'
 
 const { app, ipcMain, BrowserWindow, Menu, dialog, shell } = require('electron')
+const { spawn } = require('child_process');
+
+
+
 import promiseIpc from 'electron-promise-ipc';
 const isMac = process.platform === 'darwin'
 
@@ -28,6 +32,9 @@ const {fs} = require("fs")
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
 let releaseNotes;
+
+
+
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
   process.env.version_basestack = autoUpdater.currentVersion
@@ -46,14 +53,17 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 let mainWindow
+let open_server; let close_server; let  cancel_container;
 
-// let { open_server,close_server } = require("../modules/server/server.js")
-// open_server()
-// const { 
-//  cancel_container
-//  } = require('../modules/server/api/controllers/index.js')
-// // const {logger } = require("../modules/server/api/controllers/logger.js")
-// const { store } = require("../modules/server/api/store/global.js")
+if (process.env.NODE_ENV == 'production'){
+  let { open_server,close_server } = require("../modules/server/server.js")
+  open_server()
+  const { 
+   cancel_container
+   } = require('../modules/server/api/controllers/index.js')
+}
+const { store } = require("../modules/server/api/store/global.js")
+const {logger } = require("../modules/server/api/controllers/logger.js")
 
 
 
@@ -268,9 +278,14 @@ Menu.setApplicationMenu(menu);
 //   global.__static = ""
 // }
 
-const winURL = process.env.NODE_ENV === 'development'
+const winURL = (process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
-  : `file://${__dirname}/index.html`
+  : `file://${__dirname}/index.html`);
+
+  console.log("winurl defined")
+
+
+
 function checkUpdates(){
   if(process.env.NODE_ENV == 'production'){
     // logger.info("Check for Basestack updates and notify")
@@ -306,7 +321,11 @@ function createWindow () {
   mainWindow.webContents.session.clearCache(function(){
   //some callback.
   });
-  mainWindow.loadURL(winURL)
+  try{
+    mainWindow.loadURL(winURL)
+  } catch(err){
+    console.error(err)
+  }
   mainWindow.webContents.send('releaseNotes', releaseNotes)
   ipcMain.on("queryRelease", (event, arg) => {
     event.reply('releaseNotes', releaseNotes)
@@ -481,10 +500,29 @@ app.on('ready', ()=>{
   (async () => {
     try{
       createWindow();   
-      checkUpdates()
+      checkUpdates();
+      // if (process.env.NODE_ENV == 'production'){
+      //   const command = ['node', server]
+        // console.log(server, command)
+        // const bat = spawn('node', ['/home/brianmerritt/misc/tmp/dist/electron/server.js'], {env: process.env })
+      //   const bat = spawn('node', ['server.js'], {env: process.env })
+      //   console.log("___________________________________________________________")
+      //   bat.stdout.on('data', (data) => {
+      //     console.log(">>>", data.toString());
+      //   });
+
+      //   bat.stderr.on('data', (data) => {
+      //     console.error(data.toString());
+      //   });
+
+      //   bat.on('exit', (code) => {
+      //     console.log(`Child exited with code ${code}`);
+      //   });
+      // }
     } catch(error){
       // logger.error("error in check updates")
       // logger.error(error)
+      console.error(error)
     } 
   })()
     

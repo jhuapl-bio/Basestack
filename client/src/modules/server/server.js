@@ -12,6 +12,7 @@ import  http  from "http"
 import cors from"cors"
 import bodyParser  from "body-parser"
 const port = 5003
+console.log("0-00000000000000000")
 import  router  from "./api/routes/index.js"
 const path = require('path')
 app.use(bodyParser.json())

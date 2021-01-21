@@ -207,7 +207,7 @@ async function check_image_promise(imageName){
 				  	// console.log(imageName, image.RepoDigests, image.Id)
 				  	tags = tags.concat(image.RepoTags.map((d,i)=>{
 					  	// console.log((image.RepoDigests ? image.RepoDigests[i] : null))
-					  	console.log(image.RepoTags, image.RepoDigests)
+					  	// console.log(image.RepoTags, image.RepoDigests, "<<<<<<<<<<<<<<")
 					  	if (image.RepoDigests){
 					  		console.log(image.RepoDigests[i], i, imageName)
 					  	}

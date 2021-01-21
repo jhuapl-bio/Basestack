@@ -35,9 +35,10 @@
     "e2e": "npm run pack && mocha test/e2e",
     "lint": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter src",
     "lint:fix": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter --fix src",
-    "pack": "npm run pack:main && npm run pack:renderer",
+    "pack": "npm run pack:main && npm run pack:renderer && npm run pack:server",
     "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
+    "pack:server": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.server.config.js",
     "test": "npm run unit && npm run e2e",
     "unit": "karma start test/unit/karma.conf.js",
     "postinstall": "npm run lint:fix"
@@ -80,7 +81,10 @@
     },
     "mac": {
       "icon": "build/icons/icon_osx.icns",
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlement.mac.plist",
@@ -160,6 +164,7 @@
     "cfonts": "^2.8.6",
     "chai": "^4.1.2",
     "chalk": "^2.4.1",
+    "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "^4.5.1",
     "cross-env": "^5.1.6",
     "css-loader": "^0.28.11",
@@ -196,6 +201,7 @@
     "multispinner": "^0.2.1",
     "node-loader": "^0.6.0",
     "node-sass": "^4.14.1",
+    "nodemon-webpack-plugin": "^4.4.4",
     "require-dir": "^1.0.0",
     "sass-loader": "^7.0.3",
     "spectron": "^3.8.0",
@@ -209,6 +215,7 @@
     "webpack-cli": "^3.0.8",
     "webpack-dev-server": "^3.1.4",
     "webpack-hot-middleware": "^2.22.2",
-    "webpack-merge": "^4.1.3"
+    "webpack-merge": "^4.1.3",
+    "webpack-node-externals": "^2.5.2"
   }
 }
