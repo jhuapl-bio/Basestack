@@ -404,9 +404,8 @@
 										<b-form-select class="formGroup-input" v-model="row.item.basecalling"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.basecalling"></b-form-select>
 								    </template>
 									<template  v-slot:cell(barcoding)="row">
-								    	<b-form-textarea
+								    	<!-- <b-form-textarea
 								          v-model="row.item.barcoding"
-								          v-if="row.item.barcoding && (row.item.barcoding == 'custom' || !modules.basestack_consensus.resources.run_config.barcoding.includes(row.item.barcoding))"
 								          label="Barcoding"
 								          type="text"
 								          required
@@ -414,7 +413,7 @@
 						                  class="formGroup-input"
 						                  :state="stateValidationEmpty(row.item.barcoding)"
 								          placeholder="barcode_arrs_nb12.cfg"
-								    	></b-form-textarea>	
+								    	></b-form-textarea>	 -->
 								    	<b-form-select class="formGroup-input" v-model="row.item.barcoding"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.barcoding"></b-form-select>			 
 								    </template>
 								    <template  v-slot:cell(filename)="row">
@@ -643,15 +642,15 @@
 								>
 									<template v-slot:cell()="cell">
 										<span 
-											:class="[cell.value.exists ? 'center-align-icon success-icon' : (cell.value.required ? 'center-align-icon  warn-icon' : 'center-align-icon  warn-icon text-warning' ) ]" 
+											:class="[cell.value.exists ? 'center-align-icon success-icon' : 'center-align-icon  warn-icon']" 
 											style="margin:auto; text-align:center" v-tooltip="{
-								            content: (cell.value.exists ? 'Exists' : (cell.value.required ? 'Does not exist and is required' : 'Does not exist but not required' )),
+								            content: 'Presence in Run Directory?',
 								            placement: 'top',
 								            classes: ['info'],
 								            trigger: 'hover',
 								            targetClasses: ['it-has-a-tooltip'],
 								            }">
-					            			<font-awesome-icon :icon="cell.value.exists ? 'check' : (cell.value.required ? 'times-circle' : 'exclamation')" size="sm" />
+					            			<font-awesome-icon :icon="cell.value.exists ? 'check' : 'times-circle'" size="sm" />
 						            	</span>								 
 								    </template>
 								</b-table>
@@ -748,9 +747,9 @@ export default {
 					filename: 'manifest.txt'
 				},
 				specifics: {
-					throughput: {exists: false, name: null, required: false},
-					seq_summary: {exists: false, name: null, required:true},
-					drift_correction: {exists: false, name: null, required:false}
+					throughput: {exists: false, name: null},
+					seq_summary: {exists: false, name: null},
+					drift_correction: {exists: false, name: null}
 				}
 			},
 			validatingRunDir: false,
@@ -846,7 +845,17 @@ export default {
         			}
         		},
         		specifics: {
+        			throughput: {
+        				exists: {
+        					checked: value => value === true
+        				}
+        			},
         			seq_summary: {
+        				exists: {
+        					checked: value => value === true
+        				}
+        			},
+        			drift_correction: {
         				exists: {
         					checked: value => value === true
         				}
