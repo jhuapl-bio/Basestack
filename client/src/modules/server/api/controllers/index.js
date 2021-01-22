@@ -34,6 +34,8 @@ export async function initialize(params){
 	try{
 		// let re = await setup_data()''
 
+		logger.info(logger)
+		logger.info(store.meta,"llllllllllllllllllllllllllllllllllllllllllllllllllllllll")
 		store.meta.ready  = false
 		let userMeta = path.join(store.meta.writePath, "meta.json")
 		let metaExists = await checkFileExist(store.meta.writePath, "meta.json", true)

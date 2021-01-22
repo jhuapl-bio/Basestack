@@ -13,11 +13,10 @@ const modulesPath  = path.join(globalPath, "src", "modules", "pipelines")
 let writePath;
 let resourcePath;
 let dataPath;
-
 if (process.env.NODE_ENV != "development"){
 	dataPath = path.join(process.env.APPDATA, "Basestack", "data")
 	writePath = path.join(dataPath, 'userdata')
-	globalPath = process.resourcesPath
+	globalPath = (process.env.resourcesPath)
 } 
 
 else {
@@ -52,5 +51,5 @@ var meta = {
 	OS: OS	,
 	ready:false
 }
-// console.log("0000000000000000000000000000", meta, "\n________________________________________________")
+console.log("0000000000000000000000000000", meta, "\n________________________________________________")
 module.exports.meta = meta
