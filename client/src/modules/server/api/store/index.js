@@ -14,17 +14,14 @@ let writePath;
 let resourcePath;
 let dataPath;
 if (process.env.NODE_ENV != "development"){
-console.log(3, "productions")
 	dataPath = path.join(process.env.APPDATA, "Basestack", "data")
 	writePath = path.join(dataPath, 'userdata')
 	globalPath = (process.env.resourcesPath)
 } 
 
 else {
-console.log(3, "development")
 	dataPath = path.join(globalPath, "data")
 	writePath = path.join(dataPath, 'userdata');
-console.log(4)
 }
 
 resourcePath = path.join(globalPath, "data", "config")
@@ -36,7 +33,6 @@ if (process.getuid){
 if(process.getgid){
 	gid = process.getgid()
 }
-console.log(5, resourcePath)
 const dockerStagePath = path.join(resourcePath, 'installation');
 var meta = {
 	appVersion: null,

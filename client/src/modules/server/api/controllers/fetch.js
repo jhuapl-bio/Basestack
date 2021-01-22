@@ -429,8 +429,10 @@ export async function fetch_modules(){
 			store.config.images[key].status.stream = store.config.images[key].status.stream.splice(-200)
 		}
 		for (const [key, value] of Object.entries(store.config.modules)){
+			// console.log(key,"-----", value.module, store.modules[key])
 			if (value.module && store.modules[key]){
 				store.config.modules[key].status = store.modules[key].status
+				// console.log(store.modules[key].status, key, "--------")
 				store.config.modules[key].status.stream = store.config.modules[key].status.stream.splice(-200)
 				store.config.modules[key].installed = store.config.images[value.image].status.installed
 			} 

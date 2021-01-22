@@ -108,10 +108,10 @@ var menu = Menu.buildFromTemplate([
   {
     label: 'System',
     submenu: [
-      // {
-      //   label: 'Refresh Server',
-      //   click() {  close_server(); open_server();  }
-      // },
+      {
+        label: 'Refresh Server',
+        click() {  close_server(); open_server();  }
+      },
       {
         label: 'Print ENV',
         click() {  logger.info(JSON.stringify(process.env, null, 4))  }
