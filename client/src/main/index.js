@@ -60,7 +60,7 @@ if (process.env.NODE_ENV !== 'development') {
 process.env.resourcesPath = process.resourcesPath
 
 let mainWindow
-
+const express = require("express")
 const { store } = require("../modules/server/api/store/global.js")
 const {logger } = require("../modules/server/api/controllers/logger.js")
 
@@ -108,10 +108,10 @@ var menu = Menu.buildFromTemplate([
   {
     label: 'System',
     submenu: [
-      {
-        label: 'Refresh Server',
-        click() {  close_server(); open_server();  }
-      },
+      // {
+      //   label: 'Refresh Server',
+      //   click() {  close_server(); open_server();  }
+      // },
       {
         label: 'Print ENV',
         click() {  logger.info(JSON.stringify(process.env, null, 4))  }
@@ -330,10 +330,10 @@ var menu = Menu.buildFromTemplate([
   {
     label: 'Logs and Info',
     submenu: [
-      // {
-      //   label: 'Open Logs',
-      //   click() { shell.openPath(store.meta.logFolder)  }
-      // },
+      {
+        label: 'Open Logs',
+        click() { shell.openPath(store.meta.logFolder)  }
+      },
       {
         label: 'View Release Notes',
         click() {  
@@ -467,7 +467,7 @@ function createWindow () {
 
   mainWindow.webContents.on('did-finish-load', function () {
     let quitUpdateInstall = false;
-    // logger.info("Basestack is finished loading")
+    logger.info("Basestack is finished loading")
     function sendStatusToWindow(text) {
       dialog.showMessageBox(mainWindow, {
         type: 'info',
@@ -484,8 +484,8 @@ function createWindow () {
       // sendStatusToWindow('Error in auto-updater. ' + err);
     })
     autoUpdater.on('update-available', (info) => {
-      // logger.info(info)
-      // logger.info("update available")
+      logger.info(info)
+      logger.info("update available")
       let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
       const options = {
           type: 'question',
@@ -501,7 +501,7 @@ function createWindow () {
 
       mainWindow.webContents.send('releaseNotes', releaseNotes)
       dialog.showMessageBox(null, options).then((response) => { 
-        // logger.info("%s update choice -> %s", response)
+        logger.info("%s update choice -> %s", response)
         if (response.response == 0){
            autoUpdater.downloadUpdate()
            mainWindow.webContents.send('mainNotification', {
@@ -520,7 +520,7 @@ function createWindow () {
       let log_message = "Download speed: " + progressObj.bytesPerSecond;
       log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
       log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-      // logger.info("%s <-- Update Download progress", log_message)
+      logger.info("%s <-- Update Download progress", log_message)
       // sendStatusToWindow(log_message);
       mainWindow.webContents.send('mainNotification', {
          type: 'info',
@@ -531,7 +531,7 @@ function createWindow () {
 
     autoUpdater.on('update-downloaded', (info, err) => {
       if (err){
-        // logger.error(err)
+        logger.error(err)
       }
       try{
         mainWindow.webContents.send('mainNotification', {
@@ -543,18 +543,18 @@ function createWindow () {
         mainWindow.webContents.send('releaseNotes', releaseNotes)
         quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
       } catch(err) {
-        // logger.error(`Download update failed to finish. ${err}`)
+        logger.error(`Download update failed to finish. ${err}`)
         // throw new Error("Could not download update, check error logs")
       }
     });
     autoUpdater.on('checking-for-update', () => {
-      // logger.info('Checking for Basestack update...');
+      logger.info('Checking for Basestack update...');
     })
     autoUpdater.on('update-not-available', (info, err) => {
       if (err){
-        // logger.error(`${err} err in update not available messaging`)
+        logger.error(`${err} err in update not available messaging`)
       }
-      // logger.info('Basestack update not available.');
+      logger.info('Basestack update not available.');
       releaseNotes=info
       logger.info(`${JSON.stringify(info)}`)
       mainWindow.webContents.send('releaseNotes', releaseNotes)
