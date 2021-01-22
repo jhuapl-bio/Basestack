@@ -250,9 +250,8 @@ export class BasestackConsensus{
 		  	let tsv_file_content = runDir.run_info.desc + "\n"
 		  	logger.info("%s", "Bookmark run info")
 		  	await writeFile(path.join(metaDir, runDir.run_info.filename), tsv_file_content+"\n").then((response)=>{
-		  		logger.info("%s %s", "Success in writing runInfo file")
+		  		logger.info("%s %s", "Success in writing runInfo files")
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
-		  	console.log(tsv_file_content)
 		  	
 		  	tsv_file_content = "primers\t"+runDir.run_config.primers+"\n"+
 		  	'basecalling\t'+ runDir.run_config.basecalling+"\n" +

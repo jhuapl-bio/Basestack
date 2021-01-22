@@ -55,6 +55,9 @@ let mainConfig = {
   resolve: {
     extensions: ['.js', '.json', '.node']
   },
+  watchOptions: {
+    ignored: '../src/modules/**'
+  },
   target: 'electron-main'
 }
 

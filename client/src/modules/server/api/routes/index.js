@@ -73,6 +73,7 @@ router.post("/modules/cancel", (req,res,next)=>{
 
 router.post("/init/start", (req,res,next)=>{
 	try {
+		console.log("initializing starting")
 		initialize().then((response)=>{
 			res.status(200).json({status: 200, message: "Initialized app" });
 		}).catch((err)=>{

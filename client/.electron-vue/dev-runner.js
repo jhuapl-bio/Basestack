@@ -99,15 +99,8 @@ function startServer (devClient){
     serverConfig.entry.server = path.join(__dirname, '../src/modules/index.server.js')
     serverConfig.mode = 'development'
     const compiler = webpack(serverConfig)
-    hotMiddleware = webpackHotMiddleware(compiler, {
-      log: false,
-      heartbeat: 2500,
-    })
-    compiler.hooks.watchRun.tapAsync('watch-run', (compilation, done) => {
-      logStats('Server', chalk.white.bold('compiling...'))
-      hotMiddleware.publish({ action: 'compiling' })
-      done()
-    })
+    
+    
 
     compiler.hooks.done.tap('done', stats => {
       logStats('Server', stats)
@@ -128,7 +121,7 @@ function startMain (devClient) {
 
     compiler.hooks.watchRun.tapAsync('watch-run', (compilation, done) => {
       logStats('Main', chalk.white.bold('compiling...'))
-      hotMiddleware.publish({ action: 'compiling' })
+      // hotMiddleware.publish({ action: 'compiling' })
       done()
     })
 
