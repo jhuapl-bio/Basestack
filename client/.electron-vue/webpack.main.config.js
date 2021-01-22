@@ -2,10 +2,13 @@
 
 process.env.BABEL_ENV = 'main'
 
+const express = require("express")
+
+
+
 const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
-
 const MinifyPlugin = require("babel-minify-webpack-plugin")
 
 let mainConfig = {

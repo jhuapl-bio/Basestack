@@ -23,30 +23,37 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
  * that provide pure *.vue files that need compiling
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/webpack-configurations.html#white-listing-externals
  */
-let whiteListedModules = []
-
+let whiteListedModules = ['express']
 let serverConfig = {
   target: 'node',
-  mode:'production',
+   // mode:'production',
    entry: {
      server: path.join(__dirname, '../src/modules/index.server.js')
    },
    devtool: 'source-map',
+   mode: 'development',
    output: {
      filename: '[name].js',
      path: path.join(__dirname, '../dist/electron'),
      libraryTarget: 'commonjs2',
      publicPath: '/',
    },
-   externals: [nodeExternals()], // Need this to avoid error when working with Express
+   externals: [
+     nodeExternals(),
+    ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))
+  ],
    node: {
     __dirname: false,
     __filename: false
     },
-   resolve: {
+  resolve: {
     // modules: [path.resolve(__dirname, '../node_modules')],
-    extensions: ['.js', '.vue', '.json', '.css', '.node']
-   },
+    extensions: [ 
+        '.jsx', '.js',
+        '.json',
+        '.html',
+        '.css', '.styl', '.scss', '.sass' ]
+  },
   module: {
     rules: [
       {
@@ -82,11 +89,8 @@ let serverConfig = {
 
 if (process.env.NODE_ENV !== 'production'){
   serverConfig.plugins.push(new NodemonPlugin() )
-} else {
-  serverConfig.plugins.push(new NodemonPlugin() )
-
 }
-
+console.log(serverConfig.externals,"-------------------")
 
 /**
  * Adjust serverConfig for production settings
@@ -96,6 +100,9 @@ if (process.env.NODE_ENV === 'production') {
 
   serverConfig.plugins.push(
     new MinifyPlugin(),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': '"production"'
+    }),
     new CopyWebpackPlugin([
       {
         from: path.join(__dirname, '../static'),
@@ -103,9 +110,6 @@ if (process.env.NODE_ENV === 'production') {
         ignore: ['.*']
       }
     ]),
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': '"production"'
-    }),
     new webpack.LoaderOptionsPlugin({
       minimize: true
     })

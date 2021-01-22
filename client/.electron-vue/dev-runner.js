@@ -211,7 +211,6 @@ function init () {
   if (process.argv.slice(2) =="client"){
     devClient = true
   }
-
   Promise.all([
     startServer(devClient), 
     startRenderer(devClient), 

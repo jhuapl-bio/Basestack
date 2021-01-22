@@ -60,6 +60,14 @@
         "filter": [
           "config/**/*"
         ]
+      },
+      {
+        "from": "dist/electron/server.js",
+        "to": "data/server/server.js"
+      },
+      {
+        "from": "node_modules",
+        "to": "data/server/node_modules"
       }
     ],
     "dmg": {
