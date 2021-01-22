@@ -15,15 +15,14 @@
         	active-nav-item-class="activeTabButton"
         	style="height: 100vh; " 
         	vertical
-        	v-if="!initial "
-        	
+        	v-if="initial"        	
         >
           <b-tab  
           	v-for="[key, entry] of Object.entries(modules)" 
-          	v-bind:key="entry.name + (entry.status ? entry.status.installed : '')"
+          	v-bind:key="entry.name"
           	class="ma-0 pa-0"
             > 
-            <template v-slot:title v-if="(!entry.module || entry.status.installed )  && !initial">
+            <template v-slot:title v-if="(!entry.module || entry.status.installed )  && initial">
             	<div class="tab-parent" style="display: flex; justify-content: space-between;"
 				>	
 					<div  class="tab-item" style="">
@@ -36,7 +35,7 @@
 		            </div>
 	        	</div>
   			</template>
-  			<div v-if="(!entry.module || entry.status.installed )  && !initial">
+  			<div v-if="(!entry.module || entry.status.installed )  && initial">
   				<h2 class="header" style="text-align:center">{{entry.title}}
 			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
 			        :title="entry.tooltip"
@@ -125,7 +124,7 @@ export default {
 			      newState: true,
 			      protocolDir: null,
 			},
-			initial:true,
+			initial:false,
 			collapsed:false,
     		tab: 0,
 	        entries: null,
@@ -135,6 +134,20 @@ export default {
 	        images: null,
 	        intervalChecking: false,
 	        patchNotes: null,
+	        interval: null
+		}
+	},
+	watch:{
+		initial(val){
+			if (!val){
+				try{
+					this.init().catch((err)=>{
+						console.error(`Error in initializing the backend ${err}`)
+					})
+				} catch(err){
+					console.error(err)
+				}
+			}
 		}
 	},
 	computed: {
@@ -158,7 +171,7 @@ export default {
 		const $this = this
 		this.init().then((response)=>{
 			this.getStatus().then(()=>{
-				setInterval(()=>{
+				this.interval = setInterval(()=>{
 					if (!this.intervalChecking){
 						$this.getStatus()
 					}
@@ -223,6 +236,13 @@ export default {
 			this.$set(this, 'resources', response.data.data.resources)
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
+			this.initial = response.data.data.ready
+			if (!this.initial){
+				this.init().catch((err)=>{
+					console.error(`${err} in initializing the backend service`)
+				})
+			}
+
 			const modules = response.data.data.modules.entries
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
@@ -239,7 +259,7 @@ export default {
 	                position: 'center',
 	                icon: 'error',
 	                showConfirmButton:true,
-	                title:  "Docker image errors...",
+	                title:  "Docker image error...",
 	                text:  ""+ JSON.stringify(errors_message, null, 4)
 	            }) 
 			}
@@ -254,9 +274,8 @@ export default {
 			}
 		} catch(err){
 			this.initial=false
-			throw err
+			console.err(`${err} error in getting status`)
 		} finally {
-	      	this.initial = false
 			this.intervalChecking = false
 		}
       },
@@ -270,6 +289,7 @@ export default {
       },
       updateImages(val){
       	const i = this.entries.map((d)=>{return d.name}).indexOf(val.image)
+      	console.log("_________________", val)
       	this.entries[i].installed = val.exists
       },
       toggleCollapseParent(){
