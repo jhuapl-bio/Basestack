@@ -31,6 +31,15 @@
 				            }">
 			            		<font-awesome-icon icon="times-circle" size="sm" />
 			            	</span>
+			            	 <span class="center-align-icon" style="float:left"  v-tooltip="{
+					            content: (!element.private ? 'Public Module' : 'This module is private and requires additional resources. View the Cog icon to see more.'),
+					            placement: 'top',
+					            classes: ['info'],
+					            trigger: 'hover',
+					            targetClasses: ['it-has-a-tooltip'],
+					            }">
+				            	<span ><font-awesome-icon :icon="(!element.private ? 'unlock-alt' : 'user-lock')" size="sm"/></span>
+				            </span>
 	        			</b-col>
 	        		</b-row>
 	        		<b-row>
@@ -138,6 +147,15 @@
 				            targetClasses: ['it-has-a-tooltip'],
 				            }">
 			            	<span ><font-awesome-icon icon="check" size="sm"/></span>
+			            </span>
+			            <span class="center-align-icon" style="float:left"  v-tooltip="{
+				            content: (!element.private ? 'Public Module' : 'This module is private and requires additional resources. View the Cog icon to see more.'),
+				            placement: 'top',
+				            classes: ['info'],
+				            trigger: 'hover',
+				            targetClasses: ['it-has-a-tooltip'],
+				            }">
+			            	<span ><font-awesome-icon :icon="(!element.private ? 'unlock-alt' : 'user-lock')" size="sm"/></span>
 			            </span>
 
 	    			</b-col>

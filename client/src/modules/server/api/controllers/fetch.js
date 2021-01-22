@@ -214,7 +214,7 @@ async function check_image_promise(imageName){
 					tags: tags,
 					imageName: imageName,
 					error: null,
-					status: true
+					status: (tags.length >0 ? true : false)
 				})
 				
 			})().catch((error)=>{
@@ -243,8 +243,6 @@ async function check_image_promise(imageName){
 export async function check_image(image){
 	return new Promise((resolve, reject)=>{
 		check_image_promise(image).then((response)=>{
-			// console.log(response)
-			// logger.info(`${response.images} image get`)
 			resolve(response)			
 		}).catch((err)=>{
 			console.error(err, "error in promises fetch images")
@@ -442,6 +440,7 @@ async function formatDockerLoads(){
 					(async function(){
 						checking = true
 						let response =  await check_image(key)
+						console.log(response)
 						store.config.images[key].status.installed = response.status
 						store.config.images[key].status.errors = response.error
 						store.config.images[key].tags = response.tags
@@ -449,6 +448,7 @@ async function formatDockerLoads(){
 						checking = false
 					})().catch((err)=>{
 						logger.error(err)
+						console.log("not install------------", key)
 						store.config.images[key].status.installed = false
 						// store.config.images[key].status.errors = err
 						store.config.images[key].tags = []
