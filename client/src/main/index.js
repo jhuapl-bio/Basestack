@@ -53,19 +53,18 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 let mainWindow
-let open_server; let close_server; let  cancel_container;
 
 const { store } = require("../modules/server/api/store/global.js")
 const {logger } = require("../modules/server/api/controllers/logger.js")
-
-if (process.env.NODE_ENV == 'production'){
+// let open_server; let close_server; let  cancel_container;
+// if (process.env.NODE_ENV == 'production'){
   let { open_server,close_server } = require("../modules/server/server.js")
   const { 
    cancel_container
   } = require('../modules/server/api/controllers/index.js')
 
   open_server()
-}
+// }
 
 
 // logger.info(JSON.stringify(process.env, null, 4))
@@ -264,7 +263,7 @@ var menu = Menu.buildFromTemplate([
     submenu: [
       {
         label: 'Learn More',
-        click () { require('electron').shell.openExternalSync('https://electronjs.org') }
+        click () { shell.openExternal('https://github.com/jhuapl-bio/Basestack') }
       }
     ]
   }
