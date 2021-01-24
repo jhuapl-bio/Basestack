@@ -60,7 +60,7 @@ if (process.env.NODE_ENV !== 'development') {
 process.env.resourcesPath = process.resourcesPath
 
 let mainWindow
-const express = require("express")
+
 const { store } = require("../modules/server/api/store/global.js")
 const {logger } = require("../modules/server/api/controllers/logger.js")
 
@@ -108,10 +108,10 @@ var menu = Menu.buildFromTemplate([
   {
     label: 'System',
     submenu: [
-      // {
-      //   label: 'Refresh Server',
-      //   click() {  close_server(); open_server();  }
-      // },
+      {
+        label: 'Refresh Server',
+        click() {  close_server(); open_server();  }
+      },
       {
         label: 'Print ENV',
         click() {  logger.info(JSON.stringify(process.env, null, 4))  }
@@ -641,6 +641,33 @@ function createWindow () {
     
   })
 }
+
+
+// async function close_server(){
+//   try{
+//     if(process.env.NODE_ENV === 'production'){
+//       bat.kill()
+//     }
+//     return "Closed Server"
+//   } catch(err){
+//     logger.error(err)
+//     throw err
+//   } 
+// }
+// function open_server(){
+//   bat = spawn('node', ['server.js'], {env: process.env, cwd: path.join(process.resourcesPath, "data", "server") })
+//   bat.stderr.on('data', (data) => {
+//     logger.error(data.toString());
+//     console.error(data.toString());
+//     // throw new Error(code)
+//     throw new Error(data.toString())
+//   });
+
+//   bat.on('exit', (code) => {
+//     logger.info(`Server Child process exited with code ${code}`);
+//   });
+// }
+
 autoUpdater.autoDownload = false
 
 

@@ -216,6 +216,7 @@ export default {
 	async mounted(){
 		const $this = this
 		this.init().then((response)=>{
+			this.started = true
 			this.getStatus().then(()=>{
 				this.started = true
 				this.interval = setInterval(()=>{
