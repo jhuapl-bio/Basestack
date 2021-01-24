@@ -246,7 +246,6 @@ export class BasestackConsensus{
 		  	//write the meta data file for the run
 		  	
 		  	//
-		  	console.log(runDir.run_info)
 		  	let tsv_file_content = runDir.run_info.desc + "\n"
 		  	logger.info("%s", "Bookmark run info")
 		  	await writeFile(path.join(metaDir, runDir.run_info.filename), tsv_file_content+"\n").then((response)=>{
@@ -256,7 +255,6 @@ export class BasestackConsensus{
 		  	tsv_file_content = "primers\t"+runDir.run_config.primers+"\n"+
 		  	'basecalling\t'+ runDir.run_config.basecalling+"\n" +
 		  	'barcoding\t'+ runDir.run_config.barcoding +"\n"
-		  	console.log(tsv_file_content)
 
 		  	logger.info("%s", "Bookmark run config file")
 		  	await writeFile(path.join(metaDir, runDir.run_config.filename), tsv_file_content +"\n" ).then((response)=>{

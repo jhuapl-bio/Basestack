@@ -468,9 +468,9 @@ ipcMain.on('restartApp', (event, arg)=>{
   app.quit()
 })
 process.on('exit', function() {
-  if(process.env.NODE_ENV === 'production'){
-    bat.kill()
-  }
+  // if(process.env.NODE_ENV === 'production'){
+  //   bat.kill()
+  // }
 });
 /**
  * Auto Updater
