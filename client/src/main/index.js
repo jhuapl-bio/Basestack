@@ -53,104 +53,27 @@ if (process.env.NODE_ENV !== 'development') {
 process.env.resourcesPath = process.resourcesPath
 
 let mainWindow
-const express = require("express")
+
 const { store } = require("../modules/server/api/store/global.js")
 const {logger } = require("../modules/server/api/controllers/logger.js")
+
+let open_server; let close_server; let  cancel_container;
+if (process.env.NODE_ENV === 'production'){
+  if (process.env.NODE_ENV == 'production'){
+    let { open_server, close_server } = require("../modules/server/server.js")
+    const { 
+     cancel_container
+    } = require('../modules/server/api/controllers/index.js')
+
+    open_server()
+  }
+
+}
+
+
 let bat = undefined;
-
 autoUpdater.logger = logger;
-
-
-
-// let open_server; let close_server; let  cancel_container;
-// if (process.env.NODE_ENV == 'production'){
-//   let { open_server, close_server } = require("../modules/server/server.js")
-//   const { 
-//    cancel_container
-//   } = require('../modules/server/api/controllers/index.js')
-
-//   open_server()
-// }
-
-
-// logger.info(JSON.stringify(process.env, null, 4))
-
 var menu = Menu.buildFromTemplate([
-  // {
-  //     label: 'Quick Launch Software',
-  //     submenu: [
-  //         {label:'MinKNOW', 
-  //         click(){
-  //             show_MinKnow()
-  //           }
-  //         },
-  //         {label:'Sublime Text',
-  //           click(){  
-  //             show_sublime()
-  //           }
-  //         },
-  //         {label:'ALiView',
-  //           click(){  
-  //             show_aliview()
-  //           }
-  //         },
-  //         {label:'spreaD3',
-  //           click(){  
-  //             show_spreaD3()
-  //           }
-  //         },
-  //         {label:'BEAUTI', 
-  //         click(){  
-  //             // render.show_BEAUTI("<APP_DIR>/pre-commands/")
-  //             show_BEAUTI()
-  //           }
-  //         },
-  //         {label:'BEAST', 
-  //         click(){  
-  //             // render.show_BEAST("<APP_DIR>/pre-commands/")
-  //             show_BEAST()
-  //           }
-  //         },
-  //         {label:'FigTree', 
-  //         click(){  
-  //             show_figtree()
-  //           }
-  //         },
-  //         {label:'Tempest', 
-  //         click(){  
-  //             show_tempest()
-  //           }
-  //         },
-  //         {label:'Tracer', 
-  //         click(){  
-  //             show_tracer()
-  //           }
-  //         }
-  //     ]
-  // },
-  // {
-  //   label: 'Post Installation',
-  //     submenu: [
-  //     {
-  //       label: "Offline",
-  //       click: async ()=>{
-  //         install_images_offline()
-  //       }
-  //     },
-  //     {
-  //       label: "Online",
-  //       click: async ()=>{
-  //         install_images_online()
-  //        }
-  //      },
-  //      {
-  //       label: "Cancel",
-  //       click: async ()=>{
-  //         cancel_load_images()
-  //        }
-  //      }
-  //     ]
-  // },
    {
     label: 'Edit',
     submenu: [
@@ -182,10 +105,10 @@ var menu = Menu.buildFromTemplate([
   {
     label: 'Restart',
     submenu: [
-      // {
-      //   label: 'Refresh Server',
-      //   click() {  close_server(); open_server();  }
-      // },
+      {
+        label: 'Refresh Server',
+        click() {  close_server(); open_server();  }
+      },
       {
         label: 'Restart App',
         click() {  
@@ -480,31 +403,36 @@ function createWindow () {
   })
 
   mainWindow.on('closed', (e) => {
-    // try{
-    //     cancel_container({module: 'rampart', silent:true})
-    // } catch(err){
-    //    logger.error(err)
-    // }
-    // try{
-    //     cancel_container({module: 'basestack_consensus', silent:true})
-    // } catch(err){
-    //   logger.error(err)
-    // }
-    // try{
-    //     cancel_container({module: 'basestack_tutorial', silent: true})
-    // } catch(err){
-    //   logger.error(err)
-    // }
-    if (process.env.NODE_ENV === 'production'){
-      try{
-        bat.kill()
-      }catch (err){
-        logger.error(err)
-      }
-    }
     mainWindow= null
   })
 }
+
+
+// async function close_server(){
+//   try{
+//     if(process.env.NODE_ENV === 'production'){
+//       bat.kill()
+//     }
+//     return "Closed Server"
+//   } catch(err){
+//     logger.error(err)
+//     throw err
+//   } 
+// }
+// function open_server(){
+//   bat = spawn('node', ['server.js'], {env: process.env, cwd: path.join(process.resourcesPath, "data", "server") })
+//   bat.stderr.on('data', (data) => {
+//     logger.error(data.toString());
+//     console.error(data.toString());
+//     // throw new Error(code)
+//     throw new Error(data.toString())
+//   });
+
+//   bat.on('exit', (code) => {
+//     logger.info(`Server Child process exited with code ${code}`);
+//   });
+// }
+
 autoUpdater.autoDownload = false
 app.on('ready', ()=>{
   (async () => {
@@ -512,31 +440,11 @@ app.on('ready', ()=>{
       createWindow();   
       checkUpdates();
       if (process.env.NODE_ENV == 'production'){
-      //   const command = ['node', server]
-        // console.log(server, command)
-        // const bat = spawn('node', ['/home/brianmerritt/misc/tmp/dist/electron/server.js'], {env: process.env })
-       
-        console.log(app.getAppPath())
-        bat = spawn('node', ['server.js'], {env: process.env, cwd: path.join(process.resourcesPath, "data", "server") })
-        console.log("___________________________________________________________")
-        
-        
-
-        bat.stderr.on('data', (data) => {
-          logger.error(data.toString());
-        });
-
-        bat.on('exit', (code) => {
-          logger.info(`Server Child process exited with code ${code}`);
-        });
-      
-
-
+        open_server()
       }
     } catch(error){
-      logger.error("error in check updates")
       logger.error(error)
-      console.error(error)
+      throw error
     } 
   })()
     
