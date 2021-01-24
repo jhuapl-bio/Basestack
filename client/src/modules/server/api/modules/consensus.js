@@ -258,7 +258,7 @@ export class BasestackConsensus{
 		  	'barcoding\t'+ runDir.run_config.barcoding +"\n"
 		  	console.log(tsv_file_content)
 
-		  	logger.info("%s", "Bookmark run config")
+		  	logger.info("%s", "Bookmark run config file")
 		  	await writeFile(path.join(metaDir, runDir.run_config.filename), tsv_file_content +"\n" ).then((response)=>{
 		  		logger.info("%s %s", "Success in writing runInfo file")
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})

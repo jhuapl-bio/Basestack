@@ -15,7 +15,7 @@
         	active-nav-item-class="activeTabButton"
         	style="height: 100vh; " 
         	vertical
-        	v-if="initial"        	
+        	v-if="initial || started"        	
         >
           <b-tab  
           	v-for="[key, entry] of Object.entries(modules)" 
@@ -134,7 +134,8 @@ export default {
 	        images: null,
 	        intervalChecking: false,
 	        patchNotes: null,
-	        interval: null
+	        interval: null,
+	        started: false
 		}
 	},
 	watch:{
@@ -170,6 +171,7 @@ export default {
 	async mounted(){
 		const $this = this
 		this.init().then((response)=>{
+			this.started = true
 			this.getStatus().then(()=>{
 				this.interval = setInterval(()=>{
 					if (!this.intervalChecking){
