@@ -73,6 +73,7 @@ let serverConfig = {
 };
 
 if (process.env.NODE_ENV !== 'production'){
+  serverConfig.devtool = 'eval-cheap-module-source-map'
   serverConfig.plugins.push(new NodemonPlugin() )
 }
 
@@ -80,7 +81,7 @@ if (process.env.NODE_ENV !== 'production'){
  * Adjust serverConfig for production settings
  */
 if (process.env.NODE_ENV === 'production') {
-  serverConfig.devtool = ''
+  serverConfig.devtool = 'source-map'
   serverConfig.mode = 'production'
   serverConfig.plugins.push(
     new webpack.DefinePlugin({

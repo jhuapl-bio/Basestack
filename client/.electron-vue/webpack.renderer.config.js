@@ -141,6 +141,7 @@ let rendererConfig = {
  */
 if (process.env.NODE_ENV !== 'production') {
   rendererConfig.mode = 'development'
+  rendererConfig.devtool = 'eval-cheap-module-source-map'
   rendererConfig.plugins.push(
     new webpack.DefinePlugin({
       '__static': `"${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}"`
