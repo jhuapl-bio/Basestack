@@ -6,18 +6,17 @@
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
   */
-import  express  from 'express'
+const express  = require('express')
 const app = express()
-import  http  from "http"
-import cors from"cors"
-import bodyParser  from "body-parser"
+const http  = require("http")
+const cors =  require("cors")
+const  bodyParser  = require("body-parser")
 const port = 5003
-import  router  from "./api/routes/index.js"
+import router  from "./api/routes/index.js"
 const path = require('path')
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended:false, limit: '500mb'}));
-
-
+app.use(express.static('public')) 
 // Reset all on reload 
 
 app.get('/', (req, res) => res.send('Basestack Backend Server is Running at port 5003 on localhost!'))
@@ -41,6 +40,7 @@ let server;
 
 
 export var open_server = function(){
+  console.log("Opening server")
   server = app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`))
 }
 
@@ -48,7 +48,7 @@ export var open_server = function(){
 
 export var close_server = function(){
   server.close()
-  console.log("server closed")
+  console.log("Server closed")
 }
 
 export var serv  = server
