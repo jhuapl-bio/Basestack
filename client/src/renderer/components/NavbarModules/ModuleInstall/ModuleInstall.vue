@@ -9,10 +9,9 @@
 <template>
   <div id="moduleinstall"  style="overflow-y:auto">
   	<div class="text-center" >  
+    	<h4 v-if="!docker">Docker is not running or installed</h4>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
-      	<hr>
-    	<h3 v-if="!docker" class="text-danger">Docker is not running or installed <hr></h3>
   	</div>
 	<b-row v-if="images">
     	<b-col sm="6" >
@@ -698,6 +697,5 @@
 	cursor:pointer;
 }
 </style>
-
 
 
