@@ -197,9 +197,19 @@ async function check_image_promise(image){
 		try{
 			(async ()=>{
 				let getImage = await docker.getImage(image).inspect()
+				let tags = []
+				for (const image of getImage) {
+				  if (image.RepoTags && image.RepoTags.length > 0){
+				  	// console.log(imageName, image.RepoDigests, image.Id)
+				  	tags = tags.concat(image.RepoTags.map((d,i)=>{
+					  	console.log((image.RepoDigests ? image.RepoDigests[i] : null))
+				  		return {Id: image.Id, name: d, digest: (image.RepoDigests ? image.RepoDigests[i].replace(image, "") : null)}
+				  	}))
+				  }
+				}
 				resolve({
 					tags: tags,
-					imageName: imageName,
+					imageName: image,
 					error: null,
 					status: (tags.length >0 ? true : false)
 				})
@@ -392,6 +402,7 @@ async function formatDockerLoads(){
 				inspect: null
 			}
 			store.dockerStreamObjs[key] = null
+			let checking = false
 			store.statusIntervals.images[key] = setInterval(function(){ 
 				if (!checking){
 					(async function(){
