@@ -132,6 +132,9 @@ class FileService {
   fetchDockerTags(name){
     return Api().get("http://localhost:5003/tags/fetch", name)                    
   }
+  selectTag(params){
+    return Api().post("http://localhost:5003/tags/select", params)  
+  }
 
 }
 export default new FileService();

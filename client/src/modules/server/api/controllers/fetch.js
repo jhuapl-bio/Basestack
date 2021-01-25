@@ -9,6 +9,7 @@
 const fs = require("fs")
 const { convert_custom, checkFileExist,  checkFolderExists, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
+const axios = require("axios")
 var   { store }  = require("../store/global.js")
 var { logger } = require("../controllers/logger.js")
 const { getFiles, readFile,  writeFolder } = require("./IO.js")
@@ -190,6 +191,31 @@ export async function fetch_videos_meta(){
 	
 }
 
+export async function fetch_external_dockers(key){
+	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags`
+	try{
+		logger.info(url)
+		const element = store.config.images[key]
+		store.config.images[key].status.fetching_available_images = true
+		let json =  await axios.get(url)
+		let latest = null;
+		json = json.data.results
+		if (json){
+			latest = json.filter((d)=>{
+				return d.name == 'latest'
+			})[0]
+		}
+		store.config.images[key].latest_digest = {name: element.name, version: latest.name, digest: latest.images[0].digest}  
+		store.config.images[key].available_images = json.map((d)=>{
+			return {fullname: `${element.name}:${d.name}`, name: d.name, digest: d.images[0].digest, image: element.name, installed: false, selected:false }
+		})
+	} catch(err){
+		logger.error(err)
+	} finally{
+		logger.info("Checked the presence of "+key)
+		store.config.images[key].status.fetching_available_images = false
+	}
+}
 
 export async function fetch_external_dockers(key){
 	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags/latest`
@@ -235,18 +261,18 @@ async function check_image_promise(image){
 				})
 				
 			})().catch((error)=>{
-				// console.error(error, "error in checking image exist")
+				logger.error(`${error} error in checking image exist`)
 				resolve({
 					image: error,
-					imageName: image,
+					imageName: imageName,
 					status: false
 				})
 			});
 		} catch(err){
-			logger.error("%s %s", err, " error in retrieving imageName: "+image)
+			logger.error("%s %s", err, " error in retrieving imageName: "+imageName)
 			resolve({
 				image: err,
-				imageName: image,
+				imageName: imageName,
 				status: false
 			})
 		}
@@ -429,10 +455,8 @@ export async function fetch_modules(){
 			store.config.images[key].status.stream = store.config.images[key].status.stream.splice(-200)
 		}
 		for (const [key, value] of Object.entries(store.config.modules)){
-			// console.log(key,"-----", value.module, store.modules[key])
 			if (value.module && store.modules[key]){
 				store.config.modules[key].status = store.modules[key].status
-				// console.log(store.modules[key].status, key, "--------")
 				store.config.modules[key].status.stream = store.config.modules[key].status.stream.splice(-200)
 				store.config.modules[key].installed = store.config.images[value.image].status.installed
 			} 
