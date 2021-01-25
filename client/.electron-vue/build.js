@@ -12,8 +12,8 @@ const Multispinner = require('multispinner')
 
 const mainConfig = require('./webpack.main.config')
 const rendererConfig = require('./webpack.renderer.config')
-const webConfig = require('./webpack.web.config')
 const serverConfig = require('./webpack.server.config')
+// const webConfig = require('./webpack.web.config')
 
 const doneLog = chalk.bgGreen.white(' DONE ') + ' '
 const errorLog = chalk.bgRed.white(' ERROR ') + ' '
@@ -35,10 +35,11 @@ function build () {
 
   del.sync(['dist/electron/*', '!.gitkeep'])
 
-  // const tasks = ['main', 'renderer']
+  const tasks = ['main', 'renderer']
   // const tasks = ['server', 'main']
   // const tasks = ['main']
-  const tasks = ['main', 'server', 'renderer']
+  // const tasks = ['renderer']
+  // const tasks = ['main', 'server', 'renderer']
   const m = new Multispinner(tasks, {
     preText: 'building',
     postText: 'process'
@@ -97,6 +98,7 @@ function build () {
 function pack (config) {
   return new Promise((resolve, reject) => {
     config.mode = 'production'
+    console.log(config.entry)
     webpack(config, (err, stats) => {
       if (err) reject(err.stack || err)
       else if (stats.hasErrors()) {
