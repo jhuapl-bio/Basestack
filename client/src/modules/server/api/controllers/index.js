@@ -34,7 +34,9 @@ export async function initialize(params){
 	try{
 		// let re = await setup_data()''
 
-
+		logger.info(logger)
+		logger.info(store.meta,"llllllllllllllllllllllllllllllllllllllllllllllllllllllll")
+		store.meta.ready  = false
 		let userMeta = path.join(store.meta.writePath, "meta.json")
 		let metaExists = await checkFileExist(store.meta.writePath, "meta.json", true)
 		if (!metaExists){
@@ -94,10 +96,12 @@ export async function initialize(params){
 			logger.error(err)
 			throw err
 		})
-		
+		console.log("end")
+		store.meta.ready = true
 		return response
 	} catch(err){
 		logger.error(`Error in initializing the app with modules, ${err}, function: initialize()`)
+		store.meta.ready = false
 		throw err
 	}
 }

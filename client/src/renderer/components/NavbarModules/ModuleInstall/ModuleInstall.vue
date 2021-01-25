@@ -9,10 +9,9 @@
 <template>
   <div id="moduleinstall"  style="overflow-y:auto">
   	<div class="text-center" >  
+    	<h4 v-if="!docker">Docker is not running or installed</h4>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
-      	<hr>
-    	<h3 v-if="!docker" class="text-danger">Docker is not running or installed <hr></h3>
   	</div>
 	<b-row v-if="images">
     	<b-col sm="6" >
@@ -169,7 +168,7 @@
 					            targetClasses: ['it-has-a-tooltip'],
 					            }"
 		            	>
-		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement = null; selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
+		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
 					    </span>
 					</b-col>
 					<b-col sm="3"  v-else style="text-align:center">
@@ -422,12 +421,6 @@
 					}
 					if (!this.stagedInstallation[key]){
 						this.stagedInstallation[key] = value
-			
-					} else{
-						this.stagedInstallation[key].available_images = value.available_images	
-						this.stagedInstallation[key].status = value.status		
-						this.stagedInstallation[key].tags = value.tags		
-						// this.stagedInstallation[key].selectedTag = value.selectedTag		
 					}
 				}
 				if (this.selectedElement){
@@ -722,6 +715,5 @@
 	cursor:pointer;
 }
 </style>
-
 
 
