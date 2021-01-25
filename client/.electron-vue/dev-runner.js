@@ -50,12 +50,12 @@ function startRenderer (devClient) {
       heartbeat: 2500,
     })
 
-    compiler.hooks.compilation.tap('compilation', compilation => {
-      compilation.hooks.htmlWebpackPluginAfterEmit.tapAsync('html-webpack-plugin-after-emit', (data, cb) => {
-        hotMiddleware.publish({ action: 'reload' })
-        cb()
-      })
-    })
+    // compiler.hooks.compilation.tap('compilation', compilation => {
+    //   compilation.hooks.watchRun.tapAsync('html-webpack-plugin-after-emit', (data, cb) => {
+    //     hotMiddleware.publish({ action: 'reload' })
+    //     cb()
+    //   })
+    // })
 
     compiler.hooks.done.tap('done', stats => {
       logStats('Renderer', stats)
@@ -121,7 +121,7 @@ function startMain (devClient) {
 
     compiler.hooks.watchRun.tapAsync('watch-run', (compilation, done) => {
       logStats('Main', chalk.white.bold('compiling...'))
-      // hotMiddleware.publish({ action: 'compiling' })
+      hotMiddleware.publish({ action: 'compiling' })
       done()
     })
 
@@ -214,7 +214,8 @@ function init () {
   Promise.all([
     startServer(devClient), 
     startRenderer(devClient), 
-    startMain(devClient)])
+    startMain(devClient)
+    ])
     .then(() => {
       startElectron()
     })

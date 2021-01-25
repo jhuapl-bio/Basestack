@@ -6,14 +6,13 @@ const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
 
-const MinifyPlugin = require("babel-minify-webpack-plugin")
 const NodemonPlugin = require('nodemon-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
 const nodeExternals = require('webpack-node-externals')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin')
 
 
 /**
@@ -26,7 +25,6 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 let whiteListedModules = ['express']
 let serverConfig = {
   target: 'node',
-   // mode:'production',
    entry: {
      server: path.join(__dirname, '../src/modules/index.server.js')
    },
@@ -57,17 +55,6 @@ let serverConfig = {
   module: {
     rules: [
       {
-        test: /\.(js)$/,
-        enforce: 'pre',
-        exclude: /node_modules/,
-        use: {
-          loader: 'eslint-loader',
-          options: {
-            formatter: require('eslint-friendly-formatter')
-          }
-        }
-      },
-      {
         test: /\.js$/,
         use: 'babel-loader',
         exclude: /node_modules/
@@ -81,25 +68,21 @@ let serverConfig = {
   plugins: [
     new webpack.NoEmitOnErrorsPlugin(),
     new CleanWebpackPlugin(),
-    new HtmlWebpackPlugin({
-      title: 'Production',
-    })
+    new ESLintPlugin(),
   ],
 };
 
 if (process.env.NODE_ENV !== 'production'){
   serverConfig.plugins.push(new NodemonPlugin() )
 }
-console.log(serverConfig.externals,"-------------------")
 
 /**
  * Adjust serverConfig for production settings
  */
 if (process.env.NODE_ENV === 'production') {
   serverConfig.devtool = ''
-
+  serverConfig.mode = 'production'
   serverConfig.plugins.push(
-    new MinifyPlugin(),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': '"production"'
     }),
