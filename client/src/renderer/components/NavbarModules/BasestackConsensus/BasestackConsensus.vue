@@ -694,7 +694,7 @@ export default {
 			return this.fastqFiles.length == 0 ? false : true
 		},		
 	},
-	props: ['modules', 'images'],
+	props: ['modules', 'images', 'selectedTag'],
 	data() {
 		return {
 			globalState:null,

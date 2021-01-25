@@ -3,3 +3,4 @@ client/package-lock.json
 client/data/userdata
 client/data/logs
 client/.env
+client/node_modules*

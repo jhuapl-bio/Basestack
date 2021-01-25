@@ -9,6 +9,7 @@
 const fs = require("fs")
 const { checkFileExist, checkFolderExistsReject, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
+const axios = require("axios")
 var   { store }  = require("../store/global.js")
 var { logger } = require("../controllers/logger.js")
 const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO.js")
@@ -190,43 +191,89 @@ export async function fetch_videos_meta(){
 	
 }
 
+export async function fetch_external_dockers(key){
+	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags`
+	try{
+		logger.info(url)
+		const element = store.config.images[key]
+		store.config.images[key].status.fetching_available_images = true
+		let json =  await axios.get(url)
+		let latest = null;
+		json = json.data.results
+		if (json){
+			latest = json.filter((d)=>{
+				return d.name == 'latest'
+			})[0]
+		}
+		store.config.images[key].latest_digest = {name: element.name, version: latest.name, digest: latest.images[0].digest}  
+		store.config.images[key].available_images = json.map((d)=>{
+			return {fullname: `${element.name}:${d.name}`, name: d.name, digest: d.images[0].digest, image: element.name, installed: false, selected:false }
+		})
+	} catch(err){
+		logger.error(err)
+	} finally{
+		logger.info("Checked the presence of "+key)
+		store.config.images[key].status.fetching_available_images = false
+	}
+}
 
-
-async function check_image_promise(image){
+async function check_image_promise(imageName){
 	return new Promise((resolve, reject)=>{
 		try{
 			(async ()=>{
-				let getImage = await docker.getImage(image).inspect()
+				let getImages = await docker.listImages({ 'filters' : { 'reference' : [ imageName ] }})
 				let tags = []
-				for (const image of getImage) {
-				  if (image.RepoTags && image.RepoTags.length > 0){
-				  	// console.log(imageName, image.RepoDigests, image.Id)
-				  	tags = tags.concat(image.RepoTags.map((d,i)=>{
-					  	console.log((image.RepoDigests ? image.RepoDigests[i] : null))
-				  		return {Id: image.Id, name: d, digest: (image.RepoDigests ? image.RepoDigests[i].replace(image, "") : null)}
-				  	}))
-				  }
+				for (const image of getImages) {
+					if (image.RepoTags && image.RepoTags.length > 0){
+						tags = tags.concat(image.RepoTags.map((d,i)=>{
+							return {
+								version: d.replace(imageName+":", ""), 
+								name: d, 
+								image: imageName,
+								installed: true,
+								digest: (image.RepoDigests && image.RepoDigests[i] ? image.RepoDigests[i].replace(`${imageName}@`, "") : null)
+							}
+						}))
+					}
+				}
+				let installed_count = tags.length
+				tags.some((item, idx) => 
+				  item.name.includes('latest') && 
+				  tags.unshift( 
+				    tags.splice(idx,1)[0] 
+				  ) 
+				)
+				store.config.images[imageName].available_images.forEach((d, i)=>{
+					const not_available = (tags.some((item, idx)=>{
+						return item.digest !== d.digest
+					}) || installed_count == 0)
+					if (not_available){
+						tags.push(d)
+					}
+				})
+				if (imageName == 'basestack_tutorial'){
+					console.log(tags)
 				}
 				resolve({
 					tags: tags,
-					imageName: image,
+					imageName: imageName,
 					error: null,
-					status: (tags.length >0 ? true : false)
+					status: (installed_count > 0 ? true : false)
 				})
 				
 			})().catch((error)=>{
-				// console.error(error, "error in checking image exist")
+				logger.error(`${error} error in checking image exist`)
 				resolve({
 					image: error,
-					imageName: image,
+					imageName: imageName,
 					status: false
 				})
 			});
 		} catch(err){
-			logger.error("%s %s", err, " error in retrieving imageName: "+image)
+			logger.error("%s %s", err, " error in retrieving imageName: "+imageName)
 			resolve({
 				image: err,
-				imageName: image,
+				imageName: imageName,
 				status: false
 			})
 		}
@@ -352,10 +399,8 @@ export async function fetch_modules(){
 			store.config.images[key].status.stream = store.config.images[key].status.stream.splice(-200)
 		}
 		for (const [key, value] of Object.entries(store.config.modules)){
-			// console.log(key,"-----", value.module, store.modules[key])
 			if (value.module && store.modules[key]){
 				store.config.modules[key].status = store.modules[key].status
-				// console.log(store.modules[key].status, key, "--------")
 				store.config.modules[key].status.stream = store.config.modules[key].status.stream.splice(-200)
 				store.config.modules[key].status.installed = store.config.images[value.image].status.installed
 			}
@@ -399,26 +444,29 @@ async function formatDockerLoads(){
 				complete: false,
 				errors : null,
 				installed: false,
-				inspect: null
+				inspect: null,
+				fetching_available_images: false
 			}
+			store.config.images[key].tags = [ { name: 'latest', digest: null, installed: false, selected:true, image: element.name}]
+			store.config.images[key].available_images = [ { name: 'latest', digest: null, installed: false, selected:true, image: element.name }]
 			store.dockerStreamObjs[key] = null
 			let checking = false
+
+			if(!element.private){
+				fetch_external_dockers(key)
+			}
 			store.statusIntervals.images[key] = setInterval(function(){ 
 				if (!checking){
 					(async function(){
 						checking = true
 						let response =  await check_image(key)
-						console.log(response)
 						store.config.images[key].status.installed = response.status
 						store.config.images[key].status.errors = response.error
 						store.config.images[key].tags = response.tags
-						store.config.images[key].selectedTag = (response.tags.length > 0 ? response.tags[0] : null)
 						checking = false
 					})().catch((err)=>{
 						logger.error(err)
-						console.log("not install------------", key)
 						store.config.images[key].status.installed = false
-						// store.config.images[key].status.errors = err
 						store.config.images[key].tags = []
 						store.config.images[key].selectedTag = null
 						checking = false
