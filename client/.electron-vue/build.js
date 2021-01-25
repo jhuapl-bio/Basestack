@@ -12,7 +12,8 @@ const Multispinner = require('multispinner')
 
 const mainConfig = require('./webpack.main.config')
 const rendererConfig = require('./webpack.renderer.config')
-const webConfig = require('./webpack.web.config')
+const serverConfig = require('./webpack.server.config')
+// const webConfig = require('./webpack.web.config')
 
 const doneLog = chalk.bgGreen.white(' DONE ') + ' '
 const errorLog = chalk.bgRed.white(' ERROR ') + ' '
@@ -35,6 +36,10 @@ function build () {
   del.sync(['dist/electron/*', '!.gitkeep'])
 
   const tasks = ['main', 'renderer']
+  // const tasks = ['server', 'main']
+  // const tasks = ['main']
+  // const tasks = ['renderer']
+  // const tasks = ['main', 'server', 'renderer']
   const m = new Multispinner(tasks, {
     preText: 'building',
     postText: 'process'
@@ -48,32 +53,52 @@ function build () {
     console.log(`${okayLog}take it away ${chalk.yellow('`electron-builder`')}\n`)
     process.exit()
   })
+  if (tasks.includes('main')){
+    pack(mainConfig).then(result => {
+      results += result + '\n\n'
+      m.success('main')
+    })
+    .catch(err => {
+      m.error('main')
+      console.log(`\n  ${errorLog}failed to build main process`)
+      console.error(`\n${err}\n`)
+      process.exit(1)
+    })
+  }
 
-  pack(mainConfig).then(result => {
-    results += result + '\n\n'
-    m.success('main')
-  }).catch(err => {
-    m.error('main')
-    console.log(`\n  ${errorLog}failed to build main process`)
-    console.error(`\n${err}\n`)
-    process.exit(1)
-  })
+  if (tasks.includes('renderer')){
+    pack(rendererConfig).then(result => {
+      results += result + '\n\n'
+      m.success('renderer')
+    }).catch(err => {
+      m.error('renderer')
+      console.log(`\n  ${errorLog}failed to build renderer process`)
+      console.error(`\n${err}\n`)
+      process.exit(1)
+    })
+  }
 
-  pack(rendererConfig).then(result => {
-    results += result + '\n\n'
-    m.success('renderer')
-  }).catch(err => {
-    m.error('renderer')
-    console.log(`\n  ${errorLog}failed to build renderer process`)
-    console.error(`\n${err}\n`)
-    process.exit(1)
-  })
+  if (tasks.includes('server')){
+    pack(serverConfig).then(result => {
+      results += result + '\n\n'
+      m.success('server')
+    }).catch(err => {
+      m.error('server')
+      console.log(`\n  ${errorLog}failed to build server process`)
+      console.error(`\n${err}\n`)
+      process.exit(1)
+    })
+  }
+
+
+  
 
 }
 
 function pack (config) {
   return new Promise((resolve, reject) => {
     config.mode = 'production'
+    console.log(config.entry)
     webpack(config, (err, stats) => {
       if (err) reject(err.stack || err)
       else if (stats.hasErrors()) {

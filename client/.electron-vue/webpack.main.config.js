@@ -2,33 +2,25 @@
 
 process.env.BABEL_ENV = 'main'
 
+const express = require("express")
+
+
+
 const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
-
-const MinifyPlugin = require("babel-minify-webpack-plugin")
+const ESLintPlugin = require('eslint-webpack-plugin')
 
 let mainConfig = {
   
   entry: {
-    main: path.join(__dirname, '../src/main/index.js')
+    main: path.join(__dirname, '../src/main/index.js'),
   },
   externals: [
     ...Object.keys(dependencies || {})
   ],
   module: {
     rules: [
-      {
-        test: /\.(js)$/,
-        enforce: 'pre',
-        exclude: /node_modules/,
-        use: {
-          loader: 'eslint-loader',
-          options: {
-            formatter: require('eslint-friendly-formatter')
-          }
-        }
-      },
       {
         test: /\.js$/,
         use: 'babel-loader',
@@ -51,11 +43,13 @@ let mainConfig = {
     path: path.join(__dirname, '../dist/electron')
   },
   plugins: [
-    new webpack.NoEmitOnErrorsPlugin(),
-
+    new ESLintPlugin(),
   ],
   resolve: {
     extensions: ['.js', '.json', '.node']
+  },
+  watchOptions: {
+    ignored: '../src/modules/**'
   },
   target: 'electron-main'
 }
@@ -64,6 +58,7 @@ let mainConfig = {
  * Adjust mainConfig for development settings
  */
 if (process.env.NODE_ENV !== 'production') {
+  mainConfig.mode = 'development'
   mainConfig.plugins.push(
     new webpack.DefinePlugin({
       '__static': `"${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}"`
@@ -75,8 +70,9 @@ if (process.env.NODE_ENV !== 'production') {
  * Adjust mainConfig for production settings
  */
 if (process.env.NODE_ENV === 'production') {
+  // mainConfig.entry.main = [path.join(__dirname, '../src/modules/index.server.js')].concat(mainConfig.entry.main)
+  mainConfig.mode = 'production'
   mainConfig.plugins.push(
-    new MinifyPlugin(),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': '"production"'
     })

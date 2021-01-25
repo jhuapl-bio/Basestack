@@ -73,13 +73,16 @@ router.post("/modules/cancel", (req,res,next)=>{
 
 router.post("/init/start", (req,res,next)=>{
 	try {
+		console.log("init startin")
+		logger.info("initializing starting")
 		initialize().then((response)=>{
 			res.status(200).json({status: 200, message: "Initialized app" });
 		}).catch((err)=>{
+			logger.error(`Error in init server ${err}`)
 			res.status(419).send({status: 419, message: error_alert(err) });
 		})
 	} catch(err){
-		logger.error(err)
+		logger.error(`Error in init server ${err}`)
 		res.status(419).send({status: 419, message: error_alert(err) });
 	}
 })
