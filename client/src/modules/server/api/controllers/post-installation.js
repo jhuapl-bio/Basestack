@@ -49,12 +49,16 @@ var install_images_onlinePromise = function(obj){
 
 export var install_images_online = function(img){
 	return new Promise(function(resolve,reject){
-		const image = store.config.images[img.name]
+		const image = store.config.images[img.image]
 		image.config = img.config
-		if (store.dockerStreamObjs[img.name]){
+		if (store.dockerStreamObjs[img.image]){
 			reject("Docker image already loading, canceling")
 		} else {
-			install_images_onlinePromise(image).then((response,error)=>{
+			install_images_onlinePromise({
+				config: img.config,
+				name: img.image,
+				fullname: img.name
+			}).then((response,error)=>{
 				if(error){
 					logger.error(`${error} function: install_images_online()`)
 					reject(error)
@@ -184,7 +188,8 @@ export var load_image  = function(obj){
 					})
 				} else { //The repo is public and docker pullable
 					// var auth  = { key: "10644ba4-7c89-41b0-ae0d-d888ea3906d4" }
-					docker.pull(obj.installation.path)
+					console.log(obj)
+					docker.pull(obj.fullname)
 					.then((stream, error)=>{
 						store.dockerStreamObjs[obj.name]  = stream
 						store.config.images[obj.name].status.stream = []

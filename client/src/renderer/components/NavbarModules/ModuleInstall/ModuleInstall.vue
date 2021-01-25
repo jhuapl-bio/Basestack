@@ -83,7 +83,7 @@
 				            	<font-awesome-icon class="configure" icon="play-circle" size="sm" />
 				            </span>
 			            </b-col>
-			            <b-col sm="3"  v-if="!element.status.running" style="text-align:center"> 
+			            <b-col sm="4"  v-if="!element.status.running" style="text-align:center"> 
 			            	<span class="center-align-icon;" :id="'configInstall'+element.name"
 			            		v-tooltip="{
 					            content: 'Configure installation method',
@@ -98,7 +98,7 @@
 						    </span>
 						    
 						</b-col>
-						<b-col sm="3"  v-else style="text-align:center"> 
+						<b-col sm="4"  v-else="element.status.running" style="text-align:center"> 
 			            	<span class="center-align-icon"  v-tooltip="{
 					            content: 'Cancel Install for: '+element.title,
 					            placement: 'top',
@@ -130,7 +130,7 @@
 		            		<font-awesome-icon icon="times-circle" size="sm" />
 		            	</span>
 		            	<span class="center-align-icon"  v-tooltip="{
-				            content: 'The module is attempting an update',
+				            content: 'The module is either attempting an update or installing another version',
 				            placement: 'top',
 				            classes: ['info'],
 				            trigger: 'hover',
@@ -138,7 +138,16 @@
 				            }" style="float:right" v-else-if="element.status.running" >
 			            	<font-awesome-icon icon="circle-notch" size="sm" />
 			            </span>
-	    				<span class="center-align-icon success-icon" style="float:right" v-else v-tooltip="{
+	    				<span class="center-align-icon warn-icon" style="float:right" v-else-if="element.selectedTag && element.selectedTag.digest != element.latest_digest" v-tooltip="{
+				            content: 'This module is installed but can be updated',
+				            placement: 'top',
+				            classes: ['info'],
+				            trigger: 'hover',
+				            targetClasses: ['it-has-a-tooltip'],
+				            }">
+			            	<span ><font-awesome-icon icon="exclamation" size="sm"/></span>
+			            </span>
+			            <span class="center-align-icon success-icon" style="float:right" v-else v-tooltip="{
 				            content: 'This module is installed and operable',
 				            placement: 'top',
 				            classes: ['info'],
@@ -263,7 +272,7 @@
 		        </div>
 		    </button>
 		</b-col>
-		<b-col sm="6" v-if="selectedElement"  class="text-center">
+		<b-col sm="12" v-if="selectedElement"  class="text-center">
 		    <button class="btn tabButton" style="border-radius: 10px; margin:auto" v-on:click="openFolder(meta.logFolder)" v-tooltip="{
 		        content: '',
 		        placement: 'top',
@@ -316,7 +325,16 @@
 					</code>
 				</div>	
 			</div>
-			<ModuleConfig :selectedElement="selectedElement" @updateSrc="updateSrc" v-if="selectedElement && showConfig"></ModuleConfig>
+		</b-col>
+		<b-col sm="12">
+			<ModuleConfig 
+				@installSpecific="installSpecific" 
+				@removeSpecific="removeSpecific" 
+				:selectedElement="selectedElement" 
+				@updateSrc="updateSrc" 
+				v-if="selectedElement && showConfig"
+				@updateSelectedTag="updateSelectedTag">		
+			</ModuleConfig>
 		</b-col>
 	</b-row>
   </div>
@@ -391,6 +409,18 @@
 	    			this.stagedInstallation[this.selectedElement.name].installation = val
 	    		}
 	    	},
+	    	async updateSelectedTag(tag){
+	    		try{
+		    		this.selectedElement.selectedTag = tag
+		    		await FileService.selectTag(tag).then((response)=>{
+		    			console.log("changed select", tag)
+	    			}).catch((error)=>{
+	    				this.error_alert(error.response.data.message, "Error in loading image for module use!")
+	    			})
+	    		} catch(err){
+	    			console.error(err)
+	    		}
+	    	},
 	    	updateLogInterval(name, val){
 	    		if(this.$el.querySelector("#logWindow")){ 
 	    			this.logInterval[name].pause = val
@@ -398,6 +428,14 @@
 						this.$el.querySelector("#logWindow").scrollTop =  this.$el.querySelector("#logWindow").scrollHeight 
 					} 
 				}
+	    	},
+	    	installSpecific(tag){
+	    		this.selectedElement.selectedTag = tag
+	    		this.install_online_dockers(this.selectedElement)
+	    	},
+	    	removeSpecific(tag){
+	    		this.selectedElement.selectedTag = tag
+	    		this.remove_docker(this.selectedElement)
 	    	},
 	    	updateStatus(val){
 				const $this = this
@@ -605,9 +643,8 @@
 	    	async install_online_dockers(element){
 	    		let promises = []
 	    		element.pause = false
-	    		let errors = [];
+	    		const errors = []
 	    		if (this.stagedInstallation[element.name].installation.resources){
-	    			
 	    			for (const [key, value ] of Object.entries(this.stagedInstallation[element.name].installation.resources)){
 	    				if (value.type == 'file' && (value.src)){
 	    					value['srcFormat'] = { filename: value.src.name, filepath: value.src.path }
@@ -617,6 +654,12 @@
 	    				}
 	    			}
 	    		}
+	    		if (!element.selectedTag){
+	    			element.selectedTag  = {
+	    				fullname: element.name,
+	    				image: element.name
+	    			}
+	    		}
 	    		if (errors.length > 0){
 	    			this.error_alert(errors.join(","), "Error in online resources needing to be provided!")
 	    			this.showConfig = true
@@ -624,7 +667,8 @@
 		            await FileService.loadImages(
 	    				{
 	    					config: this.stagedInstallation[element.name].installation,
-	    					name: element.name
+	    					name: element.selectedTag.fullname,
+	    					image: element.name
 	    				}
 	    			)
 		            .then((response)=>{
@@ -665,8 +709,11 @@
 			              showConfirmButton: true,
 			              allowOutsideClick: true
 			            });
+			            if (!image.selectedTag){
+			            	image.selectedTag.fullname = image.name
+			            }
 		    			( async function() {
-		    				await FileService.removeImages(image.name).then((msg, err)=>{
+		    				await FileService.removeImages(image.selectedTag.fullname).then((msg, err)=>{
 				    			$this.$swal.fire({
 					              position: 'center',
 					              icon: 'success',

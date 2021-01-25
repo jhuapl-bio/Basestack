@@ -43,6 +43,7 @@
 			        <font-awesome-icon class="help" icon="question-circle"  />
 			      </span>
 			    </h2>
+
             	<component 
             		:is="entry.component" 
             		:histories="histories" 
@@ -52,12 +53,11 @@
             		@open="open"
             		class="contentDiv"
             		v-bind:images="images"
+            		v-bind:selectedTag="null"
             		v-bind:modules="modules"
             		v-bind:resources="resources"
             		v-bind:docker="docker"
-            		
-            	>
-            	
+            	>            	
             	</component>
             </div>
           </b-tab>
@@ -126,7 +126,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 0,
+    		tab: 1,
 	        entries: null,
 	        resources: null,
 	        docker:null,
@@ -177,7 +177,7 @@ export default {
 					if (!this.intervalChecking){
 						$this.getStatus()
 					}
-				}, 1000)
+				}, 2500)
 			})
 		}).catch((err)=>{
 			console.error(err)
@@ -238,6 +238,7 @@ export default {
 			this.$set(this, 'resources', response.data.data.resources)
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
+			console.log(images)
 			this.initial = response.data.data.ready
 			if (!this.initial){
 				this.init().catch((err)=>{

@@ -28,14 +28,12 @@ const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
 const { RAMPART } = require('../modules/rampart')
 import  docker  from "./docker.js"
-
 export async function initialize(params){
 	// logger.info("%s <------ initialize", store.meta)
 	try{
 		// let re = await setup_data()''
 
 		logger.info(logger)
-		logger.info(store.meta,"llllllllllllllllllllllllllllllllllllllllllllllllllllllll")
 		store.meta.ready  = false
 		let userMeta = path.join(store.meta.writePath, "meta.json")
 		let metaExists = await checkFileExist(store.meta.writePath, "meta.json", true)

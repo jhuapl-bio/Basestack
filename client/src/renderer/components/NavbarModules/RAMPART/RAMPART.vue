@@ -137,7 +137,7 @@
   export default {
     name: 'rampart',
     components: {Multiselect},
-    props: ['modules', 'images', 'histories'],
+    props: ['modules', 'images', 'histories', 'selectedTag'],
     data() {
       return {
         submitStatus: null,
