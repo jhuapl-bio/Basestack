@@ -118,7 +118,10 @@ function startMain (devClient) {
     mainConfig.mode = 'development'
     process.env.devClient = devClient
     const compiler = webpack(mainConfig)
-
+    hotMiddleware = webpackHotMiddleware(compiler, {
+      log: false,
+      heartbeat: 2500,
+    })
     compiler.hooks.watchRun.tapAsync('watch-run', (compilation, done) => {
       logStats('Main', chalk.white.bold('compiling...'))
       hotMiddleware.publish({ action: 'compiling' })
