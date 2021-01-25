@@ -73,7 +73,7 @@ let serverConfig = {
 };
 
 if (process.env.NODE_ENV !== 'production'){
-  serverConfig.devtool = 'eval-cheap-module-source-map'
+  serverConfig.devtool = 'eval-cheap-source-map'
   serverConfig.plugins.push(new NodemonPlugin() )
 }
 

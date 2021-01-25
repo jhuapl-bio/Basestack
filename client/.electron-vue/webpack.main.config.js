@@ -59,7 +59,7 @@ let mainConfig = {
  */
 if (process.env.NODE_ENV !== 'production') {
   mainConfig.mode = 'development'
-  mainConfig.devtool = 'eval-cheap-module-source-map'
+  mainConfig.devtool = 'eval-cheap-source-map'
   mainConfig.plugins.push(
     new webpack.DefinePlugin({
       '__static': `"${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}"`
