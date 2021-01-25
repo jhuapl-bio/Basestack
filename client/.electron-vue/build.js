@@ -35,7 +35,7 @@ function build () {
 
   del.sync(['dist/electron/*', '!.gitkeep'])
 
-  // const tasks = ['main', 'renderer']
+  const tasks = ['main', 'renderer']
   // const tasks = ['server', 'main']
   // const tasks = ['main']
   // const tasks = ['renderer']
