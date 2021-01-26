@@ -845,17 +845,7 @@ export default {
         			}
         		},
         		specifics: {
-        			throughput: {
-        				exists: {
-        					checked: value => value === true
-        				}
-        			},
         			seq_summary: {
-        				exists: {
-        					checked: value => value === true
-        				}
-        			},
-        			drift_correction: {
         				exists: {
         					checked: value => value === true
         				}
