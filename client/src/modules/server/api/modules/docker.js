@@ -69,7 +69,6 @@ export class DockerObj {
 		})
 	}
 	start(params){
-		// var container = docker.getContainer(this.name);
 		const $this = this
 		let options; let command;
 		return new Promise(function(resolve,reject){
@@ -87,7 +86,7 @@ export class DockerObj {
 							options = opt.options;
 							command = opt.command
 							docker.createContainer({
-								Image: $this.image, 
+								Image: params.tag.image, 
 								Cmd: command, 
 								Tty: true,
 								name: options.name,

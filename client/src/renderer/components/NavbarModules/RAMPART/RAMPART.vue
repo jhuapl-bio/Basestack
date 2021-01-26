@@ -295,7 +295,8 @@
               reportDir: this.selectedHistory.reportDir,
               name: this.selectedHistory.name,
               annotationsDir: this.selectedHistory.annotationsDir,
-              module: 'rampart'
+              module: 'rampart',
+              tag: this.images['jhuaplbio/artic'].selectedTag
           }).then((response)=>{
             this.$swal.fire({
               position: 'center',

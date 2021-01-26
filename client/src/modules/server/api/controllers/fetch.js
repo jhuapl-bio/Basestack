@@ -205,9 +205,18 @@ export async function fetch_external_dockers(key){
 				return d.name == 'latest'
 			})[0]
 		}
-		store.config.images[key].latest_digest = {name: element.name, version: latest.name, digest: latest.images[0].digest}  
+		store.config.images[key].latest_digest = latest.images[0].digest
 		store.config.images[key].available_images = json.map((d)=>{
-			return {fullname: `${element.name}:${d.name}`, name: d.name, digest: d.images[0].digest, image: element.name, installed: false, selected:false }
+
+			return {
+				fullname: `${element.name}:${d.name}`, 
+				name: d.name, 
+				version:d.name,
+				digest: d.images[0].digest, 
+				image: element.name, 
+				installed: false, 
+				selected:false 
+			}
 		})
 	} catch(err){
 		logger.error(err)
@@ -222,38 +231,48 @@ async function check_image_promise(imageName){
 		try{
 			(async ()=>{
 				let getImages = await docker.listImages({ 'filters' : { 'reference' : [ imageName ] }})
-				let tags = []
+				let tags = [];
+				let latest; 
 				for (const image of getImages) {
 					if (image.RepoTags && image.RepoTags.length > 0){
 						tags = tags.concat(image.RepoTags.map((d,i)=>{
-							return {
+							let obj = {
 								version: d.replace(imageName+":", ""), 
 								name: d, 
+								fullname: `${d}`,
 								image: imageName,
 								installed: true,
 								digest: (image.RepoDigests && image.RepoDigests[i] ? image.RepoDigests[i].replace(`${imageName}@`, "") : null)
 							}
+							if (obj.version =='latest'){
+								latest = obj
+							}
+							return obj
 						}))
 					}
 				}
 				let installed_count = tags.length
 				tags.some((item, idx) => 
-				  item.name.includes('latest') && 
+				  item.version.includes('latest') && 
 				  tags.unshift( 
 				    tags.splice(idx,1)[0] 
 				  ) 
 				)
+				if (latest && !store.config.images[imageName].selectedTag.digest){
+					store.config.images[imageName].selectedTag = latest
+				}
+				const available_versions = tags.map((d)=>{
+					return d.version
+				})
+				
 				store.config.images[imageName].available_images.forEach((d, i)=>{
-					const not_available = (tags.some((item, idx)=>{
-						return item.digest !== d.digest
+					const available = (available_versions.some((item, idx)=>{
+						return item == d.version
 					}) || installed_count == 0)
-					if (not_available){
+					if (!available){
 						tags.push(d)
 					}
 				})
-				if (imageName == 'basestack_tutorial'){
-					console.log(tags)
-				}
 				resolve({
 					tags: tags,
 					imageName: imageName,
@@ -447,11 +466,12 @@ async function formatDockerLoads(){
 				inspect: null,
 				fetching_available_images: false
 			}
-			store.config.images[key].tags = [ { name: 'latest', digest: null, installed: false, selected:true, image: element.name}]
-			store.config.images[key].available_images = [ { name: 'latest', digest: null, installed: false, selected:true, image: element.name }]
+			let base_tags = [ {fullname: `${element.name}:latest`, image:`${element.name}`, name: 'latest', digest: null, installed: false, selected:true, version:'latest'}]
+			store.config.images[key].tags = base_tags
+			store.config.images[key].available_images = base_tags
+			store.config.images[key].selectedTag = base_tags[0]
 			store.dockerStreamObjs[key] = null
 			let checking = false
-
 			if(!element.private){
 				fetch_external_dockers(key)
 			}
@@ -462,7 +482,7 @@ async function formatDockerLoads(){
 						let response =  await check_image(key)
 						store.config.images[key].status.installed = response.status
 						store.config.images[key].status.errors = response.error
-						store.config.images[key].tags = response.tags
+						store.config.images[key].tags = (response.tags.length > 0 ? response.tags : base_tags)
 						checking = false
 					})().catch((err)=>{
 						logger.error(err)

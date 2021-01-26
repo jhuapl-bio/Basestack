@@ -208,7 +208,8 @@ export default {
 		},
       	async start_tutorials(){
       		await FileService.startModule({
-      			module: 'basestack_tutorial'
+      			module: 'basestack_tutorial',
+      			tag: this.images['basestack_tutorial'].selectedTag
       		}).then((response)=>{
 				this.count +=1
         	}).catch((error)=>{
@@ -342,28 +343,28 @@ export default {
 					)
 				}
 				this.videos = metaList
-				// if (type =='new'){
-				// 	this.start_tutorials(type).then(()=>{
-				// 		this.durationInterval = setInterval(()=>{
-				// 			let nullFound = false
+				if (type =='new'){
+					this.start_tutorials(type).then(()=>{
+						this.durationInterval = setInterval(()=>{
+							let nullFound = false
 							
-				// 			this.videos.forEach((mod)=>{
-				// 		  		mod.sections.forEach((section)=>{	
-				// 			  		if (this.$refs['staged-'+section.title])	{
-				// 			  			section.duration = this.$refs['staged-'+section.title][0].duration
-				// 			  		}  		
-				// 			  		if (section.duration == undefined){
-				// 			  			nullFound = true
-				// 			  		}		
-				// 		  		})
-				//   			})
-				//   			if ((this.modules.basestack_tutorial.status.running && !nullFound) || !this.images.basestack_tutorial.status.installed || !this.modules.basestack_tutorial.status.running){
-				// 				clearInterval(this.durationInterval)
-				// 			}
-				// 		}, 600)
+							this.videos.forEach((mod)=>{
+						  		mod.sections.forEach((section)=>{	
+							  		if (this.$refs['staged-'+section.title])	{
+							  			section.duration = this.$refs['staged-'+section.title][0].duration
+							  		}  		
+							  		if (section.duration == undefined){
+							  			nullFound = true
+							  		}		
+						  		})
+				  			})
+				  			if ((this.modules.basestack_tutorial.status.running && !nullFound) || !this.images.basestack_tutorial.status.installed || !this.modules.basestack_tutorial.status.running){
+								clearInterval(this.durationInterval)
+							}
+						}, 600)
 							
-				// 	})
-				// }
+					})
+				}
 				
 				if (!this.selectedVideo){
 					if (this.videos.length > 0){

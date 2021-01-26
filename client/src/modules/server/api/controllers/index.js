@@ -82,7 +82,7 @@ export async function initialize(params){
 				let obj = await initialize_module_object(container_name)
 				if (value.config.initial && response.images.entries[value.image].installed){
 					let response = await obj.cancel()
-					let response_start = await start_module({module: container_name, tag: "latest"})
+					let response_start = await start_module({module: container_name, tag: response.images.entries[value.image].selectedTag })
 				}
 			}	
 		}
@@ -108,7 +108,7 @@ export async function initialize(params){
 async function initialize_module_object(container_name){
 	let obj;
 	if (container_name == 'rampart'){
-		obj  = new DockerObj('jhuaplbio/artic', 'rampart', new RAMPART());
+		obj  = new DockerObj('jhuaplbio/artic', 'rampart', new RAMPART(),);
 	} else if (container_name == 'basestack_tutorial'){
 		obj = new DockerObj('basestack_tutorial', 'basestack_tutorial', new Tutorial());
 	} else if (container_name == 'basestack_consensus'){
@@ -137,6 +137,7 @@ export async function start_module(params){
 		} else {
 			obj = await initialize_module_object(container_name)
 		}
+		console.log(params)
 		let response = await obj.start(params)
 		store.modules[container_name] = obj;
 		return response
