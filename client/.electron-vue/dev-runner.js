@@ -11,6 +11,7 @@ const webpackHotMiddleware = require('webpack-hot-middleware')
 
 const mainConfig = require('./webpack.main.config')
 const rendererConfig = require('./webpack.renderer.config')
+const serverConfig = require('./webpack.server.config')
 
 let electronProcess = null
 let manualRestart = false
@@ -49,12 +50,12 @@ function startRenderer (devClient) {
       heartbeat: 2500,
     })
 
-    compiler.hooks.compilation.tap('compilation', compilation => {
-      compilation.hooks.htmlWebpackPluginAfterEmit.tapAsync('html-webpack-plugin-after-emit', (data, cb) => {
-        hotMiddleware.publish({ action: 'reload' })
-        cb()
-      })
-    })
+    // compiler.hooks.compilation.tap('compilation', compilation => {
+    //   compilation.hooks.watchRun.tapAsync('html-webpack-plugin-after-emit', (data, cb) => {
+    //     hotMiddleware.publish({ action: 'reload' })
+    //     cb()
+    //   })
+    // })
 
     compiler.hooks.done.tap('done', stats => {
       logStats('Renderer', stats)
@@ -93,6 +94,23 @@ function startRenderer (devClient) {
     server.listen(9080)
   })
 }
+function startServer (devClient){
+  return new Promise((resolve, reject) => {
+    serverConfig.entry.server = path.join(__dirname, '../src/modules/index.server.js')
+    serverConfig.mode = 'development'
+    const compiler = webpack(serverConfig)
+    
+    
+
+    compiler.hooks.done.tap('done', stats => {
+      logStats('Server', stats)
+    })
+    compiler.watch({}, (err, stats) => {
+      logStats('Server', stats)
+      resolve()
+    })
+  })
+}
 
 function startMain (devClient) {
   return new Promise((resolve, reject) => {
@@ -100,7 +118,10 @@ function startMain (devClient) {
     mainConfig.mode = 'development'
     process.env.devClient = devClient
     const compiler = webpack(mainConfig)
-
+    hotMiddleware = webpackHotMiddleware(compiler, {
+      log: false,
+      heartbeat: 2500,
+    })
     compiler.hooks.watchRun.tapAsync('watch-run', (compilation, done) => {
       logStats('Main', chalk.white.bold('compiling...'))
       hotMiddleware.publish({ action: 'compiling' })
@@ -193,8 +214,11 @@ function init () {
   if (process.argv.slice(2) =="client"){
     devClient = true
   }
-
-  Promise.all([startRenderer(devClient), startMain(devClient)])
+  Promise.all([
+    startServer(devClient), 
+    startRenderer(devClient), 
+    startMain(devClient)
+    ])
     .then(() => {
       startElectron()
     })

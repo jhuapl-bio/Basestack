@@ -32,8 +32,8 @@ const {
 	fetch_videos_meta, 
 	fetch_video,
 	fetch_histories,
-	fetch_status
-
+	fetch_status,
+	fetch_external_dockers
 	} = require("../controllers/fetch.js")
 
 const { 
@@ -73,13 +73,16 @@ router.post("/modules/cancel", (req,res,next)=>{
 
 router.post("/init/start", (req,res,next)=>{
 	try {
+		console.log("init startin")
+		logger.info("initializing starting")
 		initialize().then((response)=>{
 			res.status(200).json({status: 200, message: "Initialized app" });
 		}).catch((err)=>{
+			logger.error(`Error in init server ${err}`)
 			res.status(419).send({status: 419, message: error_alert(err) });
 		})
 	} catch(err){
-		logger.error(err)
+		logger.error(`Error in init server ${err}`)
 		res.status(419).send({status: 419, message: error_alert(err) });
 	}
 })
@@ -321,7 +324,21 @@ router.get("/videos/fetchMeta", (req,res,next)=>{ //this method needs to be rewo
 		}	
 	})().catch((err)=>{})
 })
-
+router.post("/tags/fetch", (req,res,next)=>{ 
+	(async function(){
+		try {
+			fetch_external_dockers(req.body).then((response)=>{
+				res.status(200).json({status: 200, message: "Returning compelted fetch", data: response });
+				}).catch((err1)=>{
+					logger.error(err1)
+					res.status(419).send({status: 419, message: "There was an error in fetch tags. Check Logs"});
+				})			
+		} catch(err3){
+			logger.error(err3)
+			res.status(419).send({status: 419, message: error_alert(err3) });
+		}	
+	})().catch((err2)=>{console.error(err2)})
+})
 
 router.post("/videos/fetch", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	try {
@@ -419,7 +436,7 @@ router.post("/install/imagesOffline", (req,res,next)=>{ //this method needs to b
 		try {
 			
 				let response = await install_images_offline(req.body)
-				logger.info("Success in loading images")
+				logger.info(`Success in beginning to load image: ${req.body.name}`)
 				res.status(200).json({status: 200, message: "Completed docker offline load", data: null });			
 			
 		} catch(err2){
@@ -435,7 +452,7 @@ router.post("/install/imagesOnline", (req,res,next)=>{ //this method needs to be
 	(async function(){
 		try {
 			let response = await install_images_online(req.body)
-			logger.info("Success in loading images")
+			logger.info(`Success in beginning to load image: ${req.body.name}`)
 			res.status(200).json({status: 200, message: "Completed docker online load", data: response });
 		} catch(err2){
 			logger.error("%s %s", "Error in loading images2", err2)
