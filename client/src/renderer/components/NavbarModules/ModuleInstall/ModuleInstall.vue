@@ -476,7 +476,7 @@
 	    	},
 	    	async updateSelectedTag(tag){
 	    		try{
-		    		this.selectedElement.selectedTag = tag
+	    			this.stagedInstallation[this.selectedElement.name].selectedTag = tag
 		    		await FileService.selectTag(tag).then((response)=>{
 		    			console.log("changed select", tag)
 	    			}).catch((error)=>{
@@ -495,11 +495,12 @@
 				}
 	    	},
 	    	installSpecific(tag){
-	    		this.selectedElement.selectedTag = tag
+	    		this.stagedInstallation[this.selectedElement.name].selectedTag = tag
+	    		// this.selectedElement.selectedTag = tag
 	    		this.install_online_dockers(this.selectedElement)
 	    	},
 	    	removeSpecific(tag){
-	    		this.selectedElement.selectedTag = tag
+	    		this.stagedInstallation[this.selectedElement.name].selectedTag = tag
 	    		this.remove_docker(this.selectedElement)
 	    	},
 	    	updateStatus(val){
@@ -781,6 +782,7 @@
 			            if (!image.selectedTag){
 			            	image.selectedTag.fullname = image.name
 			            }
+			            console.log(image.selectedTag.fullname);
 		    			( async function() {
 		    				await FileService.removeImages(image.selectedTag.fullname).then((msg, err)=>{
 				    			$this.$swal.fire({

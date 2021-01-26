@@ -129,8 +129,8 @@ class FileService {
   rmSelection(params){
     return Api().post(`${baseEndpoint}/selections/rm`, params)  
   }
-  fetchDockerTags(name){
-    return Api().get("http://localhost:5003/tags/fetch", name)                    
+  fetchDockerTags(params){
+    return Api().post("http://localhost:5003/tags/fetch", params)                    
   }
   selectTag(params){
     return Api().post("http://localhost:5003/tags/select", params)  

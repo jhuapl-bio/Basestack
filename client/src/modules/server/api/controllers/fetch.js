@@ -205,9 +205,18 @@ export async function fetch_external_dockers(key){
 				return d.name == 'latest'
 			})[0]
 		}
-		store.config.images[key].latest_digest = {name: element.name, version: latest.name, digest: latest.images[0].digest}  
+		store.config.images[key].latest_digest = latest.images[0].digest
 		store.config.images[key].available_images = json.map((d)=>{
-			return {fullname: `${element.name}:${d.name}`, name: d.name, digest: d.images[0].digest, image: element.name, installed: false, selected:false }
+
+			return {
+				fullname: `${element.name}:${d.name}`, 
+				name: d.name, 
+				version:d.name,
+				digest: d.images[0].digest, 
+				image: element.name, 
+				installed: false, 
+				selected:false 
+			}
 		})
 	} catch(err){
 		logger.error(err)

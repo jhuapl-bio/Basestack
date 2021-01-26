@@ -56,7 +56,7 @@
 				src:[],
 				tag_fields: [
 					{
-						key: 'name',
+						key: 'version',
 						label: 'Version'
 					},
 					{
