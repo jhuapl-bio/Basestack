@@ -1,6 +1,10 @@
 'use strict'
 
 const { app, ipcMain, BrowserWindow, Menu, dialog, shell } = require('electron')
+const { spawn, exec } = require('child_process');
+
+
+
 import promiseIpc from 'electron-promise-ipc';
 const isMac = process.platform === 'darwin'
 
@@ -9,33 +13,27 @@ if (!process.env.APPDATA){
 }
 
 
-const { 
- cancel_container
- } = require('../modules/server/api/controllers/index.js')
-
 
 const path = require("path")
 // const {  show_MinKnow, show_sublime, show_aliview, show_spreaD3, show_BEAUTI, show_BEAST, show_figtree, show_tempest, show_tracer } = require('./menu.js')
-const { store } = require("../modules/server/api/store/global.js")
 
 require("../renderer/store")
 
 
-const {logger } = require("../modules/server/api/controllers/logger.js")
 
-const log = require('electron-log');
 const {autoUpdater} = require("electron-updater");
 
 
 const {fs} = require("fs")
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'debug';
-log.info('App starting...');
+// autoUpdater.logger.transports.file.level = 'info';
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
 let releaseNotes;
+
+
+
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
   process.env.version_basestack = autoUpdater.currentVersion
@@ -52,88 +50,30 @@ if (process.env.NODE_ENV !== 'development') {
     releaseDate: "NA"
   };
 }
+process.env.resourcesPath = process.resourcesPath
 
 let mainWindow
 
-let { open_server,close_server } = require("../modules/server/server.js")
-open_server()
-// logger.info(JSON.stringify(process.env, null, 4))
+const { store } = require("../modules/server/api/store/global.js")
+const {logger } = require("../modules/server/api/controllers/logger.js")
+
+let open_server; let close_server; let  cancel_container;
+if (process.env.NODE_ENV === 'production'){
+  if (process.env.NODE_ENV == 'production'){
+    let { open_server, close_server } = require("../modules/server/server.js")
+    const { 
+     cancel_container
+    } = require('../modules/server/api/controllers/index.js')
+
+    open_server()
+  }
+
+}
+
+
+let bat = undefined;
+autoUpdater.logger = logger;
 var menu = Menu.buildFromTemplate([
-  // {
-  //     label: 'Quick Launch Software',
-  //     submenu: [
-  //         {label:'MinKNOW', 
-  //         click(){
-  //             show_MinKnow()
-  //           }
-  //         },
-  //         {label:'Sublime Text',
-  //           click(){  
-  //             show_sublime()
-  //           }
-  //         },
-  //         {label:'ALiView',
-  //           click(){  
-  //             show_aliview()
-  //           }
-  //         },
-  //         {label:'spreaD3',
-  //           click(){  
-  //             show_spreaD3()
-  //           }
-  //         },
-  //         {label:'BEAUTI', 
-  //         click(){  
-  //             // render.show_BEAUTI("<APP_DIR>/pre-commands/")
-  //             show_BEAUTI()
-  //           }
-  //         },
-  //         {label:'BEAST', 
-  //         click(){  
-  //             // render.show_BEAST("<APP_DIR>/pre-commands/")
-  //             show_BEAST()
-  //           }
-  //         },
-  //         {label:'FigTree', 
-  //         click(){  
-  //             show_figtree()
-  //           }
-  //         },
-  //         {label:'Tempest', 
-  //         click(){  
-  //             show_tempest()
-  //           }
-  //         },
-  //         {label:'Tracer', 
-  //         click(){  
-  //             show_tracer()
-  //           }
-  //         }
-  //     ]
-  // },
-  // {
-  //   label: 'Post Installation',
-  //     submenu: [
-  //     {
-  //       label: "Offline",
-  //       click: async ()=>{
-  //         install_images_offline()
-  //       }
-  //     },
-  //     {
-  //       label: "Online",
-  //       click: async ()=>{
-  //         install_images_online()
-  //        }
-  //      },
-  //      {
-  //       label: "Cancel",
-  //       click: async ()=>{
-  //         cancel_load_images()
-  //        }
-  //      }
-  //     ]
-  // },
    {
     label: 'Edit',
     submenu: [
@@ -231,10 +171,11 @@ var menu = Menu.buildFromTemplate([
       {
         label: 'View Release Notes',
         click() {  
-          logger.info("Getting release notes")
+          // logger.info("Getting release notes")
           mainWindow.webContents.send('mainNotification', {
             icon: 'info',
             message: `${releaseNotes.releaseNotes}`,
+            disable_popup: true
           })
           mainWindow.webContents.send('releaseNotes', releaseNotes)
           // logger.info(`${autoUpdater.currentVersion} --> ${JSON.stringify(releaseNotes)}`)
@@ -251,7 +192,7 @@ var menu = Menu.buildFromTemplate([
     submenu: [
       {
         label: 'Learn More',
-        click () { require('electron').shell.openExternalSync('https://electronjs.org') }
+        click () { shell.openExternal('https://github.com/jhuapl-bio/Basestack') }
       }
     ]
   }
@@ -266,9 +207,14 @@ Menu.setApplicationMenu(menu);
 //   global.__static = ""
 // }
 
-const winURL = process.env.NODE_ENV === 'development'
+const winURL = (process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
-  : `file://${__dirname}/index.html`
+  : `file://${__dirname}/index.html`);
+
+  console.log("winurl defined")
+
+
+
 function checkUpdates(){
   if(process.env.NODE_ENV == 'production'){
     logger.info("Check for Basestack updates and notify")
@@ -304,7 +250,11 @@ function createWindow () {
   mainWindow.webContents.session.clearCache(function(){
   //some callback.
   });
-  mainWindow.loadURL(winURL)
+  try{
+    mainWindow.loadURL(winURL)
+  } catch(err){
+    console.error(err)
+  }
   mainWindow.webContents.send('releaseNotes', releaseNotes)
   ipcMain.on("queryRelease", (event, arg) => {
     event.reply('releaseNotes', releaseNotes)
@@ -316,7 +266,6 @@ function createWindow () {
     let quitUpdateInstall = false;
     logger.info("Basestack is finished loading")
     function sendStatusToWindow(text) {
-      logger.info(text);
       dialog.showMessageBox(mainWindow, {
         type: 'info',
         defaultId: 0,
@@ -326,7 +275,7 @@ function createWindow () {
       });
     }
     autoUpdater.on('error', (err) => {
-      logger.error(err)
+      logger.error(`Error in auto-updater. ${err}`)
       sendStatusToWindow('Error in auto-updater. ' + err);
     })
     autoUpdater.on('update-available', (info) => {
@@ -353,7 +302,8 @@ function createWindow () {
            mainWindow.webContents.send('mainNotification', {
              icon: '',
              loading: true,
-             message: `Downloading Update`
+             message: `Downloading Update`,
+             disable_popup: true
            })
            if (response.checkboxChecked ){
              quitUpdateInstall = true;
@@ -370,6 +320,7 @@ function createWindow () {
       mainWindow.webContents.send('mainNotification', {
          type: 'info',
          message: log_message,
+         disable_popup: true
       })
     })
 
@@ -395,11 +346,11 @@ function createWindow () {
     })
     autoUpdater.on('update-not-available', (info, err) => {
       if (err){
-        logger.error(err)
+        logger.error(`${err} err in update not available messaging`)
       }
       logger.info('Basestack update not available.');
       releaseNotes=info
-      // logger.info(`${JSON.stringify(info)}`)
+      logger.info(`${JSON.stringify(info)}`)
       mainWindow.webContents.send('releaseNotes', releaseNotes)
     })
     
@@ -451,36 +402,49 @@ function createWindow () {
 
   })
 
-
   mainWindow.on('closed', (e) => {
-    try{
-        cancel_container({module: 'rampart', silent:true})
-    } catch(err){
-      console.log(err)
-    }
-    try{
-        cancel_container({module: 'basestack_consensus', silent:true})
-    } catch(err){
-      console.log(err)
-    }
-    try{
-        cancel_container({module: 'basestack_tutorial', silent: true})
-    } catch(err){
-      console.log(err)
-    }
     mainWindow= null
   })
 }
-autoUpdater.autoDownload = false
 
+
+// async function close_server(){
+//   try{
+//     if(process.env.NODE_ENV === 'production'){
+//       bat.kill()
+//     }
+//     return "Closed Server"
+//   } catch(err){
+//     logger.error(err)
+//     throw err
+//   } 
+// }
+// function open_server(){
+//   bat = spawn('node', ['server.js'], {env: process.env, cwd: path.join(process.resourcesPath, "data", "server") })
+//   bat.stderr.on('data', (data) => {
+//     logger.error(data.toString());
+//     console.error(data.toString());
+//     // throw new Error(code)
+//     throw new Error(data.toString())
+//   });
+
+//   bat.on('exit', (code) => {
+//     logger.info(`Server Child process exited with code ${code}`);
+//   });
+// }
+
+autoUpdater.autoDownload = false
 app.on('ready', ()=>{
   (async () => {
     try{
       createWindow();   
-      checkUpdates()
+      checkUpdates();
+      if (process.env.NODE_ENV == 'production'){
+        open_server()
+      }
     } catch(error){
-      logger.error("error in check updates")
       logger.error(error)
+      throw error
     } 
   })()
     
@@ -503,7 +467,11 @@ ipcMain.on('restartApp', (event, arg)=>{
   app.relaunch()
   app.quit()
 })
-
+process.on('exit', function() {
+  // if(process.env.NODE_ENV === 'production'){
+  //   bat.kill()
+  // }
+});
 /**
  * Auto Updater
  *

@@ -1,6 +1,6 @@
 {
     "log": {
-        "path": "${writePath}/logs"
+        "path": "${dataPath}/logs"
     },
     "images": {
         "jhuaplbio/artic": {
@@ -9,6 +9,7 @@
             "name": "jhuaplbio/artic",
             "estimated_size": 10.6,
             "private": false,
+            "tags": [],
             "installation": {
                 "srcFiles": [
                     "Dockerfile"
@@ -17,9 +18,7 @@
                 "file": null,
                 "active": false,
                 "resources": null,
-                "path": "jhuaplbio/artic:latest",
-                "tags": []
-
+                "path": "jhuaplbio/artic"
             }
         },
         "basestack_tutorial": {
@@ -28,6 +27,7 @@
             "title": "Workshop Tutorials",
             "estimated_size": 2.42,
             "private": true,
+            "tags": [],
             "installation": {
                 "srcFiles": [
                     "Dockerfile",
@@ -37,7 +37,6 @@
                 "file": null,
                 "active": false,
                 "path": "${resourcePath}/basestack_tutorial/installation",
-                "tags": [],
                 "meta": "${writePath}/basestack_tutorial/meta.json",
                 "resourcesPath": "${writePath}/basestack_tutorial/resources",
 	            "resources": {
@@ -108,7 +107,8 @@
                         "barcode_arrs_vmk2.cfg",
                         "barcode_arrs_vmk.cfg",
                         "configuration.cfg",
-                        "configuration_dual.cfg"
+                        "configuration_dual.cfg",
+                        "custom"
                     ],
                     "basecalling" : [
                         "dna_r10.3_450bps_fast.cfg",
@@ -129,10 +129,12 @@
                         "rna_r9.4.1_70bps_fast.cfg",
                         "rna_r9.4.1_70bps_fast_prom.cfg",
                         "rna_r9.4.1_70bps_hac.cfg",
-                        "rna_r9.4.1_70bps_hac_prom.cfg"
+                        "rna_r9.4.1_70bps_hac_prom.cfg",
+                        "custom"
                     ],
                     "primers": [
-                        "nCoV-2019/V3"
+                        "nCoV-2019/V3",
+                        "custom (broken)"
                     ]
                 }
             }

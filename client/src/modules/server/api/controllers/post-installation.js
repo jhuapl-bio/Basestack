@@ -223,6 +223,7 @@ export var cancel_load_images = function(imageName){
 				store.config.images[imageName].status.changed=false
 				store.config.images[imageName].status.running = false
 				store.config.images[imageName].status.complete = false
+				logger.info(`Cancel for image building complete for: ${imageName}`)
 				resolve()
 			} else {
 				reject("No build process  to cancel for: " + imageName)
