@@ -1191,7 +1191,8 @@ export default {
 		            primerDir: this.selectedHistory.primerDir,
 		            reportDir: this.selectedHistory.reportDir,
 		            name: this.selectedHistory.name,
-		            module: 'basestack_consensus'
+		            module: 'basestack_consensus',
+		            tag: this.images['jhuaplbio/artic'].selectedTag
 		        }).then((response)=>{
 					this.$swal.fire({
 						position: 'center',

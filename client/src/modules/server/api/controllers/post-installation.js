@@ -243,7 +243,7 @@ export var remove_images = function(imageName){
 	return new Promise(function(resolve,reject){
 		(async ()=>{
 			let promises = [];
-			imageName = imageName +":latest"
+			console.log("ues")
 			let containers = await docker.listContainers({ 'filters' : { 'ancestor' : [ imageName ] }} )
 			for (let i = 0; i < containers.length; i++){
 				// docker.getContainer(containers[i].Id).remove({force:true})

@@ -177,7 +177,7 @@
 					            targetClasses: ['it-has-a-tooltip'],
 					            }"
 		            	>
-		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
+		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement ={}; selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
 					    </span>
 					</b-col>
 					<b-col sm="3"  v-else style="text-align:center">
@@ -206,7 +206,7 @@
 		            </b-col>
 		            <b-col sm="3" style="text-align:center" v-if="!element.status.running"> 
 		            	<span class="center-align-icon configure" v-if="docker"
-		            	v-on:click="selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)"
+		            	v-on:click="selectedElement ={}; selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)"
 		            	v-tooltip="{
 				            content: 'Update Module',
 				            placement: 'top',
@@ -244,7 +244,7 @@
 				            classes: ['info'],
 				            trigger: 'hover',
 				            targetClasses: ['it-has-a-tooltip'],
-				            }" v-on:click="(selectedElement == stagedInstallation[key] ? showLog = !showLog : showLog = true); selectedElement = stagedInstallation[key]; ">
+				            }" v-on:click="(selectedElement == stagedInstallation[key] ? showLog = !showLog : showLog = true); selectedElement ={}; selectedElement = stagedInstallation[key]; ">
 			            	<font-awesome-icon class="configure" icon="book-open" size="sm" />
 				        </span>
 				    </b-col>
@@ -411,7 +411,7 @@
 	    	},
 	    	async updateSelectedTag(tag){
 	    		try{
-		    		this.selectedElement.selectedTag = tag
+	    			this.stagedInstallation[this.selectedElement.name].selectedTag = tag
 		    		await FileService.selectTag(tag).then((response)=>{
 		    			console.log("changed select", tag)
 	    			}).catch((error)=>{
@@ -430,11 +430,12 @@
 				}
 	    	},
 	    	installSpecific(tag){
-	    		this.selectedElement.selectedTag = tag
+	    		this.stagedInstallation[this.selectedElement.name].selectedTag = tag
+	    		// this.selectedElement.selectedTag = tag
 	    		this.install_online_dockers(this.selectedElement)
 	    	},
 	    	removeSpecific(tag){
-	    		this.selectedElement.selectedTag = tag
+	    		this.stagedInstallation[this.selectedElement.name].selectedTag = tag
 	    		this.remove_docker(this.selectedElement)
 	    	},
 	    	updateStatus(val){
@@ -712,6 +713,7 @@
 			            if (!image.selectedTag){
 			            	image.selectedTag.fullname = image.name
 			            }
+			            console.log(image.selectedTag.fullname);
 		    			( async function() {
 		    				await FileService.removeImages(image.selectedTag.fullname).then((msg, err)=>{
 				    			$this.$swal.fire({

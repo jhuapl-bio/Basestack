@@ -52,7 +52,7 @@
 				            trigger: 'hover',
 				            targetClasses: ['it-has-a-tooltip'],
 				            }">
-			            	<span ><font-awesome-icon @click="remove_docker(option.item)" class="configure" icon="trash-alt" size="sm"/></span>
+			            	<span ><font-awesome-icon @click="remove_specific(option.item)" class="configure" icon="trash-alt" size="sm"/></span>
 			            </span>
 					</template>
 					<template v-slot:cell(name)="option">
@@ -96,7 +96,16 @@
 			            	<span ><font-awesome-icon @click="updateSelectedTag(option.item)" class="configure" icon="check-circle" size="sm"/></span>
 			            </span>
 					</template>
+					<template  v-slot:cell(selected)="option" >
+						{{option.item.fullname == selectedElement.selectedTag.fullname}}
+					</template>
 				</b-table>
+				
+			</b-col>
+		</b-row>
+		<b-row>
+			
+			<b-col sm="8">
 				<b-pagination
 			      v-model="currentPage"
 			      :total-rows="selectedElement.tags.length"
@@ -104,6 +113,26 @@
 			      aria-controls="my-table"
 			    ></b-pagination>
 			</b-col>
+			<b-col sm="4" v-if="!selectedElement.private" style="display:flex; text-align:middle; margin:auto; text-anchor:middle">
+	            	<span class="center-align-icon info-icon" style="display:flex"><font-awesome-icon @click="fetch_docker_tags(selectedElement.name)" class="configure" v-tooltip="{
+		            content: `Fetch all available version for this image. Requires Internet`,
+		            placement: 'top',
+		            classes: ['info'],
+		            trigger: 'hover',
+		            targetClasses: ['it-has-a-tooltip'],
+		            }"  icon="arrow-alt-circle-down" size="sm"/></span>
+		            <span v-if="selectedElement.status.fetching_available_images"
+               		style="margin:auto; text-align: center; min-width:20%; display:flex"
+		    		>	<p style="margin:auto; text-align:center">Fetching</p>
+	                  	<looping-rhombuses-spinner
+					          :animation-duration="4000"
+					          :size="20"
+					          style="margin: auto"
+					          :color="'#2b57b9'"
+					     />
+		    		</span>
+			</b-col>
+			
 		</b-row>
 	    <div v-if="!selectedElement.status.installed">
 	    	<span>Estimated Size: {{selectedElement.estimated_size}} GB</span>
@@ -131,7 +160,7 @@
 				src:[],
 				tag_fields: [
 					{
-						key: 'name',
+						key: 'version',
 						label: 'Version'
 					},
 					{
@@ -183,7 +212,8 @@
 	    	},
 	    	async fetch_docker_tags(name){
 	    		try{
-		    		let response = await FileService.fetchDockerTags(name)
+	    			console.log(name)
+		    		let response = await FileService.fetchDockerTags({name: name})
 		    		console.log(response)
 	    		} catch(err){
 	    			console.error(err)
