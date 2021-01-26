@@ -642,7 +642,7 @@
 								>
 									<template v-slot:cell()="cell">
 										<span 
-											:class="[cell.value.exists ? 'center-align-icon success-icon' : 'center-align-icon  warn-icon']" 
+											:class="[cell.value.exists ? 'center-align-icon success-icon' : (cell.value.required ? 'center-align-icon  warn-icon' : 'center-align-icon warn-icon')]" 
 											style="margin:auto; text-align:center" v-tooltip="{
 								            content: 'Presence in Run Directory?',
 								            placement: 'top',
@@ -650,7 +650,7 @@
 								            trigger: 'hover',
 								            targetClasses: ['it-has-a-tooltip'],
 								            }">
-					            			<font-awesome-icon :icon="cell.value.exists ? 'check' : 'times-circle'" size="sm" />
+					            			<font-awesome-icon :icon="cell.value.exists ? 'check' : (cell.value.required ? 'times-circle' : 'exclamation')" size="sm" />
 						            	</span>								 
 								    </template>
 								</b-table>
