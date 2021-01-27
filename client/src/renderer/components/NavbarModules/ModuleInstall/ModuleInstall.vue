@@ -138,7 +138,16 @@
 				            }" style="float:right" v-else-if="element.status.running" >
 			            	<font-awesome-icon icon="circle-notch" size="sm" />
 			            </span>
-	    				<span class="center-align-icon warn-icon" style="float:right" v-else-if="element.selectedTag && element.selectedTag.digest != element.latest_digest" v-tooltip="{
+			            <span class="center-align-icon text-warning" style="float:right" v-else-if="!element.private && element.status.fetching_available_images && element.status.fetching_available_images.errors" v-tooltip="{
+				            content: 'There was an error checking on newer versions',
+				            placement: 'top',
+				            classes: ['info'],
+				            trigger: 'hover',
+				            targetClasses: ['it-has-a-tooltip'],
+				            }">
+			            	<span ><font-awesome-icon icon="handshake-slash" size="sm"/></span>
+			            </span>
+	    				<span class="center-align-icon warn-icon" style="float:right" v-else-if="!element.private && element.installed_digest != element.latest_digest" v-tooltip="{
 				            content: 'This module is installed but can be updated',
 				            placement: 'top',
 				            classes: ['info'],
@@ -328,13 +337,9 @@
 		</b-col>
 		<b-col sm="12">
 			<ModuleConfig 
-				@installSpecific="installSpecific" 
-				@removeSpecific="removeSpecific" 
 				:selectedElement="selectedElement" 
 				:images="images"
-				@updateSrc="updateSrc" 
-				v-if="selectedElement && showConfig"
-				@updateSelectedTag="updateSelectedTag">		
+				v-if="selectedElement && showConfig">
 			</ModuleConfig>
 		</b-col>
 	</b-row>
@@ -389,9 +394,7 @@
 	    async mounted(){
 	    	this.meta = await FileService.fetchMeta()
 	    	this.meta = this.meta.data.data
-	    	setInterval(()=>{
-	    		console.log(this.stagedInstallation)
-	    	}, 1000)
+	    	
 			this.updateStatus(this.images)    	
 	    },
 	    beforeDestroy: function() {
@@ -413,18 +416,6 @@
 	    			this.stagedInstallation[this.selectedElement.name].installation = val
 	    		}
 	    	},
-	    	async updateSelectedTag(tag){
-	    		try{
-	    			this.stagedInstallation[this.selectedElement.name].selectedTag = tag
-		    		await FileService.selectTag(tag).then((response)=>{
-		    			console.log("changed select", tag)
-	    			}).catch((error)=>{
-	    				this.error_alert(error.response.data.message, "Error in loading image for module use!")
-	    			})
-	    		} catch(err){
-	    			console.error(err)
-	    		}
-	    	},
 	    	updateLogInterval(name, val){
 	    		if(this.$el.querySelector("#logWindow")){ 
 	    			this.logInterval[name].pause = val
@@ -432,15 +423,6 @@
 						this.$el.querySelector("#logWindow").scrollTop =  this.$el.querySelector("#logWindow").scrollHeight 
 					} 
 				}
-	    	},
-	    	installSpecific(tag){
-	    		this.stagedInstallation[this.selectedElement.name].selectedTag = tag
-	    		// this.selectedElement.selectedTag = tag
-	    		this.install_online_dockers(this.selectedElement)
-	    	},
-	    	removeSpecific(tag){
-	    		this.stagedInstallation[this.selectedElement.name].selectedTag = tag
-	    		this.remove_docker(this.selectedElement)
 	    	},
 	    	updateStatus(val){
 				const $this = this
@@ -659,21 +641,15 @@
 	    				}
 	    			}
 	    		}
-	    		if (!element.selectedTag){
-	    			element.selectedTag  = {
-	    				fullname: element.name,
-	    				image: element.name
-	    			}
-	    		}
 	    		if (errors.length > 0){
 	    			this.error_alert(errors.join(","), "Error in online resources needing to be provided!")
 	    			this.showConfig = true
 	    		} else{
+
 		            await FileService.loadImages(
 	    				{
 	    					config: this.stagedInstallation[element.name].installation,
-	    					name: element.selectedTag.fullname,
-	    					image: element.name
+	    					name: element.name
 	    				}
 	    			)
 		            .then((response)=>{
@@ -714,12 +690,8 @@
 			              showConfirmButton: true,
 			              allowOutsideClick: true
 			            });
-			            if (!image.selectedTag){
-			            	image.selectedTag.fullname = image.name
-			            }
-			            console.log(image.selectedTag.fullname);
 		    			( async function() {
-		    				await FileService.removeImages(image.selectedTag.fullname).then((msg, err)=>{
+		    				await FileService.removeImages(image.name).then((msg, err)=>{
 				    			$this.$swal.fire({
 					              position: 'center',
 					              icon: 'success',

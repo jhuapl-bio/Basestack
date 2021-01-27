@@ -9,14 +9,13 @@
 const fs = require("fs")
 const { checkFileExist, checkFolderExistsReject, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
-const axios = require("axios")
 var   { store }  = require("../store/global.js")
 var { logger } = require("../controllers/logger.js")
 const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 import Docker from 'dockerode';
 import  docker  from "./docker.js"
-
+const axios = require("axios")
 
 export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathVersion){
 	return new Promise((resolve, reject)=>{
@@ -191,12 +190,13 @@ export async function fetch_videos_meta(){
 	
 }
 
+
 export async function fetch_external_dockers(key){
 	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags`
 	try{
 		logger.info(url)
 		const element = store.config.images[key]
-		store.config.images[key].status.fetching_available_images = true
+		store.config.images[key].status.fetching_available_images.status = true
 		let json =  await axios.get(url)
 		let latest = null;
 		json = json.data.results
@@ -206,93 +206,51 @@ export async function fetch_external_dockers(key){
 			})[0]
 		}
 		store.config.images[key].latest_digest = latest.images[0].digest
-		store.config.images[key].available_images = json.map((d)=>{
-
-			return {
-				fullname: `${element.name}:${d.name}`, 
-				name: d.name, 
-				version:d.name,
-				digest: d.images[0].digest, 
-				image: element.name, 
-				installed: false,
-				selected:false 
-			}
-		})
 	} catch(err){
 		logger.error(err)
+		store.config.images[key].status.fetching_available_images.errors  = err
 	} finally{
 		logger.info("Checked the presence of "+key)
-		store.config.images[key].status.fetching_available_images = false
+		store.config.images[key].status.fetching_available_images.status = false
 	}
 }
 
-async function check_image_promise(imageName){
+async function check_image_promise(image){
 	return new Promise((resolve, reject)=>{
 		try{
 			(async ()=>{
-				let getImages = await docker.listImages({ 'filters' : { 'reference' : [ imageName ] }})
-				let tags = [];
-				let latest; 
-				for (const image of getImages) {
-					if (image.RepoTags && image.RepoTags.length > 0){
-						tags = tags.concat(image.RepoTags.map((d,i)=>{
-							let obj = {
-								version: d.replace(imageName+":", ""), 
-								name: d, 
-								fullname: `${d}`,
-								image: imageName,
-								installed: true,
-								digest: (image.RepoDigests && image.RepoDigests[i] ? image.RepoDigests[i].replace(`${imageName}@`, "") : null)
-							}
-							if (obj.version =='latest'){
-								latest = obj
-							}
-							return obj
-						}))
+				let getImage = await docker.getImage(image).inspect()
+				let latest;
+				let tags=[];
+				let digests = getImage.RepoDigests.map((d)=>{
+					return d.replace(image+"@", "")
+				})
+				for (const tag of getImage.RepoTags) {
+					if (tag.includes('latest')){
+						if(digests){
+							store.config.images[image].installed_digest = digests[0]
+						}
 					}
 				}
-				let installed_count = tags.length
-				tags.some((item, idx) => 
-				  item.version.includes('latest') && 
-				  tags.unshift( 
-				    tags.splice(idx,1)[0] 
-				  ) 
-				)
-				if (latest && !store.config.images[imageName].selectedTag.digest){
-					store.config.images[imageName].selectedTag = latest
-				}
-				const available_versions = tags.map((d)=>{
-					return d.version
-				})
-				
-				store.config.images[imageName].available_images.forEach((d, i)=>{
-					const available = (available_versions.some((item, idx)=>{
-						return item == d.version
-					}) || installed_count == 0)
-					if (!available){
-						tags.push(d)
-					}
-				})
 				resolve({
-					tags: tags,
-					imageName: imageName,
-					error: null,
-					status: (installed_count > 0 ? true : false)
+					image: getImage,
+					imageName: image,
+					status: true
 				})
 				
 			})().catch((error)=>{
-				logger.error(`${error} error in checking image exist`)
+				// console.error(error, "error in checking image exist")
 				resolve({
 					image: error,
-					imageName: imageName,
+					imageName: image,
 					status: false
 				})
 			});
 		} catch(err){
-			logger.error("%s %s", err, " error in retrieving imageName: "+imageName)
+			logger.error("%s %s", err, " error in retrieving imageName: "+image)
 			resolve({
 				image: err,
-				imageName: imageName,
+				imageName: image,
 				status: false
 			})
 		}
@@ -464,40 +422,33 @@ async function formatDockerLoads(){
 				errors : null,
 				installed: false,
 				inspect: null,
-				fetching_available_images: false
+				fetching_available_images: {
+					status: false,
+					errors: false
+				}
 			}
-			let base_tags = [ {fullname: `${element.name}:latest`, image:`${element.name}`, name: 'latest', digest: null, installed: false, selected:true, version:'latest'}]
-			store.config.images[key].tags = base_tags
-			store.config.images[key].available_images = base_tags
-			store.config.images[key].selectedTag = base_tags[0]
+			store.config.images[key].installed_digest = null
 			store.dockerStreamObjs[key] = null
-			let checking = false
-			if(!element.private){
+			if (!element.private){
 				fetch_external_dockers(key)
 			}
 			store.statusIntervals.images[key] = setInterval(function(){ 
-				if (!checking){
-					(async function(){
-						checking = true
-						let response =  await check_image(key)
-						store.config.images[key].status.installed = response.status
-						store.config.images[key].status.errors = response.error
-						store.config.images[key].tags = (response.tags.length > 0 ? response.tags : base_tags)
-						checking = false
-					})().catch((err)=>{
-						logger.error(err)
-						store.config.images[key].status.installed = false
-						store.config.images[key].tags = []
-						store.config.images[key].selectedTag = null
-						checking = false
-					})
-				}			
+				(async function(){
+					let response =  await check_image(key)
+					console.log(store.config.images[key].latest_digest)
+					store.config.images[key].status.installed = response.status
+					store.config.images[key].status.inspect = response.image
+				})().catch((err)=>{
+					logger.error(err)
+					store.config.images[key].status.installed = false
+					store.config.images[key].status.inspect = null
+				})			
 			}, 2000);
 		}
 		
 	}
 	catch(err){
-		logger.error(`Initiating storage of Docker Modules and images function formatDockerLoads() failed, error: ${err}`)
+		logger.error(`Initiating Storage of Docker Modules and images function formatDockerLoads() failed, error: ${err}`)
 		throw err
 	}
 }

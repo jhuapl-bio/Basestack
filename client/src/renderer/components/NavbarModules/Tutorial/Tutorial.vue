@@ -209,11 +209,10 @@ export default {
       	async start_tutorials(){
       		await FileService.startModule({
       			module: 'basestack_tutorial',
-      			tag: this.images['basestack_tutorial'].selectedTag
       		}).then((response)=>{
 				this.count +=1
         	}).catch((error)=>{
-        		console.error(error)
+		        console.error("-----------------", error)
         		this.$swal.fire({
 					position: 'center',
 					icon: 'error',
