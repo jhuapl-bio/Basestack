@@ -214,7 +214,7 @@ export async function fetch_external_dockers(key){
 				version:d.name,
 				digest: d.images[0].digest, 
 				image: element.name, 
-				installed: false, 
+				installed: false,
 				selected:false 
 			}
 		})

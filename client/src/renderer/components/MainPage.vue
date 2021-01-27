@@ -352,7 +352,6 @@ export default {
 			this.$set(this, 'resources', response.data.data.resources)
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
-			console.log(images)
 			this.initial = response.data.data.ready
 			if (!this.initial){
 				this.init().catch((err)=>{
