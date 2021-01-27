@@ -663,7 +663,7 @@
 		</div>
 		
     </b-form>
-	<p class="typo__p text-white bg-danger" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
+	<p class="text-center text-white bg-danger" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
   </div>
 </template>
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>

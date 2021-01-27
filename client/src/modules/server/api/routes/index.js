@@ -327,6 +327,7 @@ router.get("/videos/fetchMeta", (req,res,next)=>{ //this method needs to be rewo
 router.post("/tags/fetch", (req,res,next)=>{ 
 	(async function(){
 		try {
+			console.log("tags");
 			fetch_external_dockers(req.body.name).then((response)=>{
 				res.status(200).json({status: 200, message: "Returning compelted fetch", data: response });
 				}).catch((err1)=>{

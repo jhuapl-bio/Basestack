@@ -25,8 +25,19 @@
             <template v-slot:title v-if="(!entry.module || entry.status.installed )  && initial">
             	<div class="tab-parent" style="display: flex; justify-content: space-between;"
 				>	
-					<div  class="tab-item" style="">
-		            	<span style="text-align:left; text-anchor: start;">
+					<div class="tab-item" style="">
+		            	<span v-if="entry.module && images[entry.image].latest_digest != images[entry.image].installed_digest && !images[entry.image].private" style="text-align:left; text-anchor: start;"
+		            	v-tooltip="{
+			            content: 'An Update is available',
+			            placement: 'top',
+			            classes: ['info'],
+			            trigger: 'hover',
+			            targetClasses: ['it-has-a-tooltip'],
+			            }"
+		            	>
+		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
+		            	</span>
+		            	<span v-else style="text-align:left; text-anchor: start;">
 		            		<font-awesome-icon class="configure" :icon="entry.icon"/>
 		            	</span>
 		            	<span style="  text-anchor: end; text-align:right; vertical-align:middle; white-space: nowrap; padding-left: 10px; font-size: 0.8em" v-if="!collapsed">
@@ -171,8 +182,8 @@ export default {
 	async mounted(){
 		const $this = this
 		this.init().then((response)=>{
-			this.started = true
 			this.getStatus().then(()=>{
+				this.started = true
 				this.interval = setInterval(()=>{
 					if (!this.intervalChecking){
 						$this.getStatus()
