@@ -37,7 +37,7 @@
 	    	<b-col sm="12" class="overflow-auto">
 			    <b-table
 					:fields="tag_fields"
-					:items="selectedElement.tags"
+					:items="images[selectedElement.name].tags"
 					striped
 					style="max-width: 100%; text-align:center; font-size: 0.8em"
 					:current-page="currentPage"
@@ -154,7 +154,7 @@
 	    	Multiselect, 		
 	    	LoopingRhombusesSpinner
 	    },
-	    props: ['selectedElement'],
+	    props: ['selectedElement', 'images'],
 		data() {
 			return {
 				src:[],
@@ -212,9 +212,7 @@
 	    	},
 	    	async fetch_docker_tags(name){
 	    		try{
-	    			console.log(name)
 		    		let response = await FileService.fetchDockerTags({name: name})
-		    		console.log(response)
 	    		} catch(err){
 	    			console.error(err)
 	    		}

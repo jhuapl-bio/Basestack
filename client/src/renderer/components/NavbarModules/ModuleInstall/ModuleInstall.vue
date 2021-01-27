@@ -9,7 +9,7 @@
 <template>
   <div id="moduleinstall"  style="overflow-y:auto">
   	<div class="text-center" >  
-    	<h4 v-if="!docker">Docker is not running or installed</h4>
+    	<h4 v-if="!docker" class="bg-danger text-white">Docker is not running or installed</h4>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
   	</div>
@@ -331,6 +331,7 @@
 				@installSpecific="installSpecific" 
 				@removeSpecific="removeSpecific" 
 				:selectedElement="selectedElement" 
+				:images="images"
 				@updateSrc="updateSrc" 
 				v-if="selectedElement && showConfig"
 				@updateSelectedTag="updateSelectedTag">		
@@ -388,6 +389,9 @@
 	    async mounted(){
 	    	this.meta = await FileService.fetchMeta()
 	    	this.meta = this.meta.data.data
+	    	setInterval(()=>{
+	    		console.log(this.stagedInstallation)
+	    	}, 1000)
 			this.updateStatus(this.images)    	
 	    },
 	    beforeDestroy: function() {
