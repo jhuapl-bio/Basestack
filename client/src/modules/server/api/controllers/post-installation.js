@@ -49,16 +49,12 @@ var install_images_onlinePromise = function(obj){
 
 export var install_images_online = function(img){
 	return new Promise(function(resolve,reject){
-		const image = store.config.images[img.image]
+		const image = store.config.images[img.name]
 		image.config = img.config
-		if (store.dockerStreamObjs[img.image]){
+		if (store.dockerStreamObjs[img.name]){
 			reject("Docker image already loading, canceling")
 		} else {
-			install_images_onlinePromise({
-				config: img.config,
-				name: img.image,
-				fullname: img.name
-			}).then((response,error)=>{
+			install_images_onlinePromise(image).then((response,error)=>{
 				if(error){
 					logger.error(`${error} function: install_images_online()`)
 					reject(error)

@@ -474,18 +474,6 @@
 	    			this.stagedInstallation[this.selectedElement.name].installation = val
 	    		}
 	    	},
-	    	async updateSelectedTag(tag){
-	    		try{
-	    			this.stagedInstallation[this.selectedElement.name].selectedTag = tag
-		    		await FileService.selectTag(tag).then((response)=>{
-		    			console.log("changed select", tag)
-	    			}).catch((error)=>{
-	    				this.error_alert(error.response.data.message, "Error in loading image for module use!")
-	    			})
-	    		} catch(err){
-	    			console.error(err)
-	    		}
-	    	},
 	    	updateLogInterval(name, val){
 	    		if(this.$el.querySelector("#logWindow")){ 
 	    			this.logInterval[name].pause = val
@@ -493,15 +481,6 @@
 						this.$el.querySelector("#logWindow").scrollTop =  this.$el.querySelector("#logWindow").scrollHeight 
 					} 
 				}
-	    	},
-	    	installSpecific(tag){
-	    		this.stagedInstallation[this.selectedElement.name].selectedTag = tag
-	    		// this.selectedElement.selectedTag = tag
-	    		this.install_online_dockers(this.selectedElement)
-	    	},
-	    	removeSpecific(tag){
-	    		this.stagedInstallation[this.selectedElement.name].selectedTag = tag
-	    		this.remove_docker(this.selectedElement)
 	    	},
 	    	updateStatus(val){
 				const $this = this
@@ -720,12 +699,6 @@
 	    				}
 	    			}
 	    		}
-	    		if (!element.selectedTag){
-	    			element.selectedTag  = {
-	    				fullname: element.name,
-	    				image: element.name
-	    			}
-	    		}
 	    		if (errors.length > 0){
 	    			this.error_alert(errors.join(","), "Error in online resources needing to be provided!")
 	    			this.showConfig = true
@@ -734,8 +707,7 @@
 		            await FileService.loadImages(
 	    				{
 	    					config: this.stagedInstallation[element.name].installation,
-	    					name: element.selectedTag.fullname,
-	    					image: element.name
+	    					name: element.name
 	    				}
 	    			)
 		            .then((response)=>{
@@ -779,12 +751,8 @@
 			              showConfirmButton: true,
 			              allowOutsideClick: true
 			            });
-			            if (!image.selectedTag){
-			            	image.selectedTag.fullname = image.name
-			            }
-			            console.log(image.selectedTag.fullname);
 		    			( async function() {
-		    				await FileService.removeImages(image.selectedTag.fullname).then((msg, err)=>{
+		    				await FileService.removeImages(image.name).then((msg, err)=>{
 				    			$this.$swal.fire({
 					              position: 'center',
 					              icon: 'success',

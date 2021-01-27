@@ -27,7 +27,6 @@ export async function initialize(params){
 	try{
 		// let re = await setup_data()''
 
-		logger.info(logger)
 		store.meta.ready  = false
 		let userMeta = path.join(store.meta.writePath, "meta.json")
 		let metaExists = await checkFileExist(store.meta.writePath, "meta.json", true)
@@ -109,7 +108,7 @@ export async function initialize(params){
 				let obj = await initialize_module_object(container_name)
 				if (value.config.initial && response.images.entries[value.image].installed){
 					let response = await obj.cancel()
-					let response_start = await start_module({module: container_name, tag: response.images.entries[value.image].selectedTag })
+					let response_start = await start_module({module: container_name, tag: "latest"})
 				}
 			}	
 		}

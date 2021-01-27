@@ -53,37 +53,7 @@
 	    props: ['selectedElement', 'images'],
 		data() {
 			return {
-				src:[],
-				tag_fields: [
-					{
-						key: 'version',
-						label: 'Version'
-					},
-					{
-						key: 'download',
-						label: 'Download'
-					},
-					{
-						key: 'installed',
-						label: "Installed"
-					},
-					{
-						key: 'remove',
-						label: 'Remove'
-					},
-					{
-						key: 'selected',
-						label: 'Selected'
-					},
-					{
-						key: 'select',
-						label: 'Select'
-					},
-					
-					
-				],
-				currentPage:1,
-				perPage: 5,
+				src:[]
 			}
 	  	},
 	    mounted(){
