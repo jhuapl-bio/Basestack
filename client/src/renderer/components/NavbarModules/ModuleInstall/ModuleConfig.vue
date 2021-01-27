@@ -1,8 +1,28 @@
 <template>
   <div id="moduleconfig"  style="">
    <label style="text-align:center" class="typo__label">Installation Type</label>
-	<b-form-select v-model="selectedElement.installation.type"  :options="['offline', 'online']" >
-	</b-form-select>
+   	<div style="display:flex">
+		<b-form-select v-model="selectedElement.installation.type"  :options="['offline', 'online']" >
+		</b-form-select>
+		<span class="center-align-icon info-icon" style="display:flex"><font-awesome-icon @click="fetch_docker_tags(selectedElement.name)" class="configure" v-tooltip="{
+	        content: `Fetch all available version for this image. Requires Internet`,
+	        placement: 'top',
+	        classes: ['info'],
+	        trigger: 'hover',
+	        targetClasses: ['it-has-a-tooltip'],
+	        }"  icon="arrow-alt-circle-down" size="sm"/>
+		</span>
+	    <span v-if="images[selectedElement.name].status.fetching_available_images.status"
+			style="margin:auto; text-align: center; min-width:20%; display:flex"
+		>	<p style="margin:auto; text-align:center">Fetching</p>
+	      	<looping-rhombuses-spinner
+		          :animation-duration="4000"
+		          :size="20"
+		          style="margin: auto"
+		          :color="'#2b57b9'"
+		     />
+		</span>
+	</div>
 	<div v-if="selectedElement.installation.type =='offline'">
     	<b-form-file 
              :ref="'docker_archive'+selectedElement.name" 
@@ -42,9 +62,10 @@
 </template>
 
 <script>
+	import { LoopingRhombusesSpinner } from 'epic-spinners'
 	export default {
 		name: 'moduleconfig',
-	    components: {},
+	    components: {LoopingRhombusesSpinner},
 	    props: ['selectedElement', 'images'],
 		data() {
 			return {
@@ -62,6 +83,13 @@
 		    },
 	    },
 	    methods: {
+			async fetch_docker_tags(name){
+	    		try{
+		    		let response = await FileService.fetchDockerTags({name: name})
+	    		} catch(err){
+	    			console.error(err)
+	    		}
+	    	},
 	    	convert_gb(size, val){
 	    		if (val =='MB'){
 		    		return size / 1000 
