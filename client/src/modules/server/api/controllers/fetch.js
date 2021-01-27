@@ -192,22 +192,18 @@ export async function fetch_videos_meta(){
 
 
 export async function fetch_external_dockers(key){
-	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags`
+	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags/latest`
 	try{
 		logger.info(url)
 		const element = store.config.images[key]
+		store.config.images[key].status.fetching_available_images.errors = null
 		store.config.images[key].status.fetching_available_images.status = true
 		let json =  await axios.get(url)
 		let latest = null;
-		json = json.data.results
-		if (json){
-			latest = json.filter((d)=>{
-				return d.name == 'latest'
-			})[0]
-		}
+		latest = json.data
 		store.config.images[key].latest_digest = latest.images[0].digest
 	} catch(err){
-		logger.error(err)
+		logger.error(`${err} error in fetching external dockers`)
 		store.config.images[key].status.fetching_available_images.errors  = err
 	} finally{
 		logger.info("Checked the presence of "+key)
@@ -435,7 +431,6 @@ async function formatDockerLoads(){
 			store.statusIntervals.images[key] = setInterval(function(){ 
 				(async function(){
 					let response =  await check_image(key)
-					console.log(store.config.images[key].latest_digest)
 					store.config.images[key].status.installed = response.status
 					store.config.images[key].status.inspect = response.image
 				})().catch((err)=>{

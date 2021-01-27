@@ -94,7 +94,6 @@ export async function initialize(params){
 			logger.error(err)
 			throw err
 		})
-		console.log("end")
 		store.meta.ready = true
 		return response
 	} catch(err){

@@ -159,7 +159,6 @@ import FileService from '@/services/File-service.js'
 import moment from "moment"
 import Multiselect from 'vue-multiselect'
 import path from "path"
-import "vue-moment"
 
 export default {
 	name: 'Tutorial',

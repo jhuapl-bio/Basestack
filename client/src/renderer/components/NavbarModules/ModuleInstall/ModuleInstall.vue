@@ -175,8 +175,9 @@
 			            	<span ><font-awesome-icon :icon="(!element.private ? 'unlock-alt' : 'user-lock')" size="sm"/></span>
 			            </span>
 
+
 	    			</b-col>
-		            <b-col sm="3"  v-if="!element.status.running" style="text-align:center"> 
+		            <b-col sm="2" offset-sm="1" v-if="!element.status.running" style="text-align:center"> 
 		            	<span class="center-align-icon;" :id="'configInstall'+element.name"
 		            		v-tooltip="{
 					            content: 'Configure installation method',
@@ -189,7 +190,7 @@
 		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement ={}; selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
 					    </span>
 					</b-col>
-					<b-col sm="3"  v-else style="text-align:center">
+					<b-col sm="2"  offset-sm="1" v-else style="text-align:center">
 						<span class="center-align-icon"  v-tooltip="{
 				            content: 'Cancel Install for: '+element.title,
 				            placement: 'top',
@@ -200,7 +201,7 @@
 			            	<font-awesome-icon class="configure" icon="stop-circle" size="sm" />
 			            </span> 
 					</b-col>
-		            <b-col sm="3" style="text-align:center" > 
+		            <b-col sm="2" style="text-align:center" > 
 		            	<span class="center-align-icon configure"  v-tooltip="{
 				            content: 'Uninstall Module. RECOMMENDED Clean Images after selecting this',
 				            placement: 'top',
@@ -213,7 +214,7 @@
 			            	</span>
 			            </span>
 		            </b-col>
-		            <b-col sm="3" style="text-align:center" v-if="!element.status.running"> 
+		            <b-col sm="2" style="text-align:center" v-if="!element.status.running"> 
 		            	<span class="center-align-icon configure" v-if="docker"
 		            	v-on:click="selectedElement ={}; selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)"
 		            	v-tooltip="{
@@ -227,7 +228,7 @@
 			            	<font-awesome-icon  class="configure" icon="level-up-alt" size="sm" />
 			            </span>
 		            </b-col>
-		            <b-col sm="3" style="text-align:center" v-else> 
+		            <b-col sm="2" style="text-align:center" v-else> 
 		            	<span class="center-align-icon success-icon" style="float:right" v-tooltip="{
 				            content: 'This module is currently updating',
 				            placement: 'top',
@@ -246,7 +247,7 @@
 					     	/>
 				     	</span>
 		            </b-col>
-		            <b-col sm="3" style="text-align:center" > 
+		            <b-col sm="2" style="text-align:center" > 
 			        	<span class="center-align-icon configure"  v-tooltip="{
 				            content: 'View Logs (if any)',
 				            placement: 'top',
@@ -257,6 +258,33 @@
 			            	<font-awesome-icon class="configure" icon="book-open" size="sm" />
 				        </span>
 				    </b-col>
+				    <b-col sm="2" v-if="!element.private">
+				    	<span v-if="!element.status.fetching_available_images.status" class="center-align-icon info-icon" style="float:middle"><font-awesome-icon @click="fetch_docker_tags(element.name)" class="configure" v-tooltip="{
+					        content: `Fetch all available version for this image. Requires Internet`,
+					        placement: 'top',
+					        classes: ['info'],
+					        trigger: 'hover',
+					        targetClasses: ['it-has-a-tooltip'],
+					        }"  icon="arrow-alt-circle-down" size="sm"/>
+						</span>
+					    <span v-else
+							style="margin:auto; text-align: center; min-width:20%; display:flex"
+							v-tooltip="{
+					        content: `Fetching Available Tags through internet`,
+					        placement: 'top',
+					        classes: ['info'],
+					        trigger: 'hover',
+					        targetClasses: ['it-has-a-tooltip'],
+					        }"  icon="arrow-alt-circle-down" size="sm"
+						>	
+					      	<semipolar-spinner
+						          :animation-duration="4000"
+						          :size="20"
+						          style="margin: auto"
+						          :color="'#2b57b9'"
+						     />
+						</span>
+					</b-col>
 		        </b-row>
 	            
 	          </li>
@@ -347,9 +375,8 @@
 </template>
 
 <script>
-
     import FileService from '../../../services/File-service.js'
-    import {HalfCircleSpinner} from 'epic-spinners'
+    import {HalfCircleSpinner, SemipolarSpinner  } from 'epic-spinners'
     import ModuleConfig from "@/components/NavbarModules/ModuleInstall/ModuleConfig"
     import Disk from "@/components/NavbarModules/System/Disk";
   	import Memory from "@/components/NavbarModules/System/Memory";
@@ -358,6 +385,7 @@
 		name: 'moduleinstall',
 	    components: {
 	    	HalfCircleSpinner, 
+	    	SemipolarSpinner ,
 	    	ModuleConfig,
 	    	Disk,
 	    	Memory
@@ -411,6 +439,13 @@
 		    }
 	    },
 	    methods: {
+	    	async fetch_docker_tags(name){
+	    		try{
+		    		let response = await FileService.fetchDockerTags({name: name})
+	    		} catch(err){
+	    			console.error(err)
+	    		}
+	    	},
 	    	updateSrc(val){
 	    		if (this.stagedInstallation[this.selectedElement.name]){
 	    			this.stagedInstallation[this.selectedElement.name].installation = val
