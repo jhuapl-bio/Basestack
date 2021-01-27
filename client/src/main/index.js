@@ -110,6 +110,24 @@ var menu = Menu.buildFromTemplate([
         click() {  close_server(); open_server();  }
       },
       {
+        label: 'Enable Hyper-V',
+        click() {  
+          let bat = exec("start cmd  DISM /Online /Disable-Feature:Microsoft-Hyper-V", { cwd: app.getPath('desktop') }); 
+            bat.stderr.on('data', (data) => {
+              logger.error(data.toString());
+              console.error(data.toString());
+              // throw new Error(code)
+              throw new Error(data.toString())
+            });
+            bat.stdout.on('data', (data) => {
+              logger.info(`${data.toString()}`)
+            });
+            bat.on('exit', (code) => {
+              logger.info(`Server Child process exited with code ${code}`);
+            });
+        }
+      },
+      {
         label: 'Restart App',
         click() {  
           if (process.env.NODE_ENV === 'production'){
