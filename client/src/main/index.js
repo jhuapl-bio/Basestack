@@ -110,73 +110,83 @@ var menu = Menu.buildFromTemplate([
         click() {  close_server(); open_server();  }
       },
       {
-        label: 'Disable Hyper-V',
-        click() {  
-          let bat = exec("powershell -Command \"Start-Process -Verb RunAs cmd.exe \'/K DISM /Online /Disable-Feature:Microsoft-Hyper-V\'\"", { cwd: app.getPath('desktop') }); 
-            bat.stderr.on('data', (data) => {
-              logger.error(data.toString());
-              console.error(data.toString());
-              // throw new Error(code)
-              throw new Error(data.toString())
-            });
-            bat.stdout.on('data', (data) => {
-              logger.info(`${data.toString()}`)
-            });
-            bat.on('exit', (code) => {
-              logger.info(`Server Child process exited with code ${code}`);
-            });
-        }
+        label: 'Hyper-V',
+        submenu:[
+          {
+            label: 'Disable Hyper-V',
+            click() {  
+              let bat = exec("powershell -Command \"Start-Process -Verb RunAs cmd.exe \'/K DISM /Online /Disable-Feature:Microsoft-Hyper-V\'\"", { cwd: app.getPath('desktop') }); 
+                bat.stderr.on('data', (data) => {
+                  logger.error(data.toString());
+                  console.error(data.toString());
+                  // throw new Error(code)
+                  throw new Error(data.toString())
+                });
+                bat.stdout.on('data', (data) => {
+                  logger.info(`${data.toString()}`)
+                });
+                bat.on('exit', (code) => {
+                  logger.info(`Server Child process exited with code ${code}`);
+                });
+            }
+          },
+          {
+            label: 'Enable Hyper-V',
+            click() {  
+              let bat = exec("powershell \"Start-Process -Verb RunAs cmd.exe \' /K DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V\' \"", { cwd: app.getPath('desktop') }); 
+                bat.stderr.on('data', (data) => {
+                  logger.error(data.toString());
+                  console.error(data.toString());
+                  throw new Error(`${data.toString()}`)
+                });
+                bat.stdout.on('data', (data) => {
+                  logger.info(`${data.toString()}`)
+                });
+                bat.on('exit', (code) => {
+                  logger.info(`Server Child process exited with code ${code}`);
+                });
+            }
+          },
+        ]
       },
       {
-        label: 'Enable Hyper-V',
-        click() {  
-          let bat = exec("powershell \"Start-Process -Verb RunAs cmd.exe /c /K 'DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V' \"", { cwd: app.getPath('desktop') }); 
-            bat.stderr.on('data', (data) => {
-              logger.error(data.toString());
-              console.error(data.toString());
-              throw new Error(`${data.toString()}`)
-            });
-            bat.stdout.on('data', (data) => {
-              logger.info(`${data.toString()}`)
-            });
-            bat.on('exit', (code) => {
-              logger.info(`Server Child process exited with code ${code}`);
-            });
-        }
-      },
-      {
-        label: 'Download WSL2',
-        click() { 
-        let batDownload = exec("powershell \"Invoke-WebRequest 'https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi' -OutFile 'wsl_installer.msi'\"", { cwd: app.getPath('desktop') }); 
-        batDownload.stderr.on('data', (data) => {
-            logger.error(data.toString());
-            console.error(data.toString());
-            throw new Error(`${data.toString()}`)
-          });
-        batDownload.stdout.on('data', (data) => {
-            logger.info(`${data.toString()}`)
-          });
-        batDownload.on('exit', (code) => {
-            logger.info(`Server Child process exited with code ${code}`);
-          });
-        }
-      },
-      {
-        label: 'Install WSL2',
-        click() { 
-        let batInstaller = exec("start /wait msiexec /i wsl_installer.msi ", { cwd: app.getPath('desktop') }); 
-        batInstaller.stderr.on('data', (data) => {
-            logger.error(data.toString());
-            console.error(data.toString());
-            throw new Error(`${data.toString()}`)
-          });
-        batInstaller.stdout.on('data', (data) => {
-            logger.info(`${data.toString()}`)
-          });
-        batInstaller.on('exit', (code) => {
-            logger.info(`Server Child process exited with code ${code}`);
-          });
-        }
+        label: 'WSL2',
+        submenu:[
+          {
+            label: '1. Download WSL2',
+            click() { 
+            let batDownload = exec("powershell \"Invoke-WebRequest 'https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi' -OutFile 'wsl_installer.msi'\"", { cwd: app.getPath('desktop') }); 
+            batDownload.stderr.on('data', (data) => {
+                logger.error(data.toString());
+                console.error(data.toString());
+                throw new Error(`${data.toString()}`)
+              });
+            batDownload.stdout.on('data', (data) => {
+                logger.info(`${data.toString()}`)
+              });
+            batDownload.on('exit', (code) => {
+                logger.info(`Server Child process exited with code ${code}`);
+              });
+            }
+          },
+          {
+            label: '2. Install WSL2',
+            click() { 
+            let batInstaller = exec("start /wait msiexec /i wsl_installer.msi ", { cwd: app.getPath('desktop') }); 
+            batInstaller.stderr.on('data', (data) => {
+                logger.error(data.toString());
+                console.error(data.toString());
+                throw new Error(`${data.toString()}`)
+              });
+            batInstaller.stdout.on('data', (data) => {
+                logger.info(`${data.toString()}`)
+              });
+            batInstaller.on('exit', (code) => {
+                logger.info(`Server Child process exited with code ${code}`);
+              });
+            }
+          },
+        ]
       },
       {
         label: 'Restart App',
