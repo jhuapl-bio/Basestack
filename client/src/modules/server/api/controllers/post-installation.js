@@ -49,16 +49,12 @@ var install_images_onlinePromise = function(obj){
 
 export var install_images_online = function(img){
 	return new Promise(function(resolve,reject){
-		const image = store.config.images[img.image]
+		const image = store.config.images[img.name]
 		image.config = img.config
-		if (store.dockerStreamObjs[img.image]){
+		if (store.dockerStreamObjs[img.name]){
 			reject("Docker image already loading, canceling")
 		} else {
-			install_images_onlinePromise({
-				config: img.config,
-				name: img.image,
-				fullname: img.name
-			}).then((response,error)=>{
+			install_images_onlinePromise(image).then((response,error)=>{
 				if(error){
 					logger.error(`${error} function: install_images_online()`)
 					reject(error)
@@ -188,8 +184,7 @@ export var load_image  = function(obj){
 					})
 				} else { //The repo is public and docker pullable
 					// var auth  = { key: "10644ba4-7c89-41b0-ae0d-d888ea3906d4" }
-					console.log(obj)
-					docker.pull(obj.fullname)
+					docker.pull(obj.installation.path)
 					.then((stream, error)=>{
 						store.dockerStreamObjs[obj.name]  = stream
 						store.config.images[obj.name].status.stream = []
@@ -243,7 +238,8 @@ export var remove_images = function(imageName){
 	return new Promise(function(resolve,reject){
 		(async ()=>{
 			let promises = [];
-			console.log("ues")
+
+			imageName = imageName +":latest"
 			let containers = await docker.listContainers({ 'filters' : { 'ancestor' : [ imageName ] }} )
 			for (let i = 0; i < containers.length; i++){
 				// docker.getContainer(containers[i].Id).remove({force:true})

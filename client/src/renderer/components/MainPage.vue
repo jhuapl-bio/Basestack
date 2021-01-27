@@ -244,7 +244,7 @@ export default {
 					console.error(`${err} in initializing the backend service`)
 				})
 			}
-
+			// console.log(images)
 			const modules = response.data.data.modules.entries
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors

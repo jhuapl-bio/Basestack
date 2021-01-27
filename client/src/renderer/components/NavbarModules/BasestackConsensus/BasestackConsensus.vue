@@ -845,17 +845,7 @@ export default {
         			}
         		},
         		specifics: {
-        			throughput: {
-        				exists: {
-        					checked: value => value === true
-        				}
-        			},
         			seq_summary: {
-        				exists: {
-        					checked: value => value === true
-        				}
-        			},
-        			drift_correction: {
         				exists: {
         					checked: value => value === true
         				}
@@ -1192,7 +1182,6 @@ export default {
 		            reportDir: this.selectedHistory.reportDir,
 		            name: this.selectedHistory.name,
 		            module: 'basestack_consensus',
-		            tag: this.images['jhuaplbio/artic'].selectedTag
 		        }).then((response)=>{
 					this.$swal.fire({
 						position: 'center',
