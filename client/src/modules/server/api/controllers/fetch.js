@@ -15,7 +15,7 @@ const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO
 const si = require('systeminformation');
 import Docker from 'dockerode';
 import  docker  from "./docker.js"
-
+const axios = require("axios")
 
 export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathVersion){
 	return new Promise((resolve, reject)=>{
@@ -191,12 +191,43 @@ export async function fetch_videos_meta(){
 }
 
 
+export async function fetch_external_dockers(key){
+	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags/latest`
+	try{
+		logger.info(url)
+		const element = store.config.images[key]
+		store.config.images[key].status.fetching_available_images.errors = null
+		store.config.images[key].status.fetching_available_images.status = true
+		let json =  await axios.get(url)
+		let latest = null;
+		latest = json.data
+		store.config.images[key].latest_digest = latest.images[0].digest
+	} catch(err){
+		logger.error(`${err} error in fetching external dockers`)
+		store.config.images[key].status.fetching_available_images.errors  = err
+	} finally{
+		logger.info("Checked the presence of "+key)
+		store.config.images[key].status.fetching_available_images.status = false
+	}
+}
 
 async function check_image_promise(image){
 	return new Promise((resolve, reject)=>{
 		try{
 			(async ()=>{
 				let getImage = await docker.getImage(image).inspect()
+				let latest;
+				let tags=[];
+				let digests = getImage.RepoDigests.map((d)=>{
+					return d.replace(image+"@", "")
+				})
+				for (const tag of getImage.RepoTags) {
+					if (tag.includes('latest')){
+						if(digests){
+							store.config.images[image].installed_digest = digests[0]
+						}
+					}
+				}
 				resolve({
 					image: getImage,
 					imageName: image,
@@ -341,10 +372,8 @@ export async function fetch_modules(){
 			store.config.images[key].status.stream = store.config.images[key].status.stream.splice(-200)
 		}
 		for (const [key, value] of Object.entries(store.config.modules)){
-			// console.log(key,"-----", value.module, store.modules[key])
 			if (value.module && store.modules[key]){
 				store.config.modules[key].status = store.modules[key].status
-				// console.log(store.modules[key].status, key, "--------")
 				store.config.modules[key].status.stream = store.config.modules[key].status.stream.splice(-200)
 				store.config.modules[key].status.installed = store.config.images[value.image].status.installed
 			}
@@ -388,9 +417,17 @@ async function formatDockerLoads(){
 				complete: false,
 				errors : null,
 				installed: false,
-				inspect: null
+				inspect: null,
+				fetching_available_images: {
+					status: false,
+					errors: false
+				}
 			}
+			store.config.images[key].installed_digest = null
 			store.dockerStreamObjs[key] = null
+			if (!element.private){
+				fetch_external_dockers(key)
+			}
 			store.statusIntervals.images[key] = setInterval(function(){ 
 				(async function(){
 					let response =  await check_image(key)
@@ -406,7 +443,7 @@ async function formatDockerLoads(){
 		
 	}
 	catch(err){
-		logger.error(`Initiating storage of Docker Modules and images function formatDockerLoads() failed, error: ${err}`)
+		logger.error(`Initiating Storage of Docker Modules and images function formatDockerLoads() failed, error: ${err}`)
 		throw err
 	}
 }

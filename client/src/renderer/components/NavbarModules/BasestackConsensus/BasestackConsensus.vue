@@ -663,7 +663,7 @@
 		</div>
 		
     </b-form>
-	<p class="typo__p" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
+	<p class="text-center text-white bg-danger" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
   </div>
 </template>
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
@@ -694,7 +694,7 @@ export default {
 			return this.fastqFiles.length == 0 ? false : true
 		},		
 	},
-	props: ['modules', 'images'],
+	props: ['modules', 'images', 'selectedTag'],
 	data() {
 		return {
 			globalState:null,
@@ -1181,7 +1181,7 @@ export default {
 		            primerDir: this.selectedHistory.primerDir,
 		            reportDir: this.selectedHistory.reportDir,
 		            name: this.selectedHistory.name,
-		            module: 'basestack_consensus'
+		            module: 'basestack_consensus',
 		        }).then((response)=>{
 					this.$swal.fire({
 						position: 'center',

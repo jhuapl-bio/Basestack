@@ -1,8 +1,11 @@
 <template>
   <div id="moduleconfig"  style="">
    <label style="text-align:center" class="typo__label">Installation Type</label>
-	<b-form-select v-model="selectedElement.installation.type"  :options="['offline', 'online']" >
-	</b-form-select>
+   	<div style="display:flex">
+		<b-form-select v-model="selectedElement.installation.type"  :options="['offline', 'online']" >
+		</b-form-select>
+		
+	</div>
 	<div v-if="selectedElement.installation.type =='offline'">
     	<b-form-file 
              :ref="'docker_archive'+selectedElement.name" 
@@ -42,10 +45,12 @@
 </template>
 
 <script>
+	
+	import FileService from '@/services/File-service.js'
 	export default {
 		name: 'moduleconfig',
-	    components: {},
-	    props: ['selectedElement'],
+	    
+	    props: ['selectedElement', 'images'],
 		data() {
 			return {
 				src:[]
@@ -62,6 +67,7 @@
 		    },
 	    },
 	    methods: {
+			
 	    	convert_gb(size, val){
 	    		if (val =='MB'){
 		    		return size / 1000 

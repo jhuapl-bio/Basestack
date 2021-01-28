@@ -9,7 +9,22 @@
 <template>
   <div id="moduleinstall"  style="overflow-y:auto">
   	<div class="text-center" >  
-    	<h4 v-if="!docker">Docker is not running or installed</h4>
+  		<div v-if="!docker" >
+	    	<h4  class="bg-danger text-white">
+	    		Docker is not running or installed
+	    		<span class="center-align-icon;"
+                	v-tooltip="{
+	                  content: 'View README',
+	                  placement: 'top',
+	                  classes: ['info'],
+	                  trigger: 'hover',
+	                  targetClasses: ['it-has-a-tooltip'],
+	                  }"
+              	>
+                <font-awesome-icon class="configure"  @click="open_link('https://github.com/jhuapl-bio/Basestack/#1-install-docker', $event)" icon="exclamation" size="sm"  />
+            	</span> 
+	    	</h4>
+	    </div>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
   	</div>
@@ -30,6 +45,15 @@
 				            }">
 			            		<font-awesome-icon icon="times-circle" size="sm" />
 			            	</span>
+			            	 <span class="center-align-icon" style="float:left"  v-tooltip="{
+					            content: (!element.private ? 'Public Module' : 'This module is private and requires additional resources. View the Cog icon to see more.'),
+					            placement: 'top',
+					            classes: ['info'],
+					            trigger: 'hover',
+					            targetClasses: ['it-has-a-tooltip'],
+					            }">
+				            	<span ><font-awesome-icon :icon="(!element.private ? 'unlock-alt' : 'user-lock')" size="sm"/></span>
+				            </span>
 	        			</b-col>
 	        		</b-row>
 	        		<b-row>
@@ -74,7 +98,7 @@
 				            	<font-awesome-icon class="configure" icon="play-circle" size="sm" />
 				            </span>
 			            </b-col>
-			            <b-col sm="3"  v-if="!element.status.running" style="text-align:center"> 
+			            <b-col sm="4"  v-if="!element.status.running" style="text-align:center"> 
 			            	<span class="center-align-icon;" :id="'configInstall'+element.name"
 			            		v-tooltip="{
 					            content: 'Configure installation method',
@@ -89,7 +113,7 @@
 						    </span>
 						    
 						</b-col>
-						<b-col sm="3"  v-else style="text-align:center"> 
+						<b-col sm="4"  v-else="element.status.running" style="text-align:center"> 
 			            	<span class="center-align-icon"  v-tooltip="{
 					            content: 'Cancel Install for: '+element.title,
 					            placement: 'top',
@@ -121,7 +145,7 @@
 		            		<font-awesome-icon icon="times-circle" size="sm" />
 		            	</span>
 		            	<span class="center-align-icon"  v-tooltip="{
-				            content: 'The module is attempting an update',
+				            content: 'The module is either attempting an update or installing another version',
 				            placement: 'top',
 				            classes: ['info'],
 				            trigger: 'hover',
@@ -129,7 +153,25 @@
 				            }" style="float:right" v-else-if="element.status.running" >
 			            	<font-awesome-icon icon="circle-notch" size="sm" />
 			            </span>
-	    				<span class="center-align-icon success-icon" style="float:right" v-else v-tooltip="{
+			            <span class="center-align-icon text-warning" style="float:right" v-else-if="!element.private && element.status.fetching_available_images && element.status.fetching_available_images.errors" v-tooltip="{
+				            content: 'There was an error checking on newer versions',
+				            placement: 'top',
+				            classes: ['info'],
+				            trigger: 'hover',
+				            targetClasses: ['it-has-a-tooltip'],
+				            }">
+			            	<span ><font-awesome-icon icon="handshake-slash" size="sm"/></span>
+			            </span>
+	    				<span class="center-align-icon warn-icon" style="float:right" v-else-if="!element.private && element.installed_digest != element.latest_digest" v-tooltip="{
+				            content: 'This module is installed but can be updated',
+				            placement: 'top',
+				            classes: ['info'],
+				            trigger: 'hover',
+				            targetClasses: ['it-has-a-tooltip'],
+				            }">
+			            	<span ><font-awesome-icon icon="exclamation" size="sm"/></span>
+			            </span>
+			            <span class="center-align-icon success-icon" style="float:right" v-else v-tooltip="{
 				            content: 'This module is installed and operable',
 				            placement: 'top',
 				            classes: ['info'],
@@ -138,9 +180,19 @@
 				            }">
 			            	<span ><font-awesome-icon icon="check" size="sm"/></span>
 			            </span>
+			            <span class="center-align-icon" style="float:left"  v-tooltip="{
+				            content: (!element.private ? 'Public Module' : 'This module is private and requires additional resources. View the Cog icon to see more.'),
+				            placement: 'top',
+				            classes: ['info'],
+				            trigger: 'hover',
+				            targetClasses: ['it-has-a-tooltip'],
+				            }">
+			            	<span ><font-awesome-icon :icon="(!element.private ? 'unlock-alt' : 'user-lock')" size="sm"/></span>
+			            </span>
+
 
 	    			</b-col>
-		            <b-col sm="3"  v-if="!element.status.running" style="text-align:center"> 
+		            <b-col sm="2" offset-sm="1" v-if="!element.status.running" style="text-align:center"> 
 		            	<span class="center-align-icon;" :id="'configInstall'+element.name"
 		            		v-tooltip="{
 					            content: 'Configure installation method',
@@ -150,10 +202,10 @@
 					            targetClasses: ['it-has-a-tooltip'],
 					            }"
 		            	>
-		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
+		            		<font-awesome-icon class="configure"  @click="(selectedElement == stagedInstallation[key] ? showConfig = !showConfig : showConfig = true); selectedElement ={}; selectedElement = stagedInstallation[key];" icon="cog" size="sm"  />
 					    </span>
 					</b-col>
-					<b-col sm="3"  v-else style="text-align:center">
+					<b-col sm="2"  offset-sm="1" v-else style="text-align:center">
 						<span class="center-align-icon"  v-tooltip="{
 				            content: 'Cancel Install for: '+element.title,
 				            placement: 'top',
@@ -164,7 +216,7 @@
 			            	<font-awesome-icon class="configure" icon="stop-circle" size="sm" />
 			            </span> 
 					</b-col>
-		            <b-col sm="3" style="text-align:center" > 
+		            <b-col sm="2" style="text-align:center" > 
 		            	<span class="center-align-icon configure"  v-tooltip="{
 				            content: 'Uninstall Module. RECOMMENDED Clean Images after selecting this',
 				            placement: 'top',
@@ -177,9 +229,9 @@
 			            	</span>
 			            </span>
 		            </b-col>
-		            <b-col sm="3" style="text-align:center" v-if="!element.status.running"> 
+		            <b-col sm="2" style="text-align:center" v-if="!element.status.running"> 
 		            	<span class="center-align-icon configure" v-if="docker"
-		            	v-on:click="selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)"
+		            	v-on:click="selectedElement ={}; selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)"
 		            	v-tooltip="{
 				            content: 'Update Module',
 				            placement: 'top',
@@ -191,7 +243,7 @@
 			            	<font-awesome-icon  class="configure" icon="level-up-alt" size="sm" />
 			            </span>
 		            </b-col>
-		            <b-col sm="3" style="text-align:center" v-else> 
+		            <b-col sm="2" style="text-align:center" v-else> 
 		            	<span class="center-align-icon success-icon" style="float:right" v-tooltip="{
 				            content: 'This module is currently updating',
 				            placement: 'top',
@@ -210,17 +262,44 @@
 					     	/>
 				     	</span>
 		            </b-col>
-		            <b-col sm="3" style="text-align:center" > 
+		            <b-col sm="2" style="text-align:center" > 
 			        	<span class="center-align-icon configure"  v-tooltip="{
 				            content: 'View Logs (if any)',
 				            placement: 'top',
 				            classes: ['info'],
 				            trigger: 'hover',
 				            targetClasses: ['it-has-a-tooltip'],
-				            }" v-on:click="(selectedElement == stagedInstallation[key] ? showLog = !showLog : showLog = true); selectedElement = stagedInstallation[key]; ">
+				            }" v-on:click="(selectedElement == stagedInstallation[key] ? showLog = !showLog : showLog = true); selectedElement ={}; selectedElement = stagedInstallation[key]; ">
 			            	<font-awesome-icon class="configure" icon="book-open" size="sm" />
 				        </span>
 				    </b-col>
+				    <b-col sm="2" v-if="!element.private">
+				    	<span v-if="!element.status.fetching_available_images.status" class="center-align-icon info-icon" style="float:middle"><font-awesome-icon @click="fetch_docker_tags(element.name)" class="configure" v-tooltip="{
+					        content: `Fetch all available version for this image. Requires Internet`,
+					        placement: 'top',
+					        classes: ['info'],
+					        trigger: 'hover',
+					        targetClasses: ['it-has-a-tooltip'],
+					        }"  icon="arrow-alt-circle-down" size="sm"/>
+						</span>
+					    <span v-else
+							style="margin:auto; text-align: center; min-width:20%; display:flex"
+							v-tooltip="{
+					        content: `Fetching Available Tags through internet`,
+					        placement: 'top',
+					        classes: ['info'],
+					        trigger: 'hover',
+					        targetClasses: ['it-has-a-tooltip'],
+					        }"  icon="arrow-alt-circle-down" size="sm"
+						>	
+					      	<semipolar-spinner
+						          :animation-duration="4000"
+						          :size="20"
+						          style="margin: auto"
+						          :color="'#2b57b9'"
+						     />
+						</span>
+					</b-col>
 		        </b-row>
 	            
 	          </li>
@@ -245,7 +324,7 @@
 		        </div>
 		    </button>
 		</b-col>
-		<b-col sm="6" v-if="selectedElement"  class="text-center">
+		<b-col sm="12" v-if="selectedElement"  class="text-center">
 		    <button class="btn tabButton" style="border-radius: 10px; margin:auto" v-on:click="openFolder(meta.logFolder)" v-tooltip="{
 		        content: '',
 		        placement: 'top',
@@ -298,16 +377,21 @@
 					</code>
 				</div>	
 			</div>
-			<ModuleConfig :selectedElement="selectedElement" @updateSrc="updateSrc" v-if="selectedElement && showConfig"></ModuleConfig>
+		</b-col>
+		<b-col sm="12">
+			<ModuleConfig 
+				:selectedElement="selectedElement" 
+				:images="images"
+				v-if="selectedElement && showConfig">
+			</ModuleConfig>
 		</b-col>
 	</b-row>
   </div>
 </template>
 
 <script>
-
     import FileService from '../../../services/File-service.js'
-    import {HalfCircleSpinner} from 'epic-spinners'
+    import {HalfCircleSpinner, SemipolarSpinner  } from 'epic-spinners'
     import ModuleConfig from "@/components/NavbarModules/ModuleInstall/ModuleConfig"
     import Disk from "@/components/NavbarModules/System/Disk";
   	import Memory from "@/components/NavbarModules/System/Memory";
@@ -316,6 +400,7 @@
 		name: 'moduleinstall',
 	    components: {
 	    	HalfCircleSpinner, 
+	    	SemipolarSpinner ,
 	    	ModuleConfig,
 	    	Disk,
 	    	Memory
@@ -352,6 +437,7 @@
 	    async mounted(){
 	    	this.meta = await FileService.fetchMeta()
 	    	this.meta = this.meta.data.data
+	    	
 			this.updateStatus(this.images)    	
 	    },
 	    beforeDestroy: function() {
@@ -368,6 +454,17 @@
 		    }
 	    },
 	    methods: {
+	    	open_link (link,e) {
+		    	e.stopPropagation()
+		    	this.$electron.shell.openExternal(link)
+		    },
+	    	async fetch_docker_tags(name){
+	    		try{
+		    		let response = await FileService.fetchDockerTags({name: name})
+	    		} catch(err){
+	    			console.error(err)
+	    		}
+	    	},
 	    	updateSrc(val){
 	    		if (this.stagedInstallation[this.selectedElement.name]){
 	    			this.stagedInstallation[this.selectedElement.name].installation = val
@@ -587,9 +684,8 @@
 	    	async install_online_dockers(element){
 	    		let promises = []
 	    		element.pause = false
-	    		let errors = [];
+	    		const errors = []
 	    		if (this.stagedInstallation[element.name].installation.resources){
-	    			
 	    			for (const [key, value ] of Object.entries(this.stagedInstallation[element.name].installation.resources)){
 	    				if (value.type == 'file' && (value.src)){
 	    					value['srcFormat'] = { filename: value.src.name, filepath: value.src.path }
@@ -603,6 +699,7 @@
 	    			this.error_alert(errors.join(","), "Error in online resources needing to be provided!")
 	    			this.showConfig = true
 	    		} else{
+
 		            await FileService.loadImages(
 	    				{
 	    					config: this.stagedInstallation[element.name].installation,

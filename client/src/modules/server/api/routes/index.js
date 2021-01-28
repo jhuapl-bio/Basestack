@@ -327,7 +327,8 @@ router.get("/videos/fetchMeta", (req,res,next)=>{ //this method needs to be rewo
 router.post("/tags/fetch", (req,res,next)=>{ 
 	(async function(){
 		try {
-			fetch_external_dockers(req.body).then((response)=>{
+			console.log("tags");
+			fetch_external_dockers(req.body.name).then((response)=>{
 				res.status(200).json({status: 200, message: "Returning compelted fetch", data: response });
 				}).catch((err1)=>{
 					logger.error(err1)
@@ -339,7 +340,16 @@ router.post("/tags/fetch", (req,res,next)=>{
 		}	
 	})().catch((err2)=>{console.error(err2)})
 })
-
+router.post("/tags/select", (req,res,next)=>{ 
+	try {
+		console.log(req.body)
+		store.config.images[req.body.image].selectedTag = req.body
+		res.status(200).json({status: 200, message: "Returning selected tag completed" });
+	} catch(err3){
+		logger.error(err3)
+		res.status(419).send({status: 419, message: error_alert(err3) });
+	}	
+})
 router.post("/videos/fetch", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	try {
 		res.sendFile(req.body.fullpath)
