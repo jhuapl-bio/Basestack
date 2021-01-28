@@ -291,27 +291,54 @@ These processes can take some time for either method. Rest assured that it will 
 
 ##### Hyper-V Not Enabled - Windows
 
-If you are on older Windows distributions, you may experience an error when attempting to start docker on how HyperV is not enabled.
+![Step 1](./docs/images/EnableBIOSVirtualization.PNG "HyperVEnable")
+
+If you are on older Windows distributions, you may experience an error when attempting to start docker on how HyperV is not enabled. 
+
+##### A. Enable Hyper-V in Basestack
+
+To enable it within Basestack select: `System -> Windows Services -> Hyper-V -> Enable Hyper-V`. 
+
+A window will appear prompting admin rights and then it will automatically being the enable process. See more below.
 
 ![Step 1](./docs/images/HyperVChoices.PNG "HyperVChoices")
 
-Alternatively, you can enable it within the Host system itself by searching for "Turns Windows features on or off" and selecting "Hyper-V". This will require a computer restart
+##### B. Enable Hyper-V in Windows System
+
+**Alternatively** you can enable it within the Host system itself by searching for "Turns Windows features on or off" and selecting "Hyper-V". This will require a computer restart
 
 ![Step 2](./docs/images/Turn_Windows_ONOFF.jpg "HyperVChoices")
 
-##### WSL2NotInstalled - Windows
+##### WSL2 Not Installed - Windows
 
 The error (seen below) is often shown for newer Windows OS types. If this occurs, you may have different variants. In the included example, I have the option to enable WSL or use Hyper-V. 
 
-![Step 1](./docs/images/WSLNotInstalled.PNG "WSL Choices")
+![Step 1](./docs/images/WSLNotInstalled.PNG "WSL error messages")
 
 
-Sometimes, another window will appear regarding installing WSL. You can follow that [link](https://docs.microsoft.com/en-us/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package). Make sure to perform at LEAST step 4.
+Sometimes, another window will appear regarding installing WSL. 
 
-Once WSL2 is installed/enabled, please restart Docker Desktop
+##### A. Install WSL2 from External Sources
+
+Please follow that **[link](https://docs.microsoft.com/en-us/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package)**. 
+
+Make sure to perform **AT LEAST step 4**. Once WSL2 is installed/enabled, please restart Docker Desktop
+
+##### B. Install WSL2 in Basestack
+
+**Alternatively** Basestack allows users to download WSL directly.
+
+To Download then Install it within Basestack do: 
+
+1. `System -> Windows Services -> WSL2 -> Download WSL2`
+2. `System -> Windows Services -> WSL2 -> Install WSL2`
+
+![Step 1](./docs/images/WSLInstallDownload.PNG "WSL Install")
+
+You can then attempt to restart Docker Desktop. This also may require a system restart.
 
 <details>
-<summary>View More</summary>
+<summary>View More Common Errors</summary>
 
 ##### I/O timeout
 
