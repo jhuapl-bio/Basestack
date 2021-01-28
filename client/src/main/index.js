@@ -7,7 +7,7 @@ const { spawn, exec, execSync } = require('child_process');
 
 import promiseIpc from 'electron-promise-ipc';
 const isMac = process.platform === 'darwin'
-const isWin = process.platform.includes("win")
+const isWin = process.platform === "win32"
 
 if (!process.env.APPDATA){
   process.env.APPDATA = app.getPath('userData')
@@ -159,14 +159,14 @@ var menu = Menu.buildFromTemplate([
             bat = exec("start cmd", { cwd: app.getPath('desktop') }); 
           }
           else if(isMac){
-            bat = exec("open -a Terminal", { cwd: app.getPath('desktop'), detached:true })
+            bat = exec("open -a Terminal", { cwd: app.getPath('desktop')})
           } else {
             bat = exec("gnome-terminal", { cwd: app.getPath('desktop'), detached:true })
           }
           spawned_logs(bat, {throwError: true, process: "Open Terminal"})
         }
       },
-      ...(os.platform().includes("win") ? [
+      ...(isWin ? [
       {
         label: 'Windows Services',
         submenu: [
