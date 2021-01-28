@@ -206,15 +206,17 @@ export default {
 			console.error(err)
 		})
 	 	this.$electron.ipcRenderer.on('mainNotification', (evt, message)=>{
-	 		$this.patchNotes = message
+	 		if (message.patchNotes){
+		 		$this.patchNotes = message
+	 		} 
 		 	this.$swal.fire({
               position: 'center',
-              icon: $this.patchNotes.icon,
+              icon: message.icon,
               showConfirmButton:true,
               title:  "",
-              html: $this.patchNotes.message,
+              html: message.message,
               didOpen: () => {
-              	if ($this.patchNotes.loading){
+              	if (message.loading){
               		$this.$swal.showLoading()
               	}
     		  }
