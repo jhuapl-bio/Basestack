@@ -113,7 +113,7 @@
 						    </span>
 						    
 						</b-col>
-						<b-col sm="4"  v-else="element.status.running" style="text-align:center"> 
+						<b-col sm="4"  v-else style="text-align:center"> 
 			            	<span class="center-align-icon"  v-tooltip="{
 					            content: 'Cancel Install for: '+element.title,
 					            placement: 'top',
