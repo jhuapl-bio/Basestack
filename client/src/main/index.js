@@ -227,6 +227,28 @@ var menu = Menu.buildFromTemplate([
                   spawned_logs(batInstaller, {throwError: true, process: "Install WSL2"})
                 }
               },
+              {
+                label: '3. Turn WSL On',
+                click() {  
+                  let bat = exec("powershell -Command \"Start-Process -Verb RunAs cmd.exe \'/K DISM /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart\'\"", { cwd: app.getPath('desktop') }); 
+                  spawned_logs(bat, {throwError: true, process: "Disable HyperV"})
+                }
+              },
+              {
+                label: '4. Enable Virtualization',
+                click() {  
+                  let bat = exec("powershell -Command \"Start-Process powershell \'Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux\' -Verb runAs \"", { cwd: app.getPath('desktop'), detached:true }); 
+                  spawned_logs(bat, {throwError: true, process: "Disable HyperV"})
+                }
+              },
+              {
+                label: '5. Set WSL2',
+                click() {  
+                  let bat = exec("powershell -Command \"wsl --set-default-version 2\"", { cwd: app.getPath('desktop') }); 
+                  spawned_logs(bat, {throwError: true, process: "Disable HyperV"})
+                }
+              },
+              
             ]
           },
           {

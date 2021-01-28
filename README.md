@@ -178,6 +178,8 @@ Note that this will map all of your processes INSIDE the docker containers to yo
 
 </details>
 
+<hr>
+
 ### A2 Install Basestack
 
 Please choose one of the 2 following methods of install for your use case
@@ -195,6 +197,7 @@ For example, on Windows, your directory will look like:
 ![Step 1](./docs/images/basestackExe.PNG "Title")
 
 You will double-click the Basestack.exe file to open the application
+
 
 #### A2.2 Developer Mode
 
@@ -270,6 +273,8 @@ If you'd like a new install location specify here. You will need to supply this 
 </details>
 </summary>
 
+<hr>
+
 ### A3 Download Analyis Pipelines
 
 Select *Settings* and Select *Offline* or *Online* Installation of Docker Images
@@ -337,6 +342,19 @@ To Download then Install it within Basestack do:
 
 You can then attempt to restart Docker Desktop. This also may require a system restart.
 
+If you are still experiencing issues, attempt to enable virtualization from Basestack:
+
+3. `System -> Windows Services -> WSL2 -> Turn WSL On`
+4. `System -> Windows Services -> WSL2 -> Enable Virtualization`
+5. `System -> Windows Services -> WSL2 -> Set WSL2`
+
+**Or** from "Turn Windows features on or off". This is also a good way double check that it is now enabled.
+
+![Step 1](./docs/images/TurnWSLONOFF.PNG "WSL Install")
+
+**You will need to restart your PC/Laptop after doing this!**
+<br>
+
 <details>
 <summary>View More Common Errors</summary>
 
@@ -355,6 +373,7 @@ If you receive an error that you couldn't connect to docker, please try to resta
 ![Step 1](./docs/images/dockertaskbarOptions.PNG "Title")
 
 </details>
+<hr>
 
 ### A4. Running Consensus Generation and Reporting
 
@@ -438,6 +457,7 @@ Consensus Generation is the main feature of this application and is used to gene
 
 1. Once complete, you can view the pdf report by clicking the *pdf* link underneath the final row's status of *1/1*. You can also traverse to any of the module directories by hitting the link text on the first column for each module. In this example, I've chosen *Report Generation* as my link which is a top-level view of all modules, as well as the `report.pdf` location. Open this pdf to see your report either from the folder or the *pdf* link on the left-most column to see your results!
 
+<hr>
 
 ### A5. Running RAMPART
 
@@ -461,6 +481,8 @@ Rampart is an annotation tool provided by the Artic Network that gives quick, bu
  		- `docker container rm -f artic_consensus rampart` 
  * You MUST select the top level parent folder for RAMPART to run for the RunDIR e.g. select `fastq_pass` not `test-data`
  -->
+
+<hr>
 
 ### A6. Nextstrain 
 
@@ -486,12 +508,15 @@ Genotype -> nucleotide -> [Your number here]
 
 Also, be sure that the dataset is ncov and global. You can change the layout of the visualization(s) with the Tree Options parameters
 
+<hr>
 
 ### A7. IGV 
 
 <strong>Requires Internet. Also available at https://igv.org/app/</strong>
 
-IGV is an interactive environment that allows you to view a genome and see any annotations at a specific position.
+IGV is an interactive environment that allows you to view a genome and see any annotations at a specific position. 
+
+**These plots are also available in the Consensus Generation Pipeline Reports**
 
 ![Step 1](./docs/images/igvSelectSars.png "Title")
 
