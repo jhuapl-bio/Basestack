@@ -7,6 +7,7 @@ const { spawn, exec, execSync } = require('child_process');
 
 import promiseIpc from 'electron-promise-ipc';
 const isMac = process.platform === 'darwin'
+const isWin = process.platform.includes("win")
 
 if (!process.env.APPDATA){
   process.env.APPDATA = app.getPath('userData')
@@ -115,6 +116,12 @@ var menu = Menu.buildFromTemplate([
           shell.openExternal('https://docs.docker.com/get-docker/')
         }        
       },
+      { 
+        label: 'Open Desktop',
+        click(){
+          shell.openPath(app.getPath('desktop'))
+        }
+      }, 
       {
         label: 'Restart App',
         click() {  
@@ -123,6 +130,21 @@ var menu = Menu.buildFromTemplate([
           } else { 
             app.quit()
           }  
+        }
+      },
+      {
+        label: "Open Terminal",
+        click(){
+          let bat;
+          if (isWin){
+            bat = exec("start cmd", { cwd: app.getPath('desktop') }); 
+          }
+          else if(isMac){
+            bat = exec("open -a Terminal", { cwd: app.getPath('desktop'), detached:true })
+          } else {
+            bat = exec("gnome-terminal", { cwd: app.getPath('desktop'), detached:true })
+          }
+          spawned_logs(bat, {throwError: true, process: "Open Terminal"})
         }
       },
       ...(os.platform().includes("win") ? [
@@ -136,35 +158,14 @@ var menu = Menu.buildFromTemplate([
                 label: 'Disable Hyper-V',
                 click() {  
                   let bat = exec("powershell -Command \"Start-Process -Verb RunAs cmd.exe \'/K DISM /Online /Disable-Feature:Microsoft-Hyper-V\'\"", { cwd: app.getPath('desktop') }); 
-                    bat.stderr.on('data', (data) => {
-                      logger.error(data.toString());
-                      console.error(data.toString());
-                      // throw new Error(code)
-                      throw new Error(data.toString())
-                    });
-                    bat.stdout.on('data', (data) => {
-                      logger.info(`${data.toString()}`)
-                    });
-                    bat.on('exit', (code) => {
-                      logger.info(`Server Child process exited with code ${code}`);
-                    });
+                  spawned_logs(bat, {throwError: true, process: "Disable HyperV"})
                 }
               },
               {
                 label: 'Enable Hyper-V',
                 click() {  
                   let bat = exec("powershell \"Start-Process -Verb RunAs cmd.exe \' /K DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V\' \"", { cwd: app.getPath('desktop') }); 
-                    bat.stderr.on('data', (data) => {
-                      logger.error(data.toString());
-                      console.error(data.toString());
-                      throw new Error(`${data.toString()}`)
-                    });
-                    bat.stdout.on('data', (data) => {
-                      logger.info(`${data.toString()}`)
-                    });
-                    bat.on('exit', (code) => {
-                      logger.info(`Server Child process exited with code ${code}`);
-                    });
+                  spawned_logs(bat, {throwError: true, process: "Enable HyperV"})
                 }
               },
             ]
@@ -176,7 +177,6 @@ var menu = Menu.buildFromTemplate([
                 label: '1. Download WSL2',
                 click() { 
                 let batDownload = exec("curl.exe https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi -o wsl_installer.msi", { cwd: app.getPath('desktop') }); 
-                 // let batDownload = exec("powershell \"Invoke-WebRequest 'https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi' -OutFile 'wsl_installer.msi'\"", { cwd: app.getPath('desktop') }); 
                 batDownload.stderr.on('data', (data) => {
                     logger.error(`${data.toString()} err`);
                     mainWindow.webContents.send('mainNotification', {
@@ -188,7 +188,7 @@ var menu = Menu.buildFromTemplate([
                 });
                 batDownload.stdout.on('data', (data) => {
                     logger.info(`${data.toString()} info`)
-                  });
+                });
                 batDownload.on('exit', (code) => {
                   const text = `<p>WSL2 MSI Download Process complete with code: ${code}.<hr> 0: Success, 1 or more is failure <hr> Next, select 2. Install WSL2</p>`
                     logger.info(text);
@@ -204,24 +204,34 @@ var menu = Menu.buildFromTemplate([
               {
                 label: '2. Install WSL2',
                 click() { 
-                let batInstaller = exec("start /wait msiexec /i wsl_installer.msi ", { cwd: app.getPath('desktop') }); 
-                batInstaller.stderr.on('data', (data) => {
-                    logger.error(data.toString());
-                    console.error(data.toString());
-                    throw new Error(`${data.toString()}`)
-                  });
-                batInstaller.stdout.on('data', (data) => {
-                    logger.info(`${data.toString()}`)
-                  });
-                batInstaller.on('exit', (code) => {
-                    logger.info(`Server Child process exited with code ${code}`);
-                  });
+                  let batInstaller = exec("start /wait msiexec /i wsl_installer.msi ", { cwd: app.getPath('desktop') }); 
+                  spawned_logs(batInstaller, {throwError: true, process: "Install WSL2"})
                 }
               },
             ]
           },
+          {
+            label: "Add User Docker-Users",
+            click(){
+              // "net localgroup docker-users %USERNAME% /add"
+              let bat = exec("powershell \"Start-Process -Verb RunAs cmd.exe \' /K net localgroup docker-users %USERNAME% /add\' \"  ", { cwd: app.getPath('desktop') }); 
+              spawned_logs(bat, {throwError: true, process: "Add docker-users"})
+            }
+          },
+          {
+            label: "Open Powershell",
+            click(){
+              let bat = exec("powershell \"Start-Process powershell -Verb runAs\"", { cwd: app.getPath('desktop') }); 
+              spawned_logs(bat, {throwError: true, process: "Open Terminal"})
+            }
+          },
         ]
-      }, {role: "close"} ] : [ {role: 'close' } ]),
+      }, 
+      {role: "close"} 
+      ] : 
+      [ 
+        { role: 'close' } 
+      ]),
     ]
   },
   {
@@ -299,7 +309,20 @@ var menu = Menu.buildFromTemplate([
 ])
 Menu.setApplicationMenu(menu);
 
-
+function spawned_logs(bat, config){
+    bat.stderr.on('data', (data) => {
+      logger.error(data.toString());
+      if (config.throwError){
+        throw new Error(data.toString())
+      }
+    });
+    bat.stdout.on('data', (data) => {
+      logger.info(`${data.toString()}`)
+    });
+    bat.on('exit', (code) => {
+      logger.info(`${config.process} exited with code: ${code}`);
+    });
+}
 
 const winURL = (process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
