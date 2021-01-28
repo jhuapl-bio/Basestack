@@ -125,7 +125,7 @@ var menu = Menu.buildFromTemplate([
           }  
         }
       },
-      (os.platform().includes("win") ? {
+      ...(os.platform().includes("win") ? {
         label: 'Windows Services',
         submenu: [
           {
@@ -220,11 +220,9 @@ var menu = Menu.buildFromTemplate([
             ]
           },
         ]
-      }: {label: os.platform()}),
-
+      }: []),
     ]
   },
-  // { role: 'viewMenu' }
   {
     label: 'View',
     submenu: [
