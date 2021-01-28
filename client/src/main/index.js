@@ -110,6 +110,12 @@ var menu = Menu.buildFromTemplate([
         click() {  close_server(); open_server();  }
       },
       {
+        label: 'Docker Site',
+        click() { 
+          shell.openExternal('https://docs.docker.com/get-docker/')
+        }        
+      },
+      {
         label: 'Hyper-V',
         submenu:[
           {
@@ -155,7 +161,9 @@ var menu = Menu.buildFromTemplate([
           {
             label: '1. Download WSL2',
             click() { 
-            let batDownload = exec("powershell \"Invoke-WebRequest 'https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi' -OutFile 'wsl_installer.msi'\"", { cwd: app.getPath('desktop') }); 
+            let batDownload = spawn("curl.exe", ["\'https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi\' -o \'msi_installer.msi\' "], { cwd: app.getPath('desktop') }); 
+             // let batDownload = exec("powershell \"Invoke-WebRequest 'https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi' -OutFile 'wsl_installer.msi'\"", { cwd: app.getPath('desktop') }); 
+
             batDownload.stderr.on('data', (data) => {
                 logger.error(data.toString());
                 console.error(data.toString());
