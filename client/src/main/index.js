@@ -125,7 +125,7 @@ var menu = Menu.buildFromTemplate([
           }  
         }
       },
-      (os.platform().includes("win") ? {
+      ...(os.platform().includes("win") ? {
         label: 'Windows Services',
         submenu: [
           {
@@ -220,7 +220,7 @@ var menu = Menu.buildFromTemplate([
             ]
           },
         ]
-      }: []),
+      }: [ {role: 'close' }]),
     ]
   },
   {
@@ -239,7 +239,6 @@ var menu = Menu.buildFromTemplate([
       { role: 'togglefullscreen' }
     ]
   },
-  // { role: 'windowMenu' }
   {
     label: 'Window',
     submenu: [
@@ -300,12 +299,6 @@ var menu = Menu.buildFromTemplate([
 Menu.setApplicationMenu(menu);
 
 
-// if (process.env.NODE_ENV !== 'development') {
-//   global.__static = require('path').join(__dirname, '/static').replace(/\//g, '\\')
-//   // global.__static = require('path').join(__dirname, '/static').replace(/\/g, '\\')
-// } else {
-//   global.__static = ""
-// }
 
 const winURL = (process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
