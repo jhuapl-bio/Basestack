@@ -9,7 +9,22 @@
 <template>
   <div id="moduleinstall"  style="overflow-y:auto">
   	<div class="text-center" >  
-    	<h4 v-if="!docker" class="bg-danger text-white">Docker is not running or installed</h4>
+  		<div v-if="!docker" >
+	    	<h4  class="bg-danger text-white">
+	    		Docker is not running or installed
+	    		<span class="center-align-icon;"
+                	v-tooltip="{
+	                  content: 'View README',
+	                  placement: 'top',
+	                  classes: ['info'],
+	                  trigger: 'hover',
+	                  targetClasses: ['it-has-a-tooltip'],
+	                  }"
+              	>
+                <font-awesome-icon class="configure"  @click="open_link('https://github.com/jhuapl-bio/Basestack/#1-install-docker', $event)" icon="exclamation" size="sm"  />
+            	</span> 
+	    	</h4>
+	    </div>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
   	</div>
@@ -439,6 +454,10 @@
 		    }
 	    },
 	    methods: {
+	    	open_link (link,e) {
+		    	e.stopPropagation()
+		    	this.$electron.shell.openExternal(link)
+		    },
 	    	async fetch_docker_tags(name){
 	    		try{
 		    		let response = await FileService.fetchDockerTags({name: name})
