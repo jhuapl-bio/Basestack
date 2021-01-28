@@ -293,7 +293,7 @@ These processes can take some time for either method. Rest assured that it will 
 
 If you are on older Windows distributions, you may experience an error when attempting to start docker on how HyperV is not enabled.
 
-![Step 1](./docs/images/HyperVChoices.png "HyperVChoices")
+![Step 1](./docs/images/HyperVChoices.PNG "HyperVChoices")
 
 Alternatively, you can enable it within the Host system itself by searching for "Turns Windows features on or off" and selecting "Hyper-V". This will require a computer restart
 
@@ -384,7 +384,7 @@ Consensus Generation is the main feature of this application and is used to gene
 1. Once a folder is input and all greens are seen for the three main files, hit bookmark. The application will save all information and if any error occurs it will be reported appropriately. Please be aware that the software does not catch everything that could go wrong before a job submits
 
 <strong>Step 3</strong>
-![Step 3](./docs/images/running.PNG "Title")
+![Step 3](./docs/images/Running.png "Title")
 
 1. Once bookmarked, hit the newly-shown *Load* button to load it into the run. This will allow this tab and *RAMPART* to make use of your specified run directory. 
 
