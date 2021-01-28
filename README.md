@@ -289,8 +289,29 @@ These processes can take some time for either method. Rest assured that it will 
 
 #### Common Errors
 
+##### Hyper-V Not Enabled - Windows
+
+If you are on older Windows distributions, you may experience an error when attempting to start docker on how HyperV is not enabled.
+
+![Step 1](./docs/images/HyperVChoices.PNG "HyperVChoices")
+
+Alternatively, you can enable it within the Host system itself by searching for "Turns Windows features on or off" and selecting "Hyper-V". This will require a computer restart
+
+![Step 2](./docs/images/Turn_Windows_ONOFF.jpg "HyperVChoices")
+
+##### WSL2NotInstalled - Windows
+
+The error (seen below) is often shown for newer Windows OS types. If this occurs, you may have different variants. In the included example, I have the option to enable WSL or use Hyper-V. 
+
+![Step 1](./docs/images/WSLNotInstalled.PNG "WSL Choices")
+
+
+Sometimes, another window will appear regarding installing WSL. You can follow that [link](https://docs.microsoft.com/en-us/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package). Make sure to perform at LEAST step 4.
+
+Once WSL2 is installed/enabled, please restart Docker Desktop
+
 <details>
-<summary>Click here</summary>
+<summary>View More</summary>
 
 ##### I/O timeout
 
@@ -363,7 +384,7 @@ Consensus Generation is the main feature of this application and is used to gene
 1. Once a folder is input and all greens are seen for the three main files, hit bookmark. The application will save all information and if any error occurs it will be reported appropriately. Please be aware that the software does not catch everything that could go wrong before a job submits
 
 <strong>Step 3</strong>
-![Step 3](./docs/images/running.PNG "Title")
+![Step 3](./docs/images/Running.png "Title")
 
 1. Once bookmarked, hit the newly-shown *Load* button to load it into the run. This will allow this tab and *RAMPART* to make use of your specified run directory. 
 
