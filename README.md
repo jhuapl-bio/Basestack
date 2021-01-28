@@ -303,7 +303,7 @@ Alternatively, you can enable it within the Host system itself by searching for 
 
 The error (seen below) is often shown for newer Windows OS types. If this occurs, you may have different variants. In the included example, I have the option to enable WSL or use Hyper-V. 
 
-![Step 1](./docs/images/WSLNotInstalled.PNG "WSL Choices")
+![Step 1](./docs/images/WSLNotInstalled.png "HyperVChoices")
 
 
 Sometimes, another window will appear regarding installing WSL. You can follow that [link](https://docs.microsoft.com/en-us/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package). Make sure to perform at LEAST step 4.
