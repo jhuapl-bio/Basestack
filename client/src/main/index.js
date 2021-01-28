@@ -7,6 +7,7 @@ const { spawn, exec, execSync } = require('child_process');
 
 import promiseIpc from 'electron-promise-ipc';
 const isMac = process.platform === 'darwin'
+const isWin = process.platform.includes("win")
 
 if (!process.env.APPDATA){
   process.env.APPDATA = app.getPath('userData')
@@ -134,8 +135,16 @@ var menu = Menu.buildFromTemplate([
       {
         label: "Open Terminal",
         click(){
-          let bat = exec("start cmd", { cwd: app.getPath('desktop') }); 
-          spawned_logs(bat, {throwError: false, process: "Open Terminal"})
+          let bat;
+          if (isWin){
+            bat = exec("start cmd", { cwd: app.getPath('desktop') }); 
+          }
+          else if(isMac){
+            bat = exec("open -a Terminal", { cwd: app.getPath('desktop'), detached:true })
+          } else {
+            bat = exec("gnome-terminal", { cwd: app.getPath('desktop'), detached:true })
+          }
+          spawned_logs(bat, {throwError: true, process: "Open Terminal"})
         }
       },
       ...(os.platform().includes("win") ? [
@@ -149,14 +158,14 @@ var menu = Menu.buildFromTemplate([
                 label: 'Disable Hyper-V',
                 click() {  
                   let bat = exec("powershell -Command \"Start-Process -Verb RunAs cmd.exe \'/K DISM /Online /Disable-Feature:Microsoft-Hyper-V\'\"", { cwd: app.getPath('desktop') }); 
-                  spawned_logs(bat, {throwError: false, process: "Disable HyperV"})
+                  spawned_logs(bat, {throwError: true, process: "Disable HyperV"})
                 }
               },
               {
                 label: 'Enable Hyper-V',
                 click() {  
                   let bat = exec("powershell \"Start-Process -Verb RunAs cmd.exe \' /K DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V\' \"", { cwd: app.getPath('desktop') }); 
-                  spawned_logs(bat, {throwError: false, process: "Enable HyperV"})
+                  spawned_logs(bat, {throwError: true, process: "Enable HyperV"})
                 }
               },
             ]
@@ -196,7 +205,7 @@ var menu = Menu.buildFromTemplate([
                 label: '2. Install WSL2',
                 click() { 
                   let batInstaller = exec("start /wait msiexec /i wsl_installer.msi ", { cwd: app.getPath('desktop') }); 
-                  spawned_logs(batInstaller, {throwError: false, process: "Install WSL2"})
+                  spawned_logs(batInstaller, {throwError: true, process: "Install WSL2"})
                 }
               },
             ]
@@ -206,14 +215,14 @@ var menu = Menu.buildFromTemplate([
             click(){
               // "net localgroup docker-users %USERNAME% /add"
               let bat = exec("powershell \"Start-Process -Verb RunAs cmd.exe \' /K net localgroup docker-users %USERNAME% /add\' \"  ", { cwd: app.getPath('desktop') }); 
-              spawned_logs(bat, {throwError: false, process: "Add docker-users"})
+              spawned_logs(bat, {throwError: true, process: "Add docker-users"})
             }
           },
           {
             label: "Open Powershell",
             click(){
               let bat = exec("powershell \"Start-Process powershell -Verb runAs\"", { cwd: app.getPath('desktop') }); 
-              spawned_logs(bat, {throwError: false, process: "Open Terminal"})
+              spawned_logs(bat, {throwError: true, process: "Open Terminal"})
             }
           },
         ]
