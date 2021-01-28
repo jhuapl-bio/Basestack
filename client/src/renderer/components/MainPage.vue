@@ -37,7 +37,19 @@
 		            	>
 		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
 		            	</span>
-		            	<span v-else style="text-align:left; text-anchor: start;">
+		            	<span v-else-if="entry.name == 'moduleinstall' && !docker" style="text-align:left; text-anchor: start;"
+		            	v-tooltip="{
+			            content: 'Docker is not running. See Services Tab at the top of Basestack or refer to the README',
+			            placement: 'top',
+			            classes: ['info'],
+			            trigger: 'hover',
+			            targetClasses: ['it-has-a-tooltip'],
+			            }"
+		            	>
+		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
+		            	</span>
+		            	<span v-else
+		            	 style="text-align:left; text-anchor: start;">
 		            		<font-awesome-icon class="configure" :icon="entry.icon"/>
 		            	</span>
 		            	<span style="  text-anchor: end; text-align:right; vertical-align:middle; white-space: nowrap; padding-left: 10px; font-size: 0.8em" v-if="!collapsed">
