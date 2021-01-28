@@ -12,7 +12,13 @@ const isWin = process.platform.includes("win")
 if (!process.env.APPDATA){
   process.env.APPDATA = app.getPath('userData')
 }
-
+if (isMac){
+  process.env.platform_os = "mac"
+} else if(isWin){
+  process.env.platform_os = "win"
+} else {
+  process.env.platform_os = "linux"
+}
 
 
 const path = require("path")
@@ -130,6 +136,19 @@ var menu = Menu.buildFromTemplate([
           } else { 
             app.quit()
           }  
+        }
+      },
+      {
+        label: "Check Docker Installed",
+        click(){
+          let bat;
+          if (isWin){
+            bat = exec("whereis docker", { cwd: app.getPath('desktop') }); 
+          }
+          else {
+            bat = exec("which docker", { cwd: app.getPath('desktop') })
+          }
+          spawned_logs(bat, {throwError: true, throwExit: true, process: "Checking Docker installed: "})
         }
       },
       {
@@ -285,7 +304,8 @@ var menu = Menu.buildFromTemplate([
           mainWindow.webContents.send('mainNotification', {
             icon: 'info',
             message: `${releaseNotes.releaseNotes}`,
-            disable_popup: true
+            disable_popup: true,
+            patchNotes: true
           })
           mainWindow.webContents.send('releaseNotes', releaseNotes)
           // logger.info(`${autoUpdater.currentVersion} --> ${JSON.stringify(releaseNotes)}`)
@@ -320,7 +340,15 @@ function spawned_logs(bat, config){
       logger.info(`${data.toString()}`)
     });
     bat.on('exit', (code) => {
-      logger.info(`${config.process} exited with code: ${code}`);
+      let message = `${config.process} exited with code: ${code}`
+      if(config.throwExit){
+        mainWindow.webContents.send('mainNotification', {
+            icon: (code == 0 ? `info` : `error`),
+            message: (code == 0 ? `${config.process} succeeded` : `${config.process} failed`),
+            disable_popup: true
+        })
+      }
+      logger.info(message);
     });
 }
 
@@ -340,6 +368,8 @@ function checkUpdates(){
     logger.info(`Development mode enabled, skipping check for updates`)
   }
 }
+
+
 function createWindow () {
   /**
    * Initial window options
@@ -448,6 +478,7 @@ function createWindow () {
       try{
         mainWindow.webContents.send('mainNotification', {
           icon: 'success',
+          patchNotes: true,
           message: `Update downloaded. Restart the application to apply install changes \n ${info.releaseNotes}`,
         })
         releaseNotes=info
