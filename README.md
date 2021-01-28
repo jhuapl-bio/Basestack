@@ -178,6 +178,8 @@ Note that this will map all of your processes INSIDE the docker containers to yo
 
 </details>
 
+<hr>
+
 ### A2 Install Basestack
 
 Please choose one of the 2 following methods of install for your use case
@@ -195,6 +197,7 @@ For example, on Windows, your directory will look like:
 ![Step 1](./docs/images/basestackExe.PNG "Title")
 
 You will double-click the Basestack.exe file to open the application
+
 
 #### A2.2 Developer Mode
 
@@ -270,6 +273,8 @@ If you'd like a new install location specify here. You will need to supply this 
 </details>
 </summary>
 
+<hr>
+
 ### A3 Download Analyis Pipelines
 
 Select *Settings* and Select *Offline* or *Online* Installation of Docker Images
@@ -291,27 +296,67 @@ These processes can take some time for either method. Rest assured that it will 
 
 ##### Hyper-V Not Enabled - Windows
 
-If you are on older Windows distributions, you may experience an error when attempting to start docker on how HyperV is not enabled.
+![Step 1](./docs/images/EnableBIOSVirtualization.PNG "HyperVEnable")
+
+If you are on older Windows distributions, you may experience an error when attempting to start docker on how HyperV is not enabled. 
+
+##### A. Enable Hyper-V in Basestack
+
+To enable it within Basestack select: `System -> Windows Services -> Hyper-V -> Enable Hyper-V`. 
+
+A window will appear prompting admin rights and then it will automatically being the enable process. See more below.
 
 ![Step 1](./docs/images/HyperVChoices.PNG "HyperVChoices")
 
-Alternatively, you can enable it within the Host system itself by searching for "Turns Windows features on or off" and selecting "Hyper-V". This will require a computer restart
+##### B. Enable Hyper-V in Windows System
+
+**Alternatively** you can enable it within the Host system itself by searching for "Turns Windows features on or off" and selecting "Hyper-V". This will require a computer restart
 
 ![Step 2](./docs/images/Turn_Windows_ONOFF.jpg "HyperVChoices")
 
-##### WSL2NotInstalled - Windows
+##### WSL2 Not Installed - Windows
 
 The error (seen below) is often shown for newer Windows OS types. If this occurs, you may have different variants. In the included example, I have the option to enable WSL or use Hyper-V. 
 
-![Step 1](./docs/images/WSLNotInstalled.PNG "WSL Choices")
+![Step 1](./docs/images/WSLNotInstalled.PNG "WSL error messages")
 
 
-Sometimes, another window will appear regarding installing WSL. You can follow that [link](https://docs.microsoft.com/en-us/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package). Make sure to perform at LEAST step 4.
+Sometimes, another window will appear regarding installing WSL. 
 
-Once WSL2 is installed/enabled, please restart Docker Desktop
+##### A. Install WSL2 from External Sources
+
+Please follow that **[link](https://docs.microsoft.com/en-us/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package)**. 
+
+Make sure to perform **AT LEAST step 4**. Once WSL2 is installed/enabled, please restart Docker Desktop
+
+##### B. Install WSL2 in Basestack
+
+**Alternatively** Basestack allows users to download WSL directly.
+
+To Download then Install it within Basestack do: 
+
+1. `System -> Windows Services -> WSL2 -> Download WSL2`
+2. `System -> Windows Services -> WSL2 -> Install WSL2`
+
+![Step 1](./docs/images/WSLInstallDownload.PNG "WSL Install")
+
+You can then attempt to restart Docker Desktop. This also may require a system restart.
+
+If you are still experiencing issues, attempt to enable virtualization from Basestack:
+
+3. `System -> Windows Services -> WSL2 -> Turn WSL On`
+4. `System -> Windows Services -> WSL2 -> Enable Virtualization`
+5. `System -> Windows Services -> WSL2 -> Set WSL2`
+
+**Or** from "Turn Windows features on or off". This is also a good way double check that it is now enabled.
+
+![Step 1](./docs/images/TurnWSLONOFF.PNG "WSL Install")
+
+**You will need to restart your PC/Laptop after doing this!**
+<br>
 
 <details>
-<summary>View More</summary>
+<summary>View More Common Errors</summary>
 
 ##### I/O timeout
 
@@ -328,6 +373,7 @@ If you receive an error that you couldn't connect to docker, please try to resta
 ![Step 1](./docs/images/dockertaskbarOptions.PNG "Title")
 
 </details>
+<hr>
 
 ### A4. Running Consensus Generation and Reporting
 
@@ -411,6 +457,7 @@ Consensus Generation is the main feature of this application and is used to gene
 
 1. Once complete, you can view the pdf report by clicking the *pdf* link underneath the final row's status of *1/1*. You can also traverse to any of the module directories by hitting the link text on the first column for each module. In this example, I've chosen *Report Generation* as my link which is a top-level view of all modules, as well as the `report.pdf` location. Open this pdf to see your report either from the folder or the *pdf* link on the left-most column to see your results!
 
+<hr>
 
 ### A5. Running RAMPART
 
@@ -434,6 +481,8 @@ Rampart is an annotation tool provided by the Artic Network that gives quick, bu
  		- `docker container rm -f artic_consensus rampart` 
  * You MUST select the top level parent folder for RAMPART to run for the RunDIR e.g. select `fastq_pass` not `test-data`
  -->
+
+<hr>
 
 ### A6. Nextstrain 
 
@@ -459,12 +508,15 @@ Genotype -> nucleotide -> [Your number here]
 
 Also, be sure that the dataset is ncov and global. You can change the layout of the visualization(s) with the Tree Options parameters
 
+<hr>
 
 ### A7. IGV 
 
 <strong>Requires Internet. Also available at https://igv.org/app/</strong>
 
-IGV is an interactive environment that allows you to view a genome and see any annotations at a specific position.
+IGV is an interactive environment that allows you to view a genome and see any annotations at a specific position. 
+
+**These plots are also available in the Consensus Generation Pipeline Reports**
 
 ![Step 1](./docs/images/igvSelectSars.png "Title")
 
