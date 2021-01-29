@@ -355,6 +355,33 @@ If you are still experiencing issues, attempt to enable virtualization from Base
 **You will need to restart your PC/Laptop after doing this!**
 <br>
 
+#### Virtualization Disabled - Windows
+
+In order for either of the above to work, you need to ensure that **virtualization** is enabled in your firmware. Some processors do so by default, others do not. If you are having issue with starting Docker despite following either of the options above, please see below.
+
+You can first check if it is enabled by going into the **Task Manager** and seeing if the Virtualization attribute is enabled.
+
+![Step 1](./docs/images/TaskManagerVirtualization.PNG "taskManagerVirtWin")
+
+If it is not, open up **Command Terminal** and type: `systeminfo`. Scroll to the bottom of the output and check if the Firmware has it enabled for Hyper-V requirements.
+
+![Step 1](./docs/images/WinSysInfoCMD.PNG "systeminfoWin")
+
+If not, you will need to enable Virtualization in your BIOS. This process will look different based on everyone's system. You should try to follow the instructions in this [link](https://www.thewindowsclub.com/disable-hardware-virtualization-in-windows-10). Choose your manufacturer type. 
+
+Typically, though, to enter BIOS you must restart the computer and while it is booting hit **DEL** or **F2** or sometimes **F12**. This process is usually very quick so be ready. When it is booting, you may be able to catch the necessary keys flash.
+
+The default BIOS should look like the one below. In there, head to the **Advanced** tab and check if **Virtualization** is present. If so, enable it, save changes, and restart. If not, try to search in other tabs or open up some options that have further submenus within them as there is no guarantee it will be directly on the base **Advanced** tab. 
+
+![Step 1](./docs/images/BIOSDELLINTEL.jpg "BIOSDellVirt")
+
+On AMD CPU's if you don't see virtualization it may be labeled as **SVM** in the **Advanced** tab
+
+![Step 2](./docs/images/BIOSDELLINTEL.jpg "BIOSASUSAMD.jpg")
+
+
+If the option is not present in the BIOS that means that your CPU does not support Virtualization and Docker **won't be able to properly run on your system.**
+
 <details>
 <summary>View More Common Errors</summary>
 
