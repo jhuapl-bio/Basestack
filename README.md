@@ -377,7 +377,7 @@ The default BIOS should look like the one below. In there, head to the **Advance
 
 On AMD CPU's if you don't see virtualization it may be labeled as **SVM** in the **Advanced** tab
 
-![Step 2](./docs/images/BIOSDELLINTEL.jpg "BIOSASUSAMD.jpg")
+![Step 2](./docs/images/BIOSASUSAMD.jpg "BIOSASUSAMD.jpg")
 
 
 If the option is not present in the BIOS that means that your CPU does not support Virtualization and Docker **won't be able to properly run on your system.**
