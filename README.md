@@ -307,8 +307,6 @@ Please ensure that you follow the correct [instructions](#1-install-docker) here
 
 Note that this will map all of your processes INSIDE the docker containers to your user id if used properly. You will need sudo to delete any files or folders that are causing issues.
 
-<hr>
-
 </details>
 
 <hr>
