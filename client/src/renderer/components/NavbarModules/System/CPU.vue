@@ -2,10 +2,12 @@
   <b-table
     striped
     hover
+    v-if="resources"
     class="text-center"
     :fields="fields_cpu"
     :items="[resources.cpu]"
-  >
+  >  
+
   </b-table>
 </template>
 
@@ -24,8 +26,16 @@
             label: 'Cores'
           },
           {
+            key: 'physicalCores',
+            label: 'Physical Cores'
+          },
+          {
             key: 'manufacturer',
             label: 'Manufacturer'
+          },
+          {
+            key: 'virtualization',
+            label: 'Virtualization Support'
           }
         ]
       }

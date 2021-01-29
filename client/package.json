@@ -134,7 +134,7 @@
     "ncp": "^2.0.0",
     "rimraf": "^3.0.2",
     "sweetalert2": "^9.10.9",
-    "systeminformation": "^4.34.7",
+    "systeminformation": "^5.0.6",
     "v-tooltip": "^2.1.2",
     "vue": "^2.5.16",
     "vue-carousel": "^0.18.0",
