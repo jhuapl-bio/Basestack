@@ -140,10 +140,119 @@ Open a terminal and type `docker info`. You should see information about your `d
 
 #### Common Errors
 
-<details>
-<summary>View</summary>
+##### Hyper-V Not Enabled - Windows
 
-##### 'You are not allowed to use Docker, you must be in the "docker-users" group' (Windows)
+![Step 1](./docs/images/EnableBIOSVirtualization.PNG "HyperVEnable")
+
+If you are on older Windows distributions, you may experience an error when attempting to start docker on how HyperV is not enabled. 
+
+##### A. Enable Hyper-V in Basestack
+
+To enable it within Basestack select: `System -> Windows Services -> Hyper-V -> Enable Hyper-V`. 
+
+A window will appear prompting admin rights and then it will automatically being the enable process. See more below.
+
+![Step 1](./docs/images/HyperVChoices.PNG "HyperVChoices")
+
+##### B. Enable Hyper-V in Windows System
+
+**Alternatively** you can enable it within the Host system itself by searching for "Turns Windows features on or off" and selecting "Hyper-V". This will require a computer restart
+
+![Step 2](./docs/images/Turn_Windows_ONOFF.jpg "HyperVChoices")
+
+##### WSL2 Not Installed - Windows
+
+The error (seen below) is often shown for newer Windows OS types. If this occurs, you may have different variants. In the included example, I have the option to enable WSL or use Hyper-V. 
+
+![Step 1](./docs/images/WSLNotInstalled.PNG "WSL error messages")
+
+
+Sometimes, another window will appear regarding installing WSL. 
+
+##### A. Install WSL2 from External Sources
+
+Please follow that **[link](https://docs.microsoft.com/en-us/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package)**. 
+
+Make sure to perform **AT LEAST step 4**. Once WSL2 is installed/enabled, please restart Docker Desktop
+
+##### B. Install WSL2 in Basestack
+
+**Alternatively** Basestack allows users to download WSL directly.
+
+To Download then Install it within Basestack do: 
+
+1. `System -> Windows Services -> WSL2 -> Download WSL2`
+2. `System -> Windows Services -> WSL2 -> Install WSL2`
+
+![Step 1](./docs/images/WSLInstallDownload.PNG "WSL Install")
+
+You can then attempt to restart Docker Desktop. This also may require a system restart.
+
+If you are still experiencing issues, attempt to enable virtualization from Basestack:
+
+3. `System -> Windows Services -> WSL2 -> Turn WSL On`
+4. `System -> Windows Services -> WSL2 -> Enable Virtualization`
+5. `System -> Windows Services -> WSL2 -> Set WSL2`
+
+**Or** from "Turn Windows features on or off". This is also a good way double check that it is now enabled.
+
+![Step 1](./docs/images/TurnWSLONOFF.PNG "WSL Install")
+
+**You will need to restart your PC/Laptop after doing this!**
+<br>
+
+#### Virtualization Disabled - Windows
+
+In order for either of the above to work, you need to ensure that **virtualization** is enabled in your firmware. Some processors do so by default, others do not. If you are having issue with starting Docker despite following either of the options above, please see below.
+
+You can first check if it is enabled by going into the **Task Manager** and seeing if the Virtualization attribute is enabled.
+
+![Step 1](./docs/images/TaskManagerVirtualization.PNG "taskManagerVirtWin")
+
+If it is not, open up **Command Terminal** and type: `systeminfo`. Scroll to the bottom of the output and check if the Firmware has it enabled for Hyper-V requirements.
+
+![Step 1](./docs/images/WinSysInfoCMD.PNG "systeminfoWin")
+
+If not, you will need to enable Virtualization in your BIOS. This process will look different based on everyone's system. You should try to follow the instructions in this [link](https://www.thewindowsclub.com/disable-hardware-virtualization-in-windows-10). Choose your manufacturer type. 
+
+Typically, though, to enter BIOS you must restart the computer and while it is booting hit **DEL** or **F2** or sometimes **F12**. This process is usually very quick so be ready. When it is booting, you may be able to catch the necessary keys flash.
+
+The default BIOS should look like the one below. In there, head to the **Advanced** tab and check if **Virtualization** is present. If so, enable it, save changes, and restart. If not, try to search in other tabs or open up some options that have further submenus within them as there is no guarantee it will be directly on the base **Advanced** tab. 
+
+![Step 1](./docs/images/BIOSDELLINTEL.jpg "BIOSDellVirt")
+
+On AMD CPU's if you don't see virtualization it may be labeled as **SVM** in the **Advanced** tab
+
+![Step 2](./docs/images/BIOSASUSAMD.jpg "BIOSASUSAMD.jpg")
+
+
+If the option is not present in the BIOS that means that your CPU does not support Virtualization and Docker **won't be able to properly run on your system.**
+
+<details>
+<summary>View More Common Errors</summary>
+
+##### I/O timeout
+
+If installing as the offline method, sometimes you may retrieve and I/O exception as an error message. This is typically because you've tried to send docker to build too many images from large files in a short period of time. To fix this, you'll need to rerun docker a specific way
+
+![Step 1](./docs/images/debugIOTImeout.png "Title")
+
+- Simply seach for Hyper-V Manager in your toolbar, select the VM (usually your username is in its name), and then *Turn Off*. Docker will then shut down and you can restart it
+
+##### Docker Connection
+
+If you receive an error that you couldn't connect to docker, please try to restart via the taskbar
+
+![Step 1](./docs/images/dockertaskbarOptions.PNG "Title")
+
+
+##### 'You are not allowed to use Docker, you must be in the "docker-users" group' - Windows
+
+In Basestack select `System -> Windows Services -> Add User Docker-Users`. When completed you should see that either you're already a part of that group **OR** you've been successfully added.
+
+![Step 1](./docs/images/add_users_group_dockerusers.PNG "AdduersDockerGroup")
+
+**Alternatively** if the above does not work try the following:
 
 ![Step 1](./docs/images/computerManagement.PNG "Title")
 
@@ -164,8 +273,6 @@ Open a terminal and type `docker info`. You should see information about your `d
 - enter `docker-users` into the object field and add.
 	- You will need to log out and back into your account for this to take effect
 
-
-
 <hr>
 
 #### Permisson denied (Linux)
@@ -173,8 +280,6 @@ Open a terminal and type `docker info`. You should see information about your `d
 Please ensure that you follow the correct [instructions](#1-install-docker) here to using `userns-remap`
 
 Note that this will map all of your processes INSIDE the docker containers to your user id if used properly. You will need sudo to delete any files or folders that are causing issues.
-
-<hr>
 
 </details>
 
@@ -292,114 +397,6 @@ Select *Settings* and Select *Offline* or *Online* Installation of Docker Images
 
 These processes can take some time for either method. Rest assured that it will complete. For the online mode, if you receive a warning that the docker image didn't build, try to rerun it a few more times. Interruptions specifically with internet do occur at times but the process will pick up right back where you last left it. If you keep getting the warning notification, also try refreshing the app at `View -> Reload or Force Reload` on the top left. You can also hard fresh the app by restarting it altogether (quit and re-enter).
 
-#### Common Errors
-
-##### Hyper-V Not Enabled - Windows
-
-![Step 1](./docs/images/EnableBIOSVirtualization.PNG "HyperVEnable")
-
-If you are on older Windows distributions, you may experience an error when attempting to start docker on how HyperV is not enabled. 
-
-##### A. Enable Hyper-V in Basestack
-
-To enable it within Basestack select: `System -> Windows Services -> Hyper-V -> Enable Hyper-V`. 
-
-A window will appear prompting admin rights and then it will automatically being the enable process. See more below.
-
-![Step 1](./docs/images/HyperVChoices.PNG "HyperVChoices")
-
-##### B. Enable Hyper-V in Windows System
-
-**Alternatively** you can enable it within the Host system itself by searching for "Turns Windows features on or off" and selecting "Hyper-V". This will require a computer restart
-
-![Step 2](./docs/images/Turn_Windows_ONOFF.jpg "HyperVChoices")
-
-##### WSL2 Not Installed - Windows
-
-The error (seen below) is often shown for newer Windows OS types. If this occurs, you may have different variants. In the included example, I have the option to enable WSL or use Hyper-V. 
-
-![Step 1](./docs/images/WSLNotInstalled.PNG "WSL error messages")
-
-
-Sometimes, another window will appear regarding installing WSL. 
-
-##### A. Install WSL2 from External Sources
-
-Please follow that **[link](https://docs.microsoft.com/en-us/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package)**. 
-
-Make sure to perform **AT LEAST step 4**. Once WSL2 is installed/enabled, please restart Docker Desktop
-
-##### B. Install WSL2 in Basestack
-
-**Alternatively** Basestack allows users to download WSL directly.
-
-To Download then Install it within Basestack do: 
-
-1. `System -> Windows Services -> WSL2 -> Download WSL2`
-2. `System -> Windows Services -> WSL2 -> Install WSL2`
-
-![Step 1](./docs/images/WSLInstallDownload.PNG "WSL Install")
-
-You can then attempt to restart Docker Desktop. This also may require a system restart.
-
-If you are still experiencing issues, attempt to enable virtualization from Basestack:
-
-3. `System -> Windows Services -> WSL2 -> Turn WSL On`
-4. `System -> Windows Services -> WSL2 -> Enable Virtualization`
-5. `System -> Windows Services -> WSL2 -> Set WSL2`
-
-**Or** from "Turn Windows features on or off". This is also a good way double check that it is now enabled.
-
-![Step 1](./docs/images/TurnWSLONOFF.PNG "WSL Install")
-
-**You will need to restart your PC/Laptop after doing this!**
-<br>
-
-#### Virtualization Disabled - Windows
-
-In order for either of the above to work, you need to ensure that **virtualization** is enabled in your firmware. Some processors do so by default, others do not. If you are having issue with starting Docker despite following either of the options above, please see below.
-
-You can first check if it is enabled by going into the **Task Manager** and seeing if the Virtualization attribute is enabled.
-
-![Step 1](./docs/images/TaskManagerVirtualization.PNG "taskManagerVirtWin")
-
-If it is not, open up **Command Terminal** and type: `systeminfo`. Scroll to the bottom of the output and check if the Firmware has it enabled for Hyper-V requirements.
-
-![Step 1](./docs/images/WinSysInfoCMD.PNG "systeminfoWin")
-
-If not, you will need to enable Virtualization in your BIOS. This process will look different based on everyone's system. You should try to follow the instructions in this [link](https://www.thewindowsclub.com/disable-hardware-virtualization-in-windows-10). Choose your manufacturer type. 
-
-Typically, though, to enter BIOS you must restart the computer and while it is booting hit **DEL** or **F2** or sometimes **F12**. This process is usually very quick so be ready. When it is booting, you may be able to catch the necessary keys flash.
-
-The default BIOS should look like the one below. In there, head to the **Advanced** tab and check if **Virtualization** is present. If so, enable it, save changes, and restart. If not, try to search in other tabs or open up some options that have further submenus within them as there is no guarantee it will be directly on the base **Advanced** tab. 
-
-![Step 1](./docs/images/BIOSDELLINTEL.jpg "BIOSDellVirt")
-
-On AMD CPU's if you don't see virtualization it may be labeled as **SVM** in the **Advanced** tab
-
-![Step 2](./docs/images/BIOSASUSAMD.jpg "BIOSASUSAMD.jpg")
-
-
-If the option is not present in the BIOS that means that your CPU does not support Virtualization and Docker **won't be able to properly run on your system.**
-
-<details>
-<summary>View More Common Errors</summary>
-
-##### I/O timeout
-
-If installing as the offline method, sometimes you may retrieve and I/O exception as an error message. This is typically because you've tried to send docker to build too many images from large files in a short period of time. To fix this, you'll need to rerun docker a specific way
-
-![Step 1](./docs/images/debugIOTImeout.png "Title")
-
-- Simply seach for Hyper-V Manager in your toolbar, select the VM (usually your username is in its name), and then *Turn Off*. Docker will then shut down and you can restart it
-
-##### Docker Connection
-
-If you receive an error that you couldn't connect to docker, please try to restart via the taskbar
-
-![Step 1](./docs/images/dockertaskbarOptions.PNG "Title")
-
-</details>
 <hr>
 
 ### A4. Running Consensus Generation and Reporting
