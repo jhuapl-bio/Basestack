@@ -25,8 +25,31 @@
             <template v-slot:title v-if="(!entry.module || entry.status.installed )  && initial">
             	<div class="tab-parent" style="display: flex; justify-content: space-between;"
 				>	
-					<div  class="tab-item" style="">
-		            	<span style="text-align:left; text-anchor: start;">
+					<div class="tab-item" style="">
+		            	<span v-if="entry.module && images[entry.image].latest_digest != images[entry.image].installed_digest && !images[entry.image].private" style="text-align:left; text-anchor: start;"
+		            	v-tooltip="{
+			            content: 'An Update is available',
+			            placement: 'top',
+			            classes: ['info'],
+			            trigger: 'hover',
+			            targetClasses: ['it-has-a-tooltip'],
+			            }"
+		            	>
+		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
+		            	</span>
+		            	<span v-else-if="entry.name == 'moduleinstall' && !docker" style="text-align:left; text-anchor: start;"
+		            	v-tooltip="{
+			            content: 'Docker is not running. See Services Tab at the top of Basestack or refer to the README',
+			            placement: 'top',
+			            classes: ['info'],
+			            trigger: 'hover',
+			            targetClasses: ['it-has-a-tooltip'],
+			            }"
+		            	>
+		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
+		            	</span>
+		            	<span v-else
+		            	 style="text-align:left; text-anchor: start;">
 		            		<font-awesome-icon class="configure" :icon="entry.icon"/>
 		            	</span>
 		            	<span style="  text-anchor: end; text-align:right; vertical-align:middle; white-space: nowrap; padding-left: 10px; font-size: 0.8em" v-if="!collapsed">
@@ -43,6 +66,7 @@
 			        <font-awesome-icon class="help" icon="question-circle"  />
 			      </span>
 			    </h2>
+
             	<component 
             		:is="entry.component" 
             		:histories="histories" 
@@ -52,12 +76,11 @@
             		@open="open"
             		class="contentDiv"
             		v-bind:images="images"
+            		v-bind:selectedTag="null"
             		v-bind:modules="modules"
             		v-bind:resources="resources"
             		v-bind:docker="docker"
-            		
-            	>
-            	
+            	>            	
             	</component>
             </div>
           </b-tab>
@@ -171,13 +194,13 @@ export default {
 	async mounted(){
 		const $this = this
 		this.init().then((response)=>{
-			this.started = true
 			this.getStatus().then(()=>{
+				this.started = true
 				this.interval = setInterval(()=>{
 					if (!this.intervalChecking){
 						$this.getStatus()
 					}
-				}, 1000)
+				}, 2500)
 			})
 		}).catch((err)=>{
 			console.error(err)
@@ -246,7 +269,7 @@ export default {
 					console.error(`${err} in initializing the backend service`)
 				})
 			}
-
+			// console.log(images)
 			const modules = response.data.data.modules.entries
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
@@ -293,7 +316,7 @@ export default {
       },
       updateImages(val){
       	const i = this.entries.map((d)=>{return d.name}).indexOf(val.image)
-      	console.log("_________________", val)
+      	// console.log("_________________", val)
       	this.entries[i].installed = val.exists
       },
       toggleCollapseParent(){
