@@ -2,10 +2,12 @@
   <b-table
     striped
     hover
+    v-if="resources"
     class="text-center"
     :fields="fields_cpu"
     :items="[resources.cpu]"
-  >
+  >  
+
   </b-table>
 </template>
 
@@ -26,11 +28,19 @@
           {
             key: 'manufacturer',
             label: 'Manufacturer'
+          },
+          {
+            key: 'virtualization',
+            label: 'Virtualization Support'
           }
         ]
       }
     },
     mounted(){
+      const $this = this
+      setInterval(()=>{
+        console.log($this.resources)
+      },2000)
     },
     methods: {
 
