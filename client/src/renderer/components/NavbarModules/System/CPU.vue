@@ -8,6 +8,27 @@
     :items="[resources.cpu]"
   >  
 
+  <template  v-slot:head(virtualization)="cell">
+    <span  
+      style="text-align:center" v-b-tooltip.hover.top 
+        title="CPU's Support for Virtualization. Required for Docker. This may show disabled for Virtual Machines despite Docker still being runnable." >Virtualization
+      <font-awesome-icon class="help" icon="question-circle"  />
+    </span>
+  </template>
+  <template  v-slot:cell(virtualization)="cell">
+      <span 
+        :class="[cell.value.virtualization ? 'center-align-icon success-icon' : 'center-align-icon warn-icon']" 
+        style="margin:auto; text-align:center" v-tooltip="{
+              content: (cell.value.virtualization ? 'Supported' : 'Not Supported'),
+              placement: 'top',
+              classes: ['info'],
+              trigger: 'hover',
+              targetClasses: ['it-has-a-tooltip'],
+              }">
+              <font-awesome-icon :icon="cell.value.virtualization ? 'check' : 'times-circle' " size="sm" />
+      </span> 
+  </template>
+
   </b-table>
 </template>
 

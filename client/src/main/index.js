@@ -260,6 +260,14 @@ var menu = Menu.buildFromTemplate([
             }
           },
           {
+            label: "Show System Info",
+            click(){
+              // "net localgroup docker-users %USERNAME% /add"
+              let bat = exec("start cmd /K systeminfo", { cwd: app.getPath('desktop') }); 
+              spawned_logs(bat, {throwError: true, process: "Show System Info"})
+            }
+          },
+          {
             label: "Open Powershell",
             click(){
               let bat = exec("powershell \"Start-Process powershell -Verb runAs\"", { cwd: app.getPath('desktop') }); 
