@@ -26,6 +26,10 @@
             label: 'Cores'
           },
           {
+            key: 'physicalCores',
+            label: 'Physical Cores'
+          },
+          {
             key: 'manufacturer',
             label: 'Manufacturer'
           },
