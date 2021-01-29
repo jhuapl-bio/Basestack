@@ -7,6 +7,19 @@
     :fields="fields_cpu"
     :items="[resources.cpu]"
   >  
+  <template  v-slot:cell(virtualization)="cell">
+      <span 
+        :class="[cell.value.virtualization ? 'center-align-icon success-icon' : 'center-align-icon warn-icon']" 
+        style="margin:auto; text-align:center" v-tooltip="{
+              content: (cell.value.virtualization ? 'Supported' : 'Not Supported'),
+              placement: 'top',
+              classes: ['info'],
+              trigger: 'hover',
+              targetClasses: ['it-has-a-tooltip'],
+              }">
+              <font-awesome-icon :icon="cell.value.virtualization ? 'check' : 'times-circle' " size="sm" />
+      </span> 
+  </template>
 
   </b-table>
 </template>
