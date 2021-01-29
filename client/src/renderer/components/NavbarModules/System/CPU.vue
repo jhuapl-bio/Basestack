@@ -66,6 +66,10 @@
       }
     },
     mounted(){
+      const $this = this
+      setInterval(()=>{
+        console.log($this.resources)
+      },2000)
     },
     methods: {
 
