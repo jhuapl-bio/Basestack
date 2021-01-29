@@ -59,6 +59,7 @@ let mainConfig = {
  */
 if (process.env.NODE_ENV !== 'production') {
   mainConfig.mode = 'development'
+  mainConfig.devtool = 'eval-cheap-source-map'
   mainConfig.plugins.push(
     new webpack.DefinePlugin({
       '__static': `"${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}"`
@@ -72,6 +73,7 @@ if (process.env.NODE_ENV !== 'production') {
 if (process.env.NODE_ENV === 'production') {
   // mainConfig.entry.main = [path.join(__dirname, '../src/modules/index.server.js')].concat(mainConfig.entry.main)
   mainConfig.mode = 'production'
+  // mainConfig.devTool = 'source-map'
   mainConfig.plugins.push(
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': '"production"'
