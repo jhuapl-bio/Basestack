@@ -140,8 +140,6 @@ Open a terminal and type `docker info`. You should see information about your `d
 
 #### Common Errors
 
-#### Common Errors
-
 ##### Hyper-V Not Enabled - Windows
 
 ![Step 1](./docs/images/EnableBIOSVirtualization.PNG "HyperVEnable")
@@ -248,7 +246,13 @@ If you receive an error that you couldn't connect to docker, please try to resta
 ![Step 1](./docs/images/dockertaskbarOptions.PNG "Title")
 
 
-##### 'You are not allowed to use Docker, you must be in the "docker-users" group' (Windows)
+##### 'You are not allowed to use Docker, you must be in the "docker-users" group' - Windows
+
+In Basestack select `System -> Windows Services -> Add User Docker-Users`. When completed you should see that either you're already a part of that group **OR** you've been successfully added.
+
+![Step 1](./docs/images/add_users_group_dockerusers.PNG "AdduersDockerGroup")
+
+**Alternatively** if the above does not work try the following:
 
 ![Step 1](./docs/images/computerManagement.PNG "Title")
 
@@ -268,8 +272,6 @@ If you receive an error that you couldn't connect to docker, please try to resta
 - Select the name of your user
 - enter `docker-users` into the object field and add.
 	- You will need to log out and back into your account for this to take effect
-
-
 
 <hr>
 
