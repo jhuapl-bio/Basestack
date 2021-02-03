@@ -27,7 +27,7 @@ const { DockerObj } = require("../modules/docker.js")
 const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
 const { RAMPART } = require('../modules/rampart')
-let docker = store.docker
+const {docker_init} = require("./docker.js")
 
 
 export async function initialize(params){
@@ -42,7 +42,7 @@ export async function initialize(params){
 			let metaContent = {
 				modules: {},
 				images: {},
-				docker: {}
+				dockerConfig: {}
 			};
 			await writeFile(userMeta, JSON.stringify(metaContent, null, 4))
 		} 
@@ -50,7 +50,7 @@ export async function initialize(params){
 
 		let meta = await readFile(userMeta)
 		meta = JSON.parse(meta)
-		let attributes = ['modules', 'images', 'docker']
+		let attributes = ['modules', 'images', 'dockerConfig']
 		for (let i = 0; i < attributes.length; i++){
 			if (!meta[attributes[i]]){
 				await ammendJSON({
@@ -63,6 +63,8 @@ export async function initialize(params){
 				})
 			}
 		}
+		store.dockerConfig = meta.dockerConfig
+		store.docker = await docker_init();
 		let response = await fetch_modules()
 		for (const [key, image] of Object.entries(store.config.images)){
 			if (!meta.images[key]){
@@ -123,11 +125,11 @@ export async function initialize(params){
 export async function updateDockerSocket(socket){
 	try{
 		
-		docker  = new Docker({socketPath: socket})
+		store.docker  = new Docker({socketPath: socket})
 		await ammendJSON({
 			value: socket,
 			file: path.join(store.meta.writePath, "meta.json"),
-			attribute: 'docker.socket'
+			attribute: 'dockerConfig.socketPath'
 		}).catch((err)=>{
 			logger.error(err)
 			throw err

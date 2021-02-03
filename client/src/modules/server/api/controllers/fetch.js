@@ -14,8 +14,6 @@ var { logger } = require("../controllers/logger.js")
 const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 import Docker from 'dockerode';
-const {docker_init} = require("./docker.js")
-let docker = store.docker
 
 
 const axios = require("axios")
@@ -409,12 +407,7 @@ export async function fetch_modules(){
 async function formatDockerLoads(){
 	try{
 		const meta = store.meta
-		let userData =  await readFile(path.join(meta.writePath, "meta.json"), false)
-		userData = JSON.parse(userData, 'utf-8')
-		store.userData = userData
 		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false);
-		store.docker = await docker_init();
-		console.log("yes")
 		config = config.replace(/\$\{writePath\}/g, meta.writePath)
 		config = config.replace(/\$\{resourcePath\}/g, meta.resourcePath)
 		config = config.replace(/\\/g, "/")

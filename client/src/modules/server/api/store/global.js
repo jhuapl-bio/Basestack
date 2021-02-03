@@ -13,6 +13,7 @@ var { meta }  = require("./index")
 
 export var store = {
 	dockers: {},
+  dockerConfig: null,
 	dockerStreamObjs: {},
 	watchIntervals: null,
 	meta: meta,
