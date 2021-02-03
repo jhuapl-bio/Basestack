@@ -14,7 +14,9 @@ var { logger } = require("../controllers/logger.js")
 const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 import Docker from 'dockerode';
-import  docker  from "./docker.js"
+const {docker_init, docker} = require("./docker.js")
+
+
 const axios = require("axios")
 
 export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathVersion){
@@ -342,7 +344,6 @@ export async function fetch_status(){
 	}
 	try{
 		let docker_status = await fetch_docker_status()
-		console.log(docker)
 		response.docker = {
 			status: true,
 			socket: docker.modem.socketPath
@@ -406,7 +407,11 @@ export async function fetch_modules(){
 async function formatDockerLoads(){
 	try{
 		const meta = store.meta
+		let userData =  await readFile(path.join(meta.writePath, "meta.json"), false)
+		userData = JSON.parse(userData, 'utf-8')
+		store.userData = userData
 		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false)
+		await docker_init()
 		config = config.replace(/\$\{writePath\}/g, meta.writePath)
 		config = config.replace(/\$\{resourcePath\}/g, meta.resourcePath)
 		config = config.replace(/\\/g, "/")

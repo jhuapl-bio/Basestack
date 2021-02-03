@@ -9,7 +9,7 @@
 
 /* eslint-disable no-inner-declarations */
 
-// const docker = require("./docker.js")
+
 import Docker from 'dockerode';
 import  path  from "path"
 var  { store }  = require("../store/global.js")
@@ -27,8 +27,7 @@ const { DockerObj } = require("../modules/docker.js")
 const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
 const { RAMPART } = require('../modules/rampart')
-let  docker   = require("./docker.js")
-
+let { docker } = require("./docker.js")
 
 
 export async function initialize(params){
