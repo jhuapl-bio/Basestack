@@ -11,7 +11,6 @@ import Docker from 'dockerode';
 import path  from "path"
 const {logger, dockerlogger} = require("./logger.js")
 const { store }  = require("../store/global.js")
-let docker = store.docker
 
 export async function check_container_exists(container_name){
 	return new Promise(function(resolve,reject){

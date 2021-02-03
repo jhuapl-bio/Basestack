@@ -14,12 +14,15 @@ let dockerObj;
 
 export async function docker_init(params){
 	let config = null
-	const meta  = store.userData
-	// if (meta && meta.docker.socket){
-	// 	config = {socketPath: meta.docker.socket}
-	// }
-	// dockerObj = new Docker(config);
-	dockerObj = new Docker();
+	const meta  = store.dockerConfig
+	if (meta ){
+		config = meta.dockerConfig
+		dockerObj = new Docker(config);
+	} else {
+		dockerObj = new Docker();
+	}
+	
+	
 	return dockerObj
 } 
 
