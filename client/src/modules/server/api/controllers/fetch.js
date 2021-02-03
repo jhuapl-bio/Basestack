@@ -310,7 +310,8 @@ export async function fetch_resources(){
 		let mem = await si.mem()
 		let cpu = await si.cpu()
 		let disk = await si.fsSize()
-		return {cpu: cpu, mem: mem, disk: disk}
+		let system = await si.system()
+		return {cpu: cpu, mem: mem, disk: disk, system: system}
 	} catch(err){
 		logger.error(err)
 		throw err
