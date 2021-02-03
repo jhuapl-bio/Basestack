@@ -66,12 +66,39 @@ export var error_alert = function(err){
   else if (err.errno == 'ENOENT'){
     text = "Could not connect to docker"
   } else if(err.json){
-    text = err.json.message
+    if (err.json.message){  
+      text = err.json.message
+    } else {
+      try{
+        if (Buffer.isBuffer(err.json)){
+          err.json = err.json.toString()
+        }
+        text = JSON.stringify(err.json, null, 4)
+      } catch(error){
+        logger.info(`Could not stringify json error message ${err}`)
+        text = err.json
+      }
+    }
   } 
-  else {
-    text = err.message
+  else if (err.message){
+    text = err.message    
   }
-  return text
+  else {
+    try{
+      text = JSON.stringify(err, null, 4)
+    } catch(error){
+      logger.info(`Could not stringify error message ${err}`)
+      text = err
+    }
+  }
+  let return_response = text;
+  try{
+    return_response = decodeURIComponent(JSON.parse(text))
+    // return_response = return_response.slice(0,500)
+  } catch(err){
+    return_response = text
+  }
+  return return_response
 }
  
 //
