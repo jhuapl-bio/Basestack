@@ -14,7 +14,8 @@ var { logger } = require("../controllers/logger.js")
 const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 import Docker from 'dockerode';
-const {docker_init, docker} = require("./docker.js")
+const {docker_init} = require("./docker.js")
+let docker = store.docker
 
 
 const axios = require("axios")
@@ -217,7 +218,7 @@ async function check_image_promise(image){
 	return new Promise((resolve, reject)=>{
 		try{
 			(async ()=>{
-				let getImage = await docker.getImage(image).inspect()
+				let getImage = await store.docker.getImage(image).inspect()
 				let latest;
 				let tags=[];
 				let digests = getImage.RepoDigests.map((d)=>{
@@ -319,7 +320,7 @@ export async function fetch_resources(){
 }
 export async function fetch_docker_status(){
 	try{
-		let response = await docker.version()
+		let response = await store.docker.version()
 		// let response = true
 		return response
 	} catch(err){
@@ -347,12 +348,12 @@ export async function fetch_status(){
 		let docker_status = await fetch_docker_status()
 		response.docker = {
 			status: true,
-			socket: docker.modem.socketPath
+			socket: store.docker.modem.socketPath
 		}
 	} catch(err){
 		response.docker = {
 			status: true,
-			socket: docker.modem.socketPath
+			socket: store.docker.modem.socketPath
 		}
 		errors.push(err)
 	}
@@ -411,8 +412,9 @@ async function formatDockerLoads(){
 		let userData =  await readFile(path.join(meta.writePath, "meta.json"), false)
 		userData = JSON.parse(userData, 'utf-8')
 		store.userData = userData
-		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false)
-		await docker_init()
+		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false);
+		store.docker = await docker_init();
+		console.log("yes")
 		config = config.replace(/\$\{writePath\}/g, meta.writePath)
 		config = config.replace(/\$\{resourcePath\}/g, meta.resourcePath)
 		config = config.replace(/\\/g, "/")

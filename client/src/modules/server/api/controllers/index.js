@@ -27,7 +27,7 @@ const { DockerObj } = require("../modules/docker.js")
 const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
 const { RAMPART } = require('../modules/rampart')
-let { docker } = require("./docker.js")
+let docker = store.docker
 
 
 export async function initialize(params){
@@ -122,7 +122,7 @@ export async function initialize(params){
 
 export async function updateDockerSocket(socket){
 	try{
-		console.log(socket, docker)
+		
 		docker  = new Docker({socketPath: socket})
 		await ammendJSON({
 			value: socket,

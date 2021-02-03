@@ -11,13 +11,12 @@ import Docker from 'dockerode';
 import path  from "path"
 const {logger, dockerlogger} = require("./logger.js")
 const { store }  = require("../store/global.js")
-let { docker } = require('./docker.js');
+let docker = store.docker
 
 export async function check_container_exists(container_name){
 	return new Promise(function(resolve,reject){
-		console.log(docker);
 		(async ()=>{
-			var container = await docker.getContainer(container_name);
+			var container = await store.docker.getContainer(container_name);
 			await container.inspect((err,info)=>{
 				if (err){
 					resolve({container: null, exists: false})
@@ -111,7 +110,7 @@ export const followStreamContainer = async function(stream, obj){
 export const followStreamBuild = async function(stream, obj){
 	return new Promise(function(resolve,reject){
 		if (stream){
-			docker.modem.followProgress(stream, onFinished, onProgress)
+			store.docker.modem.followProgress(stream, onFinished, onProgress)
 		}
 		obj.status.stream.push('Starting...')
 		async function onFinished(err, output) {

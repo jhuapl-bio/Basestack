@@ -1,8 +1,8 @@
-import  docker  from "../controllers/docker.js"
 var { initDockerLogs, attachStream, init_container_logs, check_container_exists } = require("../controllers/dockerLogs.js")
 const { store } = require('../store/global')
 const {logger}  = require('../controllers/logger')
 const { readFile, ammendJSON, copyFile, writeFolder } = require("../controllers/IO.js")
+let docker = store.docker
 
 export class DockerObj {
 	constructor(image, container_name, obj){
@@ -43,7 +43,7 @@ export class DockerObj {
 		let container_name = this.container_name;
 		return new Promise(function(resolve,reject){
 			// delete store.modules[container_name]
-			var container = docker.getContainer(container_name).remove({force:true}, function(err,data){
+			var container = store.docker.getContainer(container_name).remove({force:true}, function(err,data){
 				if (err){
 					logger.error("%s %s %s", "Error in stopping docker container: ",container_name, err)
 					resolve({message: `Module does not exist: ${container_name}`})
@@ -69,15 +69,15 @@ export class DockerObj {
 		})
 	}
 	start(params){
-		// var container = docker.getContainer(this.name);
+		// var container = store.docker.getContainer(this.name);
 		const $this = this
 		let options; let command;
 		return new Promise(function(resolve,reject){
 			let name = $this.container_name
-			docker.info(function(err,data){
+			store.docker.info(function(err,data){
 				if(err){
 		 		  	logger.error("%s %s","Error in grabbing docker information, likely docker isn't running: ", err)
-		 		  	reject(new Error("Error in starting docker, please ensure docker is running. You can find more information on this through the README or via https://docs.docker.com/get-docker/"))
+		 		  	reject(new Error("Error in starting docker, please ensure docker is running. You can find more information on this through the README or via https://docs.store.docker.com/get-docker/"))
 				} else{
 					(async function(){
 						let exists;
@@ -86,7 +86,7 @@ export class DockerObj {
 							const opt  = await $this.obj.build(params);//build up the params for docker to run appropriately
 							options = opt.options;
 							command = opt.command
-							docker.createContainer({
+							store.docker.createContainer({
 								Image: $this.image, 
 								Cmd: command, 
 								Tty: true,

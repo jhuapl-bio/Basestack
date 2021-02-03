@@ -7,7 +7,6 @@
    - # **********************************************************************
   */
 import Docker from 'dockerode';
-import  docker  from "./docker.js"
 import  path  from "path"
 const fs  = require("fs")
 const zlib = require('zlib')
@@ -17,6 +16,7 @@ const { store }  = require("../store/global")
 var { logger } = require("./logger");
 var { followStreamBuild } = require("./dockerLogs.js")
 const {copyFile, readFile, copyFolder, writeFolder, ammendJSON, writeFile } = require("./IO.js")
+let docker = store.docker
 
 export var install_images_offline = function(obj){
 	return new Promise(function(resolve,reject){
@@ -73,8 +73,8 @@ export var install_images_online = function(img){
 
 export var prune_images = async function(){
 	try{
-		let responseContainers = await docker.pruneContainers()
-		let responseawait = await docker.pruneImages( { 'filters' : { 'dangling' : { 'true' : true } } } )
+		let responseContainers = await store.docker.pruneContainers()
+		let responseawait = await store.docker.pruneImages( { 'filters' : { 'dangling' : { 'true' : true } } } )
 		return responseawait
 	}
 	catch(err){
@@ -101,7 +101,7 @@ export var load_image  = function(obj){
 					store.config.images[obj.name].status.running = true
 					store.config.images[obj.name].status.complete = false
 	  				
-					docker.loadImage(
+					store.docker.loadImage(
 						obj.path,
 						{quiet: false},
 	  					(err, stream)=>{
@@ -155,7 +155,7 @@ export var load_image  = function(obj){
 						)
 					}
 					Promise.all(resource_extras).then((response)=>{
-						docker.buildImage({
+						store.docker.buildImage({
 								context: buildDir,
 		  						src: srcFiles,
 		  						AttachStdout: true,
@@ -184,7 +184,7 @@ export var load_image  = function(obj){
 					})
 				} else { //The repo is public and docker pullable
 					// var auth  = { key: "10644ba4-7c89-41b0-ae0d-d888ea3906d4" }
-					docker.pull(obj.installation.path)
+					store.docker.pull(obj.installation.path)
 					.then((stream, error)=>{
 						store.dockerStreamObjs[obj.name]  = stream
 						store.config.images[obj.name].status.stream = []
@@ -240,13 +240,13 @@ export var remove_images = function(imageName){
 			let promises = [];
 
 			imageName = imageName +":latest"
-			let containers = await docker.listContainers({ 'filters' : { 'ancestor' : [ imageName ] }} )
+			let containers = await store.docker.listContainers({ 'filters' : { 'ancestor' : [ imageName ] }} )
 			for (let i = 0; i < containers.length; i++){
-				// docker.getContainer(containers[i].Id).remove({force:true})
-				promises.push(docker.getContainer(containers[i].Id).remove({force:true}))
+				// store.docker.getContainer(containers[i].Id).remove({force:true})
+				promises.push(store.docker.getContainer(containers[i].Id).remove({force:true}))
 			}
 			Promise.all(promises).then(()=>{
-				docker.getImage(imageName).remove({
+				store.docker.getImage(imageName).remove({
 				   force: true
 				  }, (err,response)=>{
 					if(err){
