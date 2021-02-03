@@ -10,7 +10,6 @@
   <div id="installhelp">
     <b-row>
       <b-col sm="12">
-          
         <div class="col-sm mt-12 mt-sm-0" >
           <carousel :perPage="perPage" :navigationEnabled="false" direction="down">
             <slide>
@@ -22,28 +21,60 @@
                 <span class="center-align-icon; " >Need Help installing Basestack? Please swipe right for more information
                   <font-awesome-icon    icon="question-circle" size="sm"  />
                 </span>
+                <b-table
+                  class="text-center"
+                  :fields="releaseNotificationFields"
+                  :items="[releaseNotes]"
+                  :sticky-header="true"
+                >
+                  <template  v-slot:cell(current_version)>
+                  <p>{{current_version}}</p>
+                  </template>
+                  <template  v-slot:cell(checkUpdates)>
+                    <span class="center-align-icon;"
+                            v-tooltip="{
+                              content: 'If changelog not showing or a new update might be available, select this',
+                              placement: 'top',
+                              classes: ['info'],
+                              trigger: 'hover',
+                              targetClasses: ['it-has-a-tooltip'],
+                              }"
+                          >
+                            <font-awesome-icon class="configure"  @click="checkUpdates()" icon="circle-notch" size="sm"  />
+                      </span> 
+                  </template>
+                  <template  v-slot:cell(feature_tracker)>
+                    <span class="center-align-icon;"
+                            v-tooltip="{
+                              content: 'Open GitHub to see all issues and upcoming features or requests for Basestack',
+                              placement: 'top',
+                              classes: ['info'],
+                              trigger: 'hover',
+                              targetClasses: ['it-has-a-tooltip'],
+                              }"
+                          >
+                            <font-awesome-icon class="configure"  @click="open_link('https://github.com/jhuapl-bio/Basestack/issues', $event)" icon="archive" size="sm"  />
+                      </span> 
+                  </template>
+                </b-table>
+                <div style="width:100%; padding-top: 20px" class="logDiv">
+                  <h3>Release Notes</h3>
+                  <hr>
+                  <p v-html="releaseNotes.releaseNotes"></p>
+                </div>
               </div>
             </slide>
             <slide class="text-center">
               <h3 >Install Docker</h3>
               <video preload="auto" ref="videoRef" type="video/mp4" :src="docker_install" id="video-container" style="width: 100% !important; max-height:40vh; vertical-align: top" controls ></video>
               <p>Watch a brief overview of how to install Docker</p>
-            </slide>
-            <slide>
               <p>
                 More information can be found on proper installation procedures at:
+                <a class="center-y-img" href="" v-on:click="open_link('https://github.com/jhuapl-bio/Basestack#basestack',$event)">GitHub</a>
               </p>
-                <ul>
-                  <li>
-                    <a class="center-y-img" href="" v-on:click="open_link('https://github.com/Merritt-Brian/Basestack',$event)">GitHub</a>
-                  </li>
-                  <li>
-                    <a class="center-y-img" href="" v-on:click="open_link('https://drive.google.com/drive/u/0/folders/1ad2U3zBTHXfly3_ybLUxJBarvHXCPS2Z',$event)">Google Drive</a>
-                  </li>
-                </ul>
-                <p>
-                  Next, install modules by selecting that option in the left-hand tab or by continuing to the right
-                </p>
+              <p>
+                Next, install modules by selecting that option in the left-hand tab or by continuing to the right
+              </p>
             </slide>
             <slide>
                 <p>
@@ -88,7 +119,31 @@
       return {
         activeBtn:1,
         perPage: 1,
-        help:false
+        releaseNotes: {},
+        current_version: process.env.version_basestack,
+        help:false,
+        releaseNotificationFields: [
+          {
+            key: 'version',
+            label: 'Available Version'
+          },
+          {
+            key: 'current_version',
+            label: 'Installed Version'
+          },
+          {
+            key: 'releaseDate',
+            label: 'Release Date'
+          },
+          {
+            key:'checkUpdates',
+            label: 'Check Updates'
+          },
+          {
+            key: 'feature_tracker',
+            label: 'Feature Tracker'
+          }
+        ]
       }
     },
     methods: {
@@ -98,9 +153,17 @@
       },
       updateImages(val){
         this.$emit("updateImages", val)
+      },
+      checkUpdates(){
+        this.$electron.ipcRenderer.send("checkUpdates", "")
       }
     },
     mounted(){
+      const $this = this;
+      this.$electron.ipcRenderer.on('releaseNotes', (evt, message)=>{
+        $this.releaseNotes = message
+      })
+      this.$electron.ipcRenderer.send("queryRelease", "")
     },
     computed: {
       docker_install(){

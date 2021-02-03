@@ -76,7 +76,7 @@ class FileService {
     return Api().post("http://localhost:5003/install/images"+params.config.type, params)    
   }
   removeImages(imageName){
-    return Api().post("http://localhost:5003/install/removeImages/"+imageName)    
+    return Api().post("http://localhost:5003/install/removeImages/", {imageName: imageName})    
   }
   logImageInstall(params){
     return Api().get("http://localhost:5003/install/imageInstallLogs/" +  params.imageName)    
@@ -106,7 +106,13 @@ class FileService {
     return Api().get("http://localhost:5003/meta/fetch")                
   }
   updateSocket(params){
-    return Api().post("http://localhost:5003/docker/socket", params)            
+    return Api().post("http://localhost:5003/docker/socket", params)   
+  }         
+  fetchDockerTags(params){
+    return Api().post("http://localhost:5003/tags/fetch", params)                    
+  }
+  selectTag(params){
+    return Api().post("http://localhost:5003/tags/select", params)  
   }
 
 }

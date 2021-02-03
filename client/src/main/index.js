@@ -1,125 +1,86 @@
 'use strict'
 
-const { app, ipcMain, BrowserWindow, Menu, dialog } = require('electron')
+const { app, ipcMain, BrowserWindow, Menu, dialog, shell } = require('electron')
+const { spawn, exec, execSync } = require('child_process');
+
+
+
+import promiseIpc from 'electron-promise-ipc';
 const isMac = process.platform === 'darwin'
-const version = '1.0'
-process.env.version_basestack = version
+const isWin = process.platform === "win32"
 
 if (!process.env.APPDATA){
   process.env.APPDATA = app.getPath('userData')
 }
-
-
-const { 
- cancel_container
- } = require('../modules/server/api/controllers/index.js')
+if (isMac){
+  process.env.platform_os = "mac"
+} else if(isWin){
+  process.env.platform_os = "win"
+} else {
+  process.env.platform_os = "linux"
+}
 
 
 const path = require("path")
 // const {  show_MinKnow, show_sublime, show_aliview, show_spreaD3, show_BEAUTI, show_BEAST, show_figtree, show_tempest, show_tracer } = require('./menu.js')
-const  store  = require("../modules/server/api/store/global.js")
 
 require("../renderer/store")
 
 
-const {logger } = require("../modules/server/api/controllers/logger.js")
 
-const log = require('electron-log');
 const {autoUpdater} = require("electron-updater");
 
 
 const {fs} = require("fs")
-// autoUpdater.logger = log;
 // autoUpdater.logger.transports.file.level = 'info';
-
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
+let releaseNotes;
+
+let os = require("os")
+
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+  process.env.version_basestack = autoUpdater.currentVersion
+  releaseNotes = {
+    releaseNotes: "None Available",
+    version: "Not Available",
+    releaseDate: "NA"
+  };
+} else {
+  process.env.version_basestack = "Development"
+  releaseNotes = {
+    releaseNotes: "None Available",
+    version: "Development",
+    releaseDate: "NA"
+  };
 }
+process.env.resourcesPath = process.resourcesPath
 
 let mainWindow
-let { open_server,close_server } = require("../modules/server/server.js")
-open_server()
-// logger.info(JSON.stringify(process.env, null, 4))
+
+const { store } = require("../modules/server/api/store/global.js")
+const {logger } = require("../modules/server/api/controllers/logger.js")
+
+let open_server; let close_server; let  cancel_container;
+if (process.env.NODE_ENV === 'production'){
+  if (process.env.NODE_ENV == 'production'){
+    let { open_server, close_server } = require("../modules/server/server.js")
+    const { 
+     cancel_container
+    } = require('../modules/server/api/controllers/index.js')
+
+    open_server()
+  }
+
+}
+
+
+let bat = undefined;
+autoUpdater.logger = logger;
 var menu = Menu.buildFromTemplate([
-  // {
-  //     label: 'Quick Launch Software',
-  //     submenu: [
-  //         {label:'MinKNOW', 
-  //         click(){
-  //             show_MinKnow()
-  //           }
-  //         },
-  //         {label:'Sublime Text',
-  //           click(){  
-  //             show_sublime()
-  //           }
-  //         },
-  //         {label:'ALiView',
-  //           click(){  
-  //             show_aliview()
-  //           }
-  //         },
-  //         {label:'spreaD3',
-  //           click(){  
-  //             show_spreaD3()
-  //           }
-  //         },
-  //         {label:'BEAUTI', 
-  //         click(){  
-  //             // render.show_BEAUTI("<APP_DIR>/pre-commands/")
-  //             show_BEAUTI()
-  //           }
-  //         },
-  //         {label:'BEAST', 
-  //         click(){  
-  //             // render.show_BEAST("<APP_DIR>/pre-commands/")
-  //             show_BEAST()
-  //           }
-  //         },
-  //         {label:'FigTree', 
-  //         click(){  
-  //             show_figtree()
-  //           }
-  //         },
-  //         {label:'Tempest', 
-  //         click(){  
-  //             show_tempest()
-  //           }
-  //         },
-  //         {label:'Tracer', 
-  //         click(){  
-  //             show_tracer()
-  //           }
-  //         }
-  //     ]
-  // },
-  // {
-  //   label: 'Post Installation',
-  //     submenu: [
-  //     {
-  //       label: "Offline",
-  //       click: async ()=>{
-  //         install_images_offline()
-  //       }
-  //     },
-  //     {
-  //       label: "Online",
-  //       click: async ()=>{
-  //         install_images_online()
-  //        }
-  //      },
-  //      {
-  //       label: "Cancel",
-  //       click: async ()=>{
-  //         cancel_load_images()
-  //        }
-  //      }
-  //     ]
-  // },
    {
     label: 'Edit',
     submenu: [
@@ -149,12 +110,24 @@ var menu = Menu.buildFromTemplate([
     ]
   },
   {
-    label: 'Restart',
+    label: 'System',
     submenu: [
       {
         label: 'Refresh Server',
         click() {  close_server(); open_server();  }
       },
+      {
+        label: 'Docker Site',
+        click() { 
+          shell.openExternal('https://docs.docker.com/get-docker/')
+        }        
+      },
+      { 
+        label: 'Open Desktop',
+        click(){
+          shell.openPath(app.getPath('desktop'))
+        }
+      }, 
       {
         label: 'Restart App',
         click() {  
@@ -165,10 +138,143 @@ var menu = Menu.buildFromTemplate([
           }  
         }
       },
-
+      {
+        label: "Check Docker Installed",
+        click(){
+          let bat;
+          if (isWin){
+            bat = exec("whereis docker", { cwd: app.getPath('desktop') }); 
+          }
+          else {
+            bat = exec("which docker", { cwd: app.getPath('desktop') })
+          }
+          spawned_logs(bat, {throwError: true, throwExit: true, process: "Checking Docker installed: "})
+        }
+      },
+      {
+        label: "Open Terminal",
+        click(){
+          let bat;
+          if (isWin){
+            bat = exec("start cmd", { cwd: app.getPath('desktop') }); 
+          }
+          else if(isMac){
+            bat = exec("open -a Terminal", { cwd: app.getPath('desktop')})
+          } else {
+            bat = exec("gnome-terminal", { cwd: app.getPath('desktop'), detached:true })
+          }
+          spawned_logs(bat, {throwError: true, process: "Open Terminal"})
+        }
+      },
+      ...(isWin ? [
+      {
+        label: 'Windows Services',
+        submenu: [
+          {
+            label: 'Hyper-V',
+            submenu:[
+              {
+                label: 'Disable Hyper-V',
+                click() {  
+                  let bat = exec("powershell -Command \"Start-Process -Verb RunAs cmd.exe \'/K DISM /Online /Disable-Feature:Microsoft-Hyper-V\'\"", { cwd: app.getPath('desktop') }); 
+                  spawned_logs(bat, {throwError: true, process: "Disable HyperV"})
+                }
+              },
+              {
+                label: 'Enable Hyper-V',
+                click() {  
+                  let bat = exec("powershell \"Start-Process -Verb RunAs cmd.exe \' /K DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V\' \"", { cwd: app.getPath('desktop') }); 
+                  spawned_logs(bat, {throwError: true, process: "Enable HyperV"})
+                }
+              },
+            ]
+          },
+          {
+            label: 'WSL2',
+            submenu:[
+              {
+                label: '1. Download WSL2',
+                click() { 
+                let batDownload = exec("curl.exe https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi -o wsl_installer.msi", { cwd: app.getPath('desktop') }); 
+                batDownload.stderr.on('data', (data) => {
+                    logger.error(`${data.toString()} err`);
+                    mainWindow.webContents.send('mainNotification', {
+                       icon: '',
+                       loading: false,
+                       message: data.toString(),
+                       disable_popup: true
+                    })
+                });
+                batDownload.stdout.on('data', (data) => {
+                    logger.info(`${data.toString()} info`)
+                });
+                batDownload.on('exit', (code) => {
+                  const text = `<p>WSL2 MSI Download Process complete with code: ${code}.<hr> 0: Success, 1 or more is failure <hr> Next, select 2. Install WSL2</p>`
+                    logger.info(text);
+                    mainWindow.webContents.send('mainNotification', {
+                       icon: '',
+                       loading: false,
+                       message: text,
+                       disable_popup: true
+                    })
+                  });
+                }
+              },
+              {
+                label: '2. Install WSL2',
+                click() { 
+                  let batInstaller = exec("start /wait msiexec /i wsl_installer.msi ", { cwd: app.getPath('desktop') }); 
+                  spawned_logs(batInstaller, {throwError: true, process: "Install WSL2"})
+                }
+              },
+              {
+                label: '3. Turn WSL On',
+                click() {  
+                  let bat = exec("powershell -Command \"Start-Process -Verb RunAs cmd.exe \'/K DISM /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart\'\"", { cwd: app.getPath('desktop') }); 
+                  spawned_logs(bat, {throwError: true, process: "Disable HyperV"})
+                }
+              },
+              {
+                label: '4. Enable Virtualization',
+                click() {  
+                  let bat = exec("powershell -Command \"Start-Process powershell \'Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux\' -Verb runAs \"", { cwd: app.getPath('desktop'), detached:true }); 
+                  spawned_logs(bat, {throwError: true, process: "Disable HyperV"})
+                }
+              },
+              {
+                label: '5. Set WSL2',
+                click() {  
+                  let bat = exec("powershell -Command \"wsl --set-default-version 2\"", { cwd: app.getPath('desktop') }); 
+                  spawned_logs(bat, {throwError: true, process: "Disable HyperV"})
+                }
+              },
+              
+            ]
+          },
+          {
+            label: "Add User Docker-Users",
+            click(){
+              // "net localgroup docker-users %USERNAME% /add"
+              let bat = exec("powershell \"Start-Process -Verb RunAs cmd.exe \' /K net localgroup docker-users %USERNAME% /add\' \"  ", { cwd: app.getPath('desktop') }); 
+              spawned_logs(bat, {throwError: true, process: "Add docker-users"})
+            }
+          },
+          {
+            label: "Open Powershell",
+            click(){
+              let bat = exec("powershell \"Start-Process powershell -Verb runAs\"", { cwd: app.getPath('desktop') }); 
+              spawned_logs(bat, {throwError: true, process: "Open Terminal"})
+            }
+          },
+        ]
+      }, 
+      {role: "close"} 
+      ] : 
+      [ 
+        { role: 'close' } 
+      ]),
     ]
   },
-  // { role: 'viewMenu' }
   {
     label: 'View',
     submenu: [
@@ -185,7 +291,6 @@ var menu = Menu.buildFromTemplate([
       { role: 'togglefullscreen' }
     ]
   },
-  // { role: 'windowMenu' }
   {
     label: 'Window',
     submenu: [
@@ -202,28 +307,90 @@ var menu = Menu.buildFromTemplate([
     ]
   },
   {
+    label: "Check for Updates",
+    click() { 
+      checkUpdates()
+    }
+  },
+  {
+    label: 'Logs and Info',
+    submenu: [
+      {
+        label: 'Open Logs',
+        click() { shell.openPath(store.meta.logFolder)  }
+      },
+      {
+        label: 'View Release Notes',
+        click() {  
+          // logger.info("Getting release notes")
+          mainWindow.webContents.send('mainNotification', {
+            icon: 'info',
+            message: `${releaseNotes.releaseNotes}`,
+            disable_popup: true,
+            patchNotes: true
+          })
+          mainWindow.webContents.send('releaseNotes', releaseNotes)
+          // logger.info(`${autoUpdater.currentVersion} --> ${JSON.stringify(releaseNotes)}`)
+        }
+      },
+      {
+        label: 'Open Issue/Feature Tracker',
+        click(){shell.openExternal('https://github.com/jhuapl-bio/Basestack/issues')}
+      }
+    ]
+  },
+  {
     role: 'help',
     submenu: [
       {
         label: 'Learn More',
-        click () { require('electron').shell.openExternalSync('https://electronjs.org') }
+        click () { shell.openExternal('https://github.com/jhuapl-bio/Basestack') }
       }
     ]
   }
 ])
 Menu.setApplicationMenu(menu);
 
+function spawned_logs(bat, config){
+    bat.stderr.on('data', (data) => {
+      logger.error(data.toString());
+      if (config.throwError){
+        throw new Error(data.toString())
+      }
+    });
+    bat.stdout.on('data', (data) => {
+      logger.info(`${data.toString()}`)
+    });
+    bat.on('exit', (code) => {
+      let message = `${config.process} exited with code: ${code}`
+      if(config.throwExit){
+        mainWindow.webContents.send('mainNotification', {
+            icon: (code == 0 ? `info` : `error`),
+            message: (code == 0 ? `${config.process} succeeded` : `${config.process} failed`),
+            disable_popup: true
+        })
+      }
+      logger.info(message);
+    });
+}
 
-// if (process.env.NODE_ENV !== 'development') {
-//   global.__static = require('path').join(__dirname, '/static').replace(/\//g, '\\')
-//   // global.__static = require('path').join(__dirname, '/static').replace(/\/g, '\\')
-// } else {
-//   global.__static = ""
-// }
-
-const winURL = process.env.NODE_ENV === 'development'
+const winURL = (process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
-  : `file://${__dirname}/index.html`
+  : `file://${__dirname}/index.html`);
+
+  console.log("winurl defined")
+
+
+
+function checkUpdates(){
+  if(process.env.NODE_ENV == 'production'){
+    logger.info("Check for Basestack updates and notify")
+    autoUpdater.checkForUpdatesAndNotify()   
+  } else {
+    logger.info(`Development mode enabled, skipping check for updates`)
+  }
+}
+
 
 function createWindow () {
   /**
@@ -252,75 +419,114 @@ function createWindow () {
   mainWindow.webContents.session.clearCache(function(){
   //some callback.
   });
-  mainWindow.loadURL(winURL)
-  let quitUpdateInstall = false;
-  function sendStatusToWindow(text) {
-    logger.info(text);
-    dialog.showMessageBox(mainWindow, {
-      type: 'info',
-      defaultId: 0,
-      buttons: ['Ok'],
-      message: 'Info',
-      detail: text
-    });
+  try{
+    mainWindow.loadURL(winURL)
+  } catch(err){
+    console.error(err)
   }
-  autoUpdater.on('error', (err) => {
-    sendStatusToWindow('Error in auto-updater. ' + err);
+  mainWindow.webContents.send('releaseNotes', releaseNotes)
+  ipcMain.on("queryRelease", (event, arg) => {
+    event.reply('releaseNotes', releaseNotes)
   })
-  autoUpdater.on('update-available', (info) => {
-    console.log(info)
-    logger.info(info)
-    logger.info("update available")
-    let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
-    const options = {
-        type: 'question',
-        buttons: ['Install', 'Skip'],
+  ipcMain.on("checkUpdates", (event, arg) => {
+    checkUpdates()
+  })
+  mainWindow.webContents.on('did-finish-load', function () {
+    let quitUpdateInstall = false;
+    logger.info("Basestack is finished loading")
+    function sendStatusToWindow(text) {
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
         defaultId: 0,
-        title: 'Update Available',
-        message: message,
-        detail: '',
-        checkboxLabel: 'Auto-restart after download?',
-        checkboxChecked: false,
-    };
-    dialog.showMessageBox(null, options).then((response) => { 
-      logger.info("%s update choice -> %s", response)
-      if (response.response == 0){
-         autoUpdater.downloadUpdate()
-         if (response.checkboxChecked ){
-           quitUpdateInstall = true;
-         }
+        buttons: ['Ok'],
+        message: 'Info',
+        detail: text
+      });
+    }
+    autoUpdater.on('error', (err) => {
+      logger.error(`Error in auto-updater. ${err}`)
+      sendStatusToWindow('Error in auto-updater. ' + err);
+    })
+    autoUpdater.on('update-available', (info) => {
+      logger.info(info)
+      logger.info("update available")
+      let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
+      const options = {
+          type: 'question',
+          buttons: ['Install', 'Skip'],
+          defaultId: 0,
+          title: 'Update Available from https://github.com/jhuapl-bio/Basestack/releases',
+          message: message,
+          detail: '',
+          checkboxLabel: 'Auto-restart after download?',
+          checkboxChecked: true,
+      };
+      releaseNotes=info
+
+      mainWindow.webContents.send('releaseNotes', releaseNotes)
+      dialog.showMessageBox(null, options).then((response) => { 
+        logger.info("%s update choice -> %s", response)
+        if (response.response == 0){
+           autoUpdater.downloadUpdate()
+           mainWindow.webContents.send('mainNotification', {
+             icon: '',
+             loading: true,
+             message: `Downloading Update`,
+             disable_popup: true
+           })
+           if (response.checkboxChecked ){
+             quitUpdateInstall = true;
+           }
+        }
+      });
+    })
+    autoUpdater.on('download-progress', (progressObj) => {
+      let log_message = "Download speed: " + progressObj.bytesPerSecond;
+      log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+      log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+      logger.info("%s <-- Update Download progress", log_message)
+      // sendStatusToWindow(log_message);
+      mainWindow.webContents.send('mainNotification', {
+         type: 'info',
+         message: log_message,
+         disable_popup: true
+      })
+    })
+
+    autoUpdater.on('update-downloaded', (info, err) => {
+      if (err){
+        logger.error(err)
+      }
+      try{
+        mainWindow.webContents.send('mainNotification', {
+          icon: 'success',
+          patchNotes: true,
+          message: `Update downloaded. Restart the application to apply install changes \n ${info.releaseNotes}`,
+        })
+        releaseNotes=info
+        mainWindow.webContents.send('releaseNotes', releaseNotes)
+        quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
+      } catch(err) {
+        logger.error(`Download update failed to finish. ${err}`)
+        // throw new Error("Could not download update, check error logs")
       }
     });
-  })
-  autoUpdater.on('download-progress', (progressObj) => {
-    let log_message = "Download speed: " + progressObj.bytesPerSecond;
-    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-    logger.info("%s <-- Update Download progress", log_message)
-    // sendStatusToWindow(log_message);
-  })
-  autoUpdater.on('update-downloaded', (info, err) => {
-    try{
-      sendStatusToWindow('Update downloaded. Restart the application to apply install changes');
-      quitUpdateInstall ? autoUpdater.quitAndInstall() : '';
-    } catch(err) {
-      logger.error(`Download update failed to finish. ${err}`)
-      // throw new Error("Could not download update, check error logs")
-    }
-  });
-  autoUpdater.on('checking-for-update', (info, err) => {
-    try{
+    autoUpdater.on('checking-for-update', () => {
       logger.info('Checking for Basestack update...');
-    } catch (err) {
-      logger.error(err)
-      logger.error("error in check basestack update")
-      // throw new Error("Could not check for Basestack Update, check internet access and logs")
-    }
-  })
-  autoUpdater.on('update-not-available', (info) => {
-    logger.info('Basestack update not available.');
-  })
-
+    })
+    autoUpdater.on('update-not-available', (info, err) => {
+      if (err){
+        logger.error(`${err} err in update not available messaging`)
+      }
+      logger.info('Basestack update not available.');
+      releaseNotes=info
+      logger.info(`${JSON.stringify(info)}`)
+      mainWindow.webContents.send('releaseNotes', releaseNotes)
+    })
+    
+  });
+  
+  
 
 
 
@@ -366,38 +572,49 @@ function createWindow () {
 
   })
 
-
   mainWindow.on('closed', (e) => {
-    try{
-        cancel_container({module: 'rampart', silent:true})
-    } catch(err){
-      console.log(err)
-    }
-    try{
-        cancel_container({module: 'basestack_consensus', silent:true})
-    } catch(err){
-      console.log(err)
-    }
-    try{
-        cancel_container({module: 'basestack_tutorial', silent: true})
-    } catch(err){
-      console.log(err)
-    }
     mainWindow= null
   })
 }
-autoUpdater.autoDownload = false
 
+
+// async function close_server(){
+//   try{
+//     if(process.env.NODE_ENV === 'production'){
+//       bat.kill()
+//     }
+//     return "Closed Server"
+//   } catch(err){
+//     logger.error(err)
+//     throw err
+//   } 
+// }
+// function open_server(){
+//   bat = spawn('node', ['server.js'], {env: process.env, cwd: path.join(process.resourcesPath, "data", "server") })
+//   bat.stderr.on('data', (data) => {
+//     logger.error(data.toString());
+//     console.error(data.toString());
+//     // throw new Error(code)
+//     throw new Error(data.toString())
+//   });
+
+//   bat.on('exit', (code) => {
+//     logger.info(`Server Child process exited with code ${code}`);
+//   });
+// }
+
+autoUpdater.autoDownload = false
 app.on('ready', ()=>{
   (async () => {
     try{
       createWindow();   
+      checkUpdates();
       if (process.env.NODE_ENV == 'production'){
-        autoUpdater.checkForUpdates()  
+        open_server()
       }
     } catch(error){
-      logger.error("error in check updates")
       logger.error(error)
+      throw error
     } 
   })()
     
@@ -420,7 +637,11 @@ ipcMain.on('restartApp', (event, arg)=>{
   app.relaunch()
   app.quit()
 })
-
+process.on('exit', function() {
+  // if(process.env.NODE_ENV === 'production'){
+  //   bat.kill()
+  // }
+});
 /**
  * Auto Updater
  *

@@ -15,19 +15,41 @@
         	active-nav-item-class="activeTabButton"
         	style="height: 100vh; " 
         	vertical
-        	v-if="!initial"
-        	
+        	v-if="initial || started"        	
         >
           <b-tab  
           	v-for="[key, entry] of Object.entries(modules)" 
-          	v-bind:key="entry.name + (entry.status ? entry.status.installed : '')"
+          	v-bind:key="entry.name"
           	class="ma-0 pa-0"
             > 
-            <template v-slot:title v-if="(!entry.module || entry.status.installed )  && !initial">
+            <template v-slot:title v-if="(!entry.module || entry.status.installed )  && initial">
             	<div class="tab-parent" style="display: flex; justify-content: space-between;"
 				>	
-					<div  class="tab-item" style="">
-		            	<span style="text-align:left; text-anchor: start;">
+					<div class="tab-item" style="">
+		            	<span v-if="entry.module && images[entry.image].latest_digest != images[entry.image].installed_digest && !images[entry.image].private" style="text-align:left; text-anchor: start;"
+		            	v-tooltip="{
+			            content: 'An Update is available',
+			            placement: 'top',
+			            classes: ['info'],
+			            trigger: 'hover',
+			            targetClasses: ['it-has-a-tooltip'],
+			            }"
+		            	>
+		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
+		            	</span>
+		            	<span v-else-if="entry.name == 'moduleinstall' && !docker" style="text-align:left; text-anchor: start;"
+		            	v-tooltip="{
+			            content: 'Docker is not running. See Services Tab at the top of Basestack or refer to the README',
+			            placement: 'top',
+			            classes: ['info'],
+			            trigger: 'hover',
+			            targetClasses: ['it-has-a-tooltip'],
+			            }"
+		            	>
+		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
+		            	</span>
+		            	<span v-else
+		            	 style="text-align:left; text-anchor: start;">
 		            		<font-awesome-icon class="configure" :icon="entry.icon"/>
 		            	</span>
 		            	<span style="  text-anchor: end; text-align:right; vertical-align:middle; white-space: nowrap; padding-left: 10px; font-size: 0.8em" v-if="!collapsed">
@@ -36,7 +58,7 @@
 		            </div>
 	        	</div>
   			</template>
-  			<div v-if="(!entry.module || entry.status.installed )  && !initial">
+  			<div v-if="(!entry.module || entry.status.installed )  && initial">
   				<h2 class="header" style="text-align:center">{{entry.title}}
 			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
 			        :title="entry.tooltip"
@@ -44,6 +66,7 @@
 			        <font-awesome-icon class="help" icon="question-circle"  />
 			      </span>
 			    </h2>
+
             	<component 
             		:is="entry.component" 
             		:histories="histories" 
@@ -53,12 +76,11 @@
             		@open="open"
             		class="contentDiv"
             		v-bind:images="images"
+            		v-bind:selectedTag="null"
             		v-bind:modules="modules"
             		v-bind:resources="resources"
             		v-bind:docker="docker"
-            		
-            	>
-            	
+            	>            	
             	</component>
             </div>
           </b-tab>
@@ -99,7 +121,6 @@ import About from "@/components/NavbarModules/About/About"
 import Tutorial from "@/components/NavbarModules/Tutorial/Tutorial"
 import {HalfCircleSpinner} from 'epic-spinners'
 import FileService from '@/services/File-service.js'
-
 export default {
 	name: 'mainpage',
 	components:{
@@ -126,7 +147,7 @@ export default {
 			      newState: true,
 			      protocolDir: null,
 			},
-			initial:true,
+			initial:false,
 			collapsed:false,
     		tab: 9,
 	        entries: null,
@@ -134,7 +155,23 @@ export default {
 	        docker:null,
 	        modules: null,
 	        images: null,
-	        intervalChecking: false
+	        intervalChecking: false,
+	        patchNotes: null,
+	        interval: null,
+	        started: false
+		}
+	},
+	watch:{
+		initial(val){
+			if (!val){
+				try{
+					this.init().catch((err)=>{
+						console.error(`Error in initializing the backend ${err}`)
+					})
+				} catch(err){
+					console.error(err)
+				}
+			}
 		}
 	},
 	computed: {
@@ -149,7 +186,8 @@ export default {
 		    		annotationsDir: this.annotationsFolder,
 		    		newState: this.newState,
 		    		history: this.history
-		    	}
+		    	},
+		    	patchNotes: null
 	    	}
 	  }
 	},
@@ -157,18 +195,33 @@ export default {
 		const $this = this
 		this.init().then((response)=>{
 			this.getStatus().then(()=>{
-				setInterval(()=>{
+				this.started = true
+				this.interval = setInterval(()=>{
 					if (!this.intervalChecking){
 						$this.getStatus()
 					}
-				}, 1000)
+				}, 2500)
 			})
 		}).catch((err)=>{
 			console.error(err)
 		})
-		
-
-
+	 	this.$electron.ipcRenderer.on('mainNotification', (evt, message)=>{
+	 		if (message.patchNotes){
+		 		$this.patchNotes = message
+	 		} 
+		 	this.$swal.fire({
+              position: 'center',
+              icon: message.icon,
+              showConfirmButton:true,
+              title:  "",
+              html: message.message,
+              didOpen: () => {
+              	if (message.loading){
+              		$this.$swal.showLoading()
+              	}
+    		  }
+            })
+	 	})
 	},
 
 	methods: {
@@ -210,6 +263,13 @@ export default {
 			this.$set(this, 'resources', response.data.data.resources)
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
+			this.initial = response.data.data.ready
+			if (!this.initial){
+				this.init().catch((err)=>{
+					console.error(`${err} in initializing the backend service`)
+				})
+			}
+			// console.log(images)
 			const modules = response.data.data.modules.entries
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
@@ -226,7 +286,7 @@ export default {
 	                position: 'center',
 	                icon: 'error',
 	                showConfirmButton:true,
-	                title:  "Docker image errors...",
+	                title:  "Docker image error...",
 	                text:  ""+ JSON.stringify(errors_message, null, 4)
 	            }) 
 			}
@@ -241,9 +301,8 @@ export default {
 			}
 		} catch(err){
 			this.initial=false
-			throw err
+			console.err(`${err} error in getting status`)
 		} finally {
-	      	this.initial = false
 			this.intervalChecking = false
 		}
       },
@@ -257,6 +316,7 @@ export default {
       },
       updateImages(val){
       	const i = this.entries.map((d)=>{return d.name}).indexOf(val.image)
+      	// console.log("_________________", val)
       	this.entries[i].installed = val.exists
       },
       toggleCollapseParent(){

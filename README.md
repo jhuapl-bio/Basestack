@@ -9,13 +9,33 @@
 		- https://docs.docker.com/docker-for-mac/ 
 	* Linux (Ubuntu)
 		- https://docs.docker.com/engine/install/ubuntu/
-
+		- Post-Installation Steps:
+			1. Create Docker group
+				a. `sudo groupadd docker`
+			2. Add your user to the docker group
+				a. `sudo usermod -aG docker $USER`
+			3. Ensure all root-created files map as your user id in docker containers and volumes (Do both of these)
+				a.1. `echo $USER:$(id -u):1 | sudo tee -a /etc/subuid`
+				a.2. `echo $USER:$(id -g):1 | sudo tee -a /etc/subgid`
+			4. Create Docker container namespace
+				a. `echo "{\"userns-remap\": \"$USER\"}" | sudo tee -a /etc/docker/daemon.json`
+					- If you dont have the file already created (isn't created by default)
+				b. Manually add your user by following the instructions here: https://docs.docker.com/engine/security/userns-remap/.
+					- You can disable the `userns-remap` functionality by deleting the `daemon.json` file described above or removing the line attributed to your user
+			5. Check that the subgid and subuid files are correct. Order of these lines matters in that the `<username>:<uid>:1` must come first in each file
+				a.1. `cat /etc/subuid`
+					-`<username>:<uid>:1`
+					-`<username>:100000:65536`
+				a.2. `cat /etc/subgid`
+					-`<username>:<uid>:1`
+					-`<username>:100000:65536` 
+			6. Restart Docker 
+				a. `sudo service docker restart`
+				b. OR Restart your computer/session
 ## 2 Install Basestack
 
 
-1. Download Basestack from either:
-	1.  https://github.com/Merritt-Brian/Basestack/releases RECOMMENDED
-	2.  https://drive.google.com/drive/folders/1ad2U3zBTHXfly3_ybLUxJBarvHXCPS2Z
+1. Download Basestack from https://github.com/Merritt-Brian/Basestack/releases
 2. Choose your download based on your operating system from the Releases page:
 	- Windows
 		- Basestack Setup 1.0.0.setup.exe (~80 MB)
@@ -41,18 +61,19 @@
 
 - Once Basestack opens up, click 'Module Install' in the left panel.
 - Click 'Install' (play-circle)
-	- You may choose online or offline method. Online is default. Seem more information below in [Section A3](#a3-download-analyis-pipelines)
+	- You may choose online or offline method. Online is default. See more information below in [Section A3](#a3-download-analyis-pipelines)
 - Click 'OK' on the small notification window that opens up.
 - Follow the *Docker Install Log* to monitor progress and see when the analysis pipeline is ready for use (about 30-45 minutes on a fast internet connection)
-- Download the `test-data.zip` file available in the same gDrive location as the software
+- Download the [`test-data.zip`](https://drive.google.com/file/d/1zrgwheJxhMTvd7zu0fuRhVYYM0aGY5XS/view?usp=sharing) file available [here](https://drive.google.com/drive/folders/1ad2U3zBTHXfly3_ybLUxJBarvHXCPS2Z)
 
 ## 4. Troubleshooting
+- Request or view feature changes at our [issue tracker](https://github.com/jhuapl-bio/Basestack/issues)
 - If you run into issues with the online install, you may want to download (or otherwise obtain) the offline install package
-- Using the above download links, download the appropriate docker images you'd like e.g. basestack_consensus.tar.gz (~5.2GB)
-- With the 'Module Install' tab, select the gear icon and switch install method to 'offline'
-- Drag or Browse to that file on YOUR SYSTEM into the appropriate file input space
-- Click 'Install' (play-circle button)
-- See below Appendices for more detailed installation instructions.
+	- Using the above download links, download the appropriate docker images you'd like e.g. basestack_consensus.tar.gz (~5.2GB)
+	- With the 'Module Install' tab, select the gear icon and switch install method to 'offline'
+	- Drag or Browse to that file on YOUR SYSTEM into the appropriate file input space
+	- Click 'Install' (play-circle button)
+- See below Appendices for more detailed installation instructions. 
 
 ## Appendices
 
@@ -96,9 +117,33 @@
 
 <hr>
 
+#### A1.2 Confirm Docker is Running
+
+<details>
+<summary>View</summary>
+
+##### Windows
+
+In your taskbar (lower-right), if you hover over the icon you should see the message displayed below. Right-clicking will give additional options
+
+![Step 1](./docs/images/Docker4.PNG "Title")
+
+
+##### Linux or Mac
+
+Open a terminal and type `docker info`. You should see information about your `docker` service
+
+![Step 1](./docs/images/docker_info.PNG "Title")
+
+
+</details>
+
 #### Common Errors
 
-##### 'You are not allowed to use Docker, you must be in the "docker-users" group'
+<details>
+<summary>View</summary>
+
+##### 'You are not allowed to use Docker, you must be in the "docker-users" group' (Windows)
 
 ![Step 1](./docs/images/computerManagement.PNG "Title")
 
@@ -120,6 +165,21 @@
 	- You will need to log out and back into your account for this to take effect
 
 
+
+<hr>
+
+#### Permisson denied (Linux)
+
+Please ensure that you follow the correct [instructions](#1-install-docker) here to using `userns-remap`
+
+Note that this will map all of your processes INSIDE the docker containers to your user id if used properly. You will need sudo to delete any files or folders that are causing issues.
+
+<hr>
+
+</details>
+
+<hr>
+
 ### A2 Install Basestack
 
 Please choose one of the 2 following methods of install for your use case
@@ -130,13 +190,14 @@ RECOMMENDED for most users
 	* Double Click Your Executable
 		- Windows: Basestack.exe
 		- Linux: Basestack.AppImage
-		- OSX:  Basestack.dmg (under construction)
+		- OSX:  Basestack.dmg 
 
 For example, on Windows, your directory will look like: 
 
 ![Step 1](./docs/images/basestackExe.PNG "Title")
 
 You will double-click the Basestack.exe file to open the application
+
 
 #### A2.2 Developer Mode
 
@@ -212,6 +273,8 @@ If you'd like a new install location specify here. You will need to supply this 
 </details>
 </summary>
 
+<hr>
+
 ### A3 Download Analyis Pipelines
 
 Select *Settings* and Select *Offline* or *Online* Installation of Docker Images
@@ -231,8 +294,69 @@ These processes can take some time for either method. Rest assured that it will 
 
 #### Common Errors
 
+##### Hyper-V Not Enabled - Windows
+
+![Step 1](./docs/images/EnableBIOSVirtualization.PNG "HyperVEnable")
+
+If you are on older Windows distributions, you may experience an error when attempting to start docker on how HyperV is not enabled. 
+
+##### A. Enable Hyper-V in Basestack
+
+To enable it within Basestack select: `System -> Windows Services -> Hyper-V -> Enable Hyper-V`. 
+
+A window will appear prompting admin rights and then it will automatically being the enable process. See more below.
+
+![Step 1](./docs/images/HyperVChoices.PNG "HyperVChoices")
+
+##### B. Enable Hyper-V in Windows System
+
+**Alternatively** you can enable it within the Host system itself by searching for "Turns Windows features on or off" and selecting "Hyper-V". This will require a computer restart
+
+![Step 2](./docs/images/Turn_Windows_ONOFF.jpg "HyperVChoices")
+
+##### WSL2 Not Installed - Windows
+
+The error (seen below) is often shown for newer Windows OS types. If this occurs, you may have different variants. In the included example, I have the option to enable WSL or use Hyper-V. 
+
+![Step 1](./docs/images/WSLNotInstalled.PNG "WSL error messages")
+
+
+Sometimes, another window will appear regarding installing WSL. 
+
+##### A. Install WSL2 from External Sources
+
+Please follow that **[link](https://docs.microsoft.com/en-us/windows/wsl/install-win10#step-4---download-the-linux-kernel-update-package)**. 
+
+Make sure to perform **AT LEAST step 4**. Once WSL2 is installed/enabled, please restart Docker Desktop
+
+##### B. Install WSL2 in Basestack
+
+**Alternatively** Basestack allows users to download WSL directly.
+
+To Download then Install it within Basestack do: 
+
+1. `System -> Windows Services -> WSL2 -> Download WSL2`
+2. `System -> Windows Services -> WSL2 -> Install WSL2`
+
+![Step 1](./docs/images/WSLInstallDownload.PNG "WSL Install")
+
+You can then attempt to restart Docker Desktop. This also may require a system restart.
+
+If you are still experiencing issues, attempt to enable virtualization from Basestack:
+
+3. `System -> Windows Services -> WSL2 -> Turn WSL On`
+4. `System -> Windows Services -> WSL2 -> Enable Virtualization`
+5. `System -> Windows Services -> WSL2 -> Set WSL2`
+
+**Or** from "Turn Windows features on or off". This is also a good way double check that it is now enabled.
+
+![Step 1](./docs/images/TurnWSLONOFF.PNG "WSL Install")
+
+**You will need to restart your PC/Laptop after doing this!**
+<br>
+
 <details>
-<summary>Click here</summary>
+<summary>View More Common Errors</summary>
 
 ##### I/O timeout
 
@@ -249,6 +373,7 @@ If you receive an error that you couldn't connect to docker, please try to resta
 ![Step 1](./docs/images/dockertaskbarOptions.PNG "Title")
 
 </details>
+<hr>
 
 ### A4. Running Consensus Generation and Reporting
 
@@ -305,7 +430,7 @@ Consensus Generation is the main feature of this application and is used to gene
 1. Once a folder is input and all greens are seen for the three main files, hit bookmark. The application will save all information and if any error occurs it will be reported appropriately. Please be aware that the software does not catch everything that could go wrong before a job submits
 
 <strong>Step 3</strong>
-![Step 3](./docs/images/running.PNG "Title")
+![Step 3](./docs/images/Running.png "Title")
 
 1. Once bookmarked, hit the newly-shown *Load* button to load it into the run. This will allow this tab and *RAMPART* to make use of your specified run directory. 
 
@@ -332,6 +457,7 @@ Consensus Generation is the main feature of this application and is used to gene
 
 1. Once complete, you can view the pdf report by clicking the *pdf* link underneath the final row's status of *1/1*. You can also traverse to any of the module directories by hitting the link text on the first column for each module. In this example, I've chosen *Report Generation* as my link which is a top-level view of all modules, as well as the `report.pdf` location. Open this pdf to see your report either from the folder or the *pdf* link on the left-most column to see your results!
 
+<hr>
 
 ### A5. Running RAMPART
 
@@ -355,6 +481,8 @@ Rampart is an annotation tool provided by the Artic Network that gives quick, bu
  		- `docker container rm -f artic_consensus rampart` 
  * You MUST select the top level parent folder for RAMPART to run for the RunDIR e.g. select `fastq_pass` not `test-data`
  -->
+
+<hr>
 
 ### A6. Nextstrain 
 
@@ -380,12 +508,15 @@ Genotype -> nucleotide -> [Your number here]
 
 Also, be sure that the dataset is ncov and global. You can change the layout of the visualization(s) with the Tree Options parameters
 
+<hr>
 
 ### A7. IGV 
 
 <strong>Requires Internet. Also available at https://igv.org/app/</strong>
 
-IGV is an interactive environment that allows you to view a genome and see any annotations at a specific position.
+IGV is an interactive environment that allows you to view a genome and see any annotations at a specific position. 
+
+**These plots are also available in the Consensus Generation Pipeline Reports**
 
 ![Step 1](./docs/images/igvSelectSars.png "Title")
 

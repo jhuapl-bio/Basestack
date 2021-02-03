@@ -15,97 +15,93 @@ export class BasestackConsensus{
 
 	}
 	async build(data) {
-		return new Promise(function(resolve,reject){
-			(async function(){
-				// Send websocket command to return the results of articserved at a port through docker
-				// Likely volume could be used here that is mounted somehwere in host OS or we cna return a json/tsv 
-				//get the current datetime for this report
-				const currentDateTime = moment().format('YYYY-MM-DDTHH-mm-ss')
-				// const primerDir = data.primerDir
-				const fastqDir = data.runDir.fastqDir.path //get parent directory that contians fastq_pass
-				const consensusScripts = path.join(store.meta.dockerImagesPath, "sciserver", "covid19")
-				const baseDir = data.runDir.path
-				const reportDir = data.reportDir
-				const meta = reportDir.meta
-				const run_config = meta.run_config
-				const run_info = meta.run_info
-				const manifest = meta.manifest
-				// const versionDir = path.basename(primerDir)
-				// const primerNameDir = path.basename(path.dirname(primerDir))
+		try {
+			// Send websocket command to return the results of articserved at a port through docker
+			// Likely volume could be used here that is mounted somehwere in host OS or we cna return a json/tsv 
+			//get the current datetime for this report
+			const currentDateTime = moment().format('YYYY-MM-DDTHH-mm-ss')
+			// const primerDir = data.primerDir
+			const fastqDir = data.runDir.fastqDir.path //get parent directory that contians fastq_pass
+			const consensusScripts = path.join(store.meta.dockerImagesPath, "sciserver", "covid19")
+			const baseDir = data.runDir.path
+			const reportDir = data.reportDir
+			const meta = reportDir.meta
+			const run_config = meta.run_config
+			const run_info = meta.run_info
+			const manifest = meta.manifest
+			// const versionDir = path.basename(primerDir)
+			// const primerNameDir = path.basename(path.dirname(primerDir))
 
 
-				//Error checking for artic consensus generation
-				//Read file presence
-				await checkFileExist(path.dirname(run_info.path), run_info.name)
-				await checkFileExist(path.dirname(run_config.path), run_info.name)
-				await checkFileExist(path.dirname(manifest.path), run_info.name)
-				await checkFileExist(fastqDir, ".fastq")
-				// await checkFileExist(primerDir.fullpath, ".tsv")
-				// await checkFileExist(primerDir.fullpath, ".reference.fasta")
-				// await checkFileExist(primerDir.fullpath, ".bed")
+			//Error checking for artic consensus generation
+			//Read file presence
+			await checkFileExist(path.dirname(run_info.path), run_info.name)
+			await checkFileExist(path.dirname(run_config.path), run_info.name)
+			await checkFileExist(path.dirname(manifest.path), run_info.name)
+			await checkFileExist(fastqDir, ".fastq")
+			// await checkFileExist(primerDir.fullpath, ".tsv")
+			// await checkFileExist(primerDir.fullpath, ".reference.fasta")
+			// await checkFileExist(primerDir.fullpath, ".bed")
 
-				// const tmpprimerDir = "/tmp/consensus/primers/"+primerNameDir+"/"+versionDir
-				const tmpreportDir = "/tmp/consensus/reports"
-				const tmpConsensusDir = "/home/user/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline"
-				const tmpbaseDir = "/home/user/idies/workspace/covid19/sequencing_runs/example-run"
-				const tmpfastqDir = "/home/user/idies/workspace/covid19/sequencing_runs/example-run/fastq_pass"
-				const tmpConsensusScripts = "/home/user/idies/workspace/covid19"
-				const tmpRunInfo = tmpfastqDir + run_info
-				const tmpManifest = tmpfastqDir + manifest
-				const tmpRunConfig = tmpfastqDir + run_config
-				const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
-				const tmpMeta = "/home/user/idies/workspace/meta"
-				await writeFolder(consensusDir)
-				await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
-				await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
-				await copyFile(manifest.path, path.join(baseDir,  data.runDir.manifest.filename))
-				let volumes = [ reportDir.path, tmpreportDir,
-					baseDir, tmpbaseDir,
-					path.join(reportDir.path, "meta"), tmpMeta,
-					consensusDir, tmpConsensusDir,
-					fastqDir, tmpfastqDir
-				]
-				let options = {
-					name: "basestack_consensus",
-					user: store.meta.uid.toString() + ":"+store.meta.gid.toString(),
-				    "HostConfig": {
-				    	"AutoRemove": true,
-				        "Binds": [
-				                volumes[0]+":"+volumes[1],
-				                volumes[2]+":"+volumes[3],
-				                volumes[4]+":"+volumes[5],
-				                volumes[6]+":"+volumes[7],
-				                volumes[8]+":"+volumes[9],
-				        ],	
-				    },
-			        "Volumes": {
-			        	[tmpreportDir]: {},
-			        	[tmpfastqDir]: {},
-			        	[tmpMeta]: {},
-			        	[tmpConsensusDir]: {},
-			        	[tmpfastqDir]: {}
-			        }
-				}	
+			// const tmpprimerDir = "/tmp/consensus/primers/"+primerNameDir+"/"+versionDir
+			const tmpreportDir = "/tmp/consensus/reports"
+			const tmpConsensusDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline"
+			const tmpbaseDir = "/root/idies/workspace/covid19/sequencing_runs/example-run"
+			const tmpfastqDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/fastq_pass"
+			// const tmpConsensusScripts = "/root/idies/workspace/covid19"
+			const tmpRunInfo = tmpfastqDir + run_info
+			const tmpManifest = tmpfastqDir + manifest
+			const tmpRunConfig = tmpfastqDir + run_config
+			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
+			const tmpMeta = "/root/idies/workspace/meta"
+			await writeFolder(consensusDir)
+			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
+			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
+			await copyFile(manifest.path, path.join(baseDir,  data.runDir.manifest.filename))
+			let volumes = [ reportDir.path, tmpreportDir,
+				baseDir, tmpbaseDir,
+				path.join(reportDir.path, "meta"), tmpMeta,
+				consensusDir, tmpConsensusDir,
+				fastqDir, tmpfastqDir
+			]
+			let options = {
+				name: "basestack_consensus",
+				// user: store.meta.uid.toString() + ":"+store.meta.gid.toString(),
+			    "HostConfig": {
+			    	"AutoRemove": true,
+			        "Binds": [
+			                volumes[0]+":"+volumes[1],
+			                volumes[2]+":"+volumes[3],
+			                volumes[4]+":"+volumes[5],
+			                volumes[6]+":"+volumes[7],
+			                volumes[8]+":"+volumes[9],
+			        ],	
+			    },
+		        "Volumes": {
+		        	[tmpreportDir]: {},
+		        	[tmpfastqDir]: {},
+		        	[tmpMeta]: {},
+		        	[tmpConsensusDir]: {},
+		        	[tmpfastqDir]: {}
+		        }
+			}	
 
-				let command = [
-					"bash", 
-					"-c", 
-					"bash artic-module1-barcode-demux.sh -i "+ tmpbaseDir 
-				]
-				// command = [
-				// 	"bash", 
-				// 	"-c", 
-				// 	"cp -f /home/user/idies/workspace/meta/* ", tmpfastqDir, 
-				// 	"&& ls ", tmpfastqDir 
-				// ]
-				resolve({options: options, command: command })
+			let command = [
+				"bash", 
+				"-c", 
+				`bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
+			]
+			// let command = [
+			// 	"bash", 
+			// 	"-c", 
+			// 	`touch /root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline/test.txt `
+			// ]
 
-				
-			})().catch((errL)=>{
-				reject(errL)
-			})
-		})
-
+			return {options: options, command: command }
+		} catch(err){
+			logger.error(err)
+			throw err
+		}				
 	}
 	async bookmarkSelections(params){
 		const fastqDir = params.fastqDir
@@ -250,18 +246,18 @@ export class BasestackConsensus{
 		  	//write the meta data file for the run
 		  	
 		  	//
-		  	let tsv_file_content = "plate\t"+runDir.run_info.plate+"\n"+'row\t'+ runDir.run_info.row 
+		  	let tsv_file_content = runDir.run_info.desc + "\n"
 		  	logger.info("%s", "Bookmark run info")
-		  	await writeFile(path.join(metaDir, runDir.run_info.filename), tsv_file_content).then((response)=>{
-		  		logger.info("%s %s", "Success in writing runInfo file")
+		  	await writeFile(path.join(metaDir, runDir.run_info.filename), tsv_file_content+"\n").then((response)=>{
+		  		logger.info("%s %s", "Success in writing runInfo files")
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 		  	
 		  	tsv_file_content = "primers\t"+runDir.run_config.primers+"\n"+
 		  	'basecalling\t'+ runDir.run_config.basecalling+"\n" +
-		  	'barcoding\t'+ runDir.run_config.barcoding 
+		  	'barcoding\t'+ runDir.run_config.barcoding +"\n"
 
-		  	logger.info("%s", "Bookmark run config")
-		  	await writeFile(path.join(metaDir, runDir.run_config.filename), tsv_file_content ).then((response)=>{
+		  	logger.info("%s", "Bookmark run config file")
+		  	await writeFile(path.join(metaDir, runDir.run_config.filename), tsv_file_content +"\n" ).then((response)=>{
 		  		logger.info("%s %s", "Success in writing runInfo file")
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 		  	tsv_file_content = runDir.manifest.entries.map((d)=>{
