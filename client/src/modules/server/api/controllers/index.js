@@ -161,7 +161,7 @@ export async function updateDockerSocket(socket){
 		await ammendJSON({
 			value: socket,
 			file: path.join(store.meta.writePath, "meta.json"),
-			attribute: 'docker.socket'
+			attribute: 'dockerConfig.socketPath'
 		}).catch((err)=>{
 			logger.error(err)
 			throw err
