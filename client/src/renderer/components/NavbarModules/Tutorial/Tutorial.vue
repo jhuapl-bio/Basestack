@@ -111,7 +111,7 @@
 			  		</span>
 		  		</span>
 		  	</div>
-			<div class="tutorial-nav" >
+			<div class="tutorial-nav" v-if="modules.basestack_tutorial.status.running">
 					<div v-for="module in videos" class="align-top" :key="module.name" >
 						<div  class="modules align-top" style=" cursor:pointer; text-align:right !important;" @click="selectedVideo = video; selectedModule = module;" v-for="video in module.sections" :key="video.fullpath"  >
 							<b-row>
@@ -159,14 +159,13 @@ import FileService from '@/services/File-service.js'
 import moment from "moment"
 import Multiselect from 'vue-multiselect'
 import path from "path"
-import "vue-moment"
 
 export default {
 	name: 'Tutorial',
 	components: {
 		Multiselect
 	},
-	props: ['modules', 'images'],
+	props: ['modules', 'images', 'selectedTag'],
 	data(){
 		return {
 			videoFilePath: null,
@@ -208,11 +207,11 @@ export default {
 		},
       	async start_tutorials(){
       		await FileService.startModule({
-      			module: 'basestack_tutorial'
+      			module: 'basestack_tutorial',
       		}).then((response)=>{
 				this.count +=1
         	}).catch((error)=>{
-        		console.error(error)
+		        console.error("-----------------", error)
         		this.$swal.fire({
 					position: 'center',
 					icon: 'error',

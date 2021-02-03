@@ -20,7 +20,7 @@ const { getPrimerDirsVersions, fetch_protocols, fetch_primers, fetch_videos, fet
 const { writeFolder, writeFile, ammendJSON, readFile } = require("./IO.js")
 const fs  = require("fs")
 const fs_promise = require("fs").promises
-const containerNames = ['rampart','artic_consensus', 'tutorial']
+const containerNames = ['rampart','basestack_consensus', 'basestack_tutorial']
 const moment = require('moment');
 const { DockerObj } = require("../modules/docker.js")
 
@@ -36,7 +36,7 @@ export async function initialize(params){
 	try{
 		// let re = await setup_data()''
 
-
+		store.meta.ready  = false
 		let userMeta = path.join(store.meta.writePath, "meta.json")
 		let metaExists = await checkFileExist(store.meta.writePath, "meta.json", true)
 		if (!metaExists){
@@ -100,7 +100,7 @@ export async function initialize(params){
 				let obj = await initialize_module_object(container_name)
 				if (value.config.initial && response.images.entries[value.image].installed){
 					let response = await obj.cancel()
-					let response_start = await start_module({module: container_name})
+					let response_start = await start_module({module: container_name, tag: "latest"})
 				}
 			}	
 		}
@@ -112,10 +112,11 @@ export async function initialize(params){
 			logger.error(err)
 			throw err
 		})
-		
+		store.meta.ready = true
 		return response
 	} catch(err){
 		logger.error(`Error in initializing the app with modules, ${err}, function: initialize()`)
+		store.meta.ready = false
 		throw err
 	}
 }
@@ -143,11 +144,11 @@ export async function updateDockerSocket(socket){
 async function initialize_module_object(container_name){
 	let obj;
 	if (container_name == 'rampart'){
-		obj  = new DockerObj('basestack_consensus', 'rampart', new RAMPART());
+		obj  = new DockerObj('jhuaplbio/artic', 'rampart', new RAMPART());
 	} else if (container_name == 'basestack_tutorial'){
 		obj = new DockerObj('basestack_tutorial', 'basestack_tutorial', new Tutorial());
 	} else if (container_name == 'basestack_consensus'){
-		obj  = new DockerObj('basestack_consensus', 'basestack_consensus', new BasestackConsensus());
+		obj  = new DockerObj('jhuaplbio/artic', 'basestack_consensus', new BasestackConsensus());
 	} 
 
 	obj.config = store.config.modules[container_name]
@@ -201,4 +202,3 @@ export async function cancel_container(params){
 		}
 	}
 }
-

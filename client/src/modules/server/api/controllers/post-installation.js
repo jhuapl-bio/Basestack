@@ -71,25 +71,16 @@ export var install_images_online = function(img){
 }
 
 
-export var prune_images = function(){
-	return new Promise(function(resolve,reject){
-		try{
-			(async ()=>{
-				let responseawait = await docker.pruneImages( { 'filters' : { 'dangling' : { 'false' : true } } } )
-			})()
-			.then((response, error)=>{
-				if(error){
-					reject(error)
-				}
-				resolve(response)
-			}).catch((error2)=>{
-				logger.error(`${error2} function: prune_images()`)
-				reject(error2)
-			})
-		} catch(err){
-			reject(err)
-		}
-	});
+export var prune_images = async function(){
+	try{
+		let responseContainers = await docker.pruneContainers()
+		let responseawait = await docker.pruneImages( { 'filters' : { 'dangling' : { 'true' : true } } } )
+		return responseawait
+	}
+	catch(err){
+		logger.error(`${err} function: prune_images()`)
+		throw err
+	}
 }
 
 export var load_image  = function(obj){
@@ -124,7 +115,7 @@ export var load_image  = function(obj){
 	  					}
 					)
 					resolve()  
-				} else {
+				} else if (store.config.images[obj.name].private) { // the repo is private and needs to be installed from a locally contained dockerfile
 					const buildargs = {
 						"USER_ID": store.meta.uid.toString(),
 						"GROUP_ID": store.meta.gid.toString(),
@@ -191,6 +182,21 @@ export var load_image  = function(obj){
 					}).catch((err)=>{
 						logger.error("error in building image %s", obj.srcFiles)
 					})
+				} else { //The repo is public and docker pullable
+					// var auth  = { key: "10644ba4-7c89-41b0-ae0d-d888ea3906d4" }
+					docker.pull(obj.installation.path)
+					.then((stream, error)=>{
+						store.dockerStreamObjs[obj.name]  = stream
+						store.config.images[obj.name].status.stream = []
+						store.config.images[obj.name].status.changed=false
+						store.config.images[obj.name].status.running = true 
+						store.config.images[obj.name].status.complete = false
+  						followStreamBuild(stream, store.config.images[obj.name])
+						resolve()
+					}).catch((errStream)=>{
+						logger.error("Err in building image %s", obj.config.srcFiles)
+						reject(errStream)
+					});
 				}				
 			})().catch((errLog)=>{
 			 	logger.error("err in loggin build image %s", errLog)
@@ -209,6 +215,7 @@ export var cancel_load_images = function(imageName){
 			if (store.dockerStreamObjs[imageName]){
 				try{
 					store.dockerStreamObjs[imageName].destroy()
+					store.config.images[imageName].status.stream.push("Canceled Image Build Process")
 				} catch (err3){
 					store.dockerStreamObjs[imageName] =null
 				}
@@ -216,6 +223,7 @@ export var cancel_load_images = function(imageName){
 				store.config.images[imageName].status.changed=false
 				store.config.images[imageName].status.running = false
 				store.config.images[imageName].status.complete = false
+				logger.info(`Cancel for image building complete for: ${imageName}`)
 				resolve()
 			} else {
 				reject("No build process  to cancel for: " + imageName)
@@ -229,16 +237,33 @@ export var cancel_load_images = function(imageName){
 export var remove_images = function(imageName){
 	return new Promise(function(resolve,reject){
 		(async ()=>{
-			await docker.getImage(imageName).remove({
-			   force: true
-			  }, (err,response)=>{
-				if(err){
-					logger.error("%s Error in removing docker image: "+imageName, err)
-					reject(err)
-				} else {
-					resolve(response)
-				}
-			});	
-		})()
+			let promises = [];
+
+			imageName = imageName +":latest"
+			let containers = await docker.listContainers({ 'filters' : { 'ancestor' : [ imageName ] }} )
+			for (let i = 0; i < containers.length; i++){
+				// docker.getContainer(containers[i].Id).remove({force:true})
+				promises.push(docker.getContainer(containers[i].Id).remove({force:true}))
+			}
+			Promise.all(promises).then(()=>{
+				docker.getImage(imageName).remove({
+				   force: true
+				  }, (err,response)=>{
+					if(err){
+						logger.error("%s Error in removing docker image: "+imageName, err)
+						reject(err)
+					} else {
+						resolve(response)
+					}
+				});	
+			}).catch((err)=>{
+				logger.error(err)
+				reject(err)
+			})
+			
+		})().catch((err)=>{
+			logger.error(err)
+			reject(err)
+		})
 	});
 }

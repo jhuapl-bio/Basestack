@@ -1,4 +1,6 @@
-node_modules
+node_modules*
 client/package-lock.json
 client/data/userdata
 client/data/logs
+client/.env
+

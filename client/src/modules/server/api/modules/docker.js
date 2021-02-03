@@ -75,7 +75,6 @@ export class DockerObj {
 		return new Promise(function(resolve,reject){
 			let name = $this.container_name
 			docker.info(function(err,data){
-
 				if(err){
 		 		  	logger.error("%s %s","Error in grabbing docker information, likely docker isn't running: ", err)
 		 		  	reject(new Error("Error in starting docker, please ensure docker is running. You can find more information on this through the README or via https://docs.docker.com/get-docker/"))
@@ -123,7 +122,7 @@ export class DockerObj {
 							resolve({message: `Container ${name} already running...`, exists: true, payload: null })
 						}
 					})().catch((err)=>{
-						logger.error(`${err} error in checking if container exists and starting`)
+						logger.error(`Error in checking if container exists and starting ${err} `)
 						reject(err)
 					})
 				}

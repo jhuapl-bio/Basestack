@@ -1,13 +1,15 @@
 {
     "log": {
-        "path": "${writePath}/logs"
+        "path": "${dataPath}/logs"
     },
     "images": {
-        "basestack_consensus": {
+        "jhuaplbio/artic": {
             "status": null,
             "title": "Consensus",
-            "name": "basestack_consensus",
+            "name": "jhuaplbio/artic",
             "estimated_size": 10.6,
+            "private": false,
+            "tags": [],
             "installation": {
                 "srcFiles": [
                     "Dockerfile"
@@ -16,7 +18,7 @@
                 "file": null,
                 "active": false,
                 "resources": null,
-                "path": "${resourcePath}/basestack_consensus/installation/sciserver"
+                "path": "jhuaplbio/artic"
             }
         },
         "basestack_tutorial": {
@@ -24,6 +26,8 @@
             "name": "basestack_tutorial",
             "title": "Workshop Tutorials",
             "estimated_size": 2.42,
+            "private": true,
+            "tags": [],
             "installation": {
                 "srcFiles": [
                     "Dockerfile",
@@ -41,7 +45,8 @@
                         "key": "aws_key",
                         "type": "file",
                         "src": null,
-                        "srcFormat":null
+                        "srcFormat":null,
+                        "tooltip": "new_user_credential.tsv file provided in the google drive for workshop attendees"
                     }
                 }
 	            
@@ -75,13 +80,63 @@
             "module": true,
             "status": null,
             "tooltip": "Generate consensus sequences and receive a report.",
-            "image": "basestack_consensus",
+            "image": "jhuaplbio/artic",
             "meta": "${writePath}/basestack_consensus/meta.json",
             "config": {
                 "estimated_size": 14500,
                 "initial": false,
                 "primerDir": "${resourcePath}/basestack_consensus/primer_schemes",
                 "historyPath": "${writePath}/basestack_consensus/histories"
+            },
+            "resources": {
+                "run_config":{
+                    "barcoding": [
+                        "barcode_arrs_16s.cfg",
+                        "barcode_arrs_dual_nb24_pcr96.cfg",
+                        "barcode_arrs_lwb.cfg",
+                        "barcode_arrs_nb12.cfg",
+                        "barcode_arrs_nb24.cfg",
+                        "barcode_arrs_nb96.cfg",
+                        "barcode_arrs_pcr12.cfg",
+                        "barcode_arrs_pcr96.cfg",
+                        "barcode_arrs_rab.cfg",
+                        "barcode_arrs_rbk096.cfg",
+                        "barcode_arrs_rbk4.cfg",
+                        "barcode_arrs_rbk.cfg",
+                        "barcode_arrs_rlb.cfg",
+                        "barcode_arrs_vmk2.cfg",
+                        "barcode_arrs_vmk.cfg",
+                        "configuration.cfg",
+                        "configuration_dual.cfg",
+                        "custom"
+                    ],
+                    "basecalling" : [
+                        "dna_r10.3_450bps_fast.cfg",
+                        "dna_r10.3_450bps_fast_prom.cfg",
+                        "dna_r10.3_450bps_hac.cfg",
+                        "dna_r10.3_450bps_hac_prom.cfg",
+                        "dna_r10_450bps_fast.cfg",
+                        "dna_r10_450bps_hac.cfg",
+                        "dna_r9.4.1_450bps_fast.cfg",
+                        "dna_r9.4.1_450bps_fast_prom.cfg",
+                        "dna_r9.4.1_450bps_hac.cfg",
+                        "dna_r9.4.1_450bps_hac_prom.cfg",
+                        "dna_r9.4.1_450bps_hac_prom_fw205.cfg",
+                        "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg",
+                        "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac_prom.cfg",
+                        "dna_r9.5_450bps_1d2_raw.cfg",
+                        "dna_r9.5_450bps.cfg",
+                        "rna_r9.4.1_70bps_fast.cfg",
+                        "rna_r9.4.1_70bps_fast_prom.cfg",
+                        "rna_r9.4.1_70bps_hac.cfg",
+                        "rna_r9.4.1_70bps_hac_prom.cfg",
+                        "custom"
+                    ],
+                    "primers": [
+                        "nCoV-2019/V3",
+                        "custom (broken)"
+                    ]
+                }
             }
         },
         "rampart": {
@@ -92,7 +147,7 @@
             "module": true,
             "status": null,
             "tooltip": "Fast annotation of input fastq files using the artic network",
-            "image": "basestack_consensus",
+            "image": "jhuaplbio/artic",
             "meta": "${writePath}/rampart/meta.json",
             "config": {
                 "annotationsPath": "",
