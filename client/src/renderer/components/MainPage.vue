@@ -171,7 +171,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 9,
+    		tab: 0,
 	        entries: null,
 	        resources: null,
 	        docker: {},
