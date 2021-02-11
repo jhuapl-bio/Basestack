@@ -37,9 +37,20 @@
 		            	>
 		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
 		            	</span>
-		            	<span v-else-if="entry.name == 'moduleinstall' && !docker" style="text-align:left; text-anchor: start;"
+		            	<span v-else-if="entry.name == 'moduleinstall' && !docker.running" style="text-align:left; text-anchor: start;"
 		            	v-tooltip="{
 			            content: 'Docker is not running. See Services Tab at the top of Basestack or refer to the README',
+			            placement: 'top',
+			            classes: ['info'],
+			            trigger: 'hover',
+			            targetClasses: ['it-has-a-tooltip'],
+			            }"
+		            	>
+		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
+		            	</span>
+		            	<span v-else-if="entry.name == 'moduleinstall' && !docker.installed" style="text-align:left; text-anchor: start;"
+		            	v-tooltip="{
+			            content: 'Docker is not installed. See README on installing Docker for Basestack',
 			            placement: 'top',
 			            classes: ['info'],
 			            trigger: 'hover',
@@ -149,10 +160,10 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 0,
+    		tab: 9,
 	        entries: null,
 	        resources: null,
-	        docker:null,
+	        docker: {},
 	        modules: null,
 	        images: null,
 	        intervalChecking: false,
@@ -264,6 +275,7 @@ export default {
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
 			this.initial = response.data.data.ready
+			console.log(this.resources)
 			if (!this.initial){
 				this.init().catch((err)=>{
 					console.error(`${err} in initializing the backend service`)
@@ -301,7 +313,7 @@ export default {
 			}
 		} catch(err){
 			this.initial=false
-			console.err(`${err} error in getting status`)
+			console.error(`${err} error in getting status`)
 		} finally {
 			this.intervalChecking = false
 		}

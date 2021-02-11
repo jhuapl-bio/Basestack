@@ -12,6 +12,7 @@
       <CPU v-if="resources" v-bind:resources="resources"></CPU>
       <Memory v-if="resources" v-bind:resources="resources"></Memory>
       <Disk v-if="resources" v-bind:resources="resources"></Disk>
+      <Docker v-if="resources" v-bind:resources="resources"></Docker>
       <span class="center-align-icon;" style="text-align:center; cursor:pointer; margin:auto; float:right"
             v-tooltip="{
             content: 'Advanced Configuration(s)',
@@ -24,7 +25,7 @@
           > Advanced
             <font-awesome-icon class="configure"   icon="cog" size="sm"  />
       </span>
-      <span v-if="!docker.status">Docker is not running or installed</span>
+      <span v-if="!docker.running">Docker is not running or installed</span>
       <span v-else>Docker is installed and running</span>
       <hr>
       <b-row class="text-center" v-if="advanced">  
@@ -49,13 +50,15 @@
   import CPU from "@/components/NavbarModules/System/CPU";
   import Disk from "@/components/NavbarModules/System/Disk";
   import Memory from "@/components/NavbarModules/System/Memory";
+  import Docker from "@/components/NavbarModules/System/Docker";
   import FileService from '@/services/File-service.js'
   export default {
     props: ['resources', 'docker'],
     components: {
       CPU,
       Memory,
-      Disk
+      Disk,
+      Docker
     },
     data () {
       return {
