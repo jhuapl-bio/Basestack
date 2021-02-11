@@ -72,7 +72,5 @@ export var error_alert = function(err){
 // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
 // 
 if (process.env.NODE_ENV !== 'production') {
-  logger.add(new transports.Console({
-    format: format.simple()
-  }));
+  logger.add(new transports.Console());
 }
