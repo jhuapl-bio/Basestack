@@ -171,7 +171,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 0,
+    		tab: 9,
 	        entries: null,
 	        resources: null,
 	        docker: {},
@@ -352,6 +352,7 @@ export default {
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
 			this.initial = response.data.data.ready
+			console.log(this.resources)
 			if (!this.initial){
 				this.init().catch((err)=>{
 					console.error(`${err} in initializing the backend service`)
