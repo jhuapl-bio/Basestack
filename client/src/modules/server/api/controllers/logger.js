@@ -10,8 +10,12 @@ const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, label, printf } = format;
 const { meta } = require("../store/index.js")
 const myFormat = printf(({ level, message, label, timestamp }) => {
-  if (message.constructor === Object || message.constructor === Array) {
-    message = JSON.stringify(message, null, 4)
+  try{
+    if (message.constructor === Object || message.constructor === Array) {
+      message = JSON.stringify(message, null, 4)
+    }
+  } catch(err){
+    logger.error(err)
   }
   return `${timestamp} [${level}]: ${message}`;
 });
