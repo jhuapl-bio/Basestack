@@ -8,11 +8,13 @@
 	* Mac
 		- https://docs.docker.com/docker-for-mac/ 
 	* Linux (Ubuntu)
-		A. Rootless - RECOMMENDED
+		A. Rootless - RECOMMENDED 
 			- https://docs.docker.com/engine/security/rootless/
 				- If you already have `docker` installed, see documentation on [`docker context`](https://docs.docker.com/engine/security/rootless/#client) to switch between rootless and rootful
 		B. Rootful (gives root access, use if you already have docker installed or use it regularly)
 			- https://docs.docker.com/engine/install/ubuntu/
+				- Required to map you user permissions appropriately for generated files.
+				- Recommended for most rootful-specific personal systems running Docker
 			- Post-Installation Steps:
 				1. Create Docker group
 					a. `sudo groupadd docker`
@@ -37,7 +39,7 @@
 					a. `sudo service docker restart`
 					b. OR Restart your computer/session
 
-		
+			
 ## 2 Install Basestack
 
 
