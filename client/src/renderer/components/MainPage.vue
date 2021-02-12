@@ -352,7 +352,7 @@ export default {
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
 			this.initial = response.data.data.ready
-			console.log(this.modules['basestack_consensus'])
+			// console.log(this.modules['rampart'])
 			if (!this.initial){
 				this.init().catch((err)=>{
 					console.error(`${err} in initializing the backend service`)
