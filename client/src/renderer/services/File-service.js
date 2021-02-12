@@ -105,6 +105,9 @@ class FileService {
   fetchMeta(){
     return Api().get("http://localhost:5003/meta/fetch")                
   }
+  updateSocket(params){
+    return Api().post("http://localhost:5003/docker/socket", params)   
+  }         
   fetchDockerTags(params){
     return Api().post("http://localhost:5003/tags/fetch", params)                    
   }

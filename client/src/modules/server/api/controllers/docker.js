@@ -7,7 +7,22 @@
    - # **********************************************************************
   */
 var Docker = require('dockerode');
+const path = require("path")
+var  { store }  = require("../store/global.js")
+// var docker = new Docker();
+let dockerObj;
 
-var docker = new Docker();
+export async function docker_init(params){
+	let config = null
+	const meta  = store.dockerConfig
+	if (meta ){
+		config = meta.dockerConfig
+		dockerObj = new Docker(config);
+	} else {
+		dockerObj = new Docker();
+	}
+	
+	
+	return dockerObj
+} 
 
-export default docker
