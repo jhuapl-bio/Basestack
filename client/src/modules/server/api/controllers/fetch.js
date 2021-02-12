@@ -314,8 +314,9 @@ export async function fetch_resources(){
 		let system = await si.system()
 		// console.log(disk)
 		let docker = await si.dockerInfo()
+		let os  = await si.osInfo()
 		// console.log(docker)
-		return {cpu: cpu, mem: mem, disk: disk, system: system, docker: docker}
+		return {cpu: cpu, mem: mem, disk: disk, system: system, docker: docker, os: os}
 	} catch(err){
 		logger.error(`${err} <-- error in fetching resources`)
 		throw err

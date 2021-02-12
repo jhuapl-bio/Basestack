@@ -1,24 +1,27 @@
 <template>
-  <b-table
-    class="text-center"
-    :fields="fields_disk"
-    :items="resources.disk"
-    :sticky-header="true"
-  >
-    <template  v-slot:cell(used)="row">
-    <p>{{convert_gb(row.item.used, 'B')}}</p>
-    </template>
-    <template  v-slot:cell(size)="row">
-      <p>{{convert_gb(row.item.size, 'B')}}</p>
-    </template>
-    <template  v-slot:cell(available)="row">
-      <span  v-if="hoverElement && hoverElement.estimated_size > convert_gb(row.item.size - row.item.used, 'B')" class="center-align-icon warn-icon"> 
-          <font-awesome-icon icon="exclamation" size="sm" />
-          {{convert_gb(row.item.size - row.item.used, 'B')}}
-      </span>
-      <p v-else> {{convert_gb(row.item.size - row.item.used, 'B')}}</p>
-    </template>
-  </b-table>
+    <div>
+      <span class="text-center">Disk</span>
+      <b-table
+        class="text-center"
+        :fields="fields_disk"
+        :items="resources.disk"
+        :sticky-header="true"
+      >
+        <template  v-slot:cell(used)="row">
+        <p>{{convert_gb(row.item.used, 'B')}}</p>
+        </template>
+        <template  v-slot:cell(size)="row">
+          <p>{{convert_gb(row.item.size, 'B')}}</p>
+        </template>
+        <template  v-slot:cell(available)="row">
+          <span  v-if="hoverElement && hoverElement.estimated_size > convert_gb(row.item.size - row.item.used, 'B')" class="center-align-icon warn-icon"> 
+              <font-awesome-icon icon="exclamation" size="sm" />
+              {{convert_gb(row.item.size - row.item.used, 'B')}}
+          </span>
+          <p v-else> {{convert_gb(row.item.size - row.item.used, 'B')}}</p>
+        </template>
+      </b-table>
+  </div>
 </template>
 
 <script>
