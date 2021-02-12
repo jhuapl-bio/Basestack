@@ -48,9 +48,9 @@ export class BasestackConsensus{
 			// const tmpConsensusDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline"
 			// const tmpbaseDir = "/root/idies/workspace/covid19/sequencing_runs/example-run"
 			// const tmpfastqDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/fastq_pass"
-			const tmpConsensusDir = "/opt/example-run/artic-pipeline"
-			const tmpbaseDir = "/opt/example-run"
-			const tmpfastqDir = "/opt/example-run/fastq_pass"
+			const tmpConsensusDir = "/opt/sequencing_run/artic-pipeline"
+			const tmpbaseDir = "/opt/sequencing_run"
+			const tmpfastqDir = "/opt/sequencing_run/fastq_pass"
 			// const tmpConsensusScripts = "/root/idies/workspace/covid19"
 			const tmpRunInfo = tmpfastqDir + run_info
 			const tmpManifest = tmpfastqDir + manifest
@@ -88,17 +88,13 @@ export class BasestackConsensus{
 		        	[tmpfastqDir]: {}
 		        }
 			}	
+				// ` sleep 3&& echo yes && fdsfsdfdsf && bash artic-moduleff1-barcode-demux.sh -i ${tmpbaseDir} `
 
 			let command = [
 				"bash", 
 				"-c", 
-				`bash artic-moduddle1-barcode-demux.sh -i ${tmpbaseDir} `
+				`bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
 			]
-			// let command = [
-			// 	"bash", 
-			// 	"-c", 
-			// 	`touch /root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline/test.txt `
-			// ]
 
 			return {options: options, command: command }
 		} catch(err){
