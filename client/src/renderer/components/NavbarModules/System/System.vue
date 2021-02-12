@@ -12,11 +12,34 @@
       <CPU v-if="resources" v-bind:resources="resources"></CPU>
       <Memory v-if="resources" v-bind:resources="resources"></Memory>
       <Disk v-if="resources" v-bind:resources="resources"></Disk>
-      <!-- <b-form-text class="text-center" disabled> -->
-      <div class="text-center">  
-        <span v-if="!docker">Docker is not running or installed</span>
-        <span v-else>Docker is installed and running</span>
-      </div>
+      <Docker v-if="resources" v-bind:resources="resources"></Docker>
+      <span class="center-align-icon;" style="text-align:center; cursor:pointer; margin:auto; float:right"
+            v-tooltip="{
+            content: 'Advanced Configuration(s)',
+            placement: 'top',
+            classes: ['info'],
+            trigger: 'hover',
+            targetClasses: ['it-has-a-tooltip'],
+            }"
+            @click="advanced = !advanced"
+          > Advanced
+            <font-awesome-icon class="configure"   icon="cog" size="sm"  />
+      </span>
+      <span v-if="!docker.running">Docker is not running or installed</span>
+      <span v-else>Docker is installed and running</span>
+      <hr>
+      <b-row class="text-center" v-if="advanced">  
+        <b-col sm="6">
+          <b-form-input v-model="dockerSocket"  placeholder="">
+          </b-form-input>
+        </b-col>
+        <b-col sm="6">
+          <b-button  @click="updateSocket()">Update Socket</b-button>
+          <br>
+          <span>Current Socket Configuration: {{ docker.socket }}</span>
+        </b-col>
+        <hr>
+      </b-row>
       <!-- </b-form-text> -->
 
     </b-col>
@@ -27,15 +50,20 @@
   import CPU from "@/components/NavbarModules/System/CPU";
   import Disk from "@/components/NavbarModules/System/Disk";
   import Memory from "@/components/NavbarModules/System/Memory";
+  import Docker from "@/components/NavbarModules/System/Docker";
+  import FileService from '@/services/File-service.js'
   export default {
     props: ['resources', 'docker'],
     components: {
       CPU,
       Memory,
-      Disk
+      Disk,
+      Docker
     },
     data () {
       return {
+        dockerSocket: '',
+        advanced: false,
         fields_system: [
           {
             key: 'basestack',
@@ -70,7 +98,18 @@
     mounted(){
     },
     methods: {
-
+      async updateSocket(socket){
+        
+        try{
+          let response = await FileService.updateSocket({
+            socket: this.dockerSocket
+          })
+          console.log(response)
+        } catch(err){
+          console.error(err)
+        }
+        
+      }
     }
   };
 </script>

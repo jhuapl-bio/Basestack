@@ -9,7 +9,7 @@
 
 /* eslint-disable no-inner-declarations */
 
-// const docker = require("./docker.js")
+
 import Docker from 'dockerode';
 import  path  from "path"
 var  { store }  = require("../store/global.js")
@@ -27,7 +27,8 @@ const { DockerObj } = require("../modules/docker.js")
 const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
 const { RAMPART } = require('../modules/rampart')
-import  docker  from "./docker.js"
+const {docker_init} = require("./docker.js")
+
 
 export async function initialize(params){
 	// logger.info("%s <------ initialize", store.meta)
@@ -40,13 +41,31 @@ export async function initialize(params){
 		if (!metaExists){
 			let metaContent = {
 				modules: {},
-				images: {}
+				images: {},
+				dockerConfig: {}
 			};
 			await writeFile(userMeta, JSON.stringify(metaContent, null, 4))
 		} 
-		let response = await fetch_modules()
-		let meta = await readFile(path.join(store.meta.writePath, "meta.json"))
+		
+
+		let meta = await readFile(userMeta)
 		meta = JSON.parse(meta)
+		let attributes = ['modules', 'images', 'dockerConfig']
+		for (let i = 0; i < attributes.length; i++){
+			if (!meta[attributes[i]]){
+				await ammendJSON({
+					value: {},
+					file: userMeta,
+					attribute: attributes[i]
+				}).catch((err)=>{
+					logger.error(err)
+					throw err
+				})
+			}
+		}
+		store.dockerConfig = meta.dockerConfig
+		store.docker = await docker_init();
+		let response = await fetch_modules()
 		for (const [key, image] of Object.entries(store.config.images)){
 			if (!meta.images[key]){
 				await ammendJSON({
@@ -99,6 +118,25 @@ export async function initialize(params){
 	} catch(err){
 		logger.error(`Error in initializing the app with modules, ${err}, function: initialize()`)
 		store.meta.ready = false
+		throw err
+	}
+}
+
+export async function updateDockerSocket(socket){
+	try{
+		
+		store.docker  = new Docker({socketPath: socket})
+		await ammendJSON({
+			value: socket,
+			file: path.join(store.meta.writePath, "meta.json"),
+			attribute: 'dockerConfig.socketPath'
+		}).catch((err)=>{
+			logger.error(err)
+			throw err
+		})
+		return 
+	} catch(err){
+		logger.error(err)
 		throw err
 	}
 }

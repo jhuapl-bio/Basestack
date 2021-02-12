@@ -14,7 +14,8 @@ var { logger } = require("../controllers/logger.js")
 const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 import Docker from 'dockerode';
-import  docker  from "./docker.js"
+
+
 const axios = require("axios")
 
 export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathVersion){
@@ -216,7 +217,7 @@ async function check_image_promise(image){
 	return new Promise((resolve, reject)=>{
 		try{
 			(async ()=>{
-				let getImage = await docker.getImage(image).inspect()
+				let getImage = await store.docker.getImage(image).inspect()
 				let latest;
 				let tags=[];
 				let digests = getImage.RepoDigests.map((d)=>{
@@ -258,6 +259,7 @@ async function check_image_promise(image){
 
 export async function check_image(image){
 	return new Promise((resolve, reject)=>{
+
 		check_image_promise(image).then((response)=>{
 			resolve(response)			
 		}).catch((err)=>{
@@ -310,28 +312,56 @@ export async function fetch_resources(){
 		let cpu = await si.cpu()
 		let disk = await si.fsSize()
 		let system = await si.system()
-		return {cpu: cpu, mem: mem, disk: disk, system: system}
+		// console.log(disk)
+		let docker = await si.dockerInfo()
+		// console.log(docker)
+		return {cpu: cpu, mem: mem, disk: disk, system: system, docker: docker}
 	} catch(err){
-		logger.error(err)
+		logger.error(`${err} <-- error in fetching resources`)
+		throw err
+	}
+}
+export async function fetch_docker_version(){
+	try{
+		// let response = await store.docker.info()
+		let response = await store.docker.version()
+		// let response = await store.docker.df()
+		// console.log(response)
+		return response
+	} catch(err){
+		logger.error(`${err} <-- error in fetching docker version`)
 		throw err
 	}
 }
 export async function fetch_docker_status(){
+
 	try{
-		let response = await docker.version()
-		// let response = true
+		let response = await store.docker.ping()
 		return response
 	} catch(err){
-		logger.error(err)
+		logger.error(`${err} <-- error in fetching docker status via ping`)
 		throw err
 	}
 }
 export async function fetch_status(){
-	let response = {}
+	let response = {
+		docker : {
+			installed: true, //placeholder for now
+			running: false,
+			version: null,
+			socket: ( store.docker  ?  store.docker.modem.socketPath : null) 
+		},
+		resources: null,
+		images: null,
+		modules: null
+	}
 	let dockers;
 	let errors = [];
+
 	try{
-		response = await fetch_modules()
+		let re = await fetch_modules()
+		response.images = re.images
+		response.modules = re.modules
 	} catch(err){
 		errors.push(err)
 	}
@@ -342,15 +372,24 @@ export async function fetch_status(){
 		logger.error(err)
 		errors.push(err)
 	}
+	// try{
+	// 	let docker = await fetch_docker_version()
+	// 	response.docker.version = docker
+	// 	// response.docker.installed = true
+	// } catch(err){
+	// 	response.docker.version = null
+	// 	// response.docker.installed = true
+	// 	errors.push(err)
+	// }
 	try{
 		let docker_status = await fetch_docker_status()
-		response.docker = true
+		response.docker.running = true
 	} catch(err){
-		// console.error(err)
-		response.docker = false
+		response.docker.running = false
 		errors.push(err)
 	}
 	response.ready = store.meta.ready
+	// logger.info("%j %j", response.docker.running, response.docker.installed)
 	return response
 }
 
@@ -392,7 +431,7 @@ export async function fetch_modules(){
 			}, 
 		}
 	} catch(err){
-		console.error(err)
+		console.error(err, "error in fetching modules status")
 		throw err
 	}
 }
@@ -402,7 +441,7 @@ export async function fetch_modules(){
 async function formatDockerLoads(){
 	try{
 		const meta = store.meta
-		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false)
+		let config = await readFile(path.join(meta.resourcePath, "meta.json"), false);
 		config = config.replace(/\$\{writePath\}/g, meta.writePath)
 		config = config.replace(/\$\{resourcePath\}/g, meta.resourcePath)
 		config = config.replace(/\\/g, "/")
@@ -411,6 +450,9 @@ async function formatDockerLoads(){
 		store.config.modules = config.modules
 		for (const key of Object.keys(store.config.images)){
 			const element = store.config.images[key]
+			if (store.statusIntervals.images[key]){
+				clearInterval(store.statusIntervals.images[key]);
+			}
 			store.config.images[key].status = {
 				pause: false,
 				stream: [],
