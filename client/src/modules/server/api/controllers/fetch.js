@@ -345,7 +345,7 @@ export async function fetch_docker_status(){
 export async function fetch_status(){
 	let response = {
 		docker : {
-			installed: true,
+			installed: true, //placeholder for now
 			running: false,
 			version: null,
 			socket: ( store.docker  ?  store.docker.modem.socketPath : null) 
@@ -374,10 +374,10 @@ export async function fetch_status(){
 	try{
 		let docker = await fetch_docker_version()
 		response.docker.version = docker
-		response.docker.installed = true
+		// response.docker.installed = true
 	} catch(err){
 		response.docker.version = null
-		response.docker.installed = true
+		// response.docker.installed = true
 		errors.push(err)
 	}
 	try{
