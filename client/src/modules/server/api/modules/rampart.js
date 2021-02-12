@@ -150,7 +150,7 @@ export class RAMPART{
 				}	
 
 				// let command = ['bash', '-c', `id -u && groups`]
-				let command = ['bash', '-c',
+				let command = ['bash',  '-c',
 				`cd ${tmpannotationsDir}\
 				&& source /root/idies/workspace/covid19/bashrc\
 				&& conda activate artic-ncov2019\
