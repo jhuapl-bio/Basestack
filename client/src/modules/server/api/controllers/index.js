@@ -182,6 +182,7 @@ export async function start_module(params){
 	} catch(err){
 		logger.error(`${container_name}: couldn't start the necessary module, function: start_module(), check error -> ${err}`)
 		store.config.modules[container_name].errors = err
+		console.error(err)
 		throw err
 	}
 		

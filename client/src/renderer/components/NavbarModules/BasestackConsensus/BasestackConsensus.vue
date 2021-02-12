@@ -1191,11 +1191,12 @@ export default {
 					});	
 					this.selectedHistory.running = true	        	
 		        }).catch((error)=>{
+		        	console.error(error)
 					this.$swal.fire({
 						position: 'center',
 						icon: 'error',
 						showConfirmButton:true,
-		                html:  error.response.data.message + "."
+		                html:  error.response.data.message
 					});
 		        })		
 
