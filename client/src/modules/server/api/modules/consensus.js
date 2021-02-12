@@ -92,7 +92,7 @@ export class BasestackConsensus{
 			let command = [
 				"bash", 
 				"-c", 
-				`bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
+				`bash artic-moduddle1-barcode-demux.sh -i ${tmpbaseDir} `
 			]
 			// let command = [
 			// 	"bash", 
