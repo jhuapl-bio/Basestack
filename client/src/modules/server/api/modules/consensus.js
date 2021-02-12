@@ -45,15 +45,18 @@ export class BasestackConsensus{
 
 			// const tmpprimerDir = "/tmp/consensus/primers/"+primerNameDir+"/"+versionDir
 			const tmpreportDir = "/tmp/consensus/reports"
-			const tmpConsensusDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline"
-			const tmpbaseDir = "/root/idies/workspace/covid19/sequencing_runs/example-run"
-			const tmpfastqDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/fastq_pass"
+			// const tmpConsensusDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline"
+			// const tmpbaseDir = "/root/idies/workspace/covid19/sequencing_runs/example-run"
+			// const tmpfastqDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/fastq_pass"
+			const tmpConsensusDir = "/opt/example-run/artic-pipeline"
+			const tmpbaseDir = "/opt/example-run"
+			const tmpfastqDir = "/opt/example-run/fastq_pass"
 			// const tmpConsensusScripts = "/root/idies/workspace/covid19"
 			const tmpRunInfo = tmpfastqDir + run_info
 			const tmpManifest = tmpfastqDir + manifest
 			const tmpRunConfig = tmpfastqDir + run_config
 			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
-			const tmpMeta = "/root/idies/workspace/meta"
+			const tmpMeta = "/opt/sequencing_runs/meta"
 			await writeFolder(consensusDir)
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
 			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
