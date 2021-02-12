@@ -11,7 +11,7 @@
   	<div class="text-center" >  
   		<div v-if="!docker.installed || !docker.running" >
 	    	<h4  class="bg-danger text-white">
-	    		Docker is not {{ !docker.installed ?  'installed' : 'running' }}
+	    		Docker is not {{ !docker.installed ?  'running or installed' : 'running or installed' }}
 	    		<span class="center-align-icon;"
                 	v-tooltip="{
 	                  content: 'View README',

@@ -371,15 +371,15 @@ export async function fetch_status(){
 		logger.error(err)
 		errors.push(err)
 	}
-	try{
-		let docker = await fetch_docker_version()
-		response.docker.version = docker
-		// response.docker.installed = true
-	} catch(err){
-		response.docker.version = null
-		// response.docker.installed = true
-		errors.push(err)
-	}
+	// try{
+	// 	let docker = await fetch_docker_version()
+	// 	response.docker.version = docker
+	// 	// response.docker.installed = true
+	// } catch(err){
+	// 	response.docker.version = null
+	// 	// response.docker.installed = true
+	// 	errors.push(err)
+	// }
 	try{
 		let docker_status = await fetch_docker_status()
 		response.docker.running = true
