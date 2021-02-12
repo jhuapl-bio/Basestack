@@ -337,7 +337,7 @@
 		        	<span>Open Logs</span>
 		        	<font-awesome-icon class="help" icon="question-circle" 
 	        			v-tooltip.html="{
-					        content: 'Open Log Folder<br>Useful for viewing all log output or sending errors to developers.<br>Resets on exiting Basestack',
+					        content: 'Open Log Folder<br>Useful for viewing all log output or sending errors to developers.',
 					        placement: 'top',
 					        trigger: 'hover',
 					        targetClasses: ['it-has-a-tooltip'],
