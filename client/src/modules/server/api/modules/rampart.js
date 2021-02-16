@@ -160,7 +160,7 @@ export class RAMPART{
 				--protocol ${json}\
 				--annotatedPath ${tmpannotationsDir}\
 				--basecalledPath ${tmpfastqDir}\
-				--referencesPath ${references} --clearAnnotated`];
+				--referencesPath ${references} `];
 				removeAnnotations ? command[2] += " --clearAnnotated": '';
 				resolve({options: options, command: command, payload: {annotationsDir: annotationObj, protocolDir: data.protocolDir }})
 			})().catch((err)=>{
