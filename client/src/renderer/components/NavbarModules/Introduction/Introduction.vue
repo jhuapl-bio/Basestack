@@ -30,6 +30,26 @@
                   <template  v-slot:cell(current_version)>
                   <p>{{current_version}}</p>
                   </template>
+                  <template  v-slot:cell(version)="row">
+                    
+                    <span class="center-align-icon;"
+                        > <p>{{row.item.version}}</p>
+                          <semipolar-spinner
+                                v-if="row.item.version ==  0" 
+                                :animation-duration="4000"
+                                :size="20"
+                                v-tooltip="{
+                                  content: 'Fetching...',
+                                  placement: 'top',
+                                  classes: ['info'],
+                                  trigger: 'hover',
+                                  targetClasses: ['it-has-a-tooltip'],
+                                }"
+                                style="margin: auto"
+                                :color="'#2b57b9'"
+                           />
+                    </span> 
+                  </template>
                   <template  v-slot:cell(checkUpdates)>
                     <span class="center-align-icon;"
                             v-tooltip="{
@@ -109,11 +129,13 @@
 
 <script>
   import ModuleInstall from "@/components/NavbarModules/ModuleInstall/ModuleInstall"
+  import { SemipolarSpinner  } from 'epic-spinners'
   export default {
     name: 'installhelp',
     props: ['modules', 'images', 'docker', 'resources'],
     components: {
       ModuleInstall,
+      SemipolarSpinner
     },
     data(){
       return {
@@ -161,6 +183,7 @@
     mounted(){
       const $this = this;
       this.$electron.ipcRenderer.on('releaseNotes', (evt, message)=>{
+        console.log(message)
         $this.releaseNotes = message
       })
       this.$electron.ipcRenderer.send("queryRelease", "")
