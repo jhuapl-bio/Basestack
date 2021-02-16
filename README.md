@@ -38,6 +38,9 @@
 				6. Restart Docker 
 					a. `sudo service docker restart`
 					b. OR Restart your computer/session
+				7. Ensure that permissions are appropriate
+					a. `docker run -v /tmp:/tmp -it nginx echo 'test' > /tmp/test.txt`
+					b. ls -lht /tmp/test.txt <-- ensure that ownership is your uid/gid or username:group
 
 			
 ## 2 Install Basestack
