@@ -55,7 +55,7 @@ export var open_server = async function(port){
     .on("error", (err)=>{
       logger.error("error in opening server %s", err)
       if (err.code === 'EADDRINUSE' ) {
-        const erry = new Error(`${err.code} failed to start server at port: ${port}. Please clear usage of that port and restart the app...`)
+        const erry = new Error(`${err.code} failed to start server at port: ${port}. Please clear usage of that port, make sure only one instance of Basestack is running, and restart the app...`)
         logger.error(erry)
         reject(erry)
       } else{

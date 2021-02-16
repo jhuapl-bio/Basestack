@@ -7,8 +7,11 @@
   // - # **********************************************************************
   
 import axios from 'axios'
-
+const HttpsProxyAgent = require("https-proxy-agent")
+const httpsAgent = new HttpsProxyAgent({
+	"/api": { host: 'localhost',
+	port: process.env.PORT_SERVER}
+})
 export default() => {
-  return axios.create({
-  })
+  return axios.create({httpsAgent})
 }
