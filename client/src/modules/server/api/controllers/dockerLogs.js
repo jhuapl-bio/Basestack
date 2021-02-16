@@ -67,14 +67,14 @@ export const followStreamContainer = async function(stream, obj, container){
 		try{
 			// stream.emit("error", new Error("bazinga"))
 			obj.status.stream.push(formatBuffer(data))
-			dockerlogger.info("%s", formatBuffer(data))
 		} catch(err){
 			logger.error("error in getting data %s", err)
 			dockerlogger.error("error in getting data %s", err)
 			obj.status.errors = formatBuffer(err)
 			throw err
 		} finally{
-			logger.info("%s data found", formatBuffer(data))
+			// logger.info("%s", formatBuffer(data))
+			dockerlogger.info("%s", data)
 			obj.status.stream = obj.status.stream.splice(-150)
 		}
 	})
