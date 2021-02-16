@@ -107,11 +107,11 @@ export class RAMPART{
 
 				const annotationsDirPath = annotationObj.path
 				//Right now it assumes the references is alone and contains "*reference*.fasta". Add input for cusotm input of reference fasta file name
-				const tmpprotocolDir = "/home/user/rampart/protocolDir"
+				const tmpprotocolDir = "/opt/rampart/protocolDir"
 				const json = tmpprotocolDir+"/*protocol*.json"
 				const references = tmpprotocolDir+"/*reference*.fasta"
-				const tmpannotationsDir = "/home/user/rampart/annotationsDir"
-				const tmpfastqDir = "/home/user/rampart/fastqDir"
+				const tmpannotationsDir = "/opt/rampart/annotationsDir"
+				const tmpfastqDir = "/opt/rampart/fastqDir"
 				let volumes = [protocolDir,tmpprotocolDir, annotationsDirPath, tmpannotationsDir, fastqDir, tmpfastqDir]
 				//Right now it assumes the references is alone and contains "*protocol*.json". Add input for cusotm input of protocl file name
 
@@ -122,6 +122,7 @@ export class RAMPART{
 			            "3001/tcp": {},
 			            "3000/tcp": {}
 			        },
+			        // user: store.meta.uid.toString() + ":"+store.meta.gid.toString(),
 				    "HostConfig": {
 				    	"AutoRemove": true,
 				        "Binds": [
@@ -150,15 +151,17 @@ export class RAMPART{
 				}	
 
 				// let command = ['bash', '-c', `id -u && groups`]
-				let command = ['bash',  '-c',
+				let command = ['bash',  '--login', '-c',
 				`cd ${tmpannotationsDir}\
-				&& source /root/idies/workspace/covid19/bashrc\
+				&& source /opt/conda/etc/profile.d/conda.sh\
 				&& conda activate artic-ncov2019\
+				&& which conda \
+				&& which minimap2 \
 				&& rampart\
 				--protocol ${json}\
 				--annotatedPath ${tmpannotationsDir}\
 				--basecalledPath ${tmpfastqDir}\
-				--referencesPath ${references}`];
+				--referencesPath ${references} --clearAnnotated`];
 				removeAnnotations ? command[2] += " --clearAnnotated": '';
 				resolve({options: options, command: command, payload: {annotationsDir: annotationObj, protocolDir: data.protocolDir }})
 			})().catch((err)=>{

@@ -74,7 +74,7 @@ export const followStreamContainer = async function(stream, obj, container){
 			obj.status.errors = formatBuffer(err)
 			throw err
 		} finally{
-			// logger.info("%s data found", formatBuffer(data))
+			logger.info("%s data found", formatBuffer(data))
 			obj.status.stream = obj.status.stream.splice(-150)
 		}
 	})
