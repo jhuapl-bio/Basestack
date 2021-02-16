@@ -617,8 +617,12 @@ app.on('ready', ()=>{
     try{
       if (process.env.NODE_ENV == 'production'){
         logger.info("Production Mode detected, starting backend server...")
-        const port =  await open_server()
+        let port =  await open_server()
+        if (!port ){
+          port = 5003
+        }
         process.env.PORT_SERVER = port
+        
         logger.info("Server started at port: %s", port)
       }
     } catch(error){
@@ -626,8 +630,8 @@ app.on('ready', ()=>{
       logger.error(error)
       throw error
     } 
-    await createWindow();   
     checkUpdates();
+    createWindow();   
   })().catch((err)=>{
     logger.error("Error in ready app occurred somewhere, see above")
     logger.error(err.message)

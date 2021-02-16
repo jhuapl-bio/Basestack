@@ -7,111 +7,118 @@
   // - # **********************************************************************
   
 import Api from './Api.js'
+let baseEndpoint;
+if (process.env.NODE_ENV == 'production'){
+  baseEndpoint = `http://localhost:${process.env.PORT_SERVER}`
+} else {
+  baseEndpoint = 'api'
+}
 class FileService {
   init(){
-    return Api().post(`api/init/start`)    
+    console.log(baseEndpoint)
+    return Api().post(`${baseEndpoint}/init/start`)    
   }
   cancelModule(params) {
-    return Api().post(`api/modules/cancel`, params)
+    return Api().post(`${baseEndpoint}/modules/cancel`, params)
   }
   openMinKNOW(){
-  	return Api().get(`api/openMinKNOW`)
+  	return Api().get(`${baseEndpoint}/openMinKNOW`)
   }
   startModule(params){
-    return Api().post(`api/modules/start`, params)
+    return Api().post(`${baseEndpoint}/modules/start`, params)
   }
   watchConsensus(params){
-    return Api().post(`api/consensus/watch`, params)
+    return Api().post(`${baseEndpoint}/consensus/watch`, params)
   }
   initWatcher(params){
-    return Api().post(`api/consensus/startWatch`, params)
+    return Api().post(`${baseEndpoint}/consensus/startWatch`, params)
   }
   logRampart(params){
-    return Api().get(`api/rampart/log`, params)
+    return Api().get(`${baseEndpoint}/rampart/log`, params)
   }
   logServer(){
-    return Api().get(`api/system/log`)
+    return Api().get(`${baseEndpoint}/system/log`)
   }
   logArticConsensus(params){
-    return Api().get(`api/artic_consensus/log`, params)
+    return Api().get(`${baseEndpoint}/artic_consensus/log`, params)
   }
   fetchLog(params){
-    return Api().get(`api/log/` + params.name +`/`+params.type)    
+    return Api().get(`${baseEndpoint}/log/` + params.name +`/`+params.type)    
   }
   fetchPrimers(){
-    return Api().get(`api/primers/fetch`)
+    return Api().get(`${baseEndpoint}/primers/fetch`)
   }
   fetchProtocols(){
-    return Api().get(`api/protocols/fetch`)
+    return Api().get(`${baseEndpoint}/protocols/fetch`)
   }
   fetchHistories(){
-    return Api().get(`api/histories/fetch`)
+    return Api().get(`${baseEndpoint}/histories/fetch`)
   }
   fetchAnnotations(){
-    return Api().get(`api/annotations/fetch`)
+    return Api().get(`${baseEndpoint}/annotations/fetch`)
   }
   bookmarkSelections(params){
-    return Api().post(`api/bookmark/add`, params)
+    return Api().post(`${baseEndpoint}/bookmark/add`, params)
   }
   timestampAdd(params){
-    return Api().post(`api/timestamp/add`, params)
+    return Api().post(`${baseEndpoint}/timestamp/add`, params)
   }
   removeBookmark(params){
-    return Api().post(`api/bookmark/remove`, params)
+    return Api().post(`${baseEndpoint}/bookmark/remove`, params)
   }
   removeTimestamp(params){
-    return Api().post(`api/timestamp/remove`, params)
+    return Api().post(`${baseEndpoint}/timestamp/remove`, params)
   }
   removeAnnotation(params){
-     return Api().post(`api/annotation/remove`, params)
+     return Api().post(`${baseEndpoint}/annotation/remove`, params)
   }
   fetchVideos(){
-     return Api().get(`api/videos/fetch`)
+     return Api().get(`${baseEndpoint}/videos/fetch`)
   }
   fetchVideosMeta(){
-    return Api().get(`api/videos/fetchMeta`)
+    return Api().get(`${baseEndpoint}/videos/fetchMeta`)
   }
   loadImages(params){
-    return Api().post(`api/install/images`+params.config.type, params)    
+    return Api().post(`${baseEndpoint}/install/images`+params.config.type, params)    
   }
   removeImages(imageName){
-    return Api().post(`api/install/removeImages/`, {imageName: imageName})    
+    return Api().post(`${baseEndpoint}/install/removeImages/`, {imageName: imageName})    
   }
   logImageInstall(params){
-    return Api().get(`api/install/imageInstallLogs/` +  params.imageName)    
+    return Api().get(`${baseEndpoint}/install/imageInstallLogs/` +  params.imageName)    
   }
   cancelInstallImage(imageName){
-    return Api().post(`api/install/cancelInstallImage`, {imageName: imageName})        
+    return Api().post(`${baseEndpoint}/install/cancelInstallImage`, {imageName: imageName})        
   }
   pruneImages(){
-    return Api().post(`api/install/pruneImages`)        
+    return Api().post(`${baseEndpoint}/install/pruneImages`)        
   }
   validateRunDirContents(runDir){
-    return Api().post(`api/validate/validateRunDirContents`, runDir)        
+    return Api().post(`${baseEndpoint}/validate/validateRunDirContents`, runDir)        
   }
   moduleStatus(params){
-    return Api().post(`api/consensus/status`, params)        
+    return Api().post(`${baseEndpoint}/consensus/status`, params)        
   }
   checkImageStatus(params){
-    return Api().post(`api/images/status`, params)        
+    return Api().post(`${baseEndpoint}/images/status`, params)        
   }
   fetchVideo(params){
-    return Api().post(`api/videos/fetch`, params)            
+    return Api().post(`${baseEndpoint}/videos/fetch`, params)            
   }
   getModules(){
-    return Api().get(`api/status/fetch`)                
+    return Api().get(`${baseEndpoint}/status/fetch`)                
   }
   fetchMeta(){
-    return Api().get(`api/meta/fetch`)                
+    return Api().get(`${baseEndpoint}/meta/fetch`)                
   }
   updateSocket(params){
-    return Api().post(`api/docker/socket`, params)   
+    return Api().post(`${baseEndpoint}/docker/socket`, params)   
   }         
   fetchDockerTags(params){
-    return Api().post(`api/tags/fetch`, params)                    
+    return Api().post(`${baseEndpoint}/tags/fetch`, params)                    
   }
   selectTag(params){
-    return Api().post(`api/tags/select`, params)  
+    return Api().post(`${baseEndpoint}/tags/select`, params)  
   }
 
 }
