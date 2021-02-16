@@ -25,9 +25,7 @@ const ESLintPlugin = require('eslint-webpack-plugin')
 let whiteListedModules = ['express']
 let serverConfig = {
   target: 'node',
-   entry: {
-     server: path.join(__dirname, '../src/modules/index.server.js')
-   },
+   entry: path.join(__dirname, '../src/modules/index.server.js'),
    devtool: 'source-map',
    mode: 'development',
    output: {
@@ -74,7 +72,13 @@ let serverConfig = {
 
 if (process.env.NODE_ENV !== 'production'){
   serverConfig.devtool = 'eval-cheap-source-map'
-  serverConfig.plugins.push(new NodemonPlugin() )
+  serverConfig.plugins.push(
+    new NodemonPlugin(
+      {
+        "PORT_SERVER": process.env.PORT_SERVER
+      }
+    ) 
+  )
 }
 
 /**

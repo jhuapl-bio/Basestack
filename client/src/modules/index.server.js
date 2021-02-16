@@ -4,6 +4,31 @@
 
 /* eslint-disable */
 
-console.log("starting server now")
-let { open_server,close_server } = require("../modules/server/server.js")
-open_server()
+let { open_server,close_server } = require("../modules/server/server.js");
+
+	
+async function initiate_server(port){
+	console.log("initiating the server")
+	return new Promise((resolve, reject)=>{
+		(async ()=>{
+			await open_server(port);
+			console.log(port, "this is the port server");
+			console.log("__________________Port served successfully")
+			resolve(port)
+		})().catch((err)=>{
+			console.error(err, "error in starting server")
+			reject(err)
+		});	
+	})
+}
+initiate_server(process.env.PORT_SERVER).catch((err)=>{
+	console.error(err, "Error  found in init wserver function")
+	throw (err)
+}).then((res)=>{
+	console.log(res,"resolved successfully")
+	return(res)
+})
+
+
+
+

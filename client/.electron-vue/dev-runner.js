@@ -8,7 +8,6 @@ const { spawn } = require('child_process')
 const webpack = require('webpack')
 const WebpackDevServer = require('webpack-dev-server')
 const webpackHotMiddleware = require('webpack-hot-middleware')
-
 const mainConfig = require('./webpack.main.config')
 const rendererConfig = require('./webpack.renderer.config')
 const serverConfig = require('./webpack.server.config')
@@ -17,7 +16,7 @@ let electronProcess = null
 let manualRestart = false
 let hotMiddleware
 let devClient = false
-
+let serverPort = null
 function logStats (proc, data) {
   let log = ''
 
@@ -40,8 +39,15 @@ function logStats (proc, data) {
   console.log(log)
 }
 
+
+
+let rendererBasePort = 9080;
+let serverBasePort = 5033;
+process.env.PORT_SERVER = serverBasePort
+process.env.rendererBasePort = rendererBasePort
 function startRenderer (devClient) {
   return new Promise((resolve, reject) => {
+    console.log("starting renderer dev-runner", process.env.SERVER_PORT)
     rendererConfig.entry.renderer = [path.join(__dirname, 'dev-client')].concat(rendererConfig.entry.renderer)
     rendererConfig.mode = 'development'
     const compiler = webpack(rendererConfig)
@@ -60,26 +66,47 @@ function startRenderer (devClient) {
     compiler.hooks.done.tap('done', stats => {
       logStats('Renderer', stats)
     })
+    let tries = 10;
+    let ports_tried = [];
+    let opened_server = false;
     const server = new WebpackDevServer(
       compiler,
 
       {
         contentBase: path.join(__dirname, '../*'),
-        quiet: true,
+        quiet: false,
 
         before (app, ctx) {
           app.use(hotMiddleware)
-          ctx.middleware.waitUntilValid(() => {
+          ctx.middleware.waitUntilValid(async () => {
+            let port = rendererBasePort
+            let response; 
             resolve()
+            // do {
+            //     try {
+            //         tries -=1;
+            //         await startRendererServer(port);
+            //         opened_server = true;
+            //         resolve()
+            //     } catch {
+            //       opened_server = false;
+            //       ports_tried.push(port)
+            //       port = Math.floor(Math.random() * (9999 - 1000 + 1) + 1000);
+            //     }
+            // } while (!opened_server && tries > 0);
+            // if (tries <= 0){
+            //   reject(new Error(`Max Tries reached for rendering tried ports, exiting...`))
+            //   // process.exit(1)
+            // }
           })
         },
         watchOptions: {
           ignored: '**/.*' 
         },
-        proxy: { // TODO: This is currently not working w/ AXIOS, consider fixing this if we no longer switch to Websocket in the future version releases 
+        proxy: { 
           '/api': {
-            target: 'localhost:5003', 
-            logLevel:'debug',
+            target: `http://localhost:${process.env.PORT_SERVER}`, 
+            logLevel:'info',
             secure: false,
             changeOrigin: true,
             pathRewrite: {
@@ -90,30 +117,50 @@ function startRenderer (devClient) {
 
       }
     )
+    
+    
 
-    server.listen(9080)
+
+    async function startRendererServer (port) {
+      return new Promise((resolve, reject) => {
+        process.env.RENDER_PORT = port
+        server.listen(port).on("error", (err)=>{
+          reject(err)        
+        }).on("listening", ()=>{
+          resolve(`listening on port: ${port}`)
+        })
+      })
+    }
+    
+
   })
 }
 function startServer (devClient){
   return new Promise((resolve, reject) => {
-    serverConfig.entry.server = path.join(__dirname, '../src/modules/index.server.js')
+    console.log("Starting server  dev-runner")
+    // serverConfig.entry.server = path.join(__dirname, '../src/modules/index.server.js')
     serverConfig.mode = 'development'
     const compiler = webpack(serverConfig)
     
     
-
     compiler.hooks.done.tap('done', stats => {
-      logStats('Server', stats)
+      // logStats('Server', stats)
+      console.log("done....................")
     })
+
     compiler.watch({}, (err, stats) => {
       logStats('Server', stats)
-      resolve()
+      if (err){
+        console.error(err, "error in server compiler")
+      }
+      resolve()      
     })
   })
 }
 
 function startMain (devClient) {
   return new Promise((resolve, reject) => {
+    console.log("Starting main  dev-runner")
     mainConfig.entry.main = [path.join(__dirname, '../src/main/index.dev.js')].concat(mainConfig.entry.main)
     mainConfig.mode = 'development'
     process.env.devClient = devClient
@@ -214,17 +261,18 @@ function init () {
   if (process.argv.slice(2) =="client"){
     devClient = true
   }
-  Promise.all([
-    startServer(devClient), 
-    startRenderer(devClient), 
-    startMain(devClient)
-    ])
-    .then(() => {
-      startElectron()
+  startServer(devClient).then((res)=>{
+    startRenderer(devClient).then((res, rej) => {
+      console.log(res, "res", rej, "rej")
+      startMain(devClient).then(()=>{
+        startElectron()      
+      })
     })
-    .catch(err => {
-      console.error(err)
-    })
+  })
+  .catch((err) => {
+    console.error(err, "< ----error in rendering the app")
+    process.exit(1)
+  })
 }
 
 init()

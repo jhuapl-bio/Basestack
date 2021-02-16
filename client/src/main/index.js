@@ -43,6 +43,7 @@ let os = require("os")
 
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+  process.env.PORT_SERVER = 5433
   process.env.version_basestack = autoUpdater.currentVersion
   releaseNotes = {
     releaseNotes: "None Available",
@@ -51,6 +52,7 @@ if (process.env.NODE_ENV !== 'development') {
   };
 } else {
   process.env.version_basestack = "Development"
+  process.env.PORT_SERVER = 5003
   releaseNotes = {
     releaseNotes: "None Available",
     version: "Development",
@@ -66,15 +68,11 @@ const {logger } = require("../modules/server/api/controllers/logger.js")
 
 let open_server; let close_server; let  cancel_container;
 if (process.env.NODE_ENV === 'production'){
-  if (process.env.NODE_ENV == 'production'){
-    let { open_server, close_server } = require("../modules/server/server.js")
+    open_server = require("../modules/server/server.js").open_server
+    close_server = require("../modules/server/server.js").close_server
     const { 
      cancel_container
     } = require('../modules/server/api/controllers/index.js')
-
-    open_server()
-  }
-
 }
 
 
@@ -115,6 +113,10 @@ var menu = Menu.buildFromTemplate([
       {
         label: 'Refresh Server',
         click() {  close_server(); open_server();  }
+      },
+      {
+        label: 'Print ENV',
+        click() {  logger.info(JSON.stringify(process.env, null, 4))  }
       },
       {
         label: 'Docker Site',
@@ -615,16 +617,31 @@ autoUpdater.autoDownload = false
 app.on('ready', ()=>{
   (async () => {
     try{
-      createWindow();   
+      await createWindow();   
       checkUpdates();
       if (process.env.NODE_ENV == 'production'){
-        open_server()
+        logger.info("Production Mode detected, starting backend server...")
+        const port =  await open_server()
+        process.env.PORT_SERVER = port
+        logger.info("Server started at port: %s", port)
       }
     } catch(error){
+      logger.error("%s error in readying the app", error)
       logger.error(error)
       throw error
     } 
-  })()
+  })().catch((err)=>{
+    logger.error("Error in ready app occurred somewhere, see above")
+    logger.error(err.message)
+    dialog.showMessageBox(mainWindow, {
+      type: 'error',
+      defaultId: 0,
+      buttons: ['Ok'],
+      title: 'Error',
+      message: (err.message ? err.message : JSON.stringify(err, null, 4)),
+    });
+    // throw err
+  })
     
 })
 
