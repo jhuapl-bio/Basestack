@@ -643,30 +643,6 @@ function createWindow () {
 }
 
 
-// async function close_server(){
-//   try{
-//     if(process.env.NODE_ENV === 'production'){
-//       bat.kill()
-//     }
-//     return "Closed Server"
-//   } catch(err){
-//     logger.error(err)
-//     throw err
-//   } 
-// }
-// function open_server(){
-//   bat = spawn('node', ['server.js'], {env: process.env, cwd: path.join(process.resourcesPath, "data", "server") })
-//   bat.stderr.on('data', (data) => {
-//     logger.error(data.toString());
-//     console.error(data.toString());
-//     // throw new Error(code)
-//     throw new Error(data.toString())
-//   });
-
-//   bat.on('exit', (code) => {
-//     logger.info(`Server Child process exited with code ${code}`);
-//   });
-// }
 
 autoUpdater.autoDownload = false
 
