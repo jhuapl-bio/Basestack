@@ -133,7 +133,7 @@ class FileService {
     return Api().post("http://localhost:5003/tags/fetch", params)                    
   }
   selectTag(params){
-    return Api().post(`api/tags/select`, params)  
+    return Api().post(`${baseEndpoint}/tags/select`, params)  
   }
   updateSocket(params){
     return Api().post("http://localhost:5003/docker/socket", params)            
