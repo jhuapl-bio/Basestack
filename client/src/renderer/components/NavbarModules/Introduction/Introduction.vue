@@ -33,7 +33,7 @@
                   <template  v-slot:cell(version)="row">
                     
                     <span class="center-align-icon;"
-                        > <p>{{row.item.version}}</p>
+                        > 
                           <semipolar-spinner
                                 v-if="row.item.version ==  0" 
                                 :animation-duration="4000"
@@ -48,6 +48,16 @@
                                 style="margin: auto"
                                 :color="'#2b57b9'"
                            />
+                          <font-awesome-icon class="center-align-icon text-warning"  v-else-if="row.item.version == -1"
+                            v-tooltip="{
+                                content: 'Could not fetch available version, please check internet configurations',
+                                placement: 'top',
+                                classes: ['info'],
+                                trigger: 'hover',
+                                targetClasses: ['it-has-a-tooltip'],
+                            }" 
+                            icon="exclamation" size="sm"  ></font-awesome-icon>
+                          <p v-else>{{ row.item.version }}</p>
                     </span> 
                   </template>
                   <template  v-slot:cell(checkUpdates)>

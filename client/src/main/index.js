@@ -392,6 +392,7 @@ const winURL = (process.env.NODE_ENV === 'development'
 function checkUpdates(){
   if(process.env.NODE_ENV == 'production'){
     releaseNotes.version = 0
+    releaseNotes.releaseNotes = "Fetching..."
     logger.info("Check for Basestack updates and notify")
     autoUpdater.checkForUpdatesAndNotify()   
   } else {
@@ -454,7 +455,9 @@ function createWindow () {
     }
     autoUpdater.on('error', (err) => {
       logger.error(`Error in auto-updater. ${err}`)
-      sendStatusToWindow('Error in auto-updater. ' + err);
+      releaseNotes.version = -1
+      releaseNotes.releaseNotes = "Not Available"
+      // sendStatusToWindow('Error in auto-updater. ' + err);
     })
     autoUpdater.on('update-available', (info) => {
       logger.info(info)
