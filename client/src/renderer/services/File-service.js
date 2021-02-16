@@ -6,110 +6,119 @@
   // - # For any other permission, please contact the Legal Office at JHU/APL.
   // - # **********************************************************************
   
-import Api from './Api'
-
+import Api from './Api.js'
+let baseEndpoint;
+if (process.env.NODE_ENV == 'production'){
+  baseEndpoint = `http://localhost:${process.env.PORT_SERVER}`
+} else {
+  baseEndpoint = 'api'
+}
 class FileService {
   init(){
-    return Api().post('http://localhost:5003/init/start')    
+    console.log(baseEndpoint)
+    return Api().post(`${baseEndpoint}/init/start`)    
   }
   cancelModule(params) {
-    return Api().post('http://localhost:5003/modules/cancel', params)
+    return Api().post(`${baseEndpoint}/modules/cancel`, params)
   }
   openMinKNOW(){
-  	return Api().get("http://localhost:5003/openMinKNOW")
+  	return Api().get(`${baseEndpoint}/openMinKNOW`)
   }
   startModule(params){
-    return Api().post("http://localhost:5003/modules/start", params)
+    return Api().post(`${baseEndpoint}/modules/start`, params)
   }
   watchConsensus(params){
-    return Api().post("http://localhost:5003/consensus/watch", params)
+    return Api().post(`${baseEndpoint}/consensus/watch`, params)
   }
   initWatcher(params){
-    return Api().post("http://localhost:5003/consensus/startWatch", params)
+    return Api().post(`${baseEndpoint}/consensus/startWatch`, params)
   }
   logRampart(params){
-    return Api().get("http://localhost:5003/rampart/log", params)
+    return Api().get(`${baseEndpoint}/rampart/log`, params)
   }
   logServer(){
-    return Api().get("http://localhost:5003/system/log")
+    return Api().get(`${baseEndpoint}/system/log`)
   }
   logArticConsensus(params){
-    return Api().get("http://localhost:5003/artic_consensus/log", params)
+    return Api().get(`${baseEndpoint}/artic_consensus/log`, params)
   }
   fetchLog(params){
-    return Api().get("http://localhost:5003/log/" + params.name +"/"+params.type)    
+    return Api().get(`${baseEndpoint}/log/` + params.name +`/`+params.type)    
   }
   fetchPrimers(){
-    return Api().get("http://localhost:5003/primers/fetch")
+    return Api().get(`${baseEndpoint}/primers/fetch`)
   }
   fetchProtocols(){
-    return Api().get("http://localhost:5003/protocols/fetch")
+    return Api().get(`${baseEndpoint}/protocols/fetch`)
   }
   fetchHistories(){
-    return Api().get("http://localhost:5003/histories/fetch")
+    return Api().get(`${baseEndpoint}/histories/fetch`)
   }
   fetchAnnotations(){
-    return Api().get("http://localhost:5003/annotations/fetch")
+    return Api().get(`${baseEndpoint}/annotations/fetch`)
   }
   bookmarkSelections(params){
-    return Api().post("http://localhost:5003/bookmark/add", params)
+    return Api().post(`${baseEndpoint}/bookmark/add`, params)
   }
   timestampAdd(params){
-    return Api().post("http://localhost:5003/timestamp/add", params)
+    return Api().post(`${baseEndpoint}/timestamp/add`, params)
   }
   removeBookmark(params){
-    return Api().post("http://localhost:5003/bookmark/remove", params)
+    return Api().post(`${baseEndpoint}/bookmark/remove`, params)
   }
   removeTimestamp(params){
-    return Api().post("http://localhost:5003/timestamp/remove", params)
+    return Api().post(`${baseEndpoint}/timestamp/remove`, params)
   }
   removeAnnotation(params){
-     return Api().post("http://localhost:5003/annotation/remove", params)
+     return Api().post(`${baseEndpoint}/annotation/remove`, params)
   }
   fetchVideos(){
-     return Api().get("http://localhost:5003/videos/fetch")
+     return Api().get(`${baseEndpoint}/videos/fetch`)
   }
   fetchVideosMeta(){
-    return Api().get("http://localhost:5003/videos/fetchMeta")
+    return Api().get(`${baseEndpoint}/videos/fetchMeta`)
   }
   loadImages(params){
-    return Api().post("http://localhost:5003/install/images"+params.config.type, params)    
+    return Api().post(`${baseEndpoint}/install/images`+params.config.type, params)    
   }
   removeImages(imageName){
-    return Api().post("http://localhost:5003/install/removeImages/", {imageName: imageName})    
+    return Api().post(`${baseEndpoint}/install/removeImages/`, {imageName: imageName})    
   }
   logImageInstall(params){
-    return Api().get("http://localhost:5003/install/imageInstallLogs/" +  params.imageName)    
+    return Api().get(`${baseEndpoint}/install/imageInstallLogs/` +  params.imageName)    
   }
   cancelInstallImage(imageName){
-    return Api().post("http://localhost:5003/install/cancelInstallImage", {imageName: imageName})        
+    return Api().post(`${baseEndpoint}/install/cancelInstallImage`, {imageName: imageName})        
   }
   pruneImages(){
-    return Api().post("http://localhost:5003/install/pruneImages")        
+    return Api().post(`${baseEndpoint}/install/pruneImages`)        
   }
   validateRunDirContents(runDir){
-    return Api().post("http://localhost:5003/validate/validateRunDirContents", runDir)        
+    return Api().post(`${baseEndpoint}/validate/validateRunDirContents`, runDir)        
   }
   moduleStatus(params){
-    return Api().post("http://localhost:5003/consensus/status", params)        
+    return Api().post(`${baseEndpoint}/consensus/status`, params)        
   }
   checkImageStatus(params){
-    return Api().post("http://localhost:5003/images/status", params)        
+    return Api().post(`${baseEndpoint}/images/status`, params)        
   }
   fetchVideo(params){
-    return Api().post("http://localhost:5003/videos/fetch", params)            
+    return Api().post(`${baseEndpoint}/videos/fetch`, params)            
   }
   getModules(){
-    return Api().get("http://localhost:5003/status/fetch")                
+    return Api().get(`${baseEndpoint}/status/fetch`)                
   }
   fetchMeta(){
-    return Api().get("http://localhost:5003/meta/fetch")                
+    return Api().get(`${baseEndpoint}/meta/fetch`)                
   }
+  updateSocket(params){
+    return Api().post(`${baseEndpoint}/docker/socket`, params)   
+  }         
   fetchDockerTags(params){
-    return Api().post("http://localhost:5003/tags/fetch", params)                    
+    return Api().post(`${baseEndpoint}/tags/fetch`, params)                    
   }
   selectTag(params){
-    return Api().post("http://localhost:5003/tags/select", params)  
+    return Api().post(`${baseEndpoint}/tags/select`, params)  
   }
 
 }

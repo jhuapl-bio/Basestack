@@ -30,6 +30,36 @@
                   <template  v-slot:cell(current_version)>
                   <p>{{current_version}}</p>
                   </template>
+                  <template  v-slot:cell(version)="row">
+                    
+                    <span class="center-align-icon;"
+                        > 
+                          <semipolar-spinner
+                                v-if="row.item.version ==  0" 
+                                :animation-duration="4000"
+                                :size="20"
+                                v-tooltip="{
+                                  content: 'Fetching...',
+                                  placement: 'top',
+                                  classes: ['info'],
+                                  trigger: 'hover',
+                                  targetClasses: ['it-has-a-tooltip'],
+                                }"
+                                style="margin: auto"
+                                :color="'#2b57b9'"
+                           />
+                          <font-awesome-icon class="center-align-icon text-warning"  v-else-if="row.item.version == -1"
+                            v-tooltip="{
+                                content: 'Could not fetch available version, please check internet configurations',
+                                placement: 'top',
+                                classes: ['info'],
+                                trigger: 'hover',
+                                targetClasses: ['it-has-a-tooltip'],
+                            }" 
+                            icon="exclamation" size="sm"  ></font-awesome-icon>
+                          <p v-else>{{ row.item.version }}</p>
+                    </span> 
+                  </template>
                   <template  v-slot:cell(checkUpdates)>
                     <span class="center-align-icon;"
                             v-tooltip="{
@@ -109,11 +139,13 @@
 
 <script>
   import ModuleInstall from "@/components/NavbarModules/ModuleInstall/ModuleInstall"
+  import { SemipolarSpinner  } from 'epic-spinners'
   export default {
     name: 'installhelp',
     props: ['modules', 'images', 'docker', 'resources'],
     components: {
       ModuleInstall,
+      SemipolarSpinner
     },
     data(){
       return {
@@ -161,6 +193,7 @@
     mounted(){
       const $this = this;
       this.$electron.ipcRenderer.on('releaseNotes', (evt, message)=>{
+        console.log(message)
         $this.releaseNotes = message
       })
       this.$electron.ipcRenderer.send("queryRelease", "")

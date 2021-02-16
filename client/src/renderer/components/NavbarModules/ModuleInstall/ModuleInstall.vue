@@ -9,9 +9,9 @@
 <template>
   <div id="moduleinstall"  style="overflow-y:auto">
   	<div class="text-center" >  
-  		<div v-if="!docker" >
+  		<div v-if="!docker.installed || !docker.running" >
 	    	<h4  class="bg-danger text-white">
-	    		Docker is not running or installed
+	    		Docker is not {{ !docker.installed ?  'running or installed' : 'running or installed' }}
 	    		<span class="center-align-icon;"
                 	v-tooltip="{
 	                  content: 'View README',
@@ -88,7 +88,7 @@
 					     	</div>
 					 	</b-col>
 			            <b-col sm="4" style="text-align:center" v-else> 
-			            	<span class="center-align-icon"  v-if="docker" v-tooltip="{
+			            	<span class="center-align-icon"  v-if="docker.running" v-tooltip="{
 					            content: 'Install Method: '+stagedInstallation[key].installation.type,
 					            placement: 'top',
 					            classes: ['info'],
@@ -230,7 +230,7 @@
 			            </span>
 		            </b-col>
 		            <b-col sm="2" style="text-align:center" v-if="!element.status.running"> 
-		            	<span class="center-align-icon configure" v-if="docker"
+		            	<span class="center-align-icon configure" v-if="docker.running"
 		            	v-on:click="selectedElement ={}; selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)"
 		            	v-tooltip="{
 				            content: 'Update Module',
@@ -337,7 +337,7 @@
 		        	<span>Open Logs</span>
 		        	<font-awesome-icon class="help" icon="question-circle" 
 	        			v-tooltip.html="{
-					        content: 'Open Log Folder<br>Useful for viewing all log output or sending errors to developers.<br>Resets on exiting Basestack',
+					        content: 'Open Log Folder<br>Useful for viewing all log output or sending errors to developers.',
 					        placement: 'top',
 					        trigger: 'hover',
 					        targetClasses: ['it-has-a-tooltip'],

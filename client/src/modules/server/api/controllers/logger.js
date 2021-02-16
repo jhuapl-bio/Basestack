@@ -10,6 +10,13 @@ const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, label, printf } = format;
 const { meta } = require("../store/index.js")
 const myFormat = printf(({ level, message, label, timestamp }) => {
+  try{
+    if (message.constructor === Object || message.constructor === Array) {
+      message = JSON.stringify(message, null, 4)
+    }
+  } catch(err){
+    logger.error(err)
+  }
   return `${timestamp} [${level}]: ${message}`;
 });
 
@@ -59,12 +66,39 @@ export var error_alert = function(err){
   else if (err.errno == 'ENOENT'){
     text = "Could not connect to docker"
   } else if(err.json){
-    text = err.json.message
+    if (err.json.message){  
+      text = err.json.message
+    } else {
+      try{
+        if (Buffer.isBuffer(err.json)){
+          err.json = err.json.toString()
+        }
+        text = JSON.stringify(err.json, null, 4)
+      } catch(error){
+        logger.info(`Could not stringify json error message ${err}`)
+        text = err.json
+      }
+    }
   } 
-  else {
-    text = err.message
+  else if (err.message){
+    text = err.message    
   }
-  return text
+  else {
+    try{
+      text = JSON.stringify(err, null, 4)
+    } catch(error){
+      logger.info(`Could not stringify error message ${err}`)
+      text = err
+    }
+  }
+  let return_response = text;
+  try{
+    return_response = decodeURIComponent(JSON.parse(text))
+    // return_response = return_response.slice(0,500)
+  } catch(err){
+    return_response = text
+  }
+  return return_response
 }
  
 //
@@ -72,7 +106,5 @@ export var error_alert = function(err){
 // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
 // 
 if (process.env.NODE_ENV !== 'production') {
-  logger.add(new transports.Console({
-    format: format.simple()
-  }));
+  logger.add(new transports.Console());
 }

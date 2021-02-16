@@ -7,7 +7,7 @@
    - # **********************************************************************
   */
 import Docker from 'dockerode';
-import docker  from "./docker.js"
+
 import path  from "path"
 const {logger, dockerlogger} = require("./logger.js")
 const { store }  = require("../store/global.js")
@@ -15,7 +15,7 @@ const { store }  = require("../store/global.js")
 export async function check_container_exists(container_name){
 	return new Promise(function(resolve,reject){
 		(async ()=>{
-			var container = await docker.getContainer(container_name);
+			var container = await store.docker.getContainer(container_name);
 			await container.inspect((err,info)=>{
 				if (err){
 					resolve({container: null, exists: false})
@@ -61,9 +61,11 @@ function formatBuffer(data){
 	return data.toString().replace(/\u?([\0\1])(\w{1})?/g, '')
 }
 
-export const followStreamContainer = async function(stream, obj){
+export const followStreamContainer = async function(stream, obj, container){
+	
 	stream.on("data", (data)=>{
 		try{
+			// stream.emit("error", new Error("bazinga"))
 			obj.status.stream.push(formatBuffer(data))
 			dockerlogger.info("%s", formatBuffer(data))
 		} catch(err){
@@ -72,15 +74,18 @@ export const followStreamContainer = async function(stream, obj){
 			obj.status.errors = formatBuffer(err)
 			throw err
 		} finally{
+			logger.info("%s data found", formatBuffer(data))
 			obj.status.stream = obj.status.stream.splice(-150)
 		}
 	})
 	stream.on("error", (err)=>{
 		try{
+			logger.error("error found")
+			logger.error("%s error in stream!", err)
 			obj.status.stream.push(formatBuffer(err))
-			dockerlogger.info("%s", formatBuffer(err))
+			dockerlogger.error("%s", formatBuffer(err))
 			obj.status.errors = formatBuffer(err)
-		} catch(err){
+		} catch(error){
 			logger.error("%s", err)
 			dockerlogger.error("%s", err)
 		}
@@ -109,7 +114,7 @@ export const followStreamContainer = async function(stream, obj){
 export const followStreamBuild = async function(stream, obj){
 	return new Promise(function(resolve,reject){
 		if (stream){
-			docker.modem.followProgress(stream, onFinished, onProgress)
+			store.docker.modem.followProgress(stream, onFinished, onProgress)
 		}
 		obj.status.stream.push('Starting...')
 		async function onFinished(err, output) {
@@ -167,8 +172,10 @@ export const attachStream = async function(container,container_name, obj){
 				logger.error("%s Error attaching stream", err)
 				reject(err)
 			}
+			// container.modem.demuxStream(stream, process.stdout, process.stderr);
 			logger.info("attaching stream to module "+container_name)
-			followStreamContainer(stream, obj)
+			obj.status.errors = false
+			followStreamContainer(stream, obj, container)
 			resolve(stream)
 		});
 	})
