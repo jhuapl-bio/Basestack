@@ -26,7 +26,7 @@
             	<div class="tab-parent" style="display: flex; justify-content: space-between;"
 				>	
 					<div class="tab-item" style="">
-		            	<span v-if="entry.module && images[entry.image].latest_digest != images[entry.image].installed_digest && !images[entry.image].private" style="text-align:left; text-anchor: start;"
+		            	<span v-if="entry.module && images[entry.image].latest_digest != images[entry.image].installed_digest && !images[entry.image].private && !images[entry.image].status.fetching_available_images" style="text-align:left; text-anchor: start;"
 		            	v-tooltip="{
 			            content: 'An Update is available',
 			            placement: 'top',
