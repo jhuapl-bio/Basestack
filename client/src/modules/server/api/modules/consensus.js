@@ -45,15 +45,18 @@ export class BasestackConsensus{
 
 			// const tmpprimerDir = "/tmp/consensus/primers/"+primerNameDir+"/"+versionDir
 			const tmpreportDir = "/tmp/consensus/reports"
-			const tmpConsensusDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline"
-			const tmpbaseDir = "/root/idies/workspace/covid19/sequencing_runs/example-run"
-			const tmpfastqDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/fastq_pass"
+			// const tmpConsensusDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline"
+			// const tmpbaseDir = "/root/idies/workspace/covid19/sequencing_runs/example-run"
+			// const tmpfastqDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/fastq_pass"
+			const tmpConsensusDir = "/opt/sequencing_run/artic-pipeline"
+			const tmpbaseDir = "/opt/sequencing_run"
+			const tmpfastqDir = "/opt/sequencing_run/fastq_pass"
 			// const tmpConsensusScripts = "/root/idies/workspace/covid19"
 			const tmpRunInfo = tmpfastqDir + run_info
 			const tmpManifest = tmpfastqDir + manifest
 			const tmpRunConfig = tmpfastqDir + run_config
 			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
-			const tmpMeta = "/root/idies/workspace/meta"
+			const tmpMeta = "/opt/sequencing_runs/meta"
 			await writeFolder(consensusDir)
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
 			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
@@ -85,17 +88,13 @@ export class BasestackConsensus{
 		        	[tmpfastqDir]: {}
 		        }
 			}	
+				// ` sleep 3&& echo yes && fdsfsdfdsf && bash artic-moduleff1-barcode-demux.sh -i ${tmpbaseDir} `
 
 			let command = [
 				"bash", 
 				"-c", 
 				`bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
 			]
-			// let command = [
-			// 	"bash", 
-			// 	"-c", 
-			// 	`touch /root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline/test.txt `
-			// ]
 
 			return {options: options, command: command }
 		} catch(err){

@@ -66,15 +66,11 @@ const {logger } = require("../modules/server/api/controllers/logger.js")
 
 let open_server; let close_server; let  cancel_container;
 if (process.env.NODE_ENV === 'production'){
-  if (process.env.NODE_ENV == 'production'){
-    let { open_server, close_server } = require("../modules/server/server.js")
+    open_server = require("../modules/server/server.js").open_server
+    close_server = require("../modules/server/server.js").close_server
     const { 
      cancel_container
     } = require('../modules/server/api/controllers/index.js')
-
-    open_server()
-  }
-
 }
 
 
@@ -115,6 +111,10 @@ var menu = Menu.buildFromTemplate([
       {
         label: 'Refresh Server',
         click() {  close_server(); open_server();  }
+      },
+      {
+        label: 'Print ENV',
+        click() {  logger.info(JSON.stringify(process.env, null, 4))  }
       },
       {
         label: 'Docker Site',
@@ -260,6 +260,14 @@ var menu = Menu.buildFromTemplate([
             }
           },
           {
+            label: "Show System Info",
+            click(){
+              // "net localgroup docker-users %USERNAME% /add"
+              let bat = exec("start cmd /K systeminfo", { cwd: app.getPath('desktop') }); 
+              spawned_logs(bat, {throwError: true, process: "Show System Info"})
+            }
+          },
+          {
             label: "Open Powershell",
             click(){
               let bat = exec("powershell \"Start-Process powershell -Verb runAs\"", { cwd: app.getPath('desktop') }); 
@@ -330,7 +338,6 @@ var menu = Menu.buildFromTemplate([
             patchNotes: true
           })
           mainWindow.webContents.send('releaseNotes', releaseNotes)
-          // logger.info(`${autoUpdater.currentVersion} --> ${JSON.stringify(releaseNotes)}`)
         }
       },
       {
@@ -384,10 +391,13 @@ const winURL = (process.env.NODE_ENV === 'development'
 
 function checkUpdates(){
   if(process.env.NODE_ENV == 'production'){
+    releaseNotes.version = 0
+    releaseNotes.releaseNotes = "Fetching..."
     logger.info("Check for Basestack updates and notify")
     autoUpdater.checkForUpdatesAndNotify()   
   } else {
     logger.info(`Development mode enabled, skipping check for updates`)
+    autoUpdater.checkForUpdatesAndNotify()   
   }
 }
 
@@ -445,7 +455,9 @@ function createWindow () {
     }
     autoUpdater.on('error', (err) => {
       logger.error(`Error in auto-updater. ${err}`)
-      sendStatusToWindow('Error in auto-updater. ' + err);
+      releaseNotes.version = -1
+      releaseNotes.releaseNotes = "Not Available"
+      // sendStatusToWindow('Error in auto-updater. ' + err);
     })
     autoUpdater.on('update-available', (info) => {
       logger.info(info)
@@ -578,45 +590,40 @@ function createWindow () {
 }
 
 
-// async function close_server(){
-//   try{
-//     if(process.env.NODE_ENV === 'production'){
-//       bat.kill()
-//     }
-//     return "Closed Server"
-//   } catch(err){
-//     logger.error(err)
-//     throw err
-//   } 
-// }
-// function open_server(){
-//   bat = spawn('node', ['server.js'], {env: process.env, cwd: path.join(process.resourcesPath, "data", "server") })
-//   bat.stderr.on('data', (data) => {
-//     logger.error(data.toString());
-//     console.error(data.toString());
-//     // throw new Error(code)
-//     throw new Error(data.toString())
-//   });
-
-//   bat.on('exit', (code) => {
-//     logger.info(`Server Child process exited with code ${code}`);
-//   });
-// }
 
 autoUpdater.autoDownload = false
 app.on('ready', ()=>{
   (async () => {
     try{
-      createWindow();   
-      checkUpdates();
       if (process.env.NODE_ENV == 'production'){
-        open_server()
+        logger.info("Production Mode detected, starting backend server...")
+        let port =  await open_server()
+        if (!port ){
+          port = 5003
+        }
+        process.env.PORT_SERVER = port
+        
+        logger.info("Server started at port: %s", port)
       }
+      checkUpdates();
+      await createWindow();
     } catch(error){
+      logger.error("%s error in readying the app", error)
       logger.error(error)
       throw error
     } 
-  })()
+      
+  })().catch((err)=>{
+    logger.error("Error in ready app occurred somewhere, see above")
+    logger.error(err.message)
+    dialog.showMessageBox(mainWindow, {
+      type: 'error',
+      defaultId: 0,
+      buttons: ['Ok'],
+      title: 'Error',
+      message: (err.message ? err.message : JSON.stringify(err, null, 4)),
+    });
+  })
     
 })
 

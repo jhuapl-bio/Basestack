@@ -74,7 +74,13 @@ let serverConfig = {
 
 if (process.env.NODE_ENV !== 'production'){
   serverConfig.devtool = 'eval-cheap-source-map'
-  serverConfig.plugins.push(new NodemonPlugin() )
+  serverConfig.plugins.push(
+    new NodemonPlugin(
+      {
+        "PORT_SERVER": process.env.PORT_SERVER
+      }
+    ) 
+  )
 }
 
 /**
