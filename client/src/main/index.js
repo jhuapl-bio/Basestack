@@ -43,7 +43,6 @@ let os = require("os")
 
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
-  process.env.PORT_SERVER = 5433
   process.env.version_basestack = autoUpdater.currentVersion
   releaseNotes = {
     releaseNotes: "None Available",
@@ -52,7 +51,6 @@ if (process.env.NODE_ENV !== 'development') {
   };
 } else {
   process.env.version_basestack = "Development"
-  process.env.PORT_SERVER = 5003
   releaseNotes = {
     releaseNotes: "None Available",
     version: "Development",

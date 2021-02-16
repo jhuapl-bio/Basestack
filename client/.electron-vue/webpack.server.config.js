@@ -25,7 +25,9 @@ const ESLintPlugin = require('eslint-webpack-plugin')
 let whiteListedModules = ['express']
 let serverConfig = {
   target: 'node',
-   entry: path.join(__dirname, '../src/modules/index.server.js'),
+   entry: {
+     server: path.join(__dirname, '../src/modules/index.server.js')
+   },
    devtool: 'source-map',
    mode: 'development',
    output: {

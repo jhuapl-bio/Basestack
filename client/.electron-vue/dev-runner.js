@@ -81,7 +81,8 @@ function startRenderer (devClient) {
           ctx.middleware.waitUntilValid(async () => {
             let port = rendererBasePort
             let response; 
-            resolve()
+            logStats('Renderer', stats)
+            // resolve()
             // do {
             //     try {
             //         tries -=1;
@@ -105,7 +106,7 @@ function startRenderer (devClient) {
         },
         proxy: { 
           '/api': {
-            target: `http://localhost:${process.env.PORT_SERVER}`, 
+            target: `http://localhost:9080`, 
             logLevel:'info',
             secure: false,
             changeOrigin: true,
@@ -117,6 +118,7 @@ function startRenderer (devClient) {
 
       }
     )
+    resolve()
     
     
 
@@ -149,7 +151,7 @@ function startServer (devClient){
     })
 
     compiler.watch({}, (err, stats) => {
-      logStats('Server', stats)
+      // logStats('Server', stats)
       if (err){
         console.error(err, "error in server compiler")
       }
