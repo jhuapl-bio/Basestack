@@ -46,7 +46,7 @@ export var open_server = async function(port){
   return new Promise((resolve, reject)=>{
     logger.info("Attempting to open server at port: %s", port)
     if (!port){
-      port = 5433
+      port = 5003
     }
     server = app.listen(port, () => {
       logger.info(`Example app listening at http://localhost:${port}`)
