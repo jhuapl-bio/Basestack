@@ -79,9 +79,9 @@ function startRenderer (devClient) {
         before (app, ctx) {
           app.use(hotMiddleware)
           ctx.middleware.waitUntilValid(async () => {
-            let port = rendererBasePort
-            let response; 
-            logStats('Renderer', stats)
+            resolve()
+            // let port = rendererBasePort
+            // let response; 
             // resolve()
             // do {
             //     try {
@@ -118,7 +118,8 @@ function startRenderer (devClient) {
 
       }
     )
-    resolve()
+    // await startRendererServer()
+     server.listen(rendererBasePort)
     
     
 
