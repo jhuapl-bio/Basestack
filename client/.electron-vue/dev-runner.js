@@ -42,7 +42,7 @@ function logStats (proc, data) {
 
 
 let rendererBasePort = 9080;
-let serverBasePort = 5033;
+let serverBasePort = 5003;
 process.env.PORT_SERVER = serverBasePort
 process.env.rendererBasePort = rendererBasePort
 function startRenderer (devClient) {
@@ -69,6 +69,7 @@ function startRenderer (devClient) {
     let tries = 10;
     let ports_tried = [];
     let opened_server = false;
+    let port = rendererBasePort
     const server = new WebpackDevServer(
       compiler,
 
@@ -79,26 +80,27 @@ function startRenderer (devClient) {
         before (app, ctx) {
           app.use(hotMiddleware)
           ctx.middleware.waitUntilValid(async () => {
-            resolve()
-            // let port = rendererBasePort
-            // let response; 
             // resolve()
-            // do {
-            //     try {
-            //         tries -=1;
-            //         await startRendererServer(port);
-            //         opened_server = true;
-            //         resolve()
-            //     } catch {
-            //       opened_server = false;
-            //       ports_tried.push(port)
-            //       port = Math.floor(Math.random() * (9999 - 1000 + 1) + 1000);
-            //     }
-            // } while (!opened_server && tries > 0);
-            // if (tries <= 0){
-            //   reject(new Error(`Max Tries reached for rendering tried ports, exiting...`))
-            //   // process.exit(1)
-            // }
+            
+            let response; 
+            resolve()
+            do {
+                try {
+                    tries -=1;
+                    await startRendererServer(port);
+                    
+                    opened_server = true;
+                    resolve()
+                } catch {
+                  opened_server = false;
+                  ports_tried.push(port)
+                  port = Math.floor(Math.random() * (9999 - 1000 + 1) + 1000);
+                }
+            } while (!opened_server && tries > 0);
+            if (tries <= 0){
+              reject(new Error(`Max Tries reached for rendering tried ports, exiting...`))
+              process.exit(1)
+            }
           })
         },
         watchOptions: {
@@ -106,7 +108,7 @@ function startRenderer (devClient) {
         },
         proxy: { 
           '/api': {
-            target: `http://localhost:9080`, 
+            target: `http://localhost:${ process.env.PORT_SERVER }`, 
             logLevel:'info',
             secure: false,
             changeOrigin: true,
@@ -119,7 +121,7 @@ function startRenderer (devClient) {
       }
     )
     // await startRendererServer()
-     server.listen(rendererBasePort)
+     // server.listen(rendererBasePort)
     
     
 
@@ -266,7 +268,6 @@ function init () {
   }
   startServer(devClient).then((res)=>{
     startRenderer(devClient).then((res, rej) => {
-      console.log(res, "res", rej, "rej")
       startMain(devClient).then(()=>{
         startElectron()      
       })
