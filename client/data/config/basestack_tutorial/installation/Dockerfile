@@ -3,7 +3,6 @@ FROM  debian:stretch-slim
 WORKDIR /src/
 
 
-
 RUN apt-get -y update
 RUN apt-get install -y wget curl unzip groff dos2unix \
 	&& curl -sL https://deb.nodesource.com/setup_10.x | bash \

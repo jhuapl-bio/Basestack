@@ -151,12 +151,11 @@ export class RAMPART{
 				}	
 
 				// let command = ['bash', '-c', `id -u && groups`]
-				let command = ['bash',  '--login', '-c',
+				let command = ['bash', '-c',
 				`cd ${tmpannotationsDir}\
 				&& source /opt/conda/etc/profile.d/conda.sh\
 				&& conda activate artic-ncov2019\
-				&& which conda \
-				&& which minimap2 \
+				&& export PATH=$PATH:$PATH\
 				&& rampart\
 				--protocol ${json}\
 				--annotatedPath ${tmpannotationsDir}\

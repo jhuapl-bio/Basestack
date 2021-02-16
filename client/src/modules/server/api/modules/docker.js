@@ -89,7 +89,7 @@ export class DockerObj {
 							store.docker.createContainer({
 								Image: $this.image, 
 								Cmd: command, 
-								Tty: false,
+								Tty: true,
 								name: options.name,
 								Volumes: options.Volumes,
 								HostConfig: options.HostConfig,
