@@ -615,8 +615,6 @@ autoUpdater.autoDownload = false
 app.on('ready', ()=>{
   (async () => {
     try{
-      await createWindow();   
-      checkUpdates();
       if (process.env.NODE_ENV == 'production'){
         logger.info("Production Mode detected, starting backend server...")
         const port =  await open_server()
@@ -628,6 +626,8 @@ app.on('ready', ()=>{
       logger.error(error)
       throw error
     } 
+    await createWindow();   
+    checkUpdates();
   })().catch((err)=>{
     logger.error("Error in ready app occurred somewhere, see above")
     logger.error(err.message)
@@ -638,7 +638,6 @@ app.on('ready', ()=>{
       title: 'Error',
       message: (err.message ? err.message : JSON.stringify(err, null, 4)),
     });
-    // throw err
   })
     
 })
