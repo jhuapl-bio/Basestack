@@ -57,6 +57,11 @@ export class BasestackConsensus{
 			const tmpRunConfig = tmpfastqDir + run_config
 			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
 			const tmpMeta = "/opt/sequencing_runs/meta"
+
+			const tmpPrimerSchemes = "/root/idies/workspace/covid19/code/artic-ncov2019/primer_schemes"
+			const tmpBarcoding = '/root/idies/workspace/covid19/code/ont-guppy-cpu/data/barcoding'
+			const tmpBasecalling = '/root/idies/workspace/covid19/code/ont-guppy-cpu/data'
+
 			await writeFolder(consensusDir)
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
 			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))

@@ -25,7 +25,7 @@
 							<b-input-group-append >
 								<multiselect 
 								  v-model="selectedHistory" 
-								  select-label="" deselect-label="" track-by="name" :custom-label="customRunLabel" placeholder="Select Run Location" @input="updateHistory" :options="histories" :searchable="true" :allow-empty="false">
+								  select-label="" deselect-label="" track-by="name" :custom-label="customRunLabel" placeholder="Select Run Location" @input="updateHistory" :options="histories" :searchable="true" :allow-empty="false" :preselect-first="true">
 								    <template slot="singleLabel" slot-scope="{ option }">
 								    	<div v-if="option.custom">
 						                  	<font-awesome-icon icon="plus" size="sm"/>
@@ -398,23 +398,61 @@
 									:items="[selectedHistory.runDir.run_config]"
 								>
 									<template  v-slot:cell(primers)="row">
-										<b-form-select class="formGroup-input" v-model="row.item.primers"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.primers"></b-form-select>
+										<b-form-checkbox
+									      v-model="checkboxPrimers"
+									      name="checkboxPrimers"
+									    >
+									      Custom
+									    </b-form-checkbox>
+										<b-form-select class="formGroup-input" v-if="!checkboxPrimers" v-model="row.item.primers"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.primers"></b-form-select>
+										<b-form-file 
+					                 	 v-else
+					                 	 directory
+						                 webkitdirectory
+						                 :no-traverse="false"
+						                 :multiple="true"
+						                 :disabled="!isNew" 
+						                 aria-describedby="seq_file" 
+						                 v-model="row.item.primers"
+						                 :placeholder="'Choose a primer scheme folder'"
+						                 drop-placeholder="Drop primer scheme folder"
+						                 >
+					                	</b-form-file>
 									 </template>
 									<template  v-slot:cell(basecalling)="row">
-										<b-form-select class="formGroup-input" v-model="row.item.basecalling"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.basecalling"></b-form-select>
+										<b-form-checkbox
+									      v-model="checkboxBasecalling"
+									    >
+									      Custom
+									    </b-form-checkbox>
+										<b-form-select class="formGroup-input" v-if="!checkboxBasecalling" v-model="row.item.basecalling"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.basecalling"></b-form-select>
+
+										<b-form-file 
+					                 	 v-else
+						                 :disabled="!isNew" 
+						                 aria-describedby="seq_file" 
+						                 v-model="row.item.basecalling"
+						                 :placeholder="'Choose a basecalling config file'"
+						                 drop-placeholder="Drop basecalling cfg file"
+						                 >
+					                	</b-form-file>
 								    </template>
 									<template  v-slot:cell(barcoding)="row">
-								    	<!-- <b-form-textarea
-								          v-model="row.item.barcoding"
-								          label="Barcoding"
-								          type="text"
-								          required
-			           				      :disabled="!isNew"
-						                  class="formGroup-input"
-						                  :state="stateValidationEmpty(row.item.barcoding)"
-								          placeholder="barcode_arrs_nb12.cfg"
-								    	></b-form-textarea>	 -->
-								    	<b-form-select class="formGroup-input" v-model="row.item.barcoding"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.barcoding"></b-form-select>			 
+										<b-form-checkbox
+									      v-model="checkboxBarcoding"
+									    >
+									      Custom
+									    </b-form-checkbox>
+								    	<b-form-select class="formGroup-input" v-if="!checkboxBarcoding" v-model="row.item.barcoding"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.barcoding"></b-form-select>
+								    	<b-form-file 
+					                 	 v-else
+						                 :disabled="!isNew" 
+						                 aria-describedby="seq_file" 
+						                 v-model="row.item.barcoding"
+						                 :placeholder="'Choose a barcoding cfg file'"
+						                 drop-placeholder="Drop barcoding cfg file"
+						                 >
+					                	</b-form-file>			 
 								    </template>
 								    <template  v-slot:cell(filename)="row">
 								    	<b-form-textarea
@@ -700,7 +738,9 @@ export default {
 			globalState:null,
 			newState: null,
 			reportDir: null,
-
+			checkboxPrimers: true,
+			checkboxBasecalling: false,
+			checkboxBarcoding: false,
 			run_info_fields: [
 				{key: 'filename', label: 'Filename', sortable: false, class: 'text-center'},
           		{key: 'desc', label: 'Description', sortable: false, class: 'text-center'},
@@ -799,7 +839,12 @@ export default {
 		// await this.fetchPrimers()
 		this.baseRunDir = this.runDir
         await this.fetchHistories()
+        console.log(this.histories[0])
+        console.log(JSON.stringify(this.histories[0]))
         this.selectedHistory = this.histories[this.histories.length - 1]
+
+        this.selectedHistory = JSON.parse(`{"runDir":{"path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4","basename":"20200519_2000_X3_FAN44250_e97e74b4","possibleFastqFolders":[{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20}],"run_info":{"filename":"run_info.txt","validation":true},"fastqDir":{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20},"run_config":{"primers":null,"basecalling":"dna_r9.4.1_450bps_hac.cfg","barcoding":"barcode_arrs_nb12.cfg","filename":"run_config.txt","validation":true},"manifest":{"entries":[{"barcode":"NB01","id":"NTC"},{"barcode":"NB03","id":"MDHP-0056"},{"barcode":"NB11","id":"MDHP-0065---"}],"filename":"manifest.txt","validation":true},"specifics":{"throughput":{"exists":false,"name":null,"required":false},"seq_summary":{"exists":true,"name":null,"required":true},"drift_correction":{"exists":true,"name":null,"required":false}}},"primerDir":null,"name":"tes2","currentDateTime":"2021-02-17T13-23-29","reportDir":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test","meta":{"run_info":{"name":"run_info.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_info.txt"},"run_config":{"name":"run_config.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_config.txt"},"manifest":{"name":"manifest.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/manifest.txt"}},"modules":[{"key":"barcode-demux","title":"Demultiplexing","step":1,"status":null,"statusType":"file","statusCompleteFilename":"1-barcode-demux.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/1-barcode-demux"},{"key":"length-filter","title":"Length Filter","step":2,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/2-length-filter"},{"key":"normalization","title":"Normalization","step":3,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/3-normalization"},{"key":"draft-consensus","title":"Consensus Draft","step":4,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/4-draft-consensus"},{"key":"post-filter","title":"Post Filter","step":5,"status":null,"statusType":"file","statusCompleteFilename":"module5-example-run.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter"},{"key":"report","title":"Report Generation","step":6,"status":null,"statusType":"file","statusCompleteFilename":"report.pdf","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline"}],"reportFiles":{"finalReport":{"pdf":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.pdf","name":"report.pdf"},"Rmd":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.Rmd","name":"report.Rmd"}},"mutations":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/mutations-table.txt","name":"mutations-table.txt"},"summary":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/summary.txt","name":"summary.txt"}},"consensus":{"rootPath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter","files":{"postfilt":{"all":"postfilt_all.txt","fasta":"postfilt_consensus_all.fasta","summary":"postfilt_summary.txt"},"snp":{"final":"final_snpEff_report.txt"}}}},"reportName":"test-2021-02-17T13-23-29","annotationsDir":null,"running":false,"saved":false,"loaded":false}`)
+
 	},
     validations: {
       selectedHistory: {
@@ -895,7 +940,7 @@ export default {
     	},
     	selectedHistory: function(val){
     		if (!val.custom){
-    			this.isNew = false	
+    			this.isNew = true //Change this	
     			this.manifest_fields[2].thClass ='d-none'
     			this.manifest_fields[2].tdClass = 'd-none'
     		} else{
