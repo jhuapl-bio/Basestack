@@ -14,6 +14,7 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     unzip  awscliv2.zip && \
     ./aws/install  > /dev/null 2>&1
 ARG aws_key
+#Copy command will update on change in the aws key file automatically, reverting back to this layer on update or retry of installation
 COPY $aws_key /src/aws_key.csv    
 
 RUN echo "Downloading All Tutorial Videos from Amazon AWS S3 bucket, this can take some time..."

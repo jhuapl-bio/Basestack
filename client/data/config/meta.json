@@ -107,8 +107,7 @@
                         "barcode_arrs_vmk2.cfg",
                         "barcode_arrs_vmk.cfg",
                         "configuration.cfg",
-                        "configuration_dual.cfg",
-                        "custom"
+                        "configuration_dual.cfg"
                     ],
                     "basecalling" : [
                         "dna_r10.3_450bps_fast.cfg",
@@ -129,12 +128,10 @@
                         "rna_r9.4.1_70bps_fast.cfg",
                         "rna_r9.4.1_70bps_fast_prom.cfg",
                         "rna_r9.4.1_70bps_hac.cfg",
-                        "rna_r9.4.1_70bps_hac_prom.cfg",
-                        "custom"
+                        "rna_r9.4.1_70bps_hac_prom.cfg"
                     ],
                     "primers": [
-                        "nCoV-2019/V3",
-                        "custom (broken)"
+                        "nCoV-2019/V3"
                     ]
                 }
             }
