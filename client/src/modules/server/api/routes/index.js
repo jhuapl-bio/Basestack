@@ -278,7 +278,7 @@ router.get("/histories/fetch", (req,res,next)=>{ //this method needs to be rewor
 	(async function(){
 		try {
 			await fetch_histories().then((response)=>{
-					// logger.info("%s %s", "Fetch histories", JSON.stringify(response))
+					// logger.info("%s %s", "Fetch histories", JSON.stringify(response, null, 4))
 					res.status(200).json({status: 200, message: "Returning histories", data: response });
 				}).catch((err)=>{
 					logger.error("%s, %s", err, " could not fetch histories")

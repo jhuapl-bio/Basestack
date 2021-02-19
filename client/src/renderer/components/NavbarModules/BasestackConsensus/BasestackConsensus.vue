@@ -47,6 +47,17 @@
 						                </div>
 							    	</template>
 								</multiselect>
+								<span v-if="selectedHistory.loaded" class="center-align-icon;"
+				            		v-tooltip="{
+							            content: 'Open Report Folder',
+							            placement: 'top',
+							            classes: ['info'],
+							            trigger: 'hover',
+							            targetClasses: ['it-has-a-tooltip'],
+							            }"
+				            	>
+				            		<font-awesome-icon class="configure"  @click="open(selectedHistory.reportDir.path, $event)" icon="archive" size="sm"  />
+							    </span>
 								<b-button v-if="selectedHistory.loaded && !modules.basestack_consensus.status.running" v-on:click="run_artic_pipeline()"  class="btn tabButton" >
 									<div class="in-line-Button" >
 										<span>
@@ -199,508 +210,524 @@
 			            </template>
 					</b-table>
 				</b-col>
-				<b-col sm="12" >
-					<div v-if="selectedHistory">
-						<b-form-group
-				            label="Title"
-				            label-cols-sm="1"
-				            label-align-sm="center"
-				            label-size="sm"
-				            label-for="filterInput"
-				            class="mb-0 formGroup"
-				          >
-						    <b-input-group-append >
-        						<b-form-input 
-        						 :disabled="!isNew"
-        						 required
-        						 class="formGroup-input" v-model="selectedHistory.name" v-tooltip="{
-						            content: 'If you want to bookmark this run, create a title you can reference at a later date (Mandatory for bookmarking. Not needed for quick testing)',
-						            placement: 'top',
-						            classes: ['info'],
-						            trigger: 'hover',
-						            targetClasses: ['it-has-a-tooltip'],
-						            }" placeholder="Name" >
-						        </b-form-input>
-						    </b-input-group-append>
-						    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.name.required">A Form Name is required</div>
-
-						</b-form-group>
-						<b-form-group
-				            label="Run Folder"
-				            label-cols-sm="1"
-				            label-align-sm="center"
-				            label-size="sm"
-				            label-for="filterInput"
-				            class="mb-2 formGroup"
-				            inline
-				           
-				          >
-				          		<b-table
-									:fields="['RunDir', 'FastqDir']"
-									:items="[selectedHistory]"
-								>
-								<template  v-slot:cell(RunDir)="row" style="display:flex">
-							          <b-form-file 
-					                 	 v-if="row.item.custom"
-						                 ref="seq_file" 
-						                 :id="'seq_file'" 
-						                 :disabled="!isNew" 
-						                 aria-describedby="seq_file" 
-						                 v-model="fastqFiles"
-						                 directory
-						                 webkitdirectory
-						                 :no-traverse="false"
-						                 :multiple="true"
-						                 :state="selectedHistory.runDir.fastqDir.validation"
-						                 :placeholder="'Choose a run Folder'"
-						                 drop-placeholder="Drop folder here..."
-						                 :file-name-formatter="formatNames"
-						                 >
-					                </b-form-file>
-					                <b-form-textarea required v-else disabled
-					                 	:value="row.item.runDir.basename"
-					                 	class="formGroup-input"
-					                 	>
-					                </b-form-textarea>
-								</template>
-								<template  v-slot:cell(FastqDir)="row" >
-							    	<multiselect 
-					                  id="fastq_folder"
-					                  v-if="row.item.runDir.path && row.item.custom"
-									  v-model="row.item.runDir.fastqDir" 
-									  :searchable="false" :close-on-select="false" :preselect-first="true" track-by="name" label="name" :show-labels="false" placeholder="Pick a value" :options="selectedHistory.runDir.possibleFastqFolders"
-									  select-label="Select folder" :allow-empty="false"
-									  >
-									</multiselect>	
-									<b-form-input required v-else disabled
-					                 	:value="row.item.runDir.fastqDir.name"
-					                 	class="formGroup-input"
-					                 	>
-					                </b-form-input>	
-					                <p style="text-align:center" v-if="row.item.runDir.fastqDir.files">Total # of Fastq Files: {{row.item.runDir.fastqDir.files}}</p>							 
-							    </template>
-							    <template #head(RunDir)>
-							        <span  
-							        	style="text-align:center"  >
-							        	Run Dir
-							        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-							        	title="Run Folders contain fastq directories along with manifest, run_info, and run_config files" />
-							        	<span class="center-align-icon" style="float:middle; display:flex" v-tooltip="{
-								            content: 'Validating Run Directory',
+				<b-col sm="5" >
+					<b-form-group
+			            label="Title"
+			            label-align-sm="center"
+			            label-size="sm"
+			            inline
+			            label-for="filterInput"
+			            class="mb-2 formGroup"
+			          >
+					    <b-input-group-append >
+							<b-form-input 
+							 :disabled="!isNew"
+							 required
+							 class="formGroup-input" v-model="selectedHistory.name" v-tooltip="{
+					            content: 'If you want to bookmark this run, create a title you can reference at a later date (Mandatory for bookmarking. Not needed for quick testing)',
+					            placement: 'top',
+					            classes: ['info'],
+					            trigger: 'hover',
+					            targetClasses: ['it-has-a-tooltip'],
+					            }" placeholder="Name" >
+					        </b-form-input>
+					    </b-input-group-append>
+					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.name.required">A Form Name is required</div>
+					</b-form-group>
+				</b-col>
+				<b-col sm="7">
+					<b-form-group
+			            label="Run Folder"
+			            label-align-sm="center"
+			            label-size="sm"
+			            label-for="filterInput"
+			            class="mb-2 formGroup"
+			            inline
+		            >
+		          		<b-table
+							:fields="['RunDir', 'FastqDir']"
+							:items="[selectedHistory]"
+						>
+						<template  v-slot:cell(RunDir)="row" style="display:flex">
+					          <b-form-file 
+			                 	 v-if="row.item.custom"
+				                 ref="seq_file" 
+				                 :id="'seq_file'" 
+				                 :disabled="!isNew" 
+				                 aria-describedby="seq_file" 
+				                 v-model="fastqFiles"
+				                 directory
+				                 webkitdirectory
+				                 :no-traverse="false"
+				                 :multiple="true"
+				                 :state="selectedHistory.runDir.fastqDir.validation"
+				                 :placeholder="'Choose a run Folder'"
+				                 drop-placeholder="Drop folder here..."
+				                 :file-name-formatter="formatNames"
+				                 >
+			                </b-form-file>
+			                <b-form-textarea required v-else disabled
+			                 	:value="row.item.runDir.basename"
+			                 	class="formGroup-input"
+			                 	>
+			                </b-form-textarea>
+							</template>
+							<template  v-slot:cell(FastqDir)="row" >
+						    	<multiselect 
+				                  id="fastq_folder"
+				                  v-if="row.item.runDir.path && row.item.custom"
+								  v-model="row.item.runDir.fastqDir" 
+								  :searchable="false" :close-on-select="false" :preselect-first="true" track-by="name" label="name" :show-labels="false" placeholder="Pick a value" :options="selectedHistory.runDir.possibleFastqFolders"
+								  select-label="Select folder" :allow-empty="false"
+								  >
+								</multiselect>	
+								<b-form-input required v-else disabled
+				                 	:value="row.item.runDir.fastqDir.name"
+				                 	class="formGroup-input"
+				                 	>
+				                </b-form-input>	
+				                <p style="text-align:center" v-if="row.item.runDir.fastqDir.files">Total # of Fastq Files: {{row.item.runDir.fastqDir.files}}</p>							 
+						    </template>
+						    <template #head(RunDir)>
+						        <span  
+						        	style="text-align:center"  >
+						        	Run Folder
+						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+						        	title="Run Folders contain fastq directories along with manifest, run_info, and run_config files" />
+						        	<span class="center-align-icon" style="float:middle; display:flex" v-tooltip="{
+							            content: 'Validating Run Directory',
+							            placement: 'top',
+							            classes: ['info'],
+							            trigger: 'hover',
+							            targetClasses: ['it-has-a-tooltip'],
+							            }" v-if="validatingRunDir">
+						            	<looping-rhombuses-spinner
+									          :animation-duration="4000"
+									          :size="10"
+									          style="margin: auto"
+									          :color="'#2b57b9'"
+									     />
+							     	</span>
+							     	<span v-if="selectedHistory.runDir.path" class="center-align-icon;"
+					            		v-tooltip="{
+								            content: 'Open Run Folder',
 								            placement: 'top',
 								            classes: ['info'],
 								            trigger: 'hover',
 								            targetClasses: ['it-has-a-tooltip'],
-								            }" v-if="validatingRunDir">
-							            	<looping-rhombuses-spinner
-										          :animation-duration="4000"
-										          :size="10"
-										          style="margin: auto"
-										          :color="'#2b57b9'"
-										     />
-								     	</span>
-								     	<span v-if="selectedHistory.runDir.path" class="center-align-icon;"
-						            		v-tooltip="{
-									            content: 'Open Run Folder',
-									            placement: 'top',
-									            classes: ['info'],
-									            trigger: 'hover',
-									            targetClasses: ['it-has-a-tooltip'],
-									            }"
-						            	>
-						            		<font-awesome-icon class="configure"  @click="open(selectedHistory.runDir.path, $event)" icon="archive" size="sm"  />
-									    </span>	
-						      		</span>
-							    </template>
-							    <template #head(FastqDir)>
-							        <span  
-							        	style="text-align:center"  > Fastq Dir
-							        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-							        	title="Fastq directory contain your fastq files. Files must have .fastq extensions and be contained at a depth of 1 only"  />
-						      		</span>
+								            }"
+					            	>
+					            		<font-awesome-icon class="configure"  @click="open(selectedHistory.runDir.path, $event)" icon="archive" size="sm"  />
+								    </span>	
+					      		</span>
+						    </template>
+						    <template #head(FastqDir)>
+						        <span  
+						        	style="text-align:center"  > Fastq Folder
+						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+						        	title="Fastq directory contain your fastq files. Files must have .fastq extensions and be contained at a depth of 1 only"  />
+					      		</span>
+						    </template>
+						</b-table>
+			           
+			            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.fastqDir.validation.required">A valid fastq directory is required</div>
+			            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.path.required">Run Directory Must be Specified</div>
+					</b-form-group>
+				</b-col>
+				<b-col sm="4">
+					<b-form-group
+			        label-align-sm="center"
+		            label-size="sm"
+		            label-for="filterInput"
+			        class="mb-0 formGroup"
+		          	>
+		          		<template slot="label">
+						    <span  
+					        	style="text-align:center"  >
+					        	Run Info
+					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+					        	title="Run Info is a short description of your run" />
+				      		</span>
+						</template>
+						<b-input-group-append id="run_info">
+							<b-table
+								stacked
+								:fields="run_info_fields"
+								:items="[selectedHistory.runDir.run_info]"
+							>
+							<template  v-slot:cell(plate)="row">
+					            <b-form-textarea
+							          v-model="row.item.desc"
+							          label="Description"
+	           						  :disabled="!isNew"
+							          type="text"
+					                  class="formGroup-input"
+						              :state="stateValidationEmpty(row.item.desc)"
+							          required
+							          placeholder="01"
+							    ></b-form-textarea>
+							 </template>
+							<template  v-slot:cell(filename)="row">
+						    	<b-form-textarea
+						          v-model="row.item.filename"
+						          label="Filename"
+				                  class="formGroup-input"
+						          type="text"
+						          disabled
+							      :state="row.item.validation"
+						          placeholder="run_info.txt"
+						    	></b-form-textarea>
+						    	<b-form-invalid-feedback :state="row.item.validation">
+						        	run_info.txt not found
+						      	</b-form-invalid-feedback>										 
+						    </template>
+							</b-table>
+					    </b-input-group-append>
+					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_info.validation.required">Specify valid run information</div>
+					</b-form-group>
+					<b-form-group
+			            label-align-sm="center"
+			            label-size="sm"
+			            id="manifest_label"
+			            label-for="filterInput"
+			            class="mb-0 formGroup"						           
+			          >
+			          	<template slot="label">
+						    <span  
+					        	style="text-align:center"  >
+					        	Specifics
+				      		</span>
+						</template>
+						<b-input-group-append>
+							
+							<b-table
+					          show-empty
+					          small
+					          stacked
+					          label=""
+					          v-if="selectedHistory.runDir.specifics"
+					          style="width: 100%"
+			                  class="formGroup-input"
+					          :items="[selectedHistory.runDir.specifics]"
+					          :fields="specifics_table_fields"
+							  sticky-header="300px"						        
+							>
+								<template v-slot:cell()="cell">
+									<span 
+										:class="[cell.value.exists ? 'center-align-icon success-icon' : (cell.value.required ? 'center-align-icon  warn-icon' : 'center-align-icon warn-icon')]" 
+										style="margin:auto; text-align:center" v-tooltip="{
+							            content: 'Presence in Run Directory?',
+							            placement: 'top',
+							            classes: ['info'],
+							            trigger: 'hover',
+							            targetClasses: ['it-has-a-tooltip'],
+							            }">
+				            			<font-awesome-icon :icon="cell.value.exists ? 'check' : (cell.value.required ? 'times-circle' : 'exclamation')" size="sm" />
+					            	</span>								 
 							    </template>
 							</b-table>
-				           
-				            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.fastqDir.validation.required">A valid fastq directory is required</div>
-				            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.path.required">Run Directory Must be Specified</div>
-						</b-form-group>
-						<b-form-group
-			            label="Run Info"
-				        label-cols-sm="1"
-				        label-align-sm="center"
+						</b-input-group-append>
+					</b-form-group>
+				</b-col>
+				<b-col sm="8">
+					<b-form-group
+			            label-align-sm="center"
 			            label-size="sm"
 			            label-for="filterInput"
-				        class="mb-0 formGroup"
-			          	>
-			          		<template slot="label">
-							    <span  
-						        	style="text-align:center"  >
-						        	Run Info
-						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-						        	title="Run Info is a short description of your run" />
-					      		</span>
-							</template>
-							<b-input-group-append id="run_info">
-								<b-table
-									:fields="run_info_fields"
-									:items="[selectedHistory.runDir.run_info]"
-								>
-								<template  v-slot:cell(plate)="row">
-						            <b-form-textarea
-								          v-model="row.item.desc"
-								          label="Description"
-		           						  :disabled="!isNew"
-								          type="text"
-						                  class="formGroup-input"
-							              :state="stateValidationEmpty(row.item.desc)"
-								          required
-								          placeholder="01"
-								    ></b-form-textarea>
+			            class="mb-0 formGroup"
+			           
+			         >
+			         	<template slot="label">
+						    <span  
+					        	style="text-align:center"  >
+					        	Run Config
+					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+					        	title="Run Config contains your barcoding, primer scheme, and basecalling configuration" />
+				      		</span>
+						</template>
+						<b-input-group-append id="run_config">
+							<b-table
+								:fields="run_config_fields"
+								:items="[selectedHistory.runDir.run_config]"
+								stacked
+							>
+								<template  v-slot:cell(primers)="row">
+									<b-form-checkbox
+								      v-model="row.item.primers.custom"
+								      name="row.item.primers.custom"
+								    >
+								      Custom
+								    </b-form-checkbox>
+								    {{row.item.primers.val}}
+									<b-form-select class="formGroup-input" v-if="!row.item.primers.custom" v-model="row.item.primers.val"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.primers"></b-form-select>
+									<b-form-file 
+				                 	 v-else-if="row.item.primers.custom && isNew"
+				                 	 directory
+					                 :no-traverse="true"
+					                 :multiple="true"
+					          		 :file-name-formatter="formatNames"
+					                 :disabled="!isNew" 
+					                 aria-describedby="seq_file" 
+					                 v-model="primerFiles"
+					                 :placeholder="'Choose a primer scheme folder'"
+					                 drop-placeholder="Drop primer scheme folder"
+					                 >
+				                	</b-form-file>
+							    	<b-form-textarea
+							    	  v-else
+							          v-model="row.item.primers.val"
+							          label="Filename"
+					                  class="formGroup-input"
+							          type="text"
+							          disabled
+							    	></b-form-textarea>
+						    	<b-form-invalid-feedback :state="row.item.validation">
+						        	run_info.txt not found
+						      	</b-form-invalid-feedback>										 
 								 </template>
-								<template  v-slot:cell(filename)="row">
+								<template  v-slot:cell(basecalling)="row">
+									<b-form-checkbox
+								      v-model="checkboxBasecalling"
+								    >
+								      Custom
+								    </b-form-checkbox>
+									<b-form-select class="formGroup-input" v-if="!checkboxBasecalling" v-model="row.item.basecalling"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.basecalling"></b-form-select>
+
+									<b-form-file 
+				                 	 v-else
+					                 :disabled="!isNew" 
+					                 aria-describedby="seq_file" 
+					                 v-model="row.item.basecalling"
+					                 :placeholder="'Choose a basecalling config file'"
+					                 drop-placeholder="Drop basecalling cfg file"
+					                 >
+				                	</b-form-file>
+							    </template>
+								<template  v-slot:cell(barcoding)="row">
+									<b-form-checkbox
+								      v-model="checkboxBarcoding"
+								    >
+								      Custom
+								    </b-form-checkbox>
+							    	<b-form-select class="formGroup-input" v-if="!checkboxBarcoding" v-model="row.item.barcoding"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.barcoding"></b-form-select>
+							    	<b-form-file 
+				                 	 v-else
+					                 :disabled="!isNew" 
+					                 aria-describedby="seq_file" 
+					                 v-model="row.item.barcoding"
+					                 :placeholder="'Choose a barcoding cfg file'"
+					                 drop-placeholder="Drop barcoding cfg file"
+					                 >
+				                	</b-form-file>			 
+							    </template>
+							    <template  v-slot:cell(filename)="row">
 							    	<b-form-textarea
 							          v-model="row.item.filename"
 							          label="Filename"
 					                  class="formGroup-input"
 							          type="text"
 							          disabled
-								      :state="row.item.validation"
-							          placeholder="run_info.txt"
-							    	></b-form-textarea>
-							    	<b-form-invalid-feedback :state="row.item.validation">
-							        	run_info.txt not found
-							      	</b-form-invalid-feedback>										 
-							    </template>
-								</b-table>
-						    </b-input-group-append>
-						    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_info.validation.required">Specify valid run information</div>
-						</b-form-group>
-						<b-form-group
-				            label="Run Config"
-				            label-cols-sm="1"
-				            label-align-sm="center"
-				            label-size="sm"
-				            label-for="filterInput"
-				            class="mb-0 formGroup"
-				           
-				         >
-				         	<template slot="label">
-							    <span  
-						        	style="text-align:center"  >
-						        	Run Config
-						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-						        	title="Run Config contains your barcoding, primer scheme, and basecalling configuration" />
-					      		</span>
-							</template>
-							<b-input-group-append id="run_config">
-								<b-table
-									:fields="run_config_fields"
-									:items="[selectedHistory.runDir.run_config]"
-								>
-									<template  v-slot:cell(primers)="row">
-										<b-form-checkbox
-									      v-model="checkboxPrimers"
-									      name="checkboxPrimers"
-									    >
-									      Custom
-									    </b-form-checkbox>
-										<b-form-select class="formGroup-input" v-if="!checkboxPrimers" v-model="row.item.primers"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.primers"></b-form-select>
-										<b-form-file 
-					                 	 v-else
-					                 	 directory
-						                 webkitdirectory
-						                 :no-traverse="false"
-						                 :multiple="true"
-						                 :disabled="!isNew" 
-						                 aria-describedby="seq_file" 
-						                 v-model="row.item.primers"
-						                 :placeholder="'Choose a primer scheme folder'"
-						                 drop-placeholder="Drop primer scheme folder"
-						                 >
-					                	</b-form-file>
-									 </template>
-									<template  v-slot:cell(basecalling)="row">
-										<b-form-checkbox
-									      v-model="checkboxBasecalling"
-									    >
-									      Custom
-									    </b-form-checkbox>
-										<b-form-select class="formGroup-input" v-if="!checkboxBasecalling" v-model="row.item.basecalling"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.basecalling"></b-form-select>
-
-										<b-form-file 
-					                 	 v-else
-						                 :disabled="!isNew" 
-						                 aria-describedby="seq_file" 
-						                 v-model="row.item.basecalling"
-						                 :placeholder="'Choose a basecalling config file'"
-						                 drop-placeholder="Drop basecalling cfg file"
-						                 >
-					                	</b-form-file>
-								    </template>
-									<template  v-slot:cell(barcoding)="row">
-										<b-form-checkbox
-									      v-model="checkboxBarcoding"
-									    >
-									      Custom
-									    </b-form-checkbox>
-								    	<b-form-select class="formGroup-input" v-if="!checkboxBarcoding" v-model="row.item.barcoding"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.barcoding"></b-form-select>
-								    	<b-form-file 
-					                 	 v-else
-						                 :disabled="!isNew" 
-						                 aria-describedby="seq_file" 
-						                 v-model="row.item.barcoding"
-						                 :placeholder="'Choose a barcoding cfg file'"
-						                 drop-placeholder="Drop barcoding cfg file"
-						                 >
-					                	</b-form-file>			 
-								    </template>
-								    <template  v-slot:cell(filename)="row">
-								    	<b-form-textarea
-								          v-model="row.item.filename"
-								          label="Filename"
-						                  class="formGroup-input"
-								          type="text"
-								          disabled
-								          :state="row.item.validation"
-								          placeholder="run_config.txt"
-								    	>
-								    	</b-form-textarea>								 
-										  <b-form-invalid-feedback :state="row.item.validation">
-									        run_config.txt not found
-									      </b-form-invalid-feedback>
-									  </template>
-								</b-table>
-							</b-input-group-append>
-						    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_config.validation.required">Specify valid config information</div>
-						</b-form-group>
-						<b-form-group
-				            label="Manifest"
-				            label-cols-sm="2"
-				            label-align-sm="center"
-				            label-size="sm"
-				            id="manifest_label"
-				            label-for="filterInput"
-				            class="mb-0 formGroup"						           
-				          >
-				          	<template slot="label">
-							    <span  
-						        	style="text-align:center"  >
-						        	Manifest
-						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-						        	title="Manifest contains your experimental setup with all barcodes for samples" />
-					      		</span>
-							</template>
-							<b-input-group-append id="manifest"
-							>	
-								<b-table
-						          show-empty
-						          small
-						          id="manifest_table"
-				                  class="formGroup-input"
-						          :items="selectedHistory.runDir.manifest.entries"
-						          :fields="manifest_fields"
-								  sticky-header="300px"						        
-								>
-							        <template  v-slot:cell(barcode)="row">
-								    	<b-form-input
-								          v-model.trim="selectedHistory.runDir.manifest.entries[row.index].barcode"
-								          label="barcode"
-								          @input="changeBarcode($event, row.index)"
-						                  class="formGroup-input"
-								          type="text"
-				           				  :disabled="!isNew"
-							              :state="stateValidationNull(row.item.barcode)"
-								          placeholder="NB01"
-								    	></b-form-input>									 
-								    </template>
-								    <template  v-slot:cell(id)="row">
-								    	<b-form-input
-								          v-model.trim="selectedHistory.runDir.manifest.entries[row.index].id"
-								          label="barcode"
-								          @input="changeID($event, row.index)"
-						                  class="formGroup-input"
-								          type="text"
-				           				  :disabled="!isNew"
-								          placeholder="MDHP-00057"
-								          :state="stateManifestID(row.item.id)"							          
-								    	></b-form-input>									 
-								    </template>
-								    <template  v-if="selectedHistory.custom" v-slot:cell(adm)="row">
-								    	<b-row class="nopadcolumn">
-								    		<b-col sm="2">
-										    	<b-button v-on:click="addManifestRow(row.index)"  class="btn cntrButton" >
-														<span>
-															<font-awesome-icon   icon="plus"/>
-														</span>
-												</b-button>
-											</b-col>
-								    		<b-col sm="2" v-if="selectedHistory.runDir.manifest.entries.length > 1">
-												<b-button v-on:click="rmManifestRow(row.index)"  class="btn cntrButton" >
-													<span>
-														<font-awesome-icon   icon="minus"/>
-													</span>
-												</b-button>
-											</b-col>
-											<b-col sm="2" v-if="selectedHistory.runDir.manifest.entries.length > 1 && row.index > 0">
-												<b-button v-on:click="moveUpRow(row.index)"  class="btn cntrButton" >
-													<span>
-														<font-awesome-icon   icon="angle-up"/>
-													</span>
-												</b-button>
-											</b-col>
-											<b-col sm="2" v-if="selectedHistory.runDir.manifest.entries.length > 1 && row.index < selectedHistory.runDir.manifest.entries.length-1">
-												<b-button v-on:click="moveDownRow(row.index)"  class="btn cntrButton" >
-													<span>
-														<font-awesome-icon   icon="angle-down"/>
-													</span>
-												</b-button>
-											</b-col>
-										</b-row>
-								    </template>
-
-									
-								</b-table>
-								<div style="text-align:center">
-									<b-form-input
-						    	      v-model="selectedHistory.runDir.manifest.filename"
-							          label="Filename"
-				    	              class="formGroup-input"
-							          type="text"
-							          required
-							          disabled
-								      :state="selectedHistory.runDir.manifest.validation"
-							          placeholder="manifest.txt"
-							    	></b-form-input>
-							    	  <b-form-invalid-feedback 
-							    	  v-b-tooltip.hover
-		                        		title="You will need to create it manually on the left or make it directly within the run folder"
-							    	  :state="selectedHistory.runDir.manifest.validation">
-								        manifest.txt not found. 
+							          :state="row.item.validation"
+							          placeholder="run_config.txt"
+							    	>
+							    	</b-form-textarea>								 
+									  <b-form-invalid-feedback :state="row.item.validation">
+								        run_config.txt not found
 								      </b-form-invalid-feedback>
-							    	<hr>
-							    	<b-button v-on:click="addManifestRow(0)"  class="btn tabButton" v-if="selectedHistory.runDir.manifest.entries.length ==0 && selectedHistory.custom">
-										<span>
-											<font-awesome-icon icon="plus"/>
-										</span>
-									</b-button>
-									<span v-else style="text-align:center">Set one Barcode as NB00 (or other unused name) for the NTC</span>
+								  </template>
+							</b-table>
+						</b-input-group-append>
+					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_config.validation.required">Specify valid config information</div>
+					</b-form-group>
+				</b-col>
+				<b-col sm="12">
+					<b-form-group
+			            label="Manifest"
+			            label-align-sm="center"
+			            label-size="sm"
+			            id="manifest_label"
+			            label-for="filterInput"
+			            class="mb-0 formGroup"						           
+			          >
+			          	<template slot="label">
+						    <span  
+					        	style="text-align:center"  >
+					        	Manifest
+					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+					        	title="Manifest contains your experimental setup with all barcodes for samples" />
+				      		</span>
+						</template>
+						<b-input-group-append id="manifest"
+						>	
+							<b-table
+					          show-empty
+					          small
+					          id="manifest_table"
+			                  class="formGroup-input"
+					          :items="selectedHistory.runDir.manifest.entries"
+					          :fields="manifest_fields"
+							  sticky-header="300px"						        
+							>
+						        <template  v-slot:cell(barcode)="row">
+							    	<b-form-input
+							          v-model.trim="selectedHistory.runDir.manifest.entries[row.index].barcode"
+							          label="barcode"
+							          @input="changeBarcode($event, row.index)"
+					                  class="formGroup-input"
+							          type="text"
+			           				  :disabled="!isNew"
+						              :state="stateValidationNull(row.item.barcode)"
+							          placeholder="NB01"
+							    	></b-form-input>									 
+							    </template>
+							    <template  v-slot:cell(id)="row">
+							    	<b-form-input
+							          v-model.trim="selectedHistory.runDir.manifest.entries[row.index].id"
+							          label="barcode"
+							          @input="changeID($event, row.index)"
+					                  class="formGroup-input"
+							          type="text"
+			           				  :disabled="!isNew"
+							          placeholder="MDHP-00057"
+							          :state="stateManifestID(row.item.id)"							          
+							    	></b-form-input>									 
+							    </template>
+							    <template  v-if="selectedHistory.custom" v-slot:cell(adm)="row">
+							    	<b-row class="nopadcolumn">
+							    		<b-col sm="2">
+									    	<b-button v-on:click="addManifestRow(row.index)"  class="btn cntrButton" >
+													<span>
+														<font-awesome-icon   icon="plus"/>
+													</span>
+											</b-button>
+										</b-col>
+							    		<b-col sm="2" v-if="selectedHistory.runDir.manifest.entries.length > 1">
+											<b-button v-on:click="rmManifestRow(row.index)"  class="btn cntrButton" >
+												<span>
+													<font-awesome-icon   icon="minus"/>
+												</span>
+											</b-button>
+										</b-col>
+										<b-col sm="2" v-if="selectedHistory.runDir.manifest.entries.length > 1 && row.index > 0">
+											<b-button v-on:click="moveUpRow(row.index)"  class="btn cntrButton" >
+												<span>
+													<font-awesome-icon   icon="angle-up"/>
+												</span>
+											</b-button>
+										</b-col>
+										<b-col sm="2" v-if="selectedHistory.runDir.manifest.entries.length > 1 && row.index < selectedHistory.runDir.manifest.entries.length-1">
+											<b-button v-on:click="moveDownRow(row.index)"  class="btn cntrButton" >
+												<span>
+													<font-awesome-icon   icon="angle-down"/>
+												</span>
+											</b-button>
+										</b-col>
+									</b-row>
+							    </template>
 
-						    	</div>
-							</b-input-group-append>
-							<b-input-group-append>
-								<template slot="label">
-								    <span  
-							        	style="text-align:center"  >
-							        	Define Standard Manifest Scheme
-							        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-							        	title="Select a Barcode Name (e.g. NB) and Sample ID. Increments by 1" />
-						      		</span>
-								</template>
-								<b-table
-						          show-empty
-						          small
-						          label=""
-						          :hidden="!isNew"
-						          style="width: 100%"
-				                  class="formGroup-input"
-						          :items="[1]"
-						          :fields="['Barcode', 'SampleID', 'Count', 'Adjust']"
-								  sticky-header="300px"						        
-								>
-									<template  v-slot:cell(Barcode)>
-										<b-form-textarea :disabled="!isNew"
-					                 		v-model="placeHolderBarcode"
-					                 		class="formGroup-input"
-					                 	>
-					                	</b-form-textarea>								 
-								    </template>
-								    <template  v-slot:cell(Count)>
-										<b-form-select class="formGroup-input" :disabled="!isNew" v-model="placeHolderManifestCount"   :options="[12, 24, 96]"></b-form-select>							 
-								    </template>
-								    <template  v-slot:cell(SampleID)>
-										<b-form-textarea 
-					                 	v-model="placeHolderSampleID"
-					                 	class="formGroup-input" :disabled="!isNew"
-					                 	>
-					                	</b-form-textarea>						 
-								    </template>
-								    <template  v-slot:cell(Adjust)>
-										<span :hidden="!isNew" class="center-align-icon;"
-						            		v-tooltip="{
-									            content: 'Adjust The Placeholder Manifest',
-									            placement: 'top',
-									            classes: ['info'],
-									            trigger: 'hover',
-									            targetClasses: ['it-has-a-tooltip'],
-									            }"
-						            	>
-						            		<font-awesome-icon class="configure"  @click="adjustManifest()" icon="cog" size="sm"  />
-									    </span>					 
-								    </template>
-								</b-table>
 								
-							</b-input-group-append>
-						    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.minLength">Specify one or more barcode</div>
-						    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.stateManifestID">
-						    	<span  
-						        	style="text-align:center"  >
-						        	No NTC present
-						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-						        	title="One Sample ID must have NTC (No Template Control)" />
-						      	</span>
-							</div>
-						</b-form-group>
-						<b-form-group
-				            label="Run Specifics"
-				            label-cols-sm="2"
-				            label-align-sm="center"
-				            label-size="sm"
-				            id="manifest_label"
-				            label-for="filterInput"
-				            class="mb-0 formGroup"						           
-				          >
-				          	<template slot="label">
+							</b-table>
+							<div style="text-align:center">
+								<b-form-input
+					    	      v-model="selectedHistory.runDir.manifest.filename"
+						          label="Filename"
+			    	              class="formGroup-input"
+						          type="text"
+						          required
+						          disabled
+							      :state="selectedHistory.runDir.manifest.validation"
+						          placeholder="manifest.txt"
+						    	></b-form-input>
+						    	  <b-form-invalid-feedback 
+						    	  v-b-tooltip.hover
+	                        		title="You will need to create it manually on the left or make it directly within the run folder"
+						    	  :state="selectedHistory.runDir.manifest.validation">
+							        manifest.txt not found. 
+							      </b-form-invalid-feedback>
+						    	<hr>
+						    	<b-button v-on:click="addManifestRow(0)"  class="btn tabButton" v-if="selectedHistory.runDir.manifest.entries.length ==0 && selectedHistory.custom">
+									<span>
+										<font-awesome-icon icon="plus"/>
+									</span>
+								</b-button>
+								<span v-else style="text-align:center">Set one Barcode as NB00 (or other unused name) for the NTC</span>
+
+					    	</div>
+						</b-input-group-append>
+						<b-input-group-append>
+							<template slot="label">
 							    <span  
 						        	style="text-align:center"  >
-						        	Specifics
+						        	Define Standard Manifest Scheme
+						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+						        	title="Select a Barcode Name (e.g. NB) and Sample ID. Increments by 1" />
 					      		</span>
 							</template>
-							<b-input-group-append>
-								
-								<b-table
-						          show-empty
-						          small
-						          label=""
-						          v-if="selectedHistory.runDir.specifics"
-						          style="width: 100%"
-				                  class="formGroup-input"
-						          :items="[selectedHistory.runDir.specifics]"
-						          :fields="specifics_table_fields"
-								  sticky-header="300px"						        
-								>
-									<template v-slot:cell()="cell">
-										<span 
-											:class="[cell.value.exists ? 'center-align-icon success-icon' : (cell.value.required ? 'center-align-icon  warn-icon' : 'center-align-icon warn-icon')]" 
-											style="margin:auto; text-align:center" v-tooltip="{
-								            content: 'Presence in Run Directory?',
+							<b-table
+					          show-empty
+					          small
+					          label=""
+					          :hidden="!isNew"
+					          style="width: 100%"
+			                  class="formGroup-input"
+					          :items="[1]"
+					          :fields="['Barcode', 'SampleID', 'Count', 'Adjust']"
+							  sticky-header="300px"						        
+							>
+								<template  v-slot:cell(Barcode)>
+									<b-form-textarea :disabled="!isNew"
+				                 		v-model="placeHolderBarcode"
+				                 		class="formGroup-input"
+				                 	>
+				                	</b-form-textarea>								 
+							    </template>
+							    <template  v-slot:cell(Count)>
+									<b-form-select class="formGroup-input" :disabled="!isNew" v-model="placeHolderManifestCount"   :options="[12, 24, 96]"></b-form-select>							 
+							    </template>
+							    <template  v-slot:cell(SampleID)>
+									<b-form-textarea 
+				                 	v-model="placeHolderSampleID"
+				                 	class="formGroup-input" :disabled="!isNew"
+				                 	>
+				                	</b-form-textarea>						 
+							    </template>
+							    <template  v-slot:cell(Adjust)>
+									<span :hidden="!isNew" class="center-align-icon;"
+					            		v-tooltip="{
+								            content: 'Adjust The Placeholder Manifest',
 								            placement: 'top',
 								            classes: ['info'],
 								            trigger: 'hover',
 								            targetClasses: ['it-has-a-tooltip'],
-								            }">
-					            			<font-awesome-icon :icon="cell.value.exists ? 'check' : (cell.value.required ? 'times-circle' : 'exclamation')" size="sm" />
-						            	</span>								 
-								    </template>
-								</b-table>
-							</b-input-group-append>
-						</b-form-group>
-				    </div>
+								            }"
+					            	>
+					            		<font-awesome-icon class="configure"  @click="adjustManifest()" icon="cog" size="sm"  />
+								    </span>					 
+							    </template>
+							</b-table>
+							
+						</b-input-group-append>
+					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.minLength">Specify one or more barcode</div>
+					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.stateManifestID">
+					    	<span  
+					        	style="text-align:center"  >
+					        	No NTC present
+					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+					        	title="One Sample ID must have NTC (No Template Control)" />
+					      	</span>
+						</div>
+					</b-form-group>
+				</b-col>
+				<b-col sm="12">
+					
 				</b-col>
 			</b-row>
 			<hr>
 		</div>
 		
     </b-form>
+    {{selectedHistory}}
+<p>________________________________</p>
 	<p class="text-center text-white bg-danger" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
   </div>
 </template>
@@ -730,7 +757,7 @@ export default {
 	computed: {
 		stateRunFolder(){
 			return this.fastqFiles.length == 0 ? false : true
-		},		
+		},	
 	},
 	props: ['modules', 'images', 'selectedTag'],
 	data() {
@@ -738,7 +765,6 @@ export default {
 			globalState:null,
 			newState: null,
 			reportDir: null,
-			checkboxPrimers: true,
 			checkboxBasecalling: false,
 			checkboxBarcoding: false,
 			run_info_fields: [
@@ -777,7 +803,10 @@ export default {
 					validation: false
 				},
 				run_config: {
-					primers: null, 
+					primers: {
+						custom: true,
+						val: null
+					}, 
 					basecalling:null, 
 					barcoding:null,
 					filename: 'run_config.txt'
@@ -839,11 +868,9 @@ export default {
 		// await this.fetchPrimers()
 		this.baseRunDir = this.runDir
         await this.fetchHistories()
-        console.log(this.histories[0])
-        console.log(JSON.stringify(this.histories[0]))
+        // this.selectedHistory = this.histories[this.histories.length - 1]
         this.selectedHistory = this.histories[this.histories.length - 1]
-
-        this.selectedHistory = JSON.parse(`{"runDir":{"path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4","basename":"20200519_2000_X3_FAN44250_e97e74b4","possibleFastqFolders":[{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20}],"run_info":{"filename":"run_info.txt","validation":true},"fastqDir":{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20},"run_config":{"primers":null,"basecalling":"dna_r9.4.1_450bps_hac.cfg","barcoding":"barcode_arrs_nb12.cfg","filename":"run_config.txt","validation":true},"manifest":{"entries":[{"barcode":"NB01","id":"NTC"},{"barcode":"NB03","id":"MDHP-0056"},{"barcode":"NB11","id":"MDHP-0065---"}],"filename":"manifest.txt","validation":true},"specifics":{"throughput":{"exists":false,"name":null,"required":false},"seq_summary":{"exists":true,"name":null,"required":true},"drift_correction":{"exists":true,"name":null,"required":false}}},"primerDir":null,"name":"tes2","currentDateTime":"2021-02-17T13-23-29","reportDir":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test","meta":{"run_info":{"name":"run_info.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_info.txt"},"run_config":{"name":"run_config.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_config.txt"},"manifest":{"name":"manifest.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/manifest.txt"}},"modules":[{"key":"barcode-demux","title":"Demultiplexing","step":1,"status":null,"statusType":"file","statusCompleteFilename":"1-barcode-demux.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/1-barcode-demux"},{"key":"length-filter","title":"Length Filter","step":2,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/2-length-filter"},{"key":"normalization","title":"Normalization","step":3,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/3-normalization"},{"key":"draft-consensus","title":"Consensus Draft","step":4,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/4-draft-consensus"},{"key":"post-filter","title":"Post Filter","step":5,"status":null,"statusType":"file","statusCompleteFilename":"module5-example-run.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter"},{"key":"report","title":"Report Generation","step":6,"status":null,"statusType":"file","statusCompleteFilename":"report.pdf","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline"}],"reportFiles":{"finalReport":{"pdf":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.pdf","name":"report.pdf"},"Rmd":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.Rmd","name":"report.Rmd"}},"mutations":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/mutations-table.txt","name":"mutations-table.txt"},"summary":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/summary.txt","name":"summary.txt"}},"consensus":{"rootPath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter","files":{"postfilt":{"all":"postfilt_all.txt","fasta":"postfilt_consensus_all.fasta","summary":"postfilt_summary.txt"},"snp":{"final":"final_snpEff_report.txt"}}}},"reportName":"test-2021-02-17T13-23-29","annotationsDir":null,"running":false,"saved":false,"loaded":false}`)
+        
 
 	},
     validations: {
@@ -923,14 +950,15 @@ export default {
     		} 
     	},
     	primerFiles: function(val){
-    		if (val.length > 0){
-    			const dir_path = path.dirname(val[0].path)
-    			const protocol_name = path.basename(dir_path)
-    			const obj = {fullpath: dir_path, fullname: "Custom", type: "manual", name: protocol_name}
-    		 	// this.$refs.primer_file_text.innerHTML = dir_path
-    			// this.data.primerDir = obj
-    			this.primerDir = obj
-    			this.primerDirSelect = obj
+    		if (this.selectedHistory.runDir.run_config.primers.custom){
+    			let root = this.parseFileInput(val)
+    			const primerV = path.basename(root)
+    			const baseP = path.basename(path.dirname(root))
+    			this.selectedHistory.runDir.run_config.primers.val = `${baseP}/${primerV}`			
+    			this.selectedHistory.runDir.run_config.primers.path = root
+    		} else {
+    			this.selectedHistory.runDir.run_config.primers.path = null
+    			this.selectedHistory.runDir.run_config.primers.val = root
     		}
     	},
     	name: function(val){
@@ -948,7 +976,6 @@ export default {
     			this.manifest_fields[2].thClass = null
     			this.manifest_fields[2].tdClass = null
     		}
-  		
     	},
     	histories: {
     		deep:true,
@@ -1051,35 +1078,19 @@ export default {
 			})
 			return ntc_found ? null : false 
 		},
-		async changeRunDir(val, type){
+		parseFileInput(val){
 			let root;
 			let dirName;
-			const files = val.filter((d)=>{
-				if(d['$path']){
-					return true
-				} else {
-					d.$path = d.webkitRelativePath
-					return true
-				}
-			})
+			const files = val;
 			if(files.length > 0){
 				root = path.dirname(files[0].path)
-				const sep =path.sep
-				for(let i = 0; i < files.length; i++){
-					let sep_paths = files[i].$path.split(/[\\/]/)
-					sep_paths = sep_paths.filter(function (el) {
-					  return (el != null && el != "");
-					});
-					const path = files[i].path
-					if (path < root){
-						root = path
-					}
-				}
+				return root
 			} else {
-				return
+				return null
 			}
-		 	dirName = root
-		 	this.runDir.path = root
+		},
+		async changeRunDir(val, type){			
+		 	this.runDir.path = this.parseFileInput(val)
     		if (this.isNew){
     			this.selectedHistory.runDir.fastqDir = {
 					path: null,
@@ -1088,7 +1099,9 @@ export default {
 					validation: false
 				}
 			}
+
     		await this.validateRunDirContents(this.runDir).then((response)=>{
+    			console.log(this.runDir.run_config.primers)
     			this.runDir = response.runDir
 	    		this.selectedHistory.runDir = response.runDir
     		}).catch((err)=>{
@@ -1104,6 +1117,7 @@ export default {
 					runDir: runDir
 				}).then((response)=>{
 					$this.validatingRunDir = false
+					console.log($this.selectedHistory)
 					return resolve(response.data.data)
 				}).catch((err)=>{
 					console.error("error in validating run dir", err.response.data.message)
@@ -1158,6 +1172,7 @@ export default {
 					d.loaded = false
 					return d
 				})
+				console.log(this.histories)
 				if(response.data.data.length >=1){
 					if (selected.length >= 1){
 						this.histories = this.histories.map((d)=>{
@@ -1176,7 +1191,10 @@ export default {
 					protocolDir: this.protocolDir ,
 					custom: true
 				}
+				// const newReport = JSON.parse(`{"runDir":{"path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4","basename":"20200519_2000_X3_FAN44250_e97e74b4","possibleFastqFolders":[{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20}],"run_info":{"filename":"run_info.txt","validation":true},"fastqDir":{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20},"run_config": {"primers": {"custom": true,"val": null},"basecalling":"dna_r9.4.1_450bps_hac.cfg","barcoding":"barcode_arrs_nb12.cfg","filename":"run_config.txt","validation":true},"manifest":{"entries":[{"barcode":"NB01","id":"NTC"},{"barcode":"NB03","id":"MDHP-0056"},{"barcode":"NB11","id":"MDHP-0065---"}],"filename":"manifest.txt","validation":true},"specifics":{"throughput":{"exists":false,"name":null,"required":false},"seq_summary":{"exists":true,"name":null,"required":true},"drift_correction":{"exists":true,"name":null,"required":false}}},"primerDir":null,"name":"tes2","currentDateTime":"2021-02-17T13-23-29","reportDir":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test","meta":{"run_info":{"name":"run_info.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_info.txt"},"run_config":{"name":"run_config.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_config.txt"},"manifest":{"name":"manifest.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/manifest.txt"}},"modules":[{"key":"barcode-demux","title":"Demultiplexing","step":1,"status":null,"statusType":"file","statusCompleteFilename":"1-barcode-demux.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/1-barcode-demux"},{"key":"length-filter","title":"Length Filter","step":2,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/2-length-filter"},{"key":"normalization","title":"Normalization","step":3,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/3-normalization"},{"key":"draft-consensus","title":"Consensus Draft","step":4,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/4-draft-consensus"},{"key":"post-filter","title":"Post Filter","step":5,"status":null,"statusType":"file","statusCompleteFilename":"module5-example-run.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter"},{"key":"report","title":"Report Generation","step":6,"status":null,"statusType":"file","statusCompleteFilename":"report.pdf","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline"}],"reportFiles":{"finalReport":{"pdf":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.pdf","name":"report.pdf"},"Rmd":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.Rmd","name":"report.Rmd"}},"mutations":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/mutations-table.txt","name":"mutations-table.txt"},"summary":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/summary.txt","name":"summary.txt"}},"consensus":{"rootPath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter","files":{"postfilt":{"all":"postfilt_all.txt","fasta":"postfilt_consensus_all.fasta","summary":"postfilt_summary.txt"},"snp":{"final":"final_snpEff_report.txt"}}}},"reportName":"test-2021-02-17T13-23-29","annotationsDir":null,"running":false,"saved":false,"loaded":false}`)
+		        this.selectedHistory = newReport
 				this.histories.push(newReport)
+
 
 				this.customHistory = newReport
 			})
@@ -1266,6 +1284,9 @@ export default {
 	    					return n.loaded
 	    				})
 	    				this.selectedHistory = this.histories.filter((n)=>{return n.name == name})[0];
+	    				if (!this.selectedHistory){
+	    					this.selectedHistory = this.histories[this.histories.length - 1]
+	    				}
 	    				if (running.length ==0){
 	    					this.loadHistory()
 	    				}

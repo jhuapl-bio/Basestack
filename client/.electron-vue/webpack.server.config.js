@@ -56,7 +56,6 @@ let serverConfig = {
     rules: [
       {
         test: /\.js$/,
-        use: 'babel-loader',
         exclude: /node_modules/
       },
       {
@@ -66,7 +65,6 @@ let serverConfig = {
     ]
   },
   plugins: [
-    new webpack.NoEmitOnErrorsPlugin(),
     new CleanWebpackPlugin(),
     new ESLintPlugin(),
   ],
@@ -77,6 +75,7 @@ if (process.env.NODE_ENV !== 'production'){
   serverConfig.plugins.push(
     new NodemonPlugin(
       {
+         verbose: true,
         "PORT_SERVER": process.env.PORT_SERVER
       }
     ) 

@@ -11,7 +11,7 @@
       :items="[resources.cpu]"
     >  
 
-    <template  v-slot:head(virtualization)="cell">
+    <template  v-slot:head(virtualization)>
       <span  
         style="text-align:center" v-b-tooltip.hover.top 
           title="CPU's Support for Virtualization. Required for Docker. This may show disabled for Virtual Machines despite Docker still being runnable." >Virtualization
