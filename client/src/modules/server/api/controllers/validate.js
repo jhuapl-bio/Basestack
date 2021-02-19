@@ -222,6 +222,7 @@ export async function validate_run_dir(runDir){
 		const drift_correctionExists = await checkFileExist(runDir_path, 'drift_correction.*csv', true)
 		let possibleFolders  = await getFolders(runDir_path)
 		let validFolders = []; let checkExists = [];
+		console.log(runDir.run_config.primers)
 		for (let i = 0; i < possibleFolders.length; i++){
 			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq$", true, true))
 		}
@@ -250,7 +251,13 @@ export async function validate_run_dir(runDir){
 		if(run_configExists){
 			validation['run_config']['exists'] = run_configExists
 			content = await readTableFile(run_configPath, '\t')
-			runDir.run_config.primers = content[0][1]	
+			console.log(runDir.run_config.primers )	
+			if (runDir.run_config.primers.val){
+				runDir.run_config.primers = convert_custom(runDir.run_config.primers) 
+			} else {
+				runDir.run_config.primers = convert_custom(content[0][1]) 				
+			}
+			console.log(runDir.run_config.primers )	
 			runDir.run_config.basecalling = content[1][1]
 			runDir.run_config.barcoding = content[2][1]
 			runDir.run_config.validation = run_configExists
@@ -276,11 +283,21 @@ export async function validate_run_dir(runDir){
 		runDir.specifics.throughput.exists = validation.throughput.exists
 		runDir.specifics.drift_correction.exists = validation.drift_correction.exists
 		runDir.specifics.seq_summary.exists = validation.seq_summary.exists
+		console.log(runDir.run_config.primers)
 		return {
 			runDir: runDir
 		}
 	} catch(err){
 		logger.error(err)
 		throw err
+	}
+}
+
+
+export  function convert_custom(val){ //convert legacy runs to object for use in custom input configurations
+	if (typeof val !== 'object' ){	
+		return {custom: false,  val: val, path: null}
+	} else {
+		return val
 	}
 }

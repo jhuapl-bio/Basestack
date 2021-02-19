@@ -27,28 +27,9 @@ let rendererConfig = {
   externals: [
     ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))
   ],
+  stats: 'normal',
   module: {
     rules: [
-      // {
-      //   test: /\.scss$/,
-      //   use: ['vue-style-loader', 'css-loader', 'sass-loader']
-      // },
-      // {
-      //   test: /\.sass$/,
-      //   use: ['vue-style-loader', 'css-loader', 'sass-loader?indentedSyntax']
-      // },
-      // {
-      //   test: /\.less$/,
-      //   use: ['vue-style-loader', 'css-loader', 'less-loader']
-      // },
-      // {
-      //   test: /\.css$/,
-      //   use: ['vue-style-loader', 'css-loader']
-      // },
-      // {
-      //   test: /\.html$/,
-      //   use: 'vue-html-loader'
-      // },
       {
         test: /\.css$/,
         use: [
@@ -119,7 +100,6 @@ let rendererConfig = {
         : false
     }),
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoEmitOnErrorsPlugin()
   ],
   output: {
     filename: '[name].js',

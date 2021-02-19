@@ -39,6 +39,15 @@ export class BasestackConsensus{
 			await checkFileExist(path.dirname(run_config.path), run_info.name)
 			await checkFileExist(path.dirname(manifest.path), run_info.name)
 			await checkFileExist(fastqDir, ".fastq")
+
+
+
+
+
+
+
+
+
 			// await checkFileExist(primerDir.fullpath, ".tsv")
 			// await checkFileExist(primerDir.fullpath, ".reference.fasta")
 			// await checkFileExist(primerDir.fullpath, ".bed")
@@ -58,10 +67,10 @@ export class BasestackConsensus{
 			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
 			const tmpMeta = "/opt/sequencing_runs/meta"
 
-			const tmpPrimerSchemes = "/root/idies/workspace/covid19/code/artic-ncov2019/primer_schemes"
+			const tmpPrimerSchemes = "/root/idies/workspace/covid19/code/artic-ncov2019/primer_schemes/SARS-CoV-2"
 			const tmpBarcoding = '/root/idies/workspace/covid19/code/ont-guppy-cpu/data/barcoding'
 			const tmpBasecalling = '/root/idies/workspace/covid19/code/ont-guppy-cpu/data'
-
+			console.log(run_config)
 			await writeFolder(consensusDir)
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
 			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
@@ -72,35 +81,37 @@ export class BasestackConsensus{
 				consensusDir, tmpConsensusDir,
 				fastqDir, tmpfastqDir
 			]
+
+			let command = ['bash', '-c']
+
+			console.log(data.runDir.run_config.primers)
+			if (data.runDir.run_config.primers.custom && data.runDir.run_config.primers.path){
+				volumes.push(data.runDir.run_config.primers.path)
+				volumes.push("/tmp/primerSchemes")
+				command.push('find /tmp/primerSchemes | while read p; do if [ -f "$p" ]; then base=$(basename $p) && extension="${base#*.}"  && ln -s $p $(dirname $p)/ncov-2019.$extension ; fi done')	
+				command.push(` && ls ${tmpPrimerSchemes}`)
+			}
+			let binds = []
+			let i  =0 ;
+			while (i < volumes.length) {
+			    binds.push(volumes.slice(i, i += 2).join(":"));
+			}
+			console.log(binds)
+
 			let options = {
 				name: "basestack_consensus",
 				// user: store.meta.uid.toString() + ":"+store.meta.gid.toString(),
 			    "HostConfig": {
 			    	"AutoRemove": true,
-			        "Binds": [
-			                volumes[0]+":"+volumes[1],
-			                volumes[2]+":"+volumes[3],
-			                volumes[4]+":"+volumes[5],
-			                volumes[6]+":"+volumes[7],
-			                volumes[8]+":"+volumes[9],
-			        ],	
+			        "Binds": binds	
 			    },
 		        "Volumes": {
-		        	[tmpreportDir]: {},
-		        	[tmpfastqDir]: {},
-		        	[tmpMeta]: {},
-		        	[tmpConsensusDir]: {},
-		        	[tmpfastqDir]: {}
 		        }
 			}	
-				// ` sleep 3&& echo yes && fdsfsdfdsf && bash artic-moduleff1-barcode-demux.sh -i ${tmpbaseDir} `
 
-			let command = [
-				"bash", 
-				"-c", 
-				`bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
-			]
-
+			
+			// `bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
+			console.log(command)
 			return {options: options, command: command }
 		} catch(err){
 			logger.error(err)
@@ -242,9 +253,12 @@ export class BasestackConsensus{
 		
 		// const primerNameDir = path.basename(path.dirname(primerDir.fullpath))
 		// await checkFileExist(fastqDir, ".fastq")
-		// await checkFileExist(primerDir.fullpath, ".tsv")
-		// await checkFileExist(primerDir.fullpath, ".reference.fasta")
-		// await checkFileExist(primerDir.fullpath, ".bed")
+		if (params.runDir.run_config.primers.path){
+			const path =params.runDir.run_config.primers.path
+			await checkFileExist(path, ".tsv")
+			await checkFileExist(path, ".reference.fasta")
+			await checkFileExist(path, ".bed")
+		}
 		try {
 			await checkFolderExistsReject(reportPath) //uncomment if you'd like to not overwrite the folder
 		  	//write the meta data file for the run
@@ -256,7 +270,7 @@ export class BasestackConsensus{
 		  		logger.info("%s %s", "Success in writing runInfo files")
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 		  	
-		  	tsv_file_content = "primers\t"+runDir.run_config.primers+"\n"+
+		  	tsv_file_content = "primers\t"+runDir.run_config.primers.val+"\n"+
 		  	'basecalling\t'+ runDir.run_config.basecalling+"\n" +
 		  	'barcoding\t'+ runDir.run_config.barcoding +"\n"
 
