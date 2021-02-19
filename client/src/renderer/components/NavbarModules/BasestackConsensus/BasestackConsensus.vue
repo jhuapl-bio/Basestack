@@ -1259,6 +1259,7 @@ export default {
 					override: override
 				}).then((response)=>{
 					$this.validatingRunDir = false
+					console.log($this.selectedHistory)
 					return resolve(response.data.data)
 				}).catch((err)=>{
 					console.error("error in validating run dir", err.response.data.message)
@@ -1322,6 +1323,7 @@ export default {
 					d.loaded = false
 					return d
 				})
+				console.log(this.histories)
 				if(response.data.data.length >=1){
 					if (selected.length >= 1){
 						this.histories = this.histories.map((d)=>{

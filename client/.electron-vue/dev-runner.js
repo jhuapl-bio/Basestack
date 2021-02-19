@@ -147,7 +147,7 @@ function startServer (devClient){
     })
 
     compiler.watch({}, (err, stats) => {
-      // logStats('Server', stats)
+      logStats('Server', stats)
       if (err){
         console.error(err, "error in server compiler")
       }

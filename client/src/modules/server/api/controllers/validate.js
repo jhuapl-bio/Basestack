@@ -315,6 +315,7 @@ export async function validate_run_dir(params){
 		runDir.specifics.throughput.exists = validation.throughput.exists
 		runDir.specifics.drift_correction.exists = validation.drift_correction.exists
 		runDir.specifics.seq_summary.exists = validation.seq_summary.exists
+		console.log(runDir.run_config.primers)
 		return {
 			runDir: runDir
 		}
