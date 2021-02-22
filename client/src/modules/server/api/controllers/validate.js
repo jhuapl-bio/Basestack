@@ -71,6 +71,7 @@ export async function validateVideo(videoPath){
 }
 export async function getRecursiveFiles(path, pattern){
 	return new Promise((resolve, reject)=>{
+		console.log(path, "<<<<<")
 		let glob_pattern = "/**/*";
 		if (pattern){
 			glob_pattern = pattern;
@@ -221,6 +222,9 @@ export async function validate_run_dir(runDir){
 		const seq_summaryExists  = await checkFileExist(runDir_path, 'sequencing_summary.*txt', true)
 		const drift_correctionExists = await checkFileExist(runDir_path, 'drift_correction.*csv', true)
 		let possibleFolders  = await getFolders(runDir_path)
+		possibleFolders = possibleFolders.filter((d)=>{
+			return d.name != 'artic-pipeline'
+		})
 		let validFolders = []; let checkExists = [];
 		for (let i = 0; i < possibleFolders.length; i++){
 			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq$", true, true))
@@ -237,7 +241,9 @@ export async function validate_run_dir(runDir){
 		})
 		let promises = []
 		validFolders.forEach((d)=>{
+			
 			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
+			
 		})
 		response = await Promise.all(promises)
 		response.forEach((d,i)=>{
