@@ -877,6 +877,9 @@ export default {
 			counter: 0,
 			isNew: true,
 
+			customPrimerAdd: true,
+
+
 
 
 
