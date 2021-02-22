@@ -3,10 +3,10 @@
         "path": "${dataPath}/logs"
     },
     "images": {
-        "jhuaplbio/artic": {
+        "jhuaplbio/basestack_consensus": {
             "status": null,
             "title": "Consensus",
-            "name": "jhuaplbio/artic",
+            "name": "jhuaplbio/basestack_consensus",
             "estimated_size": 10.6,
             "private": false,
             "tags": [],
@@ -18,7 +18,7 @@
                 "file": null,
                 "active": false,
                 "resources": null,
-                "path": "jhuaplbio/artic"
+                "path": "jhuaplbio/basestack_consensus"
             }
         },
         "basestack_tutorial": {
@@ -80,7 +80,7 @@
             "module": true,
             "status": null,
             "tooltip": "Generate consensus sequences and receive a report.",
-            "image": "jhuaplbio/artic",
+            "image": "jhuaplbio/basestack_consensus",
             "meta": "${writePath}/basestack_consensus/meta.json",
             "config": {
                 "estimated_size": 14500,
@@ -147,7 +147,7 @@
             "module": true,
             "status": null,
             "tooltip": "Fast annotation of input fastq files using the artic network",
-            "image": "jhuaplbio/artic",
+            "image": "jhuaplbio/basestack_consensus",
             "meta": "${writePath}/rampart/meta.json",
             "config": {
                 "annotationsPath": "",

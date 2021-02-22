@@ -145,11 +145,11 @@ export async function updateDockerSocket(socket){
 async function initialize_module_object(container_name){
 	let obj;
 	if (container_name == 'rampart'){
-		obj  = new DockerObj('jhuaplbio/artic', 'rampart', new RAMPART());
+		obj  = new DockerObj('jhuaplbio/basestack_consensus', 'rampart', new RAMPART());
 	} else if (container_name == 'basestack_tutorial'){
 		obj = new DockerObj('basestack_tutorial', 'basestack_tutorial', new Tutorial());
 	} else if (container_name == 'basestack_consensus'){
-		obj  = new DockerObj('jhuaplbio/artic', 'basestack_consensus', new BasestackConsensus());
+		obj  = new DockerObj('jhuaplbio/basestack_consensus', 'basestack_consensus', new BasestackConsensus());
 	} 
 
 	obj.config = store.config.modules[container_name]
