@@ -40,14 +40,6 @@ export class BasestackConsensus{
 			await checkFileExist(path.dirname(manifest.path), run_info.name)
 			await checkFileExist(fastqDir, ".fastq")
 
-
-
-
-
-
-
-
-
 			// await checkFileExist(primerDir.fullpath, ".tsv")
 			// await checkFileExist(primerDir.fullpath, ".reference.fasta")
 			// await checkFileExist(primerDir.fullpath, ".bed")

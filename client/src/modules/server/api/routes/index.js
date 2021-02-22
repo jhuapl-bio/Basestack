@@ -45,7 +45,8 @@ const {
 	 init,
 	 cancel_container, 
 	 initialize,
-	 updateDockerSocket
+	 updateDockerSocket,
+	 add_selections
  } = require('../controllers/index')
 
 const {	removeAnnotation } = require("../controllers/annotations.js")
@@ -552,4 +553,23 @@ router.post("/validate/validateRunDirContents", (req,res,next)=>{ //this method 
 		}	
 	})().catch((err)=>{})
 })
+router.post("/selections/add", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	( async function() {
+		try {
+			await add_selections(req.body).then((response)=>{
+				logger.info("Success in adding field")
+					res.status(200).json({status: 200, message: "Completed addition of field for module", data: response });
+				}).catch((err)=>{
+					logger.error("%s %s", "Error in adding field: ", err.message)
+					res.status(419).send({status: 419, message: "There was an error; " + err.message});
+				})			
+			
+		} catch(err2){
+			logger.error("%s %s", "Error in adding field", err2)
+			res.status(419).send({status: 419, message: error_alert(err2) });
+		}	
+	})().catch((err)=>{})
+})
+
+
 export default router

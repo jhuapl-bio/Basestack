@@ -251,13 +251,10 @@ export async function validate_run_dir(runDir){
 		if(run_configExists){
 			validation['run_config']['exists'] = run_configExists
 			content = await readTableFile(run_configPath, '\t')
-			console.log(runDir.run_config.primers )	
-			if (runDir.run_config.primers.val){
-				runDir.run_config.primers = convert_custom(runDir.run_config.primers) 
-			} else {
-				runDir.run_config.primers = convert_custom(content[0][1]) 				
-			}
-			console.log(runDir.run_config.primers )	
+			
+
+			runDir.run_config.primers = convert_custom(content[0][1]) 				
+			
 			runDir.run_config.basecalling = content[1][1]
 			runDir.run_config.barcoding = content[2][1]
 			runDir.run_config.validation = run_configExists
@@ -296,7 +293,7 @@ export async function validate_run_dir(runDir){
 
 export  function convert_custom(val){ //convert legacy runs to object for use in custom input configurations
 	if (typeof val !== 'object' ){	
-		return {custom: false,  val: val, path: null}
+		return {custom: false,  val: val}
 	} else {
 		return val
 	}

@@ -453,15 +453,14 @@
 							>
 								<template  v-slot:cell(primers)="row">
 									<b-form-checkbox
-								      v-model="row.item.primers.custom"
-								      name="row.item.primers.custom"
+								      v-model="customPrimerAdd"
+								      name="customPrimerAdd"
 								    >
 								      Custom
 								    </b-form-checkbox>
-								    {{row.item.primers.val}}
-									<b-form-select class="formGroup-input" v-if="!row.item.primers.custom" v-model="row.item.primers.val"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.primers"></b-form-select>
+									<b-form-select class="formGroup-input" v-if="!customPrimerAdd" v-model="row.item.primers.val"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.primers"></b-form-select>
 									<b-form-file 
-				                 	 v-else-if="row.item.primers.custom && isNew"
+				                 	 v-else
 				                 	 directory
 					                 :no-traverse="true"
 					                 :multiple="true"
@@ -473,14 +472,6 @@
 					                 drop-placeholder="Drop primer scheme folder"
 					                 >
 				                	</b-form-file>
-							    	<b-form-textarea
-							    	  v-else
-							          v-model="row.item.primers.val"
-							          label="Filename"
-					                  class="formGroup-input"
-							          type="text"
-							          disabled
-							    	></b-form-textarea>
 						    	<b-form-invalid-feedback :state="row.item.validation">
 						        	run_info.txt not found
 						      	</b-form-invalid-feedback>										 
@@ -853,6 +844,9 @@ export default {
 			counter: 0,
 			isNew: true,
 
+			customPrimerAdd: true,
+
+
 
     	    changes: 0,
 	        tableInterval:null,
@@ -949,16 +943,28 @@ export default {
     		 	this.changeRunDir(flat, 'dir')
     		} 
     	},
-    	primerFiles: function(val){
+    	primerFiles: async function(val){
     		if (this.selectedHistory.runDir.run_config.primers.custom){
     			let root = this.parseFileInput(val)
     			const primerV = path.basename(root)
     			const baseP = path.basename(path.dirname(root))
-    			this.selectedHistory.runDir.run_config.primers.val = `${baseP}/${primerV}`			
-    			this.selectedHistory.runDir.run_config.primers.path = root
-    		} else {
-    			this.selectedHistory.runDir.run_config.primers.path = null
-    			this.selectedHistory.runDir.run_config.primers.val = root
+    			const fullname = `${baseP}/${primerV}`		
+    			try{	
+	    			let response =  await FileService.addSelection({
+						target: "modules.basestack_consensus.custom_primers",
+						value: fullname,
+						path: root,
+						custom: true
+					})
+	    		} catch(err){
+	    			console.error(err)
+	    			this.$swal.fire({
+						position: 'center',
+						icon: 'error',
+						showConfirmButton:true,
+		                title:  err.response.data.message
+					});
+	    		}
     		}
     	},
     	name: function(val){
