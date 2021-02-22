@@ -73,6 +73,7 @@ export async function validateVideo(videoPath){
 }
 export async function getRecursiveFiles(path, pattern){
 	return new Promise((resolve, reject)=>{
+		console.log(path, "<<<<<")
 		let glob_pattern = "/**/*";
 		if (pattern){
 			glob_pattern = pattern;
@@ -276,6 +277,7 @@ export async function validate_run_dir(params){
 		let promises = []
 		validFolders.forEach((d)=>{			
 			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
+			
 		})
 		response = await Promise.all(promises)
 		response.forEach((d,i)=>{
