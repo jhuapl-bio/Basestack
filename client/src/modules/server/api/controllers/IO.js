@@ -14,7 +14,7 @@ import  path  from "path"
 const mkdirp = require("mkdirp");
 const rimraf = require("rimraf");
 import parse  from 'csv-parser'
-function set(attribute, value, obj) {
+export function set(attribute, value, obj) {
     var depth = obj;  // a moving reference to internal objects within obj
     var depth_attributes = attribute.split('.');
     for(var i = 0; i < depth_attributes.length; i++) {

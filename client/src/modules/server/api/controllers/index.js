@@ -17,7 +17,7 @@ var { logger } = require("./logger.js")
 var { initDockerLogs, attachStream } = require("./dockerLogs.js")
 const { checkFileExist, checkFolderExistsReject, reformatResponseVideo, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 const { getPrimerDirsVersions, fetch_protocols, fetch_primers, fetch_videos, fetch_modules } = require("./fetch.js")
-const { writeFolder, writeFile, ammendJSON, readFile } = require("./IO.js")
+const { writeFolder, writeFile, ammendJSON, readFile, set } = require("./IO.js")
 const fs  = require("fs")
 const fs_promise = require("fs").promises
 const containerNames = ['rampart','basestack_consensus', 'basestack_tutorial']
@@ -202,5 +202,37 @@ export async function cancel_container(params){
 			logger.error(`${err}, function: cancel_container()`)
 			throw err
 		}
+	}
+}
+export async function add_selections(params){
+	console.log(params)
+	try{
+		if (!store.config.modules.basestack_consensus.resources.run_config.primers.includes(params.value)){
+			store.config.modules.basestack_consensus.resources.run_config.primers.push(params.value)
+		} else {
+			throw new Error("value already found, please opt for a different target name")
+		}
+		const attrs = params.target.split(".")
+		let meta = await readFile(store.meta.userMeta)
+		meta = JSON.parse(meta)
+		let depth  = meta
+		for (let i = 0; i < attrs.length; i+=1){	
+			depth = depth[attrs[i]]
+		}	
+		if (!Array.isArray(depth)){
+			depth = [depth]
+		}	
+		if (!depth.includes(params.value)){
+			depth.push(params.value)
+		}
+		await ammendJSON({
+			value: depth,
+			file: store.meta.userMeta,
+			attribute: params.target
+		})	
+		return 1
+	} catch(err){
+		logger.error("%s Error in adding custom file based on params: %j", err, params)
+		throw err
 	}
 }

@@ -120,6 +120,9 @@ class FileService {
   selectTag(params){
     return Api().post(`${baseEndpoint}/tags/select`, params)  
   }
+  addSelection(params){
+    return Api().post(`${baseEndpoint}/selections/add`, params)  
+  }
 
 }
 export default new FileService();
