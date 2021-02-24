@@ -17,7 +17,7 @@ var { logger } = require("./logger.js")
 var { initDockerLogs, attachStream } = require("./dockerLogs.js")
 const { checkFileExist, checkFolderExistsReject, reformatResponseVideo, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 const { getPrimerDirsVersions, fetch_protocols, fetch_primers, fetch_videos, fetch_modules } = require("./fetch.js")
-const { writeFolder, writeFile, ammendJSON, readFile, set } = require("./IO.js")
+const { writeFolder, writeFile, ammendJSON, readFile, get } = require("./IO.js")
 const fs  = require("fs")
 const fs_promise = require("fs").promises
 const containerNames = ['rampart','basestack_consensus', 'basestack_tutorial']
@@ -53,6 +53,7 @@ export async function initialize(params){
 		let attributes = ['modules', 'images', 'dockerConfig']
 		for (let i = 0; i < attributes.length; i++){
 			if (!meta[attributes[i]]){
+				meta[attributes[i]] = {}
 				await ammendJSON({
 					value: {},
 					file: userMeta,
@@ -67,7 +68,7 @@ export async function initialize(params){
 		store.docker = await docker_init();
 		let response = await fetch_modules()
 		for (const [key, image] of Object.entries(store.config.images)){
-			if (!meta.images[key]){
+			if (!meta.images || !meta.images[key]){
 				await ammendJSON({
 					value: {resources: null},
 					file: userMeta,
@@ -145,11 +146,11 @@ export async function updateDockerSocket(socket){
 async function initialize_module_object(container_name){
 	let obj;
 	if (container_name == 'rampart'){
-		obj  = new DockerObj('jhuaplbio/artic', 'rampart', new RAMPART());
+		obj  = new DockerObj('jhuaplbio/basestack_consensus', 'rampart', new RAMPART());
 	} else if (container_name == 'basestack_tutorial'){
 		obj = new DockerObj('basestack_tutorial', 'basestack_tutorial', new Tutorial());
 	} else if (container_name == 'basestack_consensus'){
-		obj  = new DockerObj('jhuaplbio/artic', 'basestack_consensus', new BasestackConsensus());
+		obj  = new DockerObj('jhuaplbio/basestack_consensus', 'basestack_consensus', new BasestackConsensus());
 	} 
 
 	obj.config = store.config.modules[container_name]
@@ -205,34 +206,79 @@ export async function cancel_container(params){
 	}
 }
 export async function add_selections(params){
-	console.log(params)
 	try{
-		if (!store.config.modules.basestack_consensus.resources.run_config.primers.includes(params.value)){
-			store.config.modules.basestack_consensus.resources.run_config.primers.push(params.value)
+		if (!params.file_target){
+			params.file_target = params.target
+		}
+		const attrs = params.file_target.split(".")
+		let meta = await readFile(store.meta.userMeta)
+		meta = JSON.parse(meta)
+		let depth  = get(params.file_target, meta, params.type)
+
+		let push = false
+		if (params.key){
+			if (depth.some(e => params.value[params.key] === e[params.key] )) {
+				console.log("already found")
+			} else {
+				console.log("not found, adding")	
+				push = true			
+			}
+		}
+		else {
+			if(!depth.includes(params.value)){
+				push = true
+			}
+		}
+		if (push){
+			let st = get(params.target, store, params.type) 
+			st.push(params.value)
+			depth.push(params.value)
+			await ammendJSON({
+				value: depth,
+				type: "arr",
+				file: store.meta.userMeta,
+				attribute: params.file_target
+			})	
 		} else {
 			throw new Error("value already found, please opt for a different target name")
 		}
+		
+
+		return 1
+	} catch(err){
+		logger.error("%s Error in adding custom file based on params: %j", err, params)
+		throw err
+	}
+}
+export async function rm_selections(params){
+	try{
 		const attrs = params.target.split(".")
 		let meta = await readFile(store.meta.userMeta)
 		meta = JSON.parse(meta)
 		let depth  = meta
-		for (let i = 0; i < attrs.length; i+=1){	
-			depth = depth[attrs[i]]
-		}	
+		
 		if (!Array.isArray(depth)){
 			depth = [depth]
 		}	
-		if (!depth.includes(params.value)){
-			depth.push(params.value)
+		let found = false
+		if (params.key){
+			params.value = store.config.modules.basestack_consensus.resources.run_config.primers.filter((d)=>{
+				return d[params.key] !== params.value[params.key]
+			})
+		}
+		else {
+			params.value = store.config.modules.basestack_consensus.resources.run_config.primers.filter((d)=>{
+				return d !== params.value
+			})
 		}
 		await ammendJSON({
 			value: depth,
 			file: store.meta.userMeta,
-			attribute: params.target
+			attribute: params.file_target
 		})	
 		return 1
 	} catch(err){
-		logger.error("%s Error in adding custom file based on params: %j", err, params)
+		logger.error("%s Error in removing custom file based on params: %j", err, params)
 		throw err
 	}
 }

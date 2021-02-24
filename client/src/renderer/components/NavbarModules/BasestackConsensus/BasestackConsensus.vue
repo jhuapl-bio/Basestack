@@ -458,9 +458,24 @@
 								    >
 								      Custom
 								    </b-form-checkbox>
-									<b-form-select class="formGroup-input" v-if="!customPrimerAdd" v-model="row.item.primers.val"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.primers"></b-form-select>
+									{{modules.basestack_consensus.resources.run_config.primers }}
+									<multiselect 
+					                  class="formGroup-input" v-model="row.item.primers.val"  :disabled="!isNew" :options="modules.basestack_consensus.resources.run_config.primers"
+									  :searchable="false" :close-on-select="false" :preselect-first="true" track-by="name" label="name" :show-labels="false" placeholder="Pick a value" 
+									  select-label="Select" :allow-empty="false"
+									  >
+									 	 <template slot="option" slot-scope="props">
+									 	 	<span class="option__desc">
+									 	 		<span class="option__title">{{ props.option.name}}</span>
+												<b-button v-if="props.option.custom" v-on:click="rmAttribute(props.option, 'primer')"   class="btn" >
+													<span>
+														<font-awesome-icon   icon="minus"/>
+													</span>
+												</b-button>
+									 	 	</span>
+									 	 </template>
+									</multiselect>	
 									<b-form-file 
-				                 	 v-else
 				                 	 directory
 					                 :no-traverse="true"
 					                 :multiple="true"
@@ -717,7 +732,6 @@
 		</div>
 		
     </b-form>
-    {{selectedHistory}}
 <p>________________________________</p>
 	<p class="text-center text-white bg-danger" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
   </div>
@@ -951,10 +965,11 @@ export default {
     			const fullname = `${baseP}/${primerV}`		
     			try{	
 	    			let response =  await FileService.addSelection({
-						target: "modules.basestack_consensus.custom_primers",
-						value: fullname,
-						path: root,
-						custom: true
+						target: `config.modules.basestack_consensus.resources.run_config.primers`,
+						file_target: "modules.basestack_consensus.resources.run_config.primers",
+						value: { name: fullname, custom: true, path: root},
+						type: 'arr',
+						key: "name"
 					})
 	    		} catch(err){
 	    			console.error(err)
@@ -993,6 +1008,26 @@ export default {
 	methods: {
 		open (link) {
 			this.$emit("open", link)
+      	},
+      	async rmAttribute(value, target){
+      		console.log(value, target)
+      		try{	
+    			let response =  await FileService.rmSelection({
+    				target: `config.modules.basestack_consensus.resources.run_config.${target}`,
+					file_target: `modules.basestack_consensus.resources.run_config.${target}`,
+					value: value,
+					type: 'arr',
+					key: "name"
+				})
+    		} catch(err){
+    			console.error(err)
+    			this.$swal.fire({
+					position: 'center',
+					icon: 'error',
+					showConfirmButton:true,
+	                title:  err.response.data.message
+				});
+    		}
       	},
 
       	hideTooltipLater() {

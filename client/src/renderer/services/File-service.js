@@ -123,6 +123,9 @@ class FileService {
   addSelection(params){
     return Api().post(`${baseEndpoint}/selections/add`, params)  
   }
+  rmSelection(params){
+    return Api().post(`${baseEndpoint}/selections/rm`, params)  
+  }
 
 }
 export default new FileService();

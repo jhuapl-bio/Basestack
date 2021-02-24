@@ -46,23 +46,27 @@ export class BasestackConsensus{
 
 			// const tmpprimerDir = "/tmp/consensus/primers/"+primerNameDir+"/"+versionDir
 			const tmpreportDir = "/tmp/consensus/reports"
-			const tmpConsensusDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline"
-			const tmpbaseDir = "/root/idies/workspace/covid19/sequencing_runs/example-run"
-			const tmpfastqDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/fastq_pass"
-			// const tmpConsensusDir = "/opt/sequencing_run/artic-pipeline"
-			// const tmpbaseDir = "/opt/sequencing_run"
-			// const tmpfastqDir = "/opt/sequencing_run/fastq_pass"
+
+			// const tmpConsensusDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/artic-pipeline"
+			// const tmpbaseDir = "/root/idies/workspace/covid19/sequencing_runs/example-run"
+			// const tmpfastqDir = "/root/idies/workspace/covid19/sequencing_runs/example-run/fastq_pass"
+			const tmpConsensusDir = "/opt/basestack_consensus/sequencing_runs/example-run/artic-pipeline"
+			const tmpbaseDir = "/opt/basestack_consensus/sequencing_runs/example-run"
+			const tmpfastqDir = "/opt/basestack_consensus/sequencing_runs/example-run/fastq_pass"
+
 			// const tmpConsensusScripts = "/root/idies/workspace/covid19"
 			const tmpRunInfo = tmpfastqDir + run_info
 			const tmpManifest = tmpfastqDir + manifest
 			const tmpRunConfig = tmpfastqDir + run_config
 			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
-			const tmpMeta = "/opt/sequencing_runs/meta"
 
-			const tmpPrimerSchemes = "/root/idies/workspace/covid19/code/artic-ncov2019/primer_schemes/SARS-CoV-2"
-			const tmpBarcoding = '/root/idies/workspace/covid19/code/ont-guppy-cpu/data/barcoding'
-			const tmpBasecalling = '/root/idies/workspace/covid19/code/ont-guppy-cpu/data'
+
+			const tmpPrimerSchemes = "/opt/basestack_consensus/covid19/code/artic-ncov2019/primer_schemes/SARS-CoV-2"
+			const tmpBarcoding = '/opt/basestack_consensus/covid19/code/ont-guppy-cpu/data/barcoding'
+			const tmpBasecalling = '/opt/basestack_consensus/covid19/code/ont-guppy-cpu/data'
 			console.log(run_config)
+			const tmpMeta = "/opt/basestack_consensus/sequencing_runs/sequencing_runs/meta"
+
 			await writeFolder(consensusDir)
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
 			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
