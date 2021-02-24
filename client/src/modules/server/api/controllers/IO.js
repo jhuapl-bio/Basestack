@@ -14,18 +14,54 @@ import  path  from "path"
 const mkdirp = require("mkdirp");
 const rimraf = require("rimraf");
 import parse  from 'csv-parser'
-export function set(attribute, value, obj) {
-    var depth = obj;  // a moving reference to internal objects within obj
-    var depth_attributes = attribute.split('.');
-    for(var i = 0; i < depth_attributes.length; i++) {
-       if (i == depth_attributes.length - 1){
-           depth[depth_attributes[i]] = value
-       }  else {
-       		depth = depth[depth_attributes[i]]
-       }
-    }
 
-    return obj
+
+
+export function set(attribute, value, obj, type) {
+    var depth_attributes = attribute.split('.');
+    var depth = obj
+    try{
+	    for(var i = 0; i < depth_attributes.length; i++) {
+			if (i < depth_attributes.length - 1 ){
+		    	depth = depth[depth_attributes[i]] 
+		    } else {
+		    	depth[depth_attributes[i]]  = value
+		    }
+	    }
+	    // console.log("obj", JSON.stringify(obj.modules, null, 4))
+	    console.log(value, depth)
+	    return obj
+	} catch(err){
+		logger.error("Error in set :%j", err)
+		throw err
+	}
+}
+
+export function get(attribute, obj, type) {
+    let depth = obj; 
+    const typeMap = {
+		'arr': [],
+		'obj': {},
+		"str": ""
+	}
+    var depth_attributes = attribute.split('.');
+    try{
+	    for(var i = 0; i < depth_attributes.length; i++) {
+	       if (!depth[depth_attributes[i]]){
+				if (i < depth_attributes.length - 1 || !type){
+			    	depth[depth_attributes[i]] = {}
+			    } else {
+			    	depth[depth_attributes[i]] = typeMap[type]
+			    }
+			}	       		
+			depth = depth[depth_attributes[i]]	    
+	    }
+	    // console.log("returning depth_attributes")
+	    return depth
+	} catch(err){
+		logger.error("Error in get attributes :%j", err)
+		throw err
+	}
 }
 export async function ammendJSON(obj){
 	return new Promise((resolve, reject)=>{
@@ -38,7 +74,8 @@ export async function ammendJSON(obj){
 				  }
 				  let js = JSON.parse(data.toString())
 				  const depthAttribute = obj.attribute
-				  js = set(obj.attribute, obj.value, js);
+				  js = set(obj.attribute, obj.value, js, obj.type);
+				  // resolve()
 				  (async function(){
 				  	await writeFile(obj.file, JSON.stringify(js,null,4))
 				  })().then(()=>{

@@ -46,7 +46,8 @@ const {
 	 cancel_container, 
 	 initialize,
 	 updateDockerSocket,
-	 add_selections
+	 add_selections,
+	 rm_selections
  } = require('../controllers/index')
 
 const {	removeAnnotation } = require("../controllers/annotations.js")
@@ -566,6 +567,23 @@ router.post("/selections/add", (req,res,next)=>{ //this method needs to be rewor
 			
 		} catch(err2){
 			logger.error("%s %s", "Error in adding field", err2)
+			res.status(419).send({status: 419, message: error_alert(err2) });
+		}	
+	})().catch((err)=>{})
+})
+router.post("/selections/rm", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	( async function() {
+		try {
+			await rm_selections(req.body).then((response)=>{
+				logger.info("Success in removal of field")
+					res.status(200).json({status: 200, message: "Completed removal of field for module", data: response });
+				}).catch((err)=>{
+					logger.error("%s %s", "Error in adding field: ", err.message)
+					res.status(419).send({status: 419, message: "There was an error; " + err.message});
+				})			
+			
+		} catch(err2){
+			logger.error("%s %s", "Error in removing field", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
 		}	
 	})().catch((err)=>{})
