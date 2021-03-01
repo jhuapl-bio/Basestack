@@ -7,7 +7,7 @@
    - # **********************************************************************
   */
 const fs = require("fs")
-const { checkFileExist, checkFolderExistsReject, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
+const { convert_custom, checkFileExist, checkFolderExistsReject, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions, validate_run_dir }  = require("./validate.js")
 import  path  from "path"
 var   { store }  = require("../store/global.js")
 var { logger } = require("../controllers/logger.js")
@@ -283,7 +283,7 @@ export async function fetch_histories(){
 		let validHistory = await validateHistory(fullpathHistory,histories[i])
 		if(validHistory){
 			try{
-				await readFile(path.join(fullpathHistory, "report-meta.json"), false).then((content, error)=>{
+				await readFile(path.join(fullpathHistory, "report-meta.json"), false).then(async (content, error)=>{
 					if (error){
 						logger.error(`${error}`)
 					} else {
@@ -295,6 +295,13 @@ export async function fetch_histories(){
 				    	} else {
 				    		contentobj.running = false
 				    	}
+				    	contentobj.runDir.run_config.primers = convert_custom(contentobj.runDir.run_config.primers, 
+				    		store.config.modules.basestack_consensus.resources.run_config.primers, 'name') 	
+				    	contentobj.runDir.run_config.basecalling = convert_custom(contentobj.runDir.run_config.basecalling,
+				    		store.config.modules.basestack_consensus.resources.run_config.basecalling, 'name') 	
+				    	contentobj.runDir.run_config.barcoding = convert_custom(contentobj.runDir.run_config.barcoding, 
+				    		store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name') 	
+						// console.log(contentobj.runDir.run_config.primers)
 						response.push(contentobj)
 					}
 					

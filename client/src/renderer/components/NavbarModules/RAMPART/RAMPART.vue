@@ -296,7 +296,7 @@
               name: this.selectedHistory.name,
               annotationsDir: this.selectedHistory.annotationsDir,
               module: 'rampart',
-              tag: this.images['jhuaplbio/artic'].selectedTag
+              tag: this.images['jhuaplbio/basestack_consensus'].selectedTag
           }).then((response)=>{
             this.$swal.fire({
               position: 'center',
