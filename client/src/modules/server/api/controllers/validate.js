@@ -332,6 +332,7 @@ function make_custom(val, map, target){
 			const val2 = map.filter((d)=>{
 				return d[target] == val
 			})
+			console.log(val2, "convertcustom")
 			if (val2.length > 0){
 				return {custom: val2[0].custom,  name: val2[0][target], path: val2[0].path}
 			}
