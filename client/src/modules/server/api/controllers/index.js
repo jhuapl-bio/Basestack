@@ -17,7 +17,7 @@ var { logger } = require("./logger.js")
 var { initDockerLogs, attachStream } = require("./dockerLogs.js")
 const { checkFileExist, checkFolderExistsReject, reformatResponseVideo, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 const { getPrimerDirsVersions, fetch_protocols, fetch_primers, fetch_videos, fetch_modules } = require("./fetch.js")
-const { writeFolder, writeFile, ammendJSON, readFile, get } = require("./IO.js")
+const { writeFolder, writeFile, ammendJSON, readFile, get, set } = require("./IO.js")
 const fs  = require("fs")
 const fs_promise = require("fs").promises
 const containerNames = ['rampart','basestack_consensus', 'basestack_tutorial']
@@ -28,7 +28,7 @@ const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
 const { RAMPART } = require('../modules/rampart')
 const {docker_init} = require("./docker.js")
-
+const lodash = require("lodash")
 
 export async function initialize(params){
 	// logger.info("%s <------ initialize", store.meta)
@@ -89,6 +89,13 @@ export async function initialize(params){
 				
 			}
 		}
+		let tag = "name"
+		function customizer(objValue, srcValue) { //https://lodash.com/docs/#merge
+		  if (Array.isArray(objValue)) {
+		    const unio = lodash.union(objValue, srcValue);
+		  	return lodash.uniqBy(unio, tag)
+		  }
+		}
 		for (const [key, value] of Object.entries(response.modules.entries)){
 			if (value.module){
 				if (!meta.modules[key]){
@@ -99,6 +106,8 @@ export async function initialize(params){
 				if (!folderExists){
 					await writeFolder(path.join(store.meta.writePath, container_name))
 				}
+				tag = "name"
+				const merged  = lodash.mergeWith( value.resources, meta.modules[key].resources, customizer)
 				let obj = await initialize_module_object(container_name)
 				if (value.config.initial && response.images.entries[value.image].installed){
 					let response = await obj.cancel()
@@ -229,6 +238,7 @@ export async function add_selections(params){
 				push = true
 			}
 		}
+		console.log("pushing?", push)
 		if (push){
 			let st = get(params.target, store, params.type) 
 			st.push(params.value)
@@ -255,28 +265,39 @@ export async function rm_selections(params){
 		const attrs = params.target.split(".")
 		let meta = await readFile(store.meta.userMeta)
 		meta = JSON.parse(meta)
-		let depth  = meta
-		
-		if (!Array.isArray(depth)){
-			depth = [depth]
-		}	
+		let depth  = get(params.file_target, meta, params.type)
+		let st = get(params.target, store, params.type) 
+		// console.log("\t===========",store.config.modules.basestack_consensus.resources.run_config.primers,"=======\n")
+
+		// console.log("\t\-->",meta.modules.basestack_consensus.resources.run_config.primers, "<--")
 		let found = false
+		console.log(params.key)
+		console.log(depth, "\n\t\t", st)
 		if (params.key){
-			params.value = store.config.modules.basestack_consensus.resources.run_config.primers.filter((d)=>{
+			depth = depth.filter((d)=>{
+				return d[params.key] !== params.value[params.key]
+			})
+			st = st.filter((d)=>{
 				return d[params.key] !== params.value[params.key]
 			})
 		}
 		else {
-			params.value = store.config.modules.basestack_consensus.resources.run_config.primers.filter((d)=>{
+			depth = depth.filter((d)=>{
+				return d !== params.value
+			})
+			st = st.filter((d)=>{
 				return d !== params.value
 			})
 		}
+		set(params.target, st, store, params.type)
 		await ammendJSON({
 			value: depth,
 			file: store.meta.userMeta,
 			attribute: params.file_target
 		})	
-		return 1
+		let obj = {custom: false}
+		obj[params.target]  = null
+		return obj
 	} catch(err){
 		logger.error("%s Error in removing custom file based on params: %j", err, params)
 		throw err

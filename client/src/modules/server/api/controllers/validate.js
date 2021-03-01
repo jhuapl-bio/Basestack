@@ -9,6 +9,8 @@
 var { logger } = require("./logger.js")
 const {readTableFile,getFiles, getFolders } = require("../controllers/IO.js")
 import glob from "glob"
+var   { store }  = require("../store/global.js")
+
 const fs  = require("fs")
 import  path  from "path"
 export async function validatePrimerVersions(primerDir,primerNameDir, fullpathVersion){
@@ -159,7 +161,9 @@ export async function checkFolderExistsAccept(filepath){
 		})
 	})
 }
-export async function validate_run_dir(runDir){
+export async function validate_run_dir(params){
+	const runDir = params.runDir
+	const override = params.override 
 	const run_info = runDir.run_info.filename
 	const run_config = runDir.run_config.filename
 	const manifest = runDir.manifest.filename
@@ -254,31 +258,32 @@ export async function validate_run_dir(runDir){
 		if (validFolders.length > 0){
 			runDir.fastqDir = validFolders[0]
 		}
-		if(run_configExists){
+		if(run_configExists && override){
 			validation['run_config']['exists'] = run_configExists
 			content = await readTableFile(run_configPath, '\t')
+			runDir.run_config.primers = convert_custom(content[0][1], store.config.modules.basestack_consensus.resources.run_config.primers, 'name') 	
+			runDir.run_config.basecalling = convert_custom( content[1][1], store.config.modules.basestack_consensus.resources.run_config.basecalling, 'name') 				
+			runDir.run_config.barcoding = convert_custom(content[2][1], store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name') 	
 			
-
-			runDir.run_config.primers = convert_custom(content[0][1]) 				
 			
-			runDir.run_config.basecalling = content[1][1]
-			runDir.run_config.barcoding = content[2][1]
-			runDir.run_config.validation = run_configExists
 		}
-		if(run_infoExists){
+		runDir.run_config.validation = run_configExists
+		if(run_infoExists && override){
 			validation['run_info']['exists'] = run_infoExists
 			content = await readTableFile(run_infoPath, '\t')	
 			runDir.run_info.desc = content[0][1]
-			runDir.run_info.validation = run_infoExists
+			
 		}
-		if(manifestExists){
+		runDir.run_info.validation = run_infoExists
+		if(manifestExists && override){
 			validation['manifest']['exists'] = manifestExists
 			content = await readTableFile(manifestPath, '\t')	
 			runDir.manifest.entries = content.map((d)=>{
 				return {barcode: d[0], id: d[1]}
 			})
-			runDir.manifest.validation = manifestExists
+			
 		}
+		runDir.manifest.validation = manifestExists;
 		(throughputExists ? validation.throughput.exists = true : '');
 		(drift_correctionExists ?  validation.drift_correction.exists = true : '');
 		(seq_summaryExists ? validation.seq_summary.exists = true : '');
@@ -286,7 +291,6 @@ export async function validate_run_dir(runDir){
 		runDir.specifics.throughput.exists = validation.throughput.exists
 		runDir.specifics.drift_correction.exists = validation.drift_correction.exists
 		runDir.specifics.seq_summary.exists = validation.seq_summary.exists
-		console.log(runDir.run_config.primers)
 		return {
 			runDir: runDir
 		}
@@ -297,9 +301,22 @@ export async function validate_run_dir(runDir){
 }
 
 
-export  function convert_custom(val){ //convert legacy runs to object for use in custom input configurations
+export  function convert_custom(val, map, target){ //convert legacy runs to object for use in custom input configurations
 	if (typeof val !== 'object' ){	
-		return {custom: false,  val: val}
+		if (map){
+			const val2 = map.filter((d)=>{
+				return d[target] == val
+			})
+			if (val2.length > 0){
+				console.log(val2[0], map)
+				return {custom: val2[0].custom,  name: val2[0][target], path: val2[0].path}
+			}
+			else{
+				return {custom: false,  name: val}
+			}
+		}else {
+			return {custom: false,  name: val}
+		}
 	} else {
 		return val
 	}

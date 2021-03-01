@@ -150,12 +150,11 @@ export class RAMPART{
 			        }
 				}	
 
-				// let command = ['bash', '-c', `id -u && groups`]
+				// let command = ['bash', '-c', `python -m http.server 3000`]
 				let command = ['bash', '-c',
 				`cd ${tmpannotationsDir}\
-				&& source /opt/conda/etc/profile.d/conda.sh\
-				&& conda activate artic-ncov2019\
-				&& export PATH=$PATH:$PATH\
+				&& source $HOME/.bashrc\
+				&& set +u; conda activate artic-ncov2019; set -u\
 				&& rampart\
 				--protocol ${json}\
 				--annotatedPath ${tmpannotationsDir}\

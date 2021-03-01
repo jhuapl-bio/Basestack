@@ -166,7 +166,7 @@ body {
 
 /*Define custom coding for the bootstrap buttons*/
 .warn-icon{
-  color:#cb6601;
+  color:#cb6601 !important;
 }
 .warn{
   background-color:rgb(203, 102, 1, 0.7);
@@ -496,4 +496,18 @@ body {
 }
 .configure{
   cursor:pointer;
+}
+
+.selectSmall{
+  font-size: 1em;
+  /*text-align:left;*/
+  padding: 0px;
+  margin:0px;
+
+}
+.center-align-icon{
+  text-align:center;
+}
+.right-align-icon{
+  text-align: right !important;
 }
