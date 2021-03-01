@@ -463,7 +463,6 @@
 										    </b-form-checkbox>
 										</b-col>
 										<b-col sm="6">
-											{{row.item.primers}}
 										    <span v-if="row.item.primers.custom && isNew"   v-on:click="rmAttribute(row.item.primers, 'primers').then((val)=>{ row.item.primers = val});"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
 							            		v-tooltip="{
 										            content: 'Remove primer',
@@ -476,7 +475,7 @@
 												<font-awesome-icon class="configure warn-icon" icon="minus"/>
 											</span>
 										</b-col>	
-									</b-row>								
+									</b-row>
 									<b-form-select class="formGroup-input" 
 										v-model="row.item.primers"  
 										:disabled="!isNew"

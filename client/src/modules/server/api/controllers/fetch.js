@@ -295,7 +295,12 @@ export async function fetch_histories(){
 				    	} else {
 				    		contentobj.running = false
 				    	}
-				    	contentobj.runDir.run_config.primers = convert_custom(contentobj.runDir.run_config.primers ) 	
+				    	contentobj.runDir.run_config.primers = convert_custom(contentobj.runDir.run_config.primers, 
+				    		store.config.modules.basestack_consensus.resources.run_config.primers, 'name') 	
+				    	contentobj.runDir.run_config.basecalling = convert_custom(contentobj.runDir.run_config.basecalling,
+				    		store.config.modules.basestack_consensus.resources.run_config.basecalling, 'name') 	
+				    	contentobj.runDir.run_config.barcoding = convert_custom(contentobj.runDir.run_config.barcoding, 
+				    		store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name') 	
 						// console.log(contentobj.runDir.run_config.primers)
 						response.push(contentobj)
 					}
