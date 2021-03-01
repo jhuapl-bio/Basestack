@@ -9,6 +9,8 @@
 var { logger } = require("./logger.js")
 const {readTableFile,getFiles, getFolders } = require("../controllers/IO.js")
 import glob from "glob"
+var   { store }  = require("../store/global.js")
+
 const fs  = require("fs")
 import  path  from "path"
 export async function validatePrimerVersions(primerDir,primerNameDir, fullpathVersion){
@@ -71,6 +73,7 @@ export async function validateVideo(videoPath){
 }
 export async function getRecursiveFiles(path, pattern){
 	return new Promise((resolve, reject)=>{
+		console.log(path, "<<<<<")
 		let glob_pattern = "/**/*";
 		if (pattern){
 			glob_pattern = pattern;
@@ -158,7 +161,9 @@ export async function checkFolderExistsAccept(filepath){
 		})
 	})
 }
-export async function validate_run_dir(runDir){
+export async function validate_run_dir(params){
+	const runDir = params.runDir
+	const override = params.override 
 	const run_info = runDir.run_info.filename
 	const run_config = runDir.run_config.filename
 	const manifest = runDir.manifest.filename
@@ -221,7 +226,11 @@ export async function validate_run_dir(runDir){
 		const seq_summaryExists  = await checkFileExist(runDir_path, 'sequencing_summary.*txt', true)
 		const drift_correctionExists = await checkFileExist(runDir_path, 'drift_correction.*csv', true)
 		let possibleFolders  = await getFolders(runDir_path)
+		possibleFolders = possibleFolders.filter((d)=>{
+			return d.name != 'artic-pipeline'
+		})
 		let validFolders = []; let checkExists = [];
+		console.log(runDir.run_config.primers)
 		for (let i = 0; i < possibleFolders.length; i++){
 			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq$", true, true))
 		}
@@ -237,7 +246,9 @@ export async function validate_run_dir(runDir){
 		})
 		let promises = []
 		validFolders.forEach((d)=>{
+			
 			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
+			
 		})
 		response = await Promise.all(promises)
 		response.forEach((d,i)=>{
@@ -247,28 +258,32 @@ export async function validate_run_dir(runDir){
 		if (validFolders.length > 0){
 			runDir.fastqDir = validFolders[0]
 		}
-		if(run_configExists){
+		if(run_configExists && override){
 			validation['run_config']['exists'] = run_configExists
 			content = await readTableFile(run_configPath, '\t')
-			runDir.run_config.primers = content[0][1]	
-			runDir.run_config.basecalling = content[1][1]
-			runDir.run_config.barcoding = content[2][1]
-			runDir.run_config.validation = run_configExists
+			runDir.run_config.primers = convert_custom(content[0][1], store.config.modules.basestack_consensus.resources.run_config.primers, 'name') 	
+			runDir.run_config.basecalling = convert_custom( content[1][1], store.config.modules.basestack_consensus.resources.run_config.basecalling, 'name') 				
+			runDir.run_config.barcoding = convert_custom(content[2][1], store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name') 	
+			
+			
 		}
-		if(run_infoExists){
+		runDir.run_config.validation = run_configExists
+		if(run_infoExists && override){
 			validation['run_info']['exists'] = run_infoExists
 			content = await readTableFile(run_infoPath, '\t')	
 			runDir.run_info.desc = content[0][1]
-			runDir.run_info.validation = run_infoExists
+			
 		}
-		if(manifestExists){
+		runDir.run_info.validation = run_infoExists
+		if(manifestExists && override){
 			validation['manifest']['exists'] = manifestExists
 			content = await readTableFile(manifestPath, '\t')	
 			runDir.manifest.entries = content.map((d)=>{
 				return {barcode: d[0], id: d[1]}
 			})
-			runDir.manifest.validation = manifestExists
+			
 		}
+		runDir.manifest.validation = manifestExists;
 		(throughputExists ? validation.throughput.exists = true : '');
 		(drift_correctionExists ?  validation.drift_correction.exists = true : '');
 		(seq_summaryExists ? validation.seq_summary.exists = true : '');
@@ -282,5 +297,27 @@ export async function validate_run_dir(runDir){
 	} catch(err){
 		logger.error(err)
 		throw err
+	}
+}
+
+
+export  function convert_custom(val, map, target){ //convert legacy runs to object for use in custom input configurations
+	if (typeof val !== 'object' ){	
+		if (map){
+			const val2 = map.filter((d)=>{
+				return d[target] == val
+			})
+			console.log(val2, "convertcustom")
+			if (val2.length > 0){
+				return {custom: val2[0].custom,  name: val2[0][target], path: val2[0].path}
+			}
+			else{
+				return {custom: false,  name: val, not_found: true}
+			}
+		}else {
+			return {custom: false,  name: val}
+		}
+	} else {
+		return val
 	}
 }

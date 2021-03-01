@@ -142,12 +142,12 @@ function startServer (devClient){
     
     
     compiler.hooks.done.tap('done', stats => {
-      // logStats('Server', stats)
+      logStats('Server', stats)
       console.log("done....................")
     })
 
     compiler.watch({}, (err, stats) => {
-      // logStats('Server', stats)
+      logStats('Server', stats)
       if (err){
         console.error(err, "error in server compiler")
       }
