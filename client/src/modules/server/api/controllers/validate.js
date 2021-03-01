@@ -307,12 +307,12 @@ export  function convert_custom(val, map, target){ //convert legacy runs to obje
 			const val2 = map.filter((d)=>{
 				return d[target] == val
 			})
+			console.log(val2, "convertcustom")
 			if (val2.length > 0){
-				console.log(val2[0], map)
 				return {custom: val2[0].custom,  name: val2[0][target], path: val2[0].path}
 			}
 			else{
-				return {custom: false,  name: val}
+				return {custom: false,  name: val, not_found: true}
 			}
 		}else {
 			return {custom: false,  name: val}
