@@ -28,8 +28,6 @@ export function set(attribute, value, obj, type) {
 		    	depth[depth_attributes[i]]  = value
 		    }
 	    }
-	    // console.log("obj", JSON.stringify(obj.modules, null, 4))
-	    console.log(value, depth)
 	    return obj
 	} catch(err){
 		logger.error("Error in set :%j", err)
@@ -53,10 +51,10 @@ export function get(attribute, obj, type) {
 			    } else {
 			    	depth[depth_attributes[i]] = typeMap[type]
 			    }
-			}	       		
+			}	  
 			depth = depth[depth_attributes[i]]	    
 	    }
-	    // console.log("returning depth_attributes")
+	    console.log("returning depth_attributes")
 	    return depth
 	} catch(err){
 		logger.error("Error in get attributes :%j", err)

@@ -93,8 +93,8 @@ class FileService {
   pruneImages(){
     return Api().post(`${baseEndpoint}/install/pruneImages`)        
   }
-  validateRunDirContents(runDir){
-    return Api().post(`${baseEndpoint}/validate/validateRunDirContents`, runDir)        
+  validateRunDirContents(params){
+    return Api().post(`${baseEndpoint}/validate/validateRunDirContents`, params)        
   }
   moduleStatus(params){
     return Api().post(`${baseEndpoint}/consensus/status`, params)        

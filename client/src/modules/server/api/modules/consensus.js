@@ -61,9 +61,9 @@ export class BasestackConsensus{
 			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
 
 
-			const tmpPrimerSchemes = "/opt/basestack_consensus/covid19/code/artic-ncov2019/primer_schemes/SARS-CoV-2"
-			const tmpBarcoding = '/opt/basestack_consensus/covid19/code/ont-guppy-cpu/data/barcoding'
-			const tmpBasecalling = '/opt/basestack_consensus/covid19/code/ont-guppy-cpu/data'
+			const tmpPrimerSchemes = "/opt/basestack_consensus/code/artic-ncov2019/primer_schemes/"
+			const tmpBarcoding = '/opt/basestack_consensus/code/ont-guppy-cpu/data/barcoding'
+			const tmpBasecalling = '/opt/basestack_consensus/code/ont-guppy-cpu/data'
 			console.log(run_config)
 			const tmpMeta = "/opt/basestack_consensus/sequencing_runs/sequencing_runs/meta"
 
@@ -78,22 +78,28 @@ export class BasestackConsensus{
 				fastqDir, tmpfastqDir
 			]
 
-			let command = ['bash', '-c']
+			let command = ['bash', '-c', 'echo Starting consensus pipeline...' ]
 
-			console.log(data.runDir.run_config.primers)
 			if (data.runDir.run_config.primers.custom && data.runDir.run_config.primers.path){
 				volumes.push(data.runDir.run_config.primers.path)
-				volumes.push("/tmp/primerSchemes")
-				command.push('find /tmp/primerSchemes | while read p; do if [ -f "$p" ]; then base=$(basename $p) && extension="${base#*.}"  && ln -s $p $(dirname $p)/ncov-2019.$extension ; fi done')	
-				command.push(` && ls ${tmpPrimerSchemes}`)
+				volumes.push(`${tmpPrimerSchemes}/${data.runDir.run_config.primers.name}`)
+				command[2] +=(` echo yes ls ${tmpPrimerSchemes}/${data.runDir.run_config.primers.name}`)
+			}
+			if (data.runDir.run_config.barcoding.custom && data.runDir.run_config.barcoding.path){
+				volumes.push(data.runDir.run_config.barcoding.path)
+				volumes.push(`${tmpBarcoding}/${data.runDir.run_config.barcoding.name}`)
+				command[2] +=(` && ls ${tmpBarcoding}`)
+			}
+			if (data.runDir.run_config.basecalling.custom && data.runDir.run_config.basecalling.path){
+				volumes.push(data.runDir.run_config.basecalling.path)
+				volumes.push(`${tmpBasecalling}/${data.runDir.run_config.basecalling.name}`)
+				command[2] +=(`&& ls ${tmpBasecalling}`)
 			}
 			let binds = []
 			let i  =0 ;
 			while (i < volumes.length) {
 			    binds.push(volumes.slice(i, i += 2).join(":"));
 			}
-			console.log(binds)
-
 			let options = {
 				name: "basestack_consensus",
 				// user: store.meta.uid.toString() + ":"+store.meta.gid.toString(),
@@ -104,10 +110,7 @@ export class BasestackConsensus{
 		        "Volumes": {
 		        }
 			}	
-
-			
-			// `bash artic-module1-barcode-demux.sh -i ${tmpbaseDir} `
-			console.log(command)
+			command[2] += (` && bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
 			return {options: options, command: command }
 		} catch(err){
 			logger.error(err)
@@ -266,9 +269,9 @@ export class BasestackConsensus{
 		  		logger.info("%s %s", "Success in writing runInfo files")
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 		  	
-		  	tsv_file_content = "primers\t"+runDir.run_config.primers.val+"\n"+
-		  	'basecalling\t'+ runDir.run_config.basecalling+"\n" +
-		  	'barcoding\t'+ runDir.run_config.barcoding +"\n"
+		  	tsv_file_content = "primers\t"+runDir.run_config.primers.name+"\n"+
+		  	'basecalling\t'+ runDir.run_config.basecalling.name+"\n" +
+		  	'barcoding\t'+ runDir.run_config.barcoding.name +"\n"
 
 		  	logger.info("%s", "Bookmark run config file")
 		  	await writeFile(path.join(metaDir, runDir.run_config.filename), tsv_file_content +"\n" ).then((response)=>{

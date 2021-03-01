@@ -85,6 +85,7 @@
             		@updateModules="updateModules"
             		@updateImages="updateImages"
             		@open="open"
+            		@changeFile="changeFile"
             		class="contentDiv"
             		v-bind:images="images"
             		v-bind:selectedTag="null"
@@ -132,6 +133,8 @@ import About from "@/components/NavbarModules/About/About"
 import Tutorial from "@/components/NavbarModules/Tutorial/Tutorial"
 import {HalfCircleSpinner} from 'epic-spinners'
 import FileService from '@/services/File-service.js'
+import path from "path"
+
 export default {
 	name: 'mainpage',
 	components:{
@@ -247,6 +250,57 @@ export default {
                       title:  "Could not open the path: "+link
             })
           }
+      },
+      parseFileInput(val){
+		let root;
+		let dirName;
+		const files = val;
+		if (Array.isArray(files)){
+			if(files.length > 0){
+				root = path.dirname(files[0].path)
+				return root
+			} else {
+				return null
+			}
+		} else {
+			return val.path
+		}
+	  },
+      async changeFile(data){
+      		const event = data.event
+      		const file_target = data.file_target
+      		const target = data.target
+      		const sublevel = data.sublevel
+      		let val = event
+      		if (event.dataTransfer){
+      			val = event.dataTransfer.files[0]
+      		}
+			let root = this.parseFileInput(val)
+			const V = path.basename(root);
+			let baseP  = root; let i = 0;
+			let fullname = V;
+			while (i < sublevel){
+				baseP = path.dirname(baseP)
+			 	fullname = `${path.basename(baseP)}/${fullname}`		
+			  	i++;
+			}			
+			try{	
+    			let response =  await FileService.addSelection({
+					target: `${target}`,
+					file_target: `${file_target}`,
+					value: { name: fullname, custom: true, path: root},
+					type: 'arr',
+					key: "name"
+				})
+    		} catch(err){
+    			console.error(err)
+    			this.$swal.fire({
+					position: 'center',
+					icon: 'error',
+					showConfirmButton:true,
+	                title:  err.response.data.message
+				});
+    		}
       },
       async init(){
       	try{

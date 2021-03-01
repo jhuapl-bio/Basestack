@@ -540,7 +540,7 @@ router.post("/validate/validateRunDirContents", (req,res,next)=>{ //this method 
 	( async function() {
 		try {
 			
-			await validate_run_dir(req.body.runDir).then((response)=>{
+			await validate_run_dir(req.body).then((response)=>{
 				logger.info("Success in validating run directory")
 					res.status(200).json({status: 200, message: "Completed validation of run dir", data: response });
 				}).catch((err)=>{
@@ -575,7 +575,7 @@ router.post("/selections/rm", (req,res,next)=>{ //this method needs to be rework
 	( async function() {
 		try {
 			await rm_selections(req.body).then((response)=>{
-				logger.info("Success in removal of field")
+				logger.info("Success in removal of field %j", response)
 					res.status(200).json({status: 200, message: "Completed removal of field for module", data: response });
 				}).catch((err)=>{
 					logger.error("%s %s", "Error in adding field: ", err.message)

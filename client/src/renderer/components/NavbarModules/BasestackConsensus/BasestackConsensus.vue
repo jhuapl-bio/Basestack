@@ -452,37 +452,55 @@
 								stacked
 							>
 								<template  v-slot:cell(primers)="row">
-									<b-form-checkbox
-								      v-model="customPrimerAdd"
-								      name="customPrimerAdd"
-								    >
-								      Custom
-								    </b-form-checkbox>
-									{{modules.basestack_consensus.resources.run_config.primers }}
-									<multiselect 
-					                  class="formGroup-input" v-model="row.item.primers.val"  :disabled="!isNew" :options="modules.basestack_consensus.resources.run_config.primers"
-									  :searchable="false" :close-on-select="false" :preselect-first="true" track-by="name" label="name" :show-labels="false" placeholder="Pick a value" 
-									  select-label="Select" :allow-empty="false"
-									  >
-									 	 <template slot="option" slot-scope="props">
-									 	 	<span class="option__desc">
-									 	 		<span class="option__title">{{ props.option.name}}</span>
-												<b-button v-if="props.option.custom" v-on:click="rmAttribute(props.option, 'primer')"   class="btn" >
-													<span>
-														<font-awesome-icon   icon="minus"/>
-													</span>
-												</b-button>
-									 	 	</span>
-									 	 </template>
-									</multiselect>	
+									<b-row>
+										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
+											<b-form-checkbox
+										      v-model="customPrimerAdd"
+										      :disabled="!isNew"
+										      name="customPrimerAdd"
+										    >
+										      Add Custom
+										    </b-form-checkbox>
+										</b-col>
+										<b-col sm="6">
+											{{row.item.primers}}
+										    <span v-if="row.item.primers.custom && isNew"   v-on:click="rmAttribute(row.item.primers, 'primers').then((val)=>{ row.item.primers = val});"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
+							            		v-tooltip="{
+										            content: 'Remove primer',
+										            placement: 'top',
+										            classes: ['info'],
+										            trigger: 'hover',
+										            targetClasses: ['it-has-a-tooltip'],
+										            }"
+								            	> Remove 
+												<font-awesome-icon class="configure warn-icon" icon="minus"/>
+											</span>
+										</b-col>	
+									</b-row>								
+									<b-form-select class="formGroup-input" 
+										v-model="row.item.primers"  
+										:disabled="!isNew"
+										v-if="!customPrimerAdd"  
+										text-field="text"
+										value-field="value"
+										:options="modules.basestack_consensus.resources.run_config.primers.map((x) => { return {text: x.name, value: x}   })">
+										
+									</b-form-select>
 									<b-form-file 
 				                 	 directory
+				                 	 v-else
 					                 :no-traverse="true"
 					                 :multiple="true"
 					          		 :file-name-formatter="formatNames"
 					                 :disabled="!isNew" 
 					                 aria-describedby="seq_file" 
-					                 v-model="primerFiles"
+					                 @change="changeFile(
+					                 {
+					                 	event: $event, 
+					                 	target: `config.modules.basestack_consensus.resources.run_config.primers`,
+										file_target: `modules.basestack_consensus.resources.run_config.primers`,
+										sublevel: 1
+					                 })"
 					                 :placeholder="'Choose a primer scheme folder'"
 					                 drop-placeholder="Drop primer scheme folder"
 					                 >
@@ -491,36 +509,97 @@
 						        	run_info.txt not found
 						      	</b-form-invalid-feedback>										 
 								 </template>
-								<template  v-slot:cell(basecalling)="row">
-									<b-form-checkbox
-								      v-model="checkboxBasecalling"
-								    >
-								      Custom
-								    </b-form-checkbox>
-									<b-form-select class="formGroup-input" v-if="!checkboxBasecalling" v-model="row.item.basecalling"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.basecalling"></b-form-select>
-
+								<template  v-slot:cell(basecalling)="row" >
+									<b-row :disabled="!isNew" >
+										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
+											<b-form-checkbox
+											  :disabled="!isNew"
+										      v-model="checkboxBasecalling"
+										    >
+										      Add Custom
+										    </b-form-checkbox>
+												
+										</b-col>
+										<b-col sm="6">
+											<span v-if="row.item.basecalling.custom && isNew"   v-on:click="rmAttribute(row.item.basecalling, 'basecalling'); row.item.basecalling = {name: null, custom: false}"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
+							            		v-tooltip="{
+										            content: 'Remove custom basecaller config',
+										            placement: 'top',
+										            classes: ['info'],
+										            trigger: 'hover',
+										            targetClasses: ['it-has-a-tooltip'],
+										            }"
+								            	> Remove 
+												<font-awesome-icon class="configure warn-icon" icon="minus"/>
+											</span>
+										</b-col>
+									</b-row>
+									<b-form-select class="formGroup-input"  
+										v-model="row.item.basecalling"  
+										:disabled="!isNew"
+										text-field="text"
+										v-if="!checkboxBasecalling"
+										value-field="value"
+										:options="modules.basestack_consensus.resources.run_config.basecalling.map((x) => { return {text: x.name, value: x}   })">
+									</b-form-select>
 									<b-form-file 
-				                 	 v-else
 					                 :disabled="!isNew" 
+					                 v-else
 					                 aria-describedby="seq_file" 
-					                 v-model="row.item.basecalling"
-					                 :placeholder="'Choose a basecalling config file'"
+					                 @change="changeFile({
+					                 	event: $event, 
+					                 	target: `config.modules.basestack_consensus.resources.run_config.basecallinig`,
+										file_target: `modules.basestack_consensus.resources.run_config.basecalling`,
+										sublevel: 0
+					                 })"
+					                 :placeholder="'Choose a basecalling cfg file'"
 					                 drop-placeholder="Drop basecalling cfg file"
 					                 >
 				                	</b-form-file>
 							    </template>
 								<template  v-slot:cell(barcoding)="row">
-									<b-form-checkbox
-								      v-model="checkboxBarcoding"
-								    >
-								      Custom
-								    </b-form-checkbox>
-							    	<b-form-select class="formGroup-input" v-if="!checkboxBarcoding" v-model="row.item.barcoding"  :disabled="!isNew"  :options="modules.basestack_consensus.resources.run_config.barcoding"></b-form-select>
+									<b-row>
+										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
+											<b-form-checkbox
+										      v-model="checkboxBarcoding"
+										      :disabled="!isNew"
+										    >
+										      Add Custom
+										    </b-form-checkbox>
+										</b-col>
+										<b-col sm="6">
+											<span v-if="row.item.barcoding.custom && isNew"   v-on:click="rmAttribute(row.item.barcoding, 'barcoding'); row.item.barcoding = {name: null, custom: false}"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
+							            		v-tooltip="{
+										            content: 'Remove custom barcoding config',
+										            placement: 'top',
+										            classes: ['info'],
+										            trigger: 'hover',
+										            targetClasses: ['it-has-a-tooltip'],
+										            }"
+								            	> Remove 
+												<font-awesome-icon class="configure warn-icon" icon="minus"/>
+											</span>
+										</b-col>
+									</b-row>
+							    	<b-form-select class="formGroup-input" 
+							    		v-if="!checkboxBarcoding" 
+							    		v-model="row.item.barcoding"  	 
+							    		:disabled="!isNew" 
+							    		text-field="text"
+										value-field="value"
+										:options="modules.basestack_consensus.resources.run_config.barcoding.map((x) => { return {text: x.name, value: x}   })">
+									</b-form-select>
+							 
 							    	<b-form-file 
-				                 	 v-else
 					                 :disabled="!isNew" 
+					                 v-else
 					                 aria-describedby="seq_file" 
-					                 v-model="row.item.barcoding"
+					                 @change="changeFile({
+					                 	event: $event, 
+					                 	target: `config.modules.basestack_consensus.resources.run_config.barcoding`,
+										file_target: `modules.basestack_consensus.resources.run_config.barcoding`,
+										sublevel: 0
+					                 })"
 					                 :placeholder="'Choose a barcoding cfg file'"
 					                 drop-placeholder="Drop barcoding cfg file"
 					                 >
@@ -732,7 +811,7 @@
 		</div>
 		
     </b-form>
-<p>________________________________</p>
+
 	<p class="text-center text-white bg-danger" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
   </div>
 </template>
@@ -771,6 +850,7 @@ export default {
 			newState: null,
 			reportDir: null,
 			checkboxBasecalling: false,
+			customPrimerAdd: false,
 			checkboxBarcoding: false,
 			run_info_fields: [
 				{key: 'filename', label: 'Filename', sortable: false, class: 'text-center'},
@@ -809,11 +889,17 @@ export default {
 				},
 				run_config: {
 					primers: {
-						custom: true,
-						val: null
+						custom: false,
+						name: null
 					}, 
-					basecalling:null, 
-					barcoding:null,
+					basecalling:{
+						custom: false,
+						name: null
+					}, 
+					barcoding:{
+						custom:false,
+						name: null,
+					},
 					filename: 'run_config.txt'
 				}, 
 				manifest: {
@@ -838,6 +924,7 @@ export default {
 			primerDir: null,
 			preload_primerDirs: [],
 			primerFiles: null,
+			barcodingFiles: null,
 			togglePrimerSelect: 'select',
 
 
@@ -858,7 +945,6 @@ export default {
 			counter: 0,
 			isNew: true,
 
-			customPrimerAdd: true,
 
 
 
@@ -957,6 +1043,7 @@ export default {
     		 	this.changeRunDir(flat, 'dir')
     		} 
     	},
+    	
     	primerFiles: async function(val){
     		if (this.selectedHistory.runDir.run_config.primers.custom){
     			let root = this.parseFileInput(val)
@@ -982,6 +1069,32 @@ export default {
 	    		}
     		}
     	},
+    	barcodingFiles: async function(val){
+    		if (this.selectedHistory.runDir.run_config.barcoding.custom){
+    			let root = this.parseFileInput(val)
+    			console.log(val,"--------------")
+    			const primerV = path.basename(root)
+    			const baseP = path.basename(path.dirname(root))
+    			const fullname = `${baseP}/${primerV}`		
+    			try{	
+	    			let response =  await FileService.addSelection({
+						target: `config.modules.basestack_consensus.resources.run_config.barcoding`,
+						file_target: "modules.basestack_consensus.resources.run_config.barcoding",
+						value: { name: fullname, custom: true, path: root},
+						type: 'arr',
+						key: "name"
+					})
+	    		} catch(err){
+	    			console.error(err)
+	    			this.$swal.fire({
+						position: 'center',
+						icon: 'error',
+						showConfirmButton:true,
+		                title:  err.response.data.message
+					});
+	    		}
+    		}
+    	},
     	name: function(val){
     		if (this.isNew){
 	    		this.customHistory.name = val
@@ -989,7 +1102,7 @@ export default {
     	},
     	selectedHistory: function(val){
     		if (!val.custom){
-    			this.isNew = true //Change this	
+    			this.isNew = false //Change this	
     			this.manifest_fields[2].thClass ='d-none'
     			this.manifest_fields[2].tdClass = 'd-none'
     		} else{
@@ -1009,16 +1122,37 @@ export default {
 		open (link) {
 			this.$emit("open", link)
       	},
+      	changeFile(data){
+      		this.$emit('changeFile', data)
+      	},
       	async rmAttribute(value, target){
-      		console.log(value, target)
       		try{	
-    			let response =  await FileService.rmSelection({
-    				target: `config.modules.basestack_consensus.resources.run_config.${target}`,
-					file_target: `modules.basestack_consensus.resources.run_config.${target}`,
-					value: value,
-					type: 'arr',
-					key: "name"
-				})
+      			let res = await this.$swal({
+			        title: `Are you sure you want to remove ${target} attribute?`,
+			        text: "You won't be able to revert this!",
+			        type: 'warning',
+			        showCancelButton: true,
+			        confirmButtonColor: '#2b57b9',
+			        cancelButtonColor: '#a60139',
+			        confirmButtonText: 'Yes, remove it!'
+		      	})
+		        if (res.value) {
+	    			let response = await FileService.rmSelection({
+	    				target: `config.modules.basestack_consensus.resources.run_config.${target}`,
+						file_target: `modules.basestack_consensus.resources.run_config.${target}`,
+						value: value,
+						type: 'arr',
+						key: "name"
+					})
+					this.$swal({
+				        title: `Removed attribute`,
+				        type: 'success',
+				        confirmButtonColor: '#2b57b9',
+			      	})
+			      	return response.data.data
+	    		} else {
+	    			return value
+	    		}
     		} catch(err){
     			console.error(err)
     			this.$swal.fire({
@@ -1027,9 +1161,24 @@ export default {
 					showConfirmButton:true,
 	                title:  err.response.data.message
 				});
+				return value
     		}
       	},
-
+      	parseFileInput(val){
+			let root;
+			let dirName;
+			const files = val;
+			if (Array.isArray(files)){
+				if(files.length > 0){
+					root = path.dirname(files[0].path)
+					return root
+				} else {
+					return null
+				}
+			} else {
+				return val.path
+			}
+	  	},
       	hideTooltipLater() {
 	      setTimeout(() => {
 	        this.showBookmarkTooltip = false;
@@ -1119,17 +1268,7 @@ export default {
 			})
 			return ntc_found ? null : false 
 		},
-		parseFileInput(val){
-			let root;
-			let dirName;
-			const files = val;
-			if(files.length > 0){
-				root = path.dirname(files[0].path)
-				return root
-			} else {
-				return null
-			}
-		},
+		
 		async changeRunDir(val, type){			
 		 	this.runDir.path = this.parseFileInput(val)
     		if (this.isNew){
@@ -1140,25 +1279,25 @@ export default {
 					validation: false
 				}
 			}
-
-    		await this.validateRunDirContents(this.runDir).then((response)=>{
-    			console.log(this.runDir.run_config.primers)
+    		await this.validateRunDirContents(this.runDir, true).then((response)=>{
     			this.runDir = response.runDir
 	    		this.selectedHistory.runDir = response.runDir
+
     		}).catch((err)=>{
     			console.error(err, "error in validation")
     		})
 
 		},
-		validateRunDirContents(runDir){
+		validateRunDirContents(runDir, override){
 			const $this = this
 			this.validatingRunDir = true
+			console.log(runDir, override)
 			return new Promise(function(resolve,reject){
 				FileService.validateRunDirContents({
-					runDir: runDir
+					runDir: runDir,
+					override: override
 				}).then((response)=>{
 					$this.validatingRunDir = false
-					console.log($this.selectedHistory)
 					return resolve(response.data.data)
 				}).catch((err)=>{
 					console.error("error in validating run dir", err.response.data.message)
@@ -1173,7 +1312,7 @@ export default {
 				this.fastqFiles = this.stagedFastqFiles
 			}
 			this.selectedHistory = (element.custom ? this.customHistory : element)
-			await this.validateRunDirContents(this.selectedHistory.runDir).then((response)=>{
+			await this.validateRunDirContents(this.selectedHistory.runDir, false).then((response)=>{
 	    		this.selectedHistory.runDir = response.runDir
     		}).catch((err)=>{
     			console.error(err, "error in validation")
@@ -1213,7 +1352,6 @@ export default {
 					d.loaded = false
 					return d
 				})
-				console.log(this.histories)
 				if(response.data.data.length >=1){
 					if (selected.length >= 1){
 						this.histories = this.histories.map((d)=>{
@@ -1420,6 +1558,7 @@ export default {
         			return d
         		})
         		// this.updateData()
+
                 this.fetchConsensusReport('')
 	        }
 		},
