@@ -117,7 +117,6 @@ export  var module_status = async function(params, mod){
 				} else {
 					mod.status = [0, modules.length, files_complete]
 				}
-				console.log(mod, "modulestatus")
 				resolve(mod)
 
 			})().catch((err)=>{

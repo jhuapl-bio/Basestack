@@ -77,6 +77,7 @@ export class BasestackConsensus{
 				baseDir, tmpbaseDir,
 				consensusDir, tmpConsensusDir,
 				baseDir, tmpbaseDir,
+				consensusDir, tmpConsensusDir,
 				fastqDir, tmpfastqDir
 			]
 
