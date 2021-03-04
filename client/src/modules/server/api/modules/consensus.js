@@ -58,23 +58,22 @@ export class BasestackConsensus{
 			const tmpRunInfo = tmpfastqDir + run_info
 			const tmpManifest = tmpfastqDir + manifest
 			const tmpRunConfig = tmpfastqDir + run_config
-			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
+			const consensusDir = path.join(reportDir.path)
 
 
 			const tmpPrimerSchemes = "/opt/basestack_consensus/code/artic-ncov2019/primer_schemes/"
 			const tmpBarcoding = '/opt/basestack_consensus/code/ont-guppy-cpu/data/barcoding'
 			const tmpBasecalling = '/opt/basestack_consensus/code/ont-guppy-cpu/data'
-			console.log(run_config)
 			const tmpMeta = "/opt/basestack_consensus/sequencing_runs/sequencing_runs/meta"
 
 			await writeFolder(consensusDir)
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
 			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
 			await copyFile(manifest.path, path.join(baseDir,  data.runDir.manifest.filename))
-			let volumes = [ reportDir.path, tmpreportDir,
-				baseDir, tmpbaseDir,
+			let volumes = [ 
 				path.join(reportDir.path, "meta"), tmpMeta,
 				consensusDir, tmpConsensusDir,
+				baseDir, tmpbaseDir,
 				fastqDir, tmpfastqDir
 			]
 
@@ -110,7 +109,7 @@ export class BasestackConsensus{
 		        "Volumes": {
 		        }
 			}	
-			command[2] += (` && bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
+			command[2] += (` && ln -s ${tmpConsensusDir} ${tmpbaseDir}/consensus/artic-pipeline && bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
 			return {options: options, command: command }
 		} catch(err){
 			logger.error(err)
@@ -122,17 +121,19 @@ export class BasestackConsensus{
 		const protocolDir = params.protocolDir
 		const primerDir = params.primerDir
 		const name = params.name
+		const runDir = params.runDir
 		const type = params.type
 		const server_config = store.config.modules['basestack_consensus']['config']
 		const currentDateTime = moment().format('YYYY-MM-DDTHH-mm-ss')
+
 		const reportName = name + "-" + currentDateTime
 		const reportPath = path.join(server_config.historyPath, name)
-		const runReportPath = path.join(reportPath, "consensus", 'artic-pipeline')
+		const runReportPath = path.join(runDir.path, "consensus", name)
 		const finalConsensusPath = path.join(runReportPath, "5-post-filter") 
 		const metaDir = path.join(reportPath, "meta")
 		const run_statsPath = path.join(runReportPath, "run_stats") 
 		const reportDir = {
-			path: reportPath,
+			path: runReportPath,
 			meta: {
 				run_info: {
 					name: "run_info.txt",
@@ -242,7 +243,6 @@ export class BasestackConsensus{
 		}
 
 		const annotationsDir = null
-		const runDir = params.runDir
 		params.currentDateTime = currentDateTime;
 		params.reportDir = reportDir;
 		params.reportName = reportName;
@@ -286,7 +286,7 @@ export class BasestackConsensus{
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 
 		  	logger.info("%s", "Bookmark meta config")
-		  	await writeFile(path.join(reportDir.path, "report-meta.json"), JSON.stringify(params,null,4)).then((response)=>{
+		  	await writeFile(path.join(reportPath, "report-meta.json"), JSON.stringify(params,null,4)).then((response)=>{
 		  		logger.info("%s %s", "Success in bookmark meta file", response)
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 
