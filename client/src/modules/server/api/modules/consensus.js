@@ -58,7 +58,7 @@ export class BasestackConsensus{
 			const tmpRunInfo = tmpfastqDir + run_info
 			const tmpManifest = tmpfastqDir + manifest
 			const tmpRunConfig = tmpfastqDir + run_config
-			const consensusDir = path.join(reportDir.path)
+			const consensusDir = path.join(reportDir.path,'consensus','artic-pipeline')
 
 
 			const tmpPrimerSchemes = "/opt/basestack_consensus/code/artic-ncov2019/primer_schemes/"
@@ -71,9 +71,9 @@ export class BasestackConsensus{
 			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
 			await copyFile(manifest.path, path.join(baseDir,  data.runDir.manifest.filename))
 			let volumes = [ 
-				path.join(reportDir.path, "meta"), tmpMeta,
-				consensusDir, tmpConsensusDir,
+				reportDir.path, tmpreportDir,
 				baseDir, tmpbaseDir,
+				consensusDir, tmpConsensusDir,
 				fastqDir, tmpfastqDir
 			]
 
@@ -109,7 +109,7 @@ export class BasestackConsensus{
 		        "Volumes": {
 		        }
 			}	
-			command[2] += (` && ln -s ${tmpConsensusDir} ${tmpbaseDir}/consensus/artic-pipeline && bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
+			command[2] += (` &&  bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
 			return {options: options, command: command }
 		} catch(err){
 			logger.error(err)
@@ -128,7 +128,7 @@ export class BasestackConsensus{
 
 		const reportName = name + "-" + currentDateTime
 		const reportPath = path.join(server_config.historyPath, name)
-		const runReportPath = path.join(runDir.path, "consensus", name)
+		const runReportPath = path.join(runDir.path, "basestack_consensus",  name )
 		const finalConsensusPath = path.join(runReportPath, "5-post-filter") 
 		const metaDir = path.join(reportPath, "meta")
 		const run_statsPath = path.join(runReportPath, "run_stats") 
@@ -300,12 +300,21 @@ export class BasestackConsensus{
 		// Manual Error checking section
 		// Check if the directory contains one or more fastq files
 		const reportDir = params.reportDir.path
-		console.log(params)
 		try {
-		  	await removeFile(reportDir, 'dir').then((response)=>{
-		  		logger.info("%s %s", "Success in deleting bookmark", response)
-		  		return response
-		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
+			let exists = await checkFolderExists(reportDir) 
+			if (exists){
+		  		await removeFile(reportDir, 'dir')
+			}
+		  	const server_config = store.config.modules['basestack_consensus']['config']
+		  	console.log(params, server_config)
+		  	const historyPath = path.join(server_config.historyPath, params.name)
+		  	if (historyPath != reportDir ){
+				exists = await checkFolderExists(historyPath) 
+				if (exists){
+			  		await removeFile(historyPath, 'dir')
+				}
+		  	}
+		  	return "Success on removing directory"
 		} catch (err){
 			logger.error(err)
 			throw err
