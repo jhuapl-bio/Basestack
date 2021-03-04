@@ -1498,7 +1498,8 @@ export default {
 		      }).then((res) => {
 		        if (res.value) {
 			        FileService.removeBookmark({
-		        		reportDir: $this.selectedHistory.reportDir
+		        		reportDir: $this.selectedHistory.reportDir,
+		        		name: $this.selectedHistory.name
 		        	}).then((response)=>{
 		        		this.bookmark = !this.bookmark
 		        		this.fetchHistories().then(()=>{
