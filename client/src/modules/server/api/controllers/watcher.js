@@ -45,6 +45,7 @@ export  var module_status = async function(params, mod){
 		const reportDir = params.reportDir
 		const modules = reportDir.mod
 		let completeFile = path.join(mod.folderpath, mod.statusCompleteFilename)
+
 		if (mod.statusType =="file"){
 			fs.exists(completeFile, function(exists, error){
 				if (error){
@@ -55,7 +56,7 @@ export  var module_status = async function(params, mod){
 		    	} else {
 		    		mod.status = [0, 1]
 		    	}
-
+		    	console.log(mod, "modulestatus")
 		    	resolve(mod)
 			})	
 		} else { // we need to look to see if all of the BC have been completed since it is async
@@ -75,6 +76,7 @@ export  var module_status = async function(params, mod){
 				} else {
 					mod.status = [0, modules.length]
 				}
+				console.log(mod, "modulestatus")
 				resolve(mod)
 
 			})().catch((err)=>{
