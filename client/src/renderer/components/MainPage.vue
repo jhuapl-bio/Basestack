@@ -251,20 +251,32 @@ export default {
             })
           }
       },
-      parseFileInput(val){
+      parseFileInput(event){
 		let root;
 		let dirName;
-		const files = val;
-		if (Array.isArray(files)){
+		let files;
+		if (event.dataTransfer){
+  			files = event.dataTransfer.files[0]
+  			if (Array.isArray(files)){
+				if(files.length > 0){
+					root = path.dirname(files[0].path)
+					return root
+				} else {
+					return null
+				}
+			} else {
+				return files.path
+			}
+  		} else {
+  			files = event.target.files
 			if(files.length > 0){
 				root = path.dirname(files[0].path)
 				return root
 			} else {
-				return null
+				return files.path
 			}
-		} else {
-			return val.path
-		}
+  			
+  		}
 	  },
       async changeFile(data){
       		const event = data.event
@@ -272,18 +284,20 @@ export default {
       		const target = data.target
       		const sublevel = data.sublevel
       		let val = event
-      		if (event.dataTransfer){
-      			val = event.dataTransfer.files[0]
-      		}
-			let root = this.parseFileInput(val)
+      		
+			let root = this.parseFileInput(event)
+			console.log(root)
 			const V = path.basename(root);
 			let baseP  = root; let i = 0;
 			let fullname = V;
+			console.log(baseP, fullname)
 			while (i < sublevel){
 				baseP = path.dirname(baseP)
+				console.log(baseP)
 			 	fullname = `${path.basename(baseP)}/${fullname}`		
 			  	i++;
-			}			
+			}	
+			console.log(fullname)		
 			try{	
     			let response =  await FileService.addSelection({
 					target: `${target}`,
@@ -292,6 +306,7 @@ export default {
 					type: 'arr',
 					key: "name"
 				})
+				console.log(response)		
     		} catch(err){
     			console.error(err)
     			this.$swal.fire({

@@ -285,11 +285,11 @@
 								</multiselect>	
 								<b-form-input required v-else disabled
 				                 	:value="row.item.runDir.fastqDir.name"
-				                 	:state="selectedHistory.runDir.fastqDir.validation"
+				                 	:state="row.item.runDir.fastqDir.validation"
 				                 	class="formGroup-input"
 				                 	>
 				                </b-form-input>	
-				                <p style="text-align:center" v-if="row.item.runDir.fastqDir.files">Total # of Fastq Files: {{row.item.runDir.fastqDir.files}}</p>							 
+				                <p style="text-align:center" v-if="row.item.runDir.fastqDir">Total # of Fastq Files: {{row.item.runDir.fastqDir.files}}</p>							 
 						    </template>
 						    <template #head(RunDir)>
 						        <span  
@@ -333,7 +333,7 @@
 						    </template>
 						</b-table>
 			           
-			            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.fastqDir.validation.required">A valid fastq directory is required</div>
+			            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.fastqDir.validation">A valid fastq directory is required</div>
 			            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.path.required">Run Directory Must be Specified</div>
 					</b-form-group>
 				</b-col>
@@ -1006,10 +1006,7 @@ export default {
         		},
         		fastqDir: {
         			validation: {
-        				required
-        			},
-        			name: {
-        				required
+        				checked: value => value === true 
         			},
         			path: {
         				required
