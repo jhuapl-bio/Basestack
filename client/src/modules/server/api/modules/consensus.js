@@ -58,22 +58,25 @@ export class BasestackConsensus{
 			const tmpRunInfo = tmpfastqDir + run_info
 			const tmpManifest = tmpfastqDir + manifest
 			const tmpRunConfig = tmpfastqDir + run_config
-			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
+			const consensusDir = path.join(reportDir.path,'consensus','artic-pipeline')
 
 
 			const tmpPrimerSchemes = "/opt/basestack_consensus/code/artic-ncov2019/primer_schemes/"
 			const tmpBarcoding = '/opt/basestack_consensus/code/ont-guppy-cpu/data/barcoding'
 			const tmpBasecalling = '/opt/basestack_consensus/code/ont-guppy-cpu/data'
-			console.log(run_config)
 			const tmpMeta = "/opt/basestack_consensus/sequencing_runs/sequencing_runs/meta"
 
 			await writeFolder(consensusDir)
+			let exists = await checkFolderExists(baseDir)
+			if (!exists){
+				await writeFolder(baseDir)
+			}
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
 			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
 			await copyFile(manifest.path, path.join(baseDir,  data.runDir.manifest.filename))
-			let volumes = [ reportDir.path, tmpreportDir,
+			let volumes = [ 
+				reportDir.path, tmpreportDir,
 				baseDir, tmpbaseDir,
-				path.join(reportDir.path, "meta"), tmpMeta,
 				consensusDir, tmpConsensusDir,
 				fastqDir, tmpfastqDir
 			]
@@ -110,7 +113,7 @@ export class BasestackConsensus{
 		        "Volumes": {
 		        }
 			}	
-			command[2] += (` && bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
+			command[2] += (` &&  bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
 			return {options: options, command: command }
 		} catch(err){
 			logger.error(err)
@@ -122,17 +125,19 @@ export class BasestackConsensus{
 		const protocolDir = params.protocolDir
 		const primerDir = params.primerDir
 		const name = params.name
+		const runDir = params.runDir
 		const type = params.type
 		const server_config = store.config.modules['basestack_consensus']['config']
 		const currentDateTime = moment().format('YYYY-MM-DDTHH-mm-ss')
+
 		const reportName = name + "-" + currentDateTime
 		const reportPath = path.join(server_config.historyPath, name)
-		const runReportPath = path.join(reportPath, "consensus", 'artic-pipeline')
+		const runReportPath = path.join(runDir.path, "basestack",  name )
 		const finalConsensusPath = path.join(runReportPath, "5-post-filter") 
 		const metaDir = path.join(reportPath, "meta")
 		const run_statsPath = path.join(runReportPath, "run_stats") 
 		const reportDir = {
-			path: reportPath,
+			path: runReportPath,
 			meta: {
 				run_info: {
 					name: "run_info.txt",
@@ -155,7 +160,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'file',
 					statusCompleteFilename: "1-barcode-demux.complete",
-					folderpath: path.join(runReportPath, "1-barcode-demux")
+					folderpath: path.join(runReportPath, 'consensus', 'artic-pipeline', "1-barcode-demux")
 				},
 				{
 					key: "length-filter",
@@ -164,7 +169,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: "multiple_files",
 					statusCompleteFilename: ".complete",			
-					folderpath: path.join(runReportPath, "2-length-filter")
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline', "2-length-filter")
 				},
 				{
 					key: "normalization",
@@ -173,7 +178,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'multiple_files',
 					statusCompleteFilename: ".complete",
-					folderpath: path.join(runReportPath, "3-normalization")
+					folderpath: path.join(runReportPath, 'consensus', 'artic-pipeline', "3-normalization")
 				},
 				{
 					key: "draft-consensus",
@@ -182,7 +187,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'multiple_files',
 					statusCompleteFilename: ".complete",
-					folderpath: path.join(runReportPath, "4-draft-consensus")
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline', "4-draft-consensus")
 				},
 				{
 					key: "post-filter",
@@ -191,7 +196,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'file',
 					statusCompleteFilename: "module5-example-run.complete",
-					folderpath: path.join(runReportPath, "5-post-filter")
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline', "5-post-filter")
 				},
 				{
 					key: "report",
@@ -200,7 +205,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'file',
 					statusCompleteFilename: "report.pdf",
-					folderpath: runReportPath
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline' )
 				}
 			],
 			reportFiles: 
@@ -242,7 +247,6 @@ export class BasestackConsensus{
 		}
 
 		const annotationsDir = null
-		const runDir = params.runDir
 		params.currentDateTime = currentDateTime;
 		params.reportDir = reportDir;
 		params.reportName = reportName;
@@ -286,7 +290,7 @@ export class BasestackConsensus{
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 
 		  	logger.info("%s", "Bookmark meta config")
-		  	await writeFile(path.join(reportDir.path, "report-meta.json"), JSON.stringify(params,null,4)).then((response)=>{
+		  	await writeFile(path.join(reportPath, "report-meta.json"), JSON.stringify(params,null,4)).then((response)=>{
 		  		logger.info("%s %s", "Success in bookmark meta file", response)
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 
@@ -300,12 +304,14 @@ export class BasestackConsensus{
 		// Manual Error checking section
 		// Check if the directory contains one or more fastq files
 		const reportDir = params.reportDir.path
-		console.log(params)
-		try {
-		  	await removeFile(reportDir, 'dir').then((response)=>{
-		  		logger.info("%s %s", "Success in deleting bookmark", response)
-		  		return response
-		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
+		try {			
+		  	await removeFile(reportDir, 'dir', true)
+		  	const server_config = store.config.modules['basestack_consensus']['config']
+		  	const historyPath = path.join(server_config.historyPath, params.name)
+		  	if (historyPath != reportDir ){
+			  	await removeFile(historyPath, 'dir')				
+		  	}
+		  	return "Success on removing directory"
 		} catch (err){
 			logger.error(err)
 			throw err

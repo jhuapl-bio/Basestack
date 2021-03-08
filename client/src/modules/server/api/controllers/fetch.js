@@ -280,6 +280,7 @@ export async function fetch_histories(){
 	let response = []
 	for (let i = 0; i < histories.length; i++){
 		const fullpathHistory = path.join(historyPath, histories[i])
+
 		let validHistory = await validateHistory(fullpathHistory,histories[i])
 		if(validHistory){
 			try{
@@ -302,6 +303,7 @@ export async function fetch_histories(){
 				    	contentobj.runDir.run_config.barcoding = convert_custom(contentobj.runDir.run_config.barcoding, 
 				    		store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name') 	
 						// console.log(contentobj.runDir.run_config.primers)
+						contentobj.fullpathHistory = fullpathHistory
 						response.push(contentobj)
 					}
 					
@@ -333,8 +335,6 @@ export async function fetch_docker_version(){
 	try{
 		// let response = await store.docker.info()
 		let response = await store.docker.version()
-		// let response = await store.docker.df()
-		// console.log(response)
 		return response
 	} catch(err){
 		logger.error(`${err} <-- error in fetching docker version`)
@@ -380,15 +380,7 @@ export async function fetch_status(){
 		logger.error(err)
 		errors.push(err)
 	}
-	// try{
-	// 	let docker = await fetch_docker_version()
-	// 	response.docker.version = docker
-	// 	// response.docker.installed = true
-	// } catch(err){
-	// 	response.docker.version = null
-	// 	// response.docker.installed = true
-	// 	errors.push(err)
-	// }
+
 	try{
 		let docker_status = await fetch_docker_status()
 		response.docker.running = true

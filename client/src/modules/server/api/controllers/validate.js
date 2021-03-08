@@ -73,7 +73,6 @@ export async function validateVideo(videoPath){
 }
 export async function getRecursiveFiles(path, pattern){
 	return new Promise((resolve, reject)=>{
-		console.log(path, "<<<<<")
 		let glob_pattern = "/**/*";
 		if (pattern){
 			glob_pattern = pattern;
@@ -169,6 +168,7 @@ export async function validate_run_dir(params){
 	const manifest = runDir.manifest.filename
 	const runDir_path = runDir.path
 	const fastqFolderName = runDir.fastqDir.name
+	console.log(fastqFolderName, "Validate")
 	const basename = path.basename(runDir_path)
 	const validation = {
 		fastq: {
@@ -219,18 +219,25 @@ export async function validate_run_dir(params){
 		const manifestPath = path.join(runDir_path, manifest)
 		const run_configPath = path.join(runDir_path, run_config)
 		const run_infoPath = path.join(runDir_path, run_info)
+		const run_dirExists  = await checkFolderExists(runDir_path,  true)
+		runDir.exists = run_dirExists	
 		const run_configExists = await checkFileExist(runDir_path, run_config, true)
 		const run_infoExists = await checkFileExist(runDir_path, run_info, true)
 		const manifestExists = await checkFileExist(runDir_path, manifest, true)
 		const throughputExists = await checkFileExist(runDir_path, 'throughput_.*.csv', true)
 		const seq_summaryExists  = await checkFileExist(runDir_path, 'sequencing_summary.*txt', true)
 		const drift_correctionExists = await checkFileExist(runDir_path, 'drift_correction.*csv', true)
-		let possibleFolders  = await getFolders(runDir_path)
+		logger.info(1)
+		let possibleFolders = [];
+		if (run_dirExists){
+			possibleFolders  = await getFolders(runDir_path)
+		} else {
+			console.log("run dir doesnt exists, runDir_path", runDir_path)
+		}
 		possibleFolders = possibleFolders.filter((d)=>{
-			return d.name != 'artic-pipeline'
+			return d.name != 'basestack'
 		})
 		let validFolders = []; let checkExists = [];
-		console.log(runDir.run_config.primers)
 		for (let i = 0; i < possibleFolders.length; i++){
 			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq$", true, true))
 		}
@@ -245,8 +252,7 @@ export async function validate_run_dir(params){
 			}
 		})
 		let promises = []
-		validFolders.forEach((d)=>{
-			
+		validFolders.forEach((d)=>{			
 			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
 			
 		})
@@ -255,8 +261,15 @@ export async function validate_run_dir(params){
 			validFolders[i].files = (d.length ? d.length : null)
 		})
 		runDir.possibleFastqFolders  = validFolders
-		if (validFolders.length > 0){
-			runDir.fastqDir = validFolders[0]
+		if (validFolders.length == 0){
+			runDir.fastqDir.files = 0
+		} else {
+			runDir.fastqDir.validation = true
+		}
+		if (override){
+			if (validFolders.length > 0){
+				runDir.fastqDir = validFolders[0]
+			}
 		}
 		if(run_configExists && override){
 			validation['run_config']['exists'] = run_configExists
@@ -307,7 +320,6 @@ export  function convert_custom(val, map, target){ //convert legacy runs to obje
 			const val2 = map.filter((d)=>{
 				return d[target] == val
 			})
-			console.log(val2, "convertcustom")
 			if (val2.length > 0){
 				return {custom: val2[0].custom,  name: val2[0][target], path: val2[0].path}
 			}
