@@ -13,6 +13,8 @@
 			<b-row class="nopadcolumn">
 				<b-col sm="12" style="" class="nopadcolumn">
 					<h4 style="text-align:left">Job Histories</h4>
+						<b-alert show v-if="submitStatus === 'ERROR'" variant="danger">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</b-alert>
+  						<b-alert show v-else-if="submitStatus === 'Warning'" variant="warning">Warning, one or more required items are missing, consider fixing this issue</b-alert>
 						<b-form-group
 				            label="Select Run"
 				            label-cols-sm="1"
@@ -260,7 +262,6 @@
 				                 webkitdirectory
 				                 :no-traverse="false"
 				                 :multiple="true"
-				                 :state="selectedHistory.runDir.fastqDir.validation"
 				                 :placeholder="'Choose a run Folder'"
 				                 drop-placeholder="Drop folder here..."
 				                 :file-name-formatter="formatNames"
@@ -268,6 +269,7 @@
 			                </b-form-file>
 			                <b-form-textarea required v-else disabled
 			                 	:value="row.item.runDir.basename"
+			                 	:state="selectedHistory.runDir.exists"
 			                 	class="formGroup-input"
 			                 	>
 			                </b-form-textarea>
@@ -283,6 +285,7 @@
 								</multiselect>	
 								<b-form-input required v-else disabled
 				                 	:value="row.item.runDir.fastqDir.name"
+				                 	:state="selectedHistory.runDir.fastqDir.validation"
 				                 	class="formGroup-input"
 				                 	>
 				                </b-form-input>	
@@ -811,7 +814,7 @@
 		
     </b-form>
 
-	<p class="text-center text-white bg-danger" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
+
   </div>
 </template>
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
@@ -969,6 +972,9 @@ export default {
     validations: {
       selectedHistory: {
       		runDir: {
+      			exists: {
+      				required
+      			},
         		manifest:{
         			validation: {
         				required
@@ -1012,7 +1018,7 @@ export default {
         		specifics: {
         			seq_summary: {
         				exists: {
-        					checked: value => value === true
+        					checked: value => value === true 
         				}
         			}
         		},
@@ -1071,7 +1077,6 @@ export default {
     	barcodingFiles: async function(val){
     		if (this.selectedHistory.runDir.run_config.barcoding.custom){
     			let root = this.parseFileInput(val)
-    			console.log(val,"--------------")
     			const primerV = path.basename(root)
     			const baseP = path.basename(path.dirname(root))
     			const fullname = `${baseP}/${primerV}`		
@@ -1290,7 +1295,6 @@ export default {
 		validateRunDirContents(runDir, override){
 			const $this = this
 			this.validatingRunDir = true
-			console.log(runDir, override)
 			return new Promise(function(resolve,reject){
 				FileService.validateRunDirContents({
 					runDir: runDir,
@@ -1369,7 +1373,7 @@ export default {
 					protocolDir: this.protocolDir ,
 					custom: true
 				}
-				// const newReport = JSON.parse(`{"runDir":{"path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4","basename":"20200519_2000_X3_FAN44250_e97e74b4","possibleFastqFolders":[{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20}],"run_info":{"filename":"run_info.txt","validation":true},"fastqDir":{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20},"run_config": {"primers": {"custom": true,"val": null},"basecalling":"dna_r9.4.1_450bps_hac.cfg","barcoding":"barcode_arrs_nb12.cfg","filename":"run_config.txt","validation":true},"manifest":{"entries":[{"barcode":"NB01","id":"NTC"},{"barcode":"NB03","id":"MDHP-0056"},{"barcode":"NB11","id":"MDHP-0065---"}],"filename":"manifest.txt","validation":true},"specifics":{"throughput":{"exists":false,"name":null,"required":false},"seq_summary":{"exists":true,"name":null,"required":true},"drift_correction":{"exists":true,"name":null,"required":false}}},"primerDir":null,"name":"tes2","currentDateTime":"2021-02-17T13-23-29","reportDir":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test","meta":{"run_info":{"name":"run_info.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_info.txt"},"run_config":{"name":"run_config.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_config.txt"},"manifest":{"name":"manifest.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/manifest.txt"}},"modules":[{"key":"barcode-demux","title":"Demultiplexing","step":1,"status":null,"statusType":"file","statusCompleteFilename":"1-barcode-demux.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/1-barcode-demux"},{"key":"length-filter","title":"Length Filter","step":2,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/2-length-filter"},{"key":"normalization","title":"Normalization","step":3,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/3-normalization"},{"key":"draft-consensus","title":"Consensus Draft","step":4,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/4-draft-consensus"},{"key":"post-filter","title":"Post Filter","step":5,"status":null,"statusType":"file","statusCompleteFilename":"module5-example-run.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter"},{"key":"report","title":"Report Generation","step":6,"status":null,"statusType":"file","statusCompleteFilename":"report.pdf","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline"}],"reportFiles":{"finalReport":{"pdf":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.pdf","name":"report.pdf"},"Rmd":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.Rmd","name":"report.Rmd"}},"mutations":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/mutations-table.txt","name":"mutations-table.txt"},"summary":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/summary.txt","name":"summary.txt"}},"consensus":{"rootPath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter","files":{"postfilt":{"all":"postfilt_all.txt","fasta":"postfilt_consensus_all.fasta","summary":"postfilt_summary.txt"},"snp":{"final":"final_snpEff_report.txt"}}}},"reportName":"test-2021-02-17T13-23-29","annotationsDir":null,"running":false,"saved":false,"loaded":false}`)
+			
 		        this.selectedHistory = newReport
 				this.histories.push(newReport)
 
@@ -1412,40 +1416,34 @@ export default {
 	        })				
 		},
 		async run_artic_pipeline() {
-			if (this.$v.$invalid) {
-	          this.submitStatus = 'ERROR'
-	        } 
-	        else {
-	        	this.checkError()
-				await FileService.startModule({
-		            runDir: this.selectedHistory.runDir,
-		            primerDir: this.selectedHistory.primerDir,
-		            reportDir: this.selectedHistory.reportDir,
-		            name: this.selectedHistory.name,
-		            module: 'basestack_consensus',
-		        }).then((response)=>{
-					this.$swal.fire({
-						position: 'center',
-						icon: (response.data.exists ? 'warning' : 'success' ),
-						showConfirmButton:true,
-		                html:  response.data.message
-					});	
-					this.selectedHistory.running = true	        	
-		        }).catch((error)=>{
-		        	console.error(error)
-					this.$swal.fire({
-						position: 'center',
-						icon: 'error',
-						showConfirmButton:true,
-		                html:  error.response.data.message
-					});
-		        })		
-
-			}
+        	this.checkError()
+			await FileService.startModule({
+	            runDir: this.selectedHistory.runDir,
+	            primerDir: this.selectedHistory.primerDir,
+	            reportDir: this.selectedHistory.reportDir,
+	            name: this.selectedHistory.name,
+	            module: 'basestack_consensus',
+	        }).then((response)=>{
+				this.$swal.fire({
+					position: 'center',
+					icon: (response.data.exists ? 'warning' : 'success' ),
+					showConfirmButton:true,
+	                html:  response.data.message
+				});	
+				this.selectedHistory.running = true	        	
+	        }).catch((error)=>{
+	        	console.error(error)
+				this.$swal.fire({
+					position: 'center',
+					icon: 'error',
+					showConfirmButton:true,
+	                html:  error.response.data.message
+				});
+	        })		
 		},
 		bookmarkParams: async function(){
 			if (this.$v.$invalid){
-				this.submitStatus = 'ERROR'
+				this.submitStatus = 'Warning'
 			}
 			else{
 				await FileService.bookmarkSelections({
@@ -1506,12 +1504,12 @@ export default {
     						this.histories.length > 0 ? this.selectedHistory = this.histories[0] : this.history = null;
 	        			}).catch((errFetch)=>{console.error(errFetch)})
 		        	}).catch((err)=>{
-		        		let path = this.selectedHistory.reportDir.path
+		        		let reportpath = this.selectedHistory.reportDir.path
 		        		let html  = `
 		        		${err.response.data.message}
 		        		<hr>
 		        		<button variant="outline-primary" id="open_folder_error" 
-		        			@click="open(${path})">
+		        			@click="open(${reportpath})">
 		        			Open Folder
 		        		</button>`
 		        		this.$swal.fire({
@@ -1523,7 +1521,7 @@ export default {
 			                onBeforeOpen: () => {
 						    	const btn = document.querySelector('#open_folder_error')
 						    	btn.addEventListener('click', () => {
-						     		$this.open(path)
+						     		$this.open(reportpath)
 						     	})
 						   }
 
@@ -1544,23 +1542,22 @@ export default {
 		},
 		loadHistory: async function(){
 			if (this.$v.$invalid) {
-	          this.submitStatus = 'ERROR'
+	        	this.submitStatus = 'Warning'
+	        } else {
+	    	    this.submitStatus = 'OK'
 	        }
-	        else {
-        		this.submitStatus = 'OK'
-        		this.selectedHistory.loaded = true
-        		this.histories = this.histories.map((d,i )=>{
-        			if (d.name != this.selectedHistory.name){
-        				d.loaded = false
-        			} else {
-        				d.loaded = true
-        			}
-        			return d
-        		})
-        		// this.updateData()
+    		this.selectedHistory.loaded = true
+    		this.histories = this.histories.map((d,i )=>{
+    			if (d.name != this.selectedHistory.name){
+    				d.loaded = false
+    			} else {
+    				d.loaded = true
+    			}
+    			return d
+    		})
+    		// this.updateData()
 
-                this.fetchConsensusReport('')
-	        }
+            this.fetchConsensusReport('')
 		},
 	    async fetchModuleStatus(mod, index){
 	    	const $this = this

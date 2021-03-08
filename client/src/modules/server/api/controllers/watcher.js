@@ -45,7 +45,6 @@ export  var module_status = async function(params, mod){
 		const reportDir = params.reportDir
 		const modules = reportDir.mod
 		let completeFile = path.join(mod.folderpath, mod.statusCompleteFilename)
-
 		if (mod.statusType =="file"){
 			fs.exists(completeFile, function(exists, error){
 				if (error){

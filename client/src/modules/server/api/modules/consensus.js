@@ -67,6 +67,10 @@ export class BasestackConsensus{
 			const tmpMeta = "/opt/basestack_consensus/sequencing_runs/sequencing_runs/meta"
 
 			await writeFolder(consensusDir)
+			let exists = await checkFolderExists(baseDir)
+			if (!exists){
+				await writeFolder(baseDir)
+			}
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
 			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
 			await copyFile(manifest.path, path.join(baseDir,  data.runDir.manifest.filename))
@@ -128,7 +132,7 @@ export class BasestackConsensus{
 
 		const reportName = name + "-" + currentDateTime
 		const reportPath = path.join(server_config.historyPath, name)
-		const runReportPath = path.join(runDir.path, "basestack_consensus",  name )
+		const runReportPath = path.join(runDir.path, "basestack",  name )
 		const finalConsensusPath = path.join(runReportPath, "5-post-filter") 
 		const metaDir = path.join(reportPath, "meta")
 		const run_statsPath = path.join(runReportPath, "run_stats") 
@@ -156,7 +160,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'file',
 					statusCompleteFilename: "1-barcode-demux.complete",
-					folderpath: path.join(runReportPath, "1-barcode-demux")
+					folderpath: path.join(runReportPath, 'consensus', 'artic-pipeline', "1-barcode-demux")
 				},
 				{
 					key: "length-filter",
@@ -165,7 +169,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: "multiple_files",
 					statusCompleteFilename: ".complete",			
-					folderpath: path.join(runReportPath, "2-length-filter")
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline', "2-length-filter")
 				},
 				{
 					key: "normalization",
@@ -174,7 +178,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'multiple_files',
 					statusCompleteFilename: ".complete",
-					folderpath: path.join(runReportPath, "3-normalization")
+					folderpath: path.join(runReportPath, 'consensus', 'artic-pipeline', "3-normalization")
 				},
 				{
 					key: "draft-consensus",
@@ -183,7 +187,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'multiple_files',
 					statusCompleteFilename: ".complete",
-					folderpath: path.join(runReportPath, "4-draft-consensus")
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline', "4-draft-consensus")
 				},
 				{
 					key: "post-filter",
@@ -192,7 +196,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'file',
 					statusCompleteFilename: "module5-example-run.complete",
-					folderpath: path.join(runReportPath, "5-post-filter")
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline', "5-post-filter")
 				},
 				{
 					key: "report",
@@ -201,7 +205,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'file',
 					statusCompleteFilename: "report.pdf",
-					folderpath: runReportPath
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline' )
 				}
 			],
 			reportFiles: 
@@ -300,19 +304,12 @@ export class BasestackConsensus{
 		// Manual Error checking section
 		// Check if the directory contains one or more fastq files
 		const reportDir = params.reportDir.path
-		try {
-			let exists = await checkFolderExists(reportDir) 
-			if (exists){
-		  		await removeFile(reportDir, 'dir')
-			}
+		try {			
+		  	await removeFile(reportDir, 'dir', true)
 		  	const server_config = store.config.modules['basestack_consensus']['config']
-		  	console.log(params, server_config)
 		  	const historyPath = path.join(server_config.historyPath, params.name)
 		  	if (historyPath != reportDir ){
-				exists = await checkFolderExists(historyPath) 
-				if (exists){
-			  		await removeFile(historyPath, 'dir')
-				}
+			  	await removeFile(historyPath, 'dir')				
 		  	}
 		  	return "Success on removing directory"
 		} catch (err){
