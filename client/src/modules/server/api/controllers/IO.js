@@ -174,7 +174,7 @@ export async function readTableFile(filepath, delimeter){
 	})
 }
 
-export async function removeFile(filepath, type){
+export async function removeFile(filepath, type, silentExists){
 	return new Promise((resolve, reject)=>{
 		 fs.exists(filepath, function(exists){
 		    if(exists){
@@ -195,7 +195,7 @@ export async function removeFile(filepath, type){
 				    })
 			    }
 		    } else {
-		    	reject(`Path Doesnt exist ${filepath}`)
+		    	silentExists ? resolve("File doesn't exist, silent exit") : reject(`Path Doesnt exist ${filepath}`)
 		    }
 		})
 		
