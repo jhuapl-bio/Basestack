@@ -23,6 +23,9 @@ export function set(attribute, value, obj, type) {
     try{
 	    for(var i = 0; i < depth_attributes.length; i++) {
 			if (i < depth_attributes.length - 1 ){
+				if (!depth[depth_attributes[i]]){
+					depth[depth_attributes[i]] = {}
+				}
 		    	depth = depth[depth_attributes[i]] 
 		    } else {
 		    	depth[depth_attributes[i]]  = value
@@ -54,7 +57,6 @@ export function get(attribute, obj, type) {
 			}	  
 			depth = depth[depth_attributes[i]]	    
 	    }
-	    console.log("returning depth_attributes")
 	    return depth
 	} catch(err){
 		logger.error("Error in get attributes :%j", err)
