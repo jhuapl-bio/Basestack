@@ -73,7 +73,6 @@ export async function validateVideo(videoPath){
 }
 export async function getRecursiveFiles(path, pattern){
 	return new Promise((resolve, reject)=>{
-		console.log(path, "<<<<<")
 		let glob_pattern = "/**/*";
 		if (pattern){
 			glob_pattern = pattern;
@@ -168,6 +167,7 @@ export async function validate_run_dir(params){
 	const manifest = runDir.manifest.filename
 	const runDir_path = runDir.path
 	const fastqFolderName = runDir.fastqDir.name
+	console.log(fastqFolderName, "Validate")
 	const basename = path.basename(runDir_path)
 	const validation = {
 		fastq: {
@@ -332,7 +332,6 @@ function make_custom(val, map, target){
 			const val2 = map.filter((d)=>{
 				return d[target] == val
 			})
-			console.log(val2, "convertcustom")
 			if (val2.length > 0){
 				return {custom: val2[0].custom,  name: val2[0][target], path: val2[0].path}
 			}
