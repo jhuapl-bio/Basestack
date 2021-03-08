@@ -22,6 +22,7 @@ export function set(attribute, value, obj, type) {
     var depth = obj
     try{
 	    for(var i = 0; i < depth_attributes.length; i++) {
+	    	console.log(">>>>", depth[depth_attributes[i]], depth_attributes[i])
 			if (i < depth_attributes.length - 1 ){
 				if (!depth[depth_attributes[i]]){
 					depth[depth_attributes[i]] = {}
