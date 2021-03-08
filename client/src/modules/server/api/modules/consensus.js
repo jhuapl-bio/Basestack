@@ -86,17 +86,18 @@ export class BasestackConsensus{
 			if (data.runDir.run_config.primers.custom && data.runDir.run_config.primers.path){
 				volumes.push(data.runDir.run_config.primers.path)
 				volumes.push(`${tmpPrimerSchemes}/${data.runDir.run_config.primers.name}`)
-				command[2] +=(` echo yes ls ${tmpPrimerSchemes}/${data.runDir.run_config.primers.name}`)
+				command[2] +=(`; mkdir -p /opt/basestack_consensus/primer_schemes/${data.runDir.run_config.primers.name} &&
+					ln -sf ${tmpPrimerSchemes}/${data.runDir.run_config.primers.name} /optfff/basestack_consensus/primer_schemes/${data.runDir.run_config.primers.name}`)
 			}
 			if (data.runDir.run_config.barcoding.custom && data.runDir.run_config.barcoding.path){
 				volumes.push(data.runDir.run_config.barcoding.path)
 				volumes.push(`${tmpBarcoding}/${data.runDir.run_config.barcoding.name}`)
-				command[2] +=(` && ls ${tmpBarcoding}`)
+				// command[2] +=(` && ls ${tmpBarcoding}`)
 			}
 			if (data.runDir.run_config.basecalling.custom && data.runDir.run_config.basecalling.path){
 				volumes.push(data.runDir.run_config.basecalling.path)
 				volumes.push(`${tmpBasecalling}/${data.runDir.run_config.basecalling.name}`)
-				command[2] +=(`&& ls ${tmpBasecalling}`)
+				// command[2] +=(`&& ls ${tmpBasecalling}`)
 			}
 			let binds = []
 			let i  =0 ;
@@ -113,7 +114,7 @@ export class BasestackConsensus{
 		        "Volumes": {
 		        }
 			}	
-			command[2] += (` &&  bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
+			command[2] += (`;  bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
 			return {options: options, command: command }
 		} catch(err){
 			logger.error(err)

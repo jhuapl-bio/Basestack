@@ -227,17 +227,23 @@ export async function validate_run_dir(params){
 		const throughputExists = await checkFileExist(runDir_path, 'throughput_.*.csv', true)
 		const seq_summaryExists  = await checkFileExist(runDir_path, 'sequencing_summary.*txt', true)
 		const drift_correctionExists = await checkFileExist(runDir_path, 'drift_correction.*csv', true)
-		logger.info(1)
 		let possibleFolders = [];
 		if (run_dirExists){
 			possibleFolders  = await getFolders(runDir_path)
 		} else {
-			console.log("run dir doesnt exists, runDir_path", runDir_path)
+			logger.info("run dir doesnt exists, runDir_pat:  %s", runDir_path)
 		}
-		possibleFolders = possibleFolders.filter((d)=>{
-			return d.name != 'basestack'
-		})
+
 		let validFolders = []; let checkExists = [];
+		if (override){
+			possibleFolders = possibleFolders.filter((d)=>{
+				return d.name != 'basestack'
+			})
+		} else {
+			possibleFolders = [runDir.fastqDir]
+		}
+
+		
 		for (let i = 0; i < possibleFolders.length; i++){
 			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq$", true, true))
 		}
@@ -251,10 +257,10 @@ export async function validate_run_dir(params){
 				return false
 			}
 		})
+		console.log(validFolders)
 		let promises = []
 		validFolders.forEach((d)=>{			
 			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
-			
 		})
 		response = await Promise.all(promises)
 		response.forEach((d,i)=>{
@@ -265,12 +271,11 @@ export async function validate_run_dir(params){
 			runDir.fastqDir.files = 0
 		} else {
 			runDir.fastqDir.validation = true
-		}
-		if (override){
-			if (validFolders.length > 0){
+			if (override){
 				runDir.fastqDir = validFolders[0]
 			}
 		}
+		
 		if(run_configExists && override){
 			validation['run_config']['exists'] = run_configExists
 			content = await readTableFile(run_configPath, '\t')
