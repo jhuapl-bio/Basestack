@@ -272,7 +272,6 @@ export async function add_selections(params){
 				push = false
 			}
 		}
-		console.log("pushing?", push)
 		if (push){
 			let st = get(params.target, store, params.type) 
 			st.push(params.value)
@@ -302,8 +301,6 @@ export async function rm_selections(params){
 		let depth  = get(params.file_target, meta, params.type)
 		let st = get(params.target, store, params.type) 
 		let found = false
-		console.log(params.key)
-		console.log(depth, "\n\t\t", st)
 		if (params.key){
 			depth = depth.filter((d)=>{
 				return d[params.key] !== params.value[params.key]
