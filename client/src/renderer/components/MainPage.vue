@@ -302,8 +302,10 @@ export default {
 			const V = path.basename(root);
 			let baseP  = root; let i = 0;
 			let fullname = V;
+			console.log(baseP, fullname)
 			while (i < sublevel){
 				baseP = path.dirname(baseP)
+				console.log(baseP)
 			 	fullname = `${path.basename(baseP)}/${fullname}`		
 			  	i++;
 			}	
@@ -315,6 +317,7 @@ export default {
 					type: 'arr',
 					key: "name"
 				})
+				console.log(response)		
     		} catch(err){
     			console.error(err)
     			this.$swal.fire({

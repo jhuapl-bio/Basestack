@@ -274,10 +274,10 @@ export async function validate_run_dir(params){
 				return false
 			}
 		})
+		console.log(validFolders)
 		let promises = []
 		validFolders.forEach((d)=>{			
 			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
-			
 		})
 		response = await Promise.all(promises)
 		response.forEach((d,i)=>{
