@@ -55,6 +55,7 @@ export  var module_status = async function(params, mod){
 		    	} else {
 		    		mod.status = [0, 1]
 		    	}
+
 		    	resolve(mod)
 			})	
 		} else { // we need to look to see if all of the BC have been completed since it is async
