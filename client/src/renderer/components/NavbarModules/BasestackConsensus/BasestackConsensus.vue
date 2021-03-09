@@ -619,10 +619,10 @@
 									</b-form-select>
 									
 									<b-form-file 
-				                 	 directory
+				                 	 :directory="row.item == 'primers' ? true : false"
 				                 	 v-else
 					                 :no-traverse="true"
-					                 :multiple="true"
+					                 :multiple="row.item == 'primers' ? true : false"
 					          		 :file-name-formatter="formatNames"
 					                 :disabled="!isNew" 
 					                 aria-describedby="seq_file" 
@@ -631,6 +631,7 @@
 					                 	event: $event, 
 					                 	target: `config.modules.basestack_consensus.resources.run_config.${row.item}`,
 										file_target: `modules.basestack_consensus.resources.run_config.${row.item}`,
+										type: row.item == 'primers' ? 'dir' : 'file',
 										sublevel: row.item == 'primers' ? 1 : 0
 					                 })"
 					                 :placeholder="`Choose ${row.item} input`"

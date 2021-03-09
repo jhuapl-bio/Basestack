@@ -251,11 +251,13 @@ export default {
             })
           }
       },
-      parseFileInput(event){
+      parseFileInput(event, type){
 		let root;
 		let dirName;
 		let files;
+		console.log(event)
 		if (event.dataTransfer){
+			console.log("dragging")
   			files = event.dataTransfer.files[0]
   			if (Array.isArray(files)){
 				if(files.length > 0){
@@ -268,9 +270,15 @@ export default {
 				return files.path
 			}
   		} else {
+			console.log("selection")
   			files = event.target.files
+  			console.log(files)
 			if(files.length > 0){
-				root = path.dirname(files[0].path)
+				if (type == 'dir'){
+					root = path.dirname(files[0].path)
+				} else {
+					root = files[0].path
+				}
 				return root
 			} else {
 				return files.path
@@ -280,12 +288,13 @@ export default {
 	  },
       async changeFile(data){
       		const event = data.event
+
       		const file_target = data.file_target
       		const target = data.target
       		const sublevel = data.sublevel
       		let val = event
       		
-			let root = this.parseFileInput(event)
+			let root = this.parseFileInput(event, data.type)
 			console.log(root)
 			const V = path.basename(root);
 			let baseP  = root; let i = 0;
