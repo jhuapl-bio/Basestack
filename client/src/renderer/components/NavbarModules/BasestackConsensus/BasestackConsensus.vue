@@ -325,10 +325,12 @@
 							<b-table
 					          show-empty
 					          small
+					          responsive
 					          id="manifest_table"
 			                  class="formGroup-input"
 					          :items="selectedHistory.runDir.manifest.entries"
 					          :fields="manifest_fields"
+					          sticky-header="250px"	
 							>
 						        <template  v-slot:cell(barcode)="row">
 							    	<b-form-input
@@ -416,49 +418,64 @@
 					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
 					        	title="Select a Barcode Name (e.g. NB) and Sample ID. Increments by 1" />
 				      		</span>
-						</template>
-						<b-table
-				          show-empty
-				          small
-				          label=""
-				          :hidden="!isNew"
-				          style="width: 100%"
-		                  class="formGroup-input"
-				          :items="[1]"
-				          :fields="['Barcode', 'SampleID', 'Count', 'Adjust']"
-						  sticky-header="300px"						        
-						>
-							<template  v-slot:cell(Barcode)>
-								<b-form-textarea :disabled="!isNew"
-			                 		v-model="placeHolderBarcode"
-			                 		class="formGroup-input"
-			                 	>
-			                	</b-form-textarea>								 
-						    </template>
-						    <template  v-slot:cell(Count)>
-								<b-form-select class="formGroup-input" :disabled="!isNew" v-model="placeHolderManifestCount"   :options="[12, 24, 96]"></b-form-select>							 
-						    </template>
-						    <template  v-slot:cell(SampleID)>
-								<b-form-textarea 
-			                 	v-model="placeHolderSampleID"
-			                 	class="formGroup-input" :disabled="!isNew"
-			                 	>
-			                	</b-form-textarea>						 
-						    </template>
-						    <template  v-slot:cell(Adjust)>
-								<span :hidden="!isNew" class="center-align-icon;"
+				      		<span :hidden="!isNew" class="center-align-icon;"
 				            		v-tooltip="{
-							            content: 'Adjust The Placeholder Manifest',
+							            content: 'Define Default Manifest',
 							            placement: 'top',
 							            classes: ['info'],
 							            trigger: 'hover',
 							            targetClasses: ['it-has-a-tooltip'],
 							            }"
 				            	>
-				            		<font-awesome-icon class="configure"  @click="adjustManifest()" icon="cog" size="sm"  />
-							    </span>					 
-						    </template>
-						</b-table>
+				            		<font-awesome-icon class="configure"  v-b-toggle.sidebar-right icon="cog" size="sm"  />
+							    </span>		
+						</template>
+						<b-sidebar id="sidebar-right" title="Sidebar" right shadow>
+							<b-table
+					          show-empty
+					          small
+					          label=""
+					          stacked
+					          responsive
+					          :hidden="!isNew"
+					          style="width: 100%"
+			                  class="formGroup-input"
+					          :items="[1]"
+					          :fields="['Barcode', 'SampleID', 'Count', 'Adjust']"
+							  sticky-header="300px"						        
+							>
+								<template  v-slot:cell(Barcode)>
+									<b-form-textarea :disabled="!isNew"
+				                 		v-model="placeHolderBarcode"
+				                 		class="formGroup-input"
+				                 	>
+				                	</b-form-textarea>								 
+							    </template>
+							    <template  v-slot:cell(Count)>
+									<b-form-select class="formGroup-input" :disabled="!isNew" v-model="placeHolderManifestCount"   :options="[12, 24, 96]"></b-form-select>							 
+							    </template>
+							    <template  v-slot:cell(SampleID)>
+									<b-form-textarea 
+				                 	v-model="placeHolderSampleID"
+				                 	class="formGroup-input" :disabled="!isNew"
+				                 	>
+				                	</b-form-textarea>						 
+							    </template>
+							    <template  v-slot:cell(Adjust)>
+									<span :hidden="!isNew" class="center-align-icon;"
+					            		v-tooltip="{
+								            content: 'Adjust The Placeholder Manifest',
+								            placement: 'top',
+								            classes: ['info'],
+								            trigger: 'hover',
+								            targetClasses: ['it-has-a-tooltip'],
+								            }"
+					            	>
+					            		<font-awesome-icon class="configure"  v-b-toggle.sidebar-right @click="adjustManifest()" icon="cog" size="sm"  />
+								    </span>					 
+							    </template>
+							</b-table>
+						</b-sidebar >
 					</b-form-group>
 				</b-col>
 				<b-col sm="7">
