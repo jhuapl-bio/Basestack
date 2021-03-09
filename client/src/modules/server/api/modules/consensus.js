@@ -27,7 +27,6 @@ export class BasestackConsensus{
 			const reportDir = data.reportDir
 			const meta = reportDir.meta
 			const run_config = meta.run_config
-			const run_info = meta.run_info
 			const manifest = meta.manifest
 			// const versionDir = path.basename(primerDir)
 			// const primerNameDir = path.basename(path.dirname(primerDir))
@@ -35,9 +34,8 @@ export class BasestackConsensus{
 
 			//Error checking for artic consensus generation
 			//Read file presence
-			await checkFileExist(path.dirname(run_info.path), run_info.name)
-			await checkFileExist(path.dirname(run_config.path), run_info.name)
-			await checkFileExist(path.dirname(manifest.path), run_info.name)
+			await checkFileExist(path.dirname(run_config.path), run_config.filename)
+			await checkFileExist(path.dirname(manifest.path), manifest.filename)
 			await checkFileExist(fastqDir, ".fastq")
 
 			// await checkFileExist(primerDir.fullpath, ".tsv")
@@ -55,25 +53,26 @@ export class BasestackConsensus{
 			const tmpfastqDir = "/opt/basestack_consensus/sequencing_runs/example-run/fastq_pass"
 
 			// const tmpConsensusScripts = "/root/idies/workspace/covid19"
-			const tmpRunInfo = tmpfastqDir + run_info
 			const tmpManifest = tmpfastqDir + manifest
 			const tmpRunConfig = tmpfastqDir + run_config
-			const consensusDir = path.join(reportDir.path, 'consensus', "artic-pipeline")
+			const consensusDir = path.join(reportDir.path,'consensus','artic-pipeline')
 
 
 			const tmpPrimerSchemes = "/opt/basestack_consensus/code/artic-ncov2019/primer_schemes/"
 			const tmpBarcoding = '/opt/basestack_consensus/code/ont-guppy-cpu/data/barcoding'
 			const tmpBasecalling = '/opt/basestack_consensus/code/ont-guppy-cpu/data'
-			console.log(run_config)
 			const tmpMeta = "/opt/basestack_consensus/sequencing_runs/sequencing_runs/meta"
 
 			await writeFolder(consensusDir)
+			let exists = await checkFolderExists(baseDir)
+			if (!exists){
+				await writeFolder(baseDir)
+			}
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
-			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
 			await copyFile(manifest.path, path.join(baseDir,  data.runDir.manifest.filename))
-			let volumes = [ reportDir.path, tmpreportDir,
+			let volumes = [ 
+				reportDir.path, tmpreportDir,
 				baseDir, tmpbaseDir,
-				path.join(reportDir.path, "meta"), tmpMeta,
 				consensusDir, tmpConsensusDir,
 				fastqDir, tmpfastqDir
 			]
@@ -83,17 +82,18 @@ export class BasestackConsensus{
 			if (data.runDir.run_config.primers.custom && data.runDir.run_config.primers.path){
 				volumes.push(data.runDir.run_config.primers.path)
 				volumes.push(`${tmpPrimerSchemes}/${data.runDir.run_config.primers.name}`)
-				command[2] +=(` echo yes ls ${tmpPrimerSchemes}/${data.runDir.run_config.primers.name}`)
+				command[2] +=(`; mkdir -p /opt/basestack_consensus/primer_schemes/${data.runDir.run_config.primers.name} &&
+					ln -sf ${tmpPrimerSchemes}/${data.runDir.run_config.primers.name} /optfff/basestack_consensus/primer_schemes/${data.runDir.run_config.primers.name}`)
 			}
 			if (data.runDir.run_config.barcoding.custom && data.runDir.run_config.barcoding.path){
 				volumes.push(data.runDir.run_config.barcoding.path)
 				volumes.push(`${tmpBarcoding}/${data.runDir.run_config.barcoding.name}`)
-				command[2] +=(` && ls ${tmpBarcoding}`)
+				// command[2] +=(` && ls ${tmpBarcoding}`)
 			}
 			if (data.runDir.run_config.basecalling.custom && data.runDir.run_config.basecalling.path){
 				volumes.push(data.runDir.run_config.basecalling.path)
 				volumes.push(`${tmpBasecalling}/${data.runDir.run_config.basecalling.name}`)
-				command[2] +=(`&& ls ${tmpBasecalling}`)
+				// command[2] +=(`&& ls ${tmpBasecalling}`)
 			}
 			let binds = []
 			let i  =0 ;
@@ -110,7 +110,7 @@ export class BasestackConsensus{
 		        "Volumes": {
 		        }
 			}	
-			command[2] += (` && bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
+			command[2] += (`;  bash artic-module1-barcode-demux.sh -i ${tmpbaseDir}  `)
 			return {options: options, command: command }
 		} catch(err){
 			logger.error(err)
@@ -122,22 +122,20 @@ export class BasestackConsensus{
 		const protocolDir = params.protocolDir
 		const primerDir = params.primerDir
 		const name = params.name
+		const runDir = params.runDir
 		const type = params.type
 		const server_config = store.config.modules['basestack_consensus']['config']
 		const currentDateTime = moment().format('YYYY-MM-DDTHH-mm-ss')
+
 		const reportName = name + "-" + currentDateTime
 		const reportPath = path.join(server_config.historyPath, name)
-		const runReportPath = path.join(reportPath, "consensus", 'artic-pipeline')
+		const runReportPath = path.join(runDir.path, "basestack",  name )
 		const finalConsensusPath = path.join(runReportPath, "5-post-filter") 
 		const metaDir = path.join(reportPath, "meta")
 		const run_statsPath = path.join(runReportPath, "run_stats") 
 		const reportDir = {
-			path: reportPath,
+			path: runReportPath,
 			meta: {
-				run_info: {
-					name: "run_info.txt",
-					path: path.join(metaDir, 'run_info.txt')
-				},
 				run_config: {
 					name: "run_config.txt",
 					path: path.join(metaDir, 'run_config.txt')
@@ -155,7 +153,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'file',
 					statusCompleteFilename: "1-barcode-demux.complete",
-					folderpath: path.join(runReportPath, "1-barcode-demux")
+					folderpath: path.join(runReportPath, 'consensus', 'artic-pipeline', "1-barcode-demux")
 				},
 				{
 					key: "length-filter",
@@ -164,7 +162,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: "multiple_files",
 					statusCompleteFilename: ".complete",			
-					folderpath: path.join(runReportPath, "2-length-filter")
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline', "2-length-filter")
 				},
 				{
 					key: "normalization",
@@ -173,7 +171,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'multiple_files',
 					statusCompleteFilename: ".complete",
-					folderpath: path.join(runReportPath, "3-normalization")
+					folderpath: path.join(runReportPath, 'consensus', 'artic-pipeline', "3-normalization")
 				},
 				{
 					key: "draft-consensus",
@@ -182,7 +180,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'multiple_files',
 					statusCompleteFilename: ".complete",
-					folderpath: path.join(runReportPath, "4-draft-consensus")
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline', "4-draft-consensus")
 				},
 				{
 					key: "post-filter",
@@ -191,7 +189,7 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'file',
 					statusCompleteFilename: "module5-example-run.complete",
-					folderpath: path.join(runReportPath, "5-post-filter")
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline', "5-post-filter")
 				},
 				{
 					key: "report",
@@ -200,18 +198,18 @@ export class BasestackConsensus{
 					status: null,
 					statusType: 'file',
 					statusCompleteFilename: "report.pdf",
-					folderpath: runReportPath
+					folderpath: path.join(runReportPath,  'consensus', 'artic-pipeline' )
 				}
 			],
 			reportFiles: 
 			{ 
 				finalReport: {
 					pdf: {
-						path: path.join(runReportPath, "report.pdf"),
+						path: path.join(runReportPath, 'consensus', 'artic-pipeline', "report.pdf"),
 						name: "report.pdf"
 					}, 
 					Rmd: {
-						path: path.join(runReportPath, "report.Rmd"),
+						path: path.join(runReportPath, 'consensus', 'artic-pipeline', "report.Rmd"),
 						name: "report.Rmd"					
 					}
 				},
@@ -242,7 +240,6 @@ export class BasestackConsensus{
 		}
 
 		const annotationsDir = null
-		const runDir = params.runDir
 		params.currentDateTime = currentDateTime;
 		params.reportDir = reportDir;
 		params.reportName = reportName;
@@ -263,13 +260,9 @@ export class BasestackConsensus{
 		  	//write the meta data file for the run
 		  	
 		  	//
-		  	let tsv_file_content = runDir.run_info.desc + "\n"
-		  	logger.info("%s", "Bookmark run info")
-		  	await writeFile(path.join(metaDir, runDir.run_info.filename), tsv_file_content+"\n").then((response)=>{
-		  		logger.info("%s %s", "Success in writing runInfo files")
-		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
+	
 		  	
-		  	tsv_file_content = "primers\t"+runDir.run_config.primers.name+"\n"+
+		  	let tsv_file_content = "primers\t"+runDir.run_config.primers.name+"\n"+
 		  	'basecalling\t'+ runDir.run_config.basecalling.name+"\n" +
 		  	'barcoding\t'+ runDir.run_config.barcoding.name +"\n"
 
@@ -286,7 +279,7 @@ export class BasestackConsensus{
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 
 		  	logger.info("%s", "Bookmark meta config")
-		  	await writeFile(path.join(reportDir.path, "report-meta.json"), JSON.stringify(params,null,4)).then((response)=>{
+		  	await writeFile(path.join(reportPath, "report-meta.json"), JSON.stringify(params,null,4)).then((response)=>{
 		  		logger.info("%s %s", "Success in bookmark meta file", response)
 		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 
@@ -300,12 +293,14 @@ export class BasestackConsensus{
 		// Manual Error checking section
 		// Check if the directory contains one or more fastq files
 		const reportDir = params.reportDir.path
-		console.log(params)
-		try {
-		  	await removeFile(reportDir, 'dir').then((response)=>{
-		  		logger.info("%s %s", "Success in deleting bookmark", response)
-		  		return response
-		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
+		try {			
+		  	await removeFile(reportDir, 'dir', true)
+		  	const server_config = store.config.modules['basestack_consensus']['config']
+		  	const historyPath = path.join(server_config.historyPath, params.name)
+		  	if (historyPath != reportDir ){
+			  	await removeFile(historyPath, 'dir')				
+		  	}
+		  	return "Success on removing directory"
 		} catch (err){
 			logger.error(err)
 			throw err

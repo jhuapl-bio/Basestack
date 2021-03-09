@@ -7,7 +7,7 @@ export async function removeAnnotation(params){
 	  	await removeFile(params.annotationDir.path, 'dir')
 	  	await removeFile(params.protocolDir.relativePath, 'dir').then((response)=>{
 	  		logger.info("%s %s", "Success in deleting annotation", response)
-			const metaFile = path.join(params.reportDir.path, "/", "report-meta.json")
+			const metaFile = path.join(params.fullpathHistory, "/", "report-meta.json")
 	  		ammendJSON({
 				value: null,
 				file: metaFile,
