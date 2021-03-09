@@ -13,8 +13,6 @@
 			<b-row class="nopadcolumn">
 				<b-col sm="12" style="" class="nopadcolumn">
 					<h4 style="text-align:left">Job Histories</h4>
-						<b-alert show v-if="submitStatus === 'ERROR'" variant="danger">Please have a valid manifest, run_config, fastq folder, minion specific run files set.</b-alert>
-  						<b-alert show v-else-if="submitStatus === 'Warning'" variant="warning">Warning, one or more required items are missing, consider fixing this issue</b-alert>
 						<b-form-group
 				            label="Select Run"
 				            label-cols-sm="1"
@@ -55,6 +53,7 @@
 							            placement: 'top',
 							            classes: ['info'],
 							            trigger: 'hover',
+							            targetClasses: ['it-has-a-tooltip'],
 							            }"
 				            	>
 				            		<font-awesome-icon class="configure"  @click="open(selectedHistory.reportDir.path, $event)" icon="archive" size="sm"  />
@@ -235,6 +234,157 @@
 					    </b-input-group-append>
 					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.name.required">A Form Name is required</div>
 					</b-form-group>
+				</b-col>
+				<b-col sm="7">
+					<b-form-group
+			            label="Run Folder"
+			            label-align-sm="center"
+			            label-size="sm"
+			            label-for="filterInput"
+			            class="mb-2 formGroup"
+			            inline
+		            >
+		          		<b-table
+							:fields="['RunDir', 'FastqDir']"
+							:items="[selectedHistory]"
+						>
+						<template  v-slot:cell(RunDir)="row" style="display:flex">
+					          <b-form-file 
+			                 	 v-if="row.item.custom"
+				                 ref="seq_file" 
+				                 :id="'seq_file'" 
+				                 :disabled="!isNew" 
+				                 aria-describedby="seq_file" 
+				                 v-model="fastqFiles"
+				                 directory
+				                 webkitdirectory
+				                 :no-traverse="false"
+				                 :multiple="true"
+				                 :state="selectedHistory.runDir.fastqDir.validation"
+				                 :placeholder="'Choose a run Folder'"
+				                 drop-placeholder="Drop folder here..."
+				                 :file-name-formatter="formatNames"
+				                 >
+			                </b-form-file>
+			                <b-form-textarea required v-else disabled
+			                 	:value="row.item.runDir.basename"
+			                 	class="formGroup-input"
+			                 	>
+			                </b-form-textarea>
+							</template>
+							<template  v-slot:cell(FastqDir)="row" >
+						    	<multiselect 
+				                  id="fastq_folder"
+				                  v-if="row.item.runDir.path && row.item.custom"
+								  v-model="row.item.runDir.fastqDir" 
+								  :searchable="false" :close-on-select="false" :preselect-first="true" track-by="name" label="name" :show-labels="false" placeholder="Pick a value" :options="selectedHistory.runDir.possibleFastqFolders"
+								  select-label="Select folder" :allow-empty="false"
+								  >
+								</multiselect>	
+								<b-form-input required v-else disabled
+				                 	:value="row.item.runDir.fastqDir.name"
+				                 	class="formGroup-input"
+				                 	>
+				                </b-form-input>	
+				                <p style="text-align:center" v-if="row.item.runDir.fastqDir.files">Total # of Fastq Files: {{row.item.runDir.fastqDir.files}}</p>							 
+						    </template>
+						    <template #head(RunDir)>
+						        <span  
+						        	style="text-align:center"  >
+						        	Run Folder
+						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+						        	title="Run Folders contain fastq directories along with manifest, run_info, and run_config files" />
+						        	<span class="center-align-icon" style="float:middle; display:flex" v-tooltip="{
+							            content: 'Validating Run Directory',
+							            placement: 'top',
+							            classes: ['info'],
+							            trigger: 'hover',
+							            targetClasses: ['it-has-a-tooltip'],
+							            }" v-if="validatingRunDir">
+						            	<looping-rhombuses-spinner
+									          :animation-duration="4000"
+									          :size="10"
+									          style="margin: auto"
+									          :color="'#2b57b9'"
+									     />
+							     	</span>
+							     	<span v-if="selectedHistory.runDir.path" class="center-align-icon;"
+					            		v-tooltip="{
+								            content: 'Open Run Folder',
+								            placement: 'top',
+								            classes: ['info'],
+								            trigger: 'hover',
+								            targetClasses: ['it-has-a-tooltip'],
+								            }"
+					            	>
+					            		<font-awesome-icon class="configure"  @click="open(selectedHistory.runDir.path, $event)" icon="archive" size="sm"  />
+								    </span>	
+					      		</span>
+						    </template>
+						    <template #head(FastqDir)>
+						        <span  
+						        	style="text-align:center"  > Fastq Folder
+						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+						        	title="Fastq directory contain your fastq files. Files must have .fastq extensions and be contained at a depth of 1 only"  />
+					      		</span>
+						    </template>
+						</b-table>
+			           
+			            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.fastqDir.validation.required">A valid fastq directory is required</div>
+			            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.path.required">Run Directory Must be Specified</div>
+					</b-form-group>
+				</b-col>
+				<b-col sm="4">
+					<b-form-group
+			        label-align-sm="center"
+		            label-size="sm"
+		            label-for="filterInput"
+			        class="mb-0 formGroup"
+		          	>
+		          		<template slot="label">
+						    <span  
+					        	style="text-align:center"  >
+					        	Run Info
+					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+					        	title="Run Info is a short description of your run" />
+				      		</span>
+						</template>
+						<b-input-group-append id="run_info">
+							<b-table
+								stacked
+								:fields="run_info_fields"
+								:items="[selectedHistory.runDir.run_info]"
+							>
+							<template  v-slot:cell(plate)="row">
+					            <b-form-textarea
+							          v-model="row.item.desc"
+							          label="Description"
+	           						  :disabled="!isNew"
+							          type="text"
+					                  class="formGroup-input"
+						              :state="stateValidationEmpty(row.item.desc)"
+							          required
+							          placeholder="01"
+							    ></b-form-textarea>
+							 </template>
+							<template  v-slot:cell(filename)="row">
+						    	<b-form-textarea
+						          v-model="row.item.filename"
+						          label="Filename"
+				                  class="formGroup-input"
+						          type="text"
+						          disabled
+							      :state="row.item.validation"
+						          placeholder="run_info.txt"
+						    	></b-form-textarea>
+						    	<b-form-invalid-feedback :state="row.item.validation">
+						        	run_info.txt not found
+						      	</b-form-invalid-feedback>										 
+						    </template>
+							</b-table>
+					    </b-input-group-append>
+					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_info.validation.required">Specify valid run information</div>
+					</b-form-group>
 					<b-form-group
 			            label-align-sm="center"
 			            label-size="sm"
@@ -278,6 +428,203 @@
 							</b-table>
 						</b-input-group-append>
 					</b-form-group>
+				</b-col>
+				<b-col sm="8">
+					<b-form-group
+			            label-align-sm="center"
+			            label-size="sm"
+			            label-for="filterInput"
+			            class="mb-0 formGroup"
+			           
+			         >
+			         	<template slot="label">
+						    <span  
+					        	style="text-align:center"  >
+					        	Run Config
+					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+					        	title="Run Config contains your barcoding, primer scheme, and basecalling configuration" />
+				      		</span>
+						</template>
+						<b-input-group-append id="run_config">
+							<b-table
+								:fields="run_config_fields"
+								:items="[selectedHistory.runDir.run_config]"
+								stacked
+							>
+								<template  v-slot:cell(primers)="row">
+									<b-row>
+										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
+											<b-form-checkbox
+										      v-model="customPrimerAdd"
+										      :disabled="!isNew"
+										      name="customPrimerAdd"
+										    >
+										      Add Custom
+										    </b-form-checkbox>
+										</b-col>
+										<b-col sm="6">
+										    <span v-if="row.item.primers.custom && isNew"   v-on:click="rmAttribute(row.item.primers, 'primers').then((val)=>{ row.item.primers = val});"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
+							            		v-tooltip="{
+										            content: 'Remove primer',
+										            placement: 'top',
+										            classes: ['info'],
+										            trigger: 'hover',
+										            targetClasses: ['it-has-a-tooltip'],
+										            }"
+								            	> Remove 
+												<font-awesome-icon class="configure warn-icon" icon="minus"/>
+											</span>
+										</b-col>	
+									</b-row>
+									<b-form-select class="formGroup-input" 
+										v-model="row.item.primers"  
+										:disabled="!isNew"
+										v-if="!customPrimerAdd"  
+										text-field="text"
+										value-field="value"
+										:options="modules.basestack_consensus.resources.run_config.primers.map((x) => { return {text: x.name, value: x}   })">
+										
+									</b-form-select>
+									<b-form-file 
+				                 	 directory
+				                 	 v-else
+					                 :no-traverse="true"
+					                 :multiple="true"
+					          		 :file-name-formatter="formatNames"
+					                 :disabled="!isNew" 
+					                 aria-describedby="seq_file" 
+					                 @change="changeFile(
+					                 {
+					                 	event: $event, 
+					                 	target: `config.modules.basestack_consensus.resources.run_config.primers`,
+										file_target: `modules.basestack_consensus.resources.run_config.primers`,
+										sublevel: 1
+					                 })"
+					                 :placeholder="'Choose a primer scheme folder'"
+					                 drop-placeholder="Drop primer scheme folder"
+					                 >
+				                	</b-form-file>
+						    	<b-form-invalid-feedback :state="row.item.validation">
+						        	run_info.txt not found
+						      	</b-form-invalid-feedback>										 
+								 </template>
+								<template  v-slot:cell(basecalling)="row" >
+									<b-row :disabled="!isNew" >
+										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
+											<b-form-checkbox
+											  :disabled="!isNew"
+										      v-model="checkboxBasecalling"
+										    >
+										      Add Custom
+										    </b-form-checkbox>
+												
+										</b-col>
+										<b-col sm="6">
+											<span v-if="row.item.basecalling.custom && isNew"   v-on:click="rmAttribute(row.item.basecalling, 'basecalling'); row.item.basecalling = {name: null, custom: false}"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
+							            		v-tooltip="{
+										            content: 'Remove custom basecaller config',
+										            placement: 'top',
+										            classes: ['info'],
+										            trigger: 'hover',
+										            targetClasses: ['it-has-a-tooltip'],
+										            }"
+								            	> Remove 
+												<font-awesome-icon class="configure warn-icon" icon="minus"/>
+											</span>
+										</b-col>
+									</b-row>
+									<b-form-select class="formGroup-input"  
+										v-model="row.item.basecalling"  
+										:disabled="!isNew"
+										text-field="text"
+										v-if="!checkboxBasecalling"
+										value-field="value"
+										:options="modules.basestack_consensus.resources.run_config.basecalling.map((x) => { return {text: x.name, value: x}   })">
+									</b-form-select>
+									<b-form-file 
+					                 :disabled="!isNew" 
+					                 v-else
+					                 aria-describedby="seq_file" 
+					                 @change="changeFile({
+					                 	event: $event, 
+					                 	target: `config.modules.basestack_consensus.resources.run_config.basecallinig`,
+										file_target: `modules.basestack_consensus.resources.run_config.basecalling`,
+										sublevel: 0
+					                 })"
+					                 :placeholder="'Choose a basecalling cfg file'"
+					                 drop-placeholder="Drop basecalling cfg file"
+					                 >
+				                	</b-form-file>
+							    </template>
+								<template  v-slot:cell(barcoding)="row">
+									<b-row>
+										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
+											<b-form-checkbox
+										      v-model="checkboxBarcoding"
+										      :disabled="!isNew"
+										    >
+										      Add Custom
+										    </b-form-checkbox>
+										</b-col>
+										<b-col sm="6">
+											<span v-if="row.item.barcoding.custom && isNew"   v-on:click="rmAttribute(row.item.barcoding, 'barcoding'); row.item.barcoding = {name: null, custom: false}"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
+							            		v-tooltip="{
+										            content: 'Remove custom barcoding config',
+										            placement: 'top',
+										            classes: ['info'],
+										            trigger: 'hover',
+										            targetClasses: ['it-has-a-tooltip'],
+										            }"
+								            	> Remove 
+												<font-awesome-icon class="configure warn-icon" icon="minus"/>
+											</span>
+										</b-col>
+									</b-row>
+							    	<b-form-select class="formGroup-input" 
+							    		v-if="!checkboxBarcoding" 
+							    		v-model="row.item.barcoding"  	 
+							    		:disabled="!isNew" 
+							    		text-field="text"
+										value-field="value"
+										:options="modules.basestack_consensus.resources.run_config.barcoding.map((x) => { return {text: x.name, value: x}   })">
+									</b-form-select>
+							 
+							    	<b-form-file 
+					                 :disabled="!isNew" 
+					                 v-else
+					                 aria-describedby="seq_file" 
+					                 @change="changeFile({
+					                 	event: $event, 
+					                 	target: `config.modules.basestack_consensus.resources.run_config.barcoding`,
+										file_target: `modules.basestack_consensus.resources.run_config.barcoding`,
+										sublevel: 0
+					                 })"
+					                 :placeholder="'Choose a barcoding cfg file'"
+					                 drop-placeholder="Drop barcoding cfg file"
+					                 >
+				                	</b-form-file>			 
+							    </template>
+							    <template  v-slot:cell(filename)="row">
+							    	<b-form-textarea
+							          v-model="row.item.filename"
+							          label="Filename"
+					                  class="formGroup-input"
+							          type="text"
+							          disabled
+							          :state="row.item.validation"
+							          placeholder="run_config.txt"
+							    	>
+							    	</b-form-textarea>								 
+									  <b-form-invalid-feedback :state="row.item.validation">
+								        run_config.txt not found
+								      </b-form-invalid-feedback>
+								  </template>
+							</b-table>
+						</b-input-group-append>
+					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_config.validation.required">Specify valid config information</div>
+					</b-form-group>
+				</b-col>
+				<b-col sm="12">
 					<b-form-group
 			            label="Manifest"
 			            label-align-sm="center"
@@ -294,43 +641,16 @@
 					        	title="Manifest contains your experimental setup with all barcodes for samples" />
 				      		</span>
 						</template>
-						<div style="text-align:center">
-							<b-form-input
-				    	      v-model="selectedHistory.runDir.manifest.filename"
-					          label="Filename"
-		    	              class="formGroup-input"
-					          type="text"
-					          required
-					          disabled
-						      :state="selectedHistory.runDir.manifest.validation"
-					          placeholder="manifest.txt"
-					    	></b-form-input>
-					    	  <b-form-invalid-feedback 
-					    	  v-b-tooltip.hover
-                        		title="You will need to create it manually on the left or make it directly within the run folder"
-					    	  :state="selectedHistory.runDir.manifest.validation">
-						        manifest.txt not found. 
-						      </b-form-invalid-feedback>
-					    	<hr>
-					    	<b-button v-on:click="addManifestRow(0)"  class="btn tabButton" v-if="selectedHistory.runDir.manifest.entries.length ==0 && selectedHistory.custom">
-								<span>
-									<font-awesome-icon icon="plus"/>
-								</span>
-							</b-button>
-							<span v-else style="text-align:center">Set one Barcode as NB00 (or other unused name) for the NTC</span>
-
-				    	</div>
 						<b-input-group-append id="manifest"
 						>	
 							<b-table
 					          show-empty
 					          small
-					          responsive
 					          id="manifest_table"
 			                  class="formGroup-input"
 					          :items="selectedHistory.runDir.manifest.entries"
 					          :fields="manifest_fields"
-					          sticky-header="250px"	
+							  sticky-header="300px"						        
 							>
 						        <template  v-slot:cell(barcode)="row">
 							    	<b-form-input
@@ -391,52 +711,46 @@
 
 								
 							</b-table>
-							
+							<div style="text-align:center">
+								<b-form-input
+					    	      v-model="selectedHistory.runDir.manifest.filename"
+						          label="Filename"
+			    	              class="formGroup-input"
+						          type="text"
+						          required
+						          disabled
+							      :state="selectedHistory.runDir.manifest.validation"
+						          placeholder="manifest.txt"
+						    	></b-form-input>
+						    	  <b-form-invalid-feedback 
+						    	  v-b-tooltip.hover
+	                        		title="You will need to create it manually on the left or make it directly within the run folder"
+						    	  :state="selectedHistory.runDir.manifest.validation">
+							        manifest.txt not found. 
+							      </b-form-invalid-feedback>
+						    	<hr>
+						    	<b-button v-on:click="addManifestRow(0)"  class="btn tabButton" v-if="selectedHistory.runDir.manifest.entries.length ==0 && selectedHistory.custom">
+									<span>
+										<font-awesome-icon icon="plus"/>
+									</span>
+								</b-button>
+								<span v-else style="text-align:center">Set one Barcode as NB00 (or other unused name) for the NTC</span>
+
+					    	</div>
 						</b-input-group-append>
-					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.minLength">Specify one or more barcode</div>
-					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.stateManifestID">
-					    	<span  
-					        	style="text-align:center"  >
-					        	No NTC present
-					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-					        	title="One Sample ID must have NTC (No Template Control)" />
-					      	</span>
-						</div>
-					</b-form-group>
-					<b-form-group
-			            label-align-sm="center"
-			            label-size="sm"
-			            label="Define Standard Manifest Scheme"
-			            label-for="filterInput"
-			            class="mb-0 formGroup"
-			           
-			         >
-						<template slot="label">
-						    <span  
-					        	style="text-align:center"  >
-					        	Define Standard Manifest Scheme
-					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-					        	title="Select a Barcode Name (e.g. NB) and Sample ID. Increments by 1" />
-				      		</span>
-				      		<span :hidden="!isNew" class="center-align-icon;"
-				            		v-tooltip="{
-							            content: 'Define Default Manifest',
-							            placement: 'top',
-							            classes: ['info'],
-							            trigger: 'hover',
-							            targetClasses: ['it-has-a-tooltip'],
-							            }"
-				            	>
-				            		<font-awesome-icon class="configure"  v-b-toggle.sidebar-right icon="cog" size="sm"  />
-							    </span>		
-						</template>
-						<b-sidebar id="sidebar-right" title="Sidebar" right shadow>
+						<b-input-group-append>
+							<template slot="label">
+							    <span  
+						        	style="text-align:center"  >
+						        	Define Standard Manifest Scheme
+						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+						        	title="Select a Barcode Name (e.g. NB) and Sample ID. Increments by 1" />
+					      		</span>
+							</template>
 							<b-table
 					          show-empty
 					          small
 					          label=""
-					          stacked
-					          responsive
 					          :hidden="!isNew"
 					          style="width: 100%"
 			                  class="formGroup-input"
@@ -471,416 +785,33 @@
 								            targetClasses: ['it-has-a-tooltip'],
 								            }"
 					            	>
-					            		<font-awesome-icon class="configure"  v-b-toggle.sidebar-right @click="adjustManifest()" icon="cog" size="sm"  />
+					            		<font-awesome-icon class="configure"  @click="adjustManifest()" icon="cog" size="sm"  />
 								    </span>					 
 							    </template>
 							</b-table>
-						</b-sidebar >
-					</b-form-group>
-				</b-col>
-				<b-col sm="7">
-					<b-form-group
-			            label="Run Folder"
-			            label-align-sm="center"
-			            label-size="sm"
-			            label-for="filterInput"
-			            class="mb-2 formGroup"
-			            inline
-		            >
-		          		<b-table
-							:fields="['RunDir', 'FastqDir']"
-							:items="[selectedHistory]"
-						>
-						<template  v-slot:cell(RunDir)="row" style="display:flex">
-					          <b-form-file 
-			                 	 v-if="row.item.custom"
-				                 ref="seq_file" 
-				                 :id="'seq_file'" 
-				                 :disabled="!isNew" 
-				                 aria-describedby="seq_file" 
-				                 v-model="fastqFiles"
-				                 directory
-				                 webkitdirectory
-				                 :no-traverse="false"
-				                 :multiple="true"
-				                 :placeholder="'Choose a run Folder'"
-				                 drop-placeholder="Drop folder here..."
-				                 :file-name-formatter="formatNames"
-				                 >
-			                </b-form-file>
-			                <b-form-textarea required v-else disabled
-			                 	:value="row.item.runDir.basename"
-			                 	:state="selectedHistory.runDir.exists"
-			                 	class="formGroup-input"
-			                 	>
-			                </b-form-textarea>
-							</template>
-							<template  v-slot:cell(FastqDir)="row" >
-						    	<multiselect 
-				                  id="fastq_folder"
-				                  v-if="row.item.runDir.path && row.item.custom"
-								  v-model="row.item.runDir.fastqDir" 
-								  :searchable="false" :close-on-select="false" :preselect-first="true" track-by="name" label="name" :show-labels="false" placeholder="Pick a value" :options="selectedHistory.runDir.possibleFastqFolders"
-								  select-label="Select folder" :allow-empty="false"
-								  >
-								</multiselect>	
-								<b-form-input required v-else disabled
-				                 	:value="row.item.runDir.fastqDir.name"
-				                 	:state="row.item.runDir.fastqDir.validation"
-				                 	class="formGroup-input"
-				                 	>
-				                </b-form-input>	
-				                <p style="text-align:center" v-if="row.item.runDir.fastqDir">Total # of Fastq Files: {{row.item.runDir.fastqDir.files}}</p>							 
-						    </template>
-						    <template #head(RunDir)>
-						        <span  
-						        	style="text-align:center"  >
-						        	Run Folder
-						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-						        	title="Run Folders contain fastq directories along with manifest,  and run_config files" />
-						        	<span class="center-align-icon" style="float:middle; display:flex" v-tooltip="{
-							            content: 'Validating Run Directory',
-							            placement: 'top',
-							            classes: ['info'],
-							            trigger: 'hover',
-							            targetClasses: ['it-has-a-tooltip'],
-							            }" v-if="validatingRunDir">
-						            	<looping-rhombuses-spinner
-									          :animation-duration="4000"
-									          :size="10"
-									          style="margin: auto"
-									          :color="'#2b57b9'"
-									     />
-							     	</span>
-							     	<span v-if="selectedHistory.runDir.path" class="center-align-icon;"
-					            		v-tooltip="{
-								            content: 'Open Run Folder',
-								            placement: 'top',
-								            classes: ['info'],
-								            trigger: 'hover',
-								            targetClasses: ['it-has-a-tooltip'],
-								            }"
-					            	>
-					            		<font-awesome-icon class="configure"  @click="open(selectedHistory.runDir.path, $event)" icon="archive" size="sm"  />
-								    </span>	
-					      		</span>
-						    </template>
-						    <template #head(FastqDir)>
-						        <span  
-						        	style="text-align:center"  > Fastq Folder
-						        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-						        	title="Fastq directory contain your fastq files. Files must have .fastq extensions and be contained at a depth of 1 only"  />
-					      		</span>
-						    </template>
-						</b-table>
-			           
-			            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.fastqDir.validation">A valid fastq directory is required</div>
-			            <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.path.required">Run Directory Must be Specified</div>
-					</b-form-group>
-					<b-form-group
-			            label-align-sm="center"
-			            label-size="sm"
-			            label-for="filterInput"
-			            class="mb-0 formGroup"
-			            v-slot="{ ariaDescribedby }"
-			         >
-			         	<template slot="label">
-						    <span  
-					        	style="text-align:center"  >
-					        	Run Config
-					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-					        	title="Run Config contains your barcoding, primer scheme, and basecalling configuration" />
-				      		</span>
-						</template>
-						<b-input-group-append id="run_config">
-							<b-table
-								id="run_config_table"
-								:fields="run_config_fields"
-								:items="[
-									'primers', 	
-									'basecalling', 
-									'barcoding'
-								]"
-								small
-								style="text-align:center"
-							>
-								<template  v-slot:cell(key)="row" >
-									<p style="text-transform: capitalize">{{row.item}}</p>
-								</template>
-								<template  v-slot:cell(filename)="row">
-									<b-alert show v-if="selectedHistory.runDir.run_config[row.item].not_found && !isNew" variant="warning">{{selectedHistory.runDir.run_config[row.item].name}} - Unsaved {{row.item}}</b-alert>
-									<b-form-select class="formGroup-input" 
-										v-model="selectedHistory.runDir.run_config[row.item]"  
-										:disabled="!isNew"
-										v-else-if="!customPrimerAdd"  
-										text-field="text"
-										value-field="value"
-										:options="modules.basestack_consensus.resources.run_config[row.item].map((x) => { return {text: x.name, value: x}   })">
-									</b-form-select>
-									
-									<b-form-file 
-				                 	 :directory="row.item == 'primers' ? true : false"
-				                 	 v-else
-					                 :no-traverse="true"
-					                 :multiple="row.item == 'primers' ? true : false"
-					          		 :file-name-formatter="formatNames"
-					                 :disabled="!isNew" 
-					                 aria-describedby="seq_file" 
-					                 @change="changeFile(
-					                 {
-					                 	event: $event, 
-					                 	target: `config.modules.basestack_consensus.resources.run_config.${row.item}`,
-										file_target: `modules.basestack_consensus.resources.run_config.${row.item}`,
-										type: row.item == 'primers' ? 'dir' : 'file',
-										sublevel: row.item == 'primers' ? 1 : 0
-					                 })"
-					                 :placeholder="`Choose ${row.item} input`"
-					                 :drop-placeholder="`Drop ${row.item} input`"
-					                 >
-				                	</b-form-file>
-								</template>
-								<template  v-slot:cell(custom)="row">
-									<font-awesome-icon :class="[ 'text-success' ]" 
-										v-if="selectedHistory.runDir.run_config[row.item].name && selectedHistory.runDir.run_config[row.item].custom && !selectedHistory.runDir.run_config[row.item].not_found " 
-										icon="check" 
-									/>
-									<font-awesome-icon :class="['text-warning']" 
-										v-else-if="selectedHistory.runDir.run_config[row.item].name && selectedHistory.runDir.run_config[row.item].custom && selectedHistory.runDir.run_config[row.item].not_found "  
-										icon="times-circle"
-										v-tooltip="{
-								            content: `${selectedHistory.runDir.run_config[row.item].name} not present in list of options, consider registering it via the custom toggle`,
-								            placement: 'top',
-								            classes: ['text-info', 'bg-dark'],
-								            trigger: 'hover',
-								        }"
-									/>
-								</template>
-								<template  v-slot:cell(remove)="row">
-									<span v-if="selectedHistory.runDir.run_config[row.item].custom && !selectedHistory.runDir.run_config[row.item].not_found && isNew"   v-on:click="rmAttribute(selectedHistory.runDir.run_config[row.item], row.item ).then((val)=>{ selectedHistory.runDir.run_config[row.item] = val});"  style="justify-content: right !important" class="center-align-icon justify-content-end" 
-					            		v-tooltip="{
-								            content: 'Remove',
-								            placement: 'top',
-								            classes: ['info'],
-								            trigger: 'hover',
-								            targetClasses: ['it-has-a-tooltip'],
-								            }"
-						            	>
-										<font-awesome-icon class="configure warn-icon" icon="minus"/>
-									</span>
-								</template>
-
-								<!-- 
-
-									<b-table
-										:items="[1]"
-				         				:fields="!row.item.primers.custom ?  ['Custom'] : ['Custom', 'Remove']"
-				         				bordered
-				         				style="text-align:center"
-									>	
-										<template  v-slot:cell(Custom)>
-											<b-form-checkbox
-										      v-model="customPrimerAdd"
-										      :disabled="!isNew"
-										      v-if="isNew"
-										      name="customPrimerAdd"
-										    >
-										    </b-form-checkbox>
-									    </template>
-									    <template  v-slot:cell(Remove) >
-									    	<span v-if="row.item.primers.custom && isNew"   v-on:click="rmAttribute(row.item.primers, 'primers').then((val)=>{ row.item.primers = val});"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
-							            		v-tooltip="{
-										            content: 'Remove primer',
-										            placement: 'top',
-										            classes: ['info'],
-										            trigger: 'hover',
-										            targetClasses: ['it-has-a-tooltip'],
-										            }"
-								            	> Remove 
-												<font-awesome-icon class="configure warn-icon" icon="minus"/>
-											</span>
-									    </template>
-
-									</b-table>
-									<b-alert show v-if="row.item.primers.not_found && !isNew" variant="warning">{{row.item.primers}} - Unsaved primer scheme</b-alert>
-									<b-form-select class="formGroup-input" 
-										v-model="row.item.primers"  
-										:disabled="!isNew"
-										v-else-if="!customPrimerAdd"  
-										text-field="text"
-										value-field="value"
-										:options="modules.basestack_consensus.resources.run_config.primers.map((x) => { return {text: x.name, value: x}   })">
-									</b-form-select>
-									
-									<b-form-file 
-				                 	 directory
-				                 	 v-else
-					                 :no-traverse="true"
-					                 :multiple="true"
-					          		 :file-name-formatter="formatNames"
-					                 :disabled="!isNew" 
-					                 aria-describedby="seq_file" 
-					                 @change="changeFile(
-					                 {
-					                 	event: $event, 
-					                 	target: `config.modules.basestack_consensus.resources.run_config.primers`,
-										file_target: `modules.basestack_consensus.resources.run_config.primers`,
-										sublevel: 1
-					                 })"
-					                 :placeholder="'Choose a primer scheme folder'"
-					                 drop-placeholder="Drop primer scheme folder"
-					                 >
-				                	</b-form-file>
-								 </template>
-								<template  v-slot:cell(basecalling)="row" >
-									<b-row :disabled="!isNew" >
-										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
-											<b-form-checkbox
-											  :disabled="!isNew"
-											  v-if="isNew"
-										      v-model="checkboxBasecalling"
-										    >
-										      Add Custom
-										    </b-form-checkbox>
-										</b-col>
-										<b-col sm="6">
-											<span v-if="row.item.basecalling.custom && isNew"   v-on:click="rmAttribute(row.item.basecalling, 'basecalling'); row.item.basecalling = {name: null, custom: false}"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
-							            		v-tooltip="{
-										            content: 'Remove custom basecaller config',
-										            placement: 'top',
-										            classes: ['info'],
-										            trigger: 'hover',
-										            targetClasses: ['it-has-a-tooltip'],
-										            }"
-								            	> Remove 
-												<font-awesome-icon class="configure warn-icon" icon="minus"/>
-											</span>
-											<span v-if="row.item.basecalling.custom && !isNew" style="justify-content: right !important" class="configure center-align-icon text-info justify-content-end" 
-							            		v-tooltip="{
-										            content: 'Custom Basecaller',
-										            placement: 'top',
-										            classes: ['info '],
-										            trigger: 'hover',
-										            targetClasses: ['it-has-a-tooltip'],
-										            }"
-								            	>Custom
-												<font-awesome-icon class="configure warn-icon" icon="cog"/>
-											</span>
-										</b-col>
-									</b-row>
-									<b-alert show v-if="row.item.basecalling.not_found && !isNew" variant="warning">{{row.item.basecalling.name}} - Unsaved basecaller config</b-alert>
-									
-									<b-form-select class="formGroup-input"  
-										v-model="row.item.basecalling"  
-										:disabled="!isNew"
-										text-field="text"
-										v-else-if="!checkboxBasecalling"
-										value-field="value"
-										:options="modules.basestack_consensus.resources.run_config.basecalling.map((x) => { return {text: x.name, value: x}   })">
-									</b-form-select>
-									<b-form-file 
-					                 :disabled="!isNew" 
-					                 v-else
-					                 aria-describedby="seq_file" 
-					                 @change="changeFile({
-					                 	event: $event, 
-					                 	target: `config.modules.basestack_consensus.resources.run_config.basecallinig`,
-										file_target: `modules.basestack_consensus.resources.run_config.basecalling`,
-										sublevel: 0
-					                 })"
-					                 :placeholder="'Choose a basecalling cfg file'"
-					                 drop-placeholder="Drop basecalling cfg file"
-					                 >
-				                	</b-form-file>
-							    </template>
-								<template  v-slot:cell(barcoding)="row">
-									<b-row>
-										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
-											<b-form-checkbox
-										      v-model="checkboxBarcoding"
-										      :disabled="!isNew"
-										      v-if="isNew"
-										    >
-										      Add Custom
-										    </b-form-checkbox>
-										</b-col>
-										<b-col sm="6">
-											<span v-if="row.item.barcoding.custom && isNew"   v-on:click="rmAttribute(row.item.barcoding, 'barcoding'); row.item.barcoding = {name: null, custom: false}"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
-							            		v-tooltip="{
-										            content: 'Remove custom barcoding config',
-										            placement: 'top',
-										            classes: ['info'],
-										            trigger: 'hover',
-										            targetClasses: ['it-has-a-tooltip'],
-										            }"
-								            	> Remove 
-												<font-awesome-icon class="configure warn-icon" icon="minus"/>
-											</span>
-										</b-col>
-									</b-row>
-									<b-alert show v-if="row.item.barcoding.not_found && !isNew" variant="warning">{{row.item.barcoding.name}} - Unsaved barcoding config</b-alert>
-							    	<b-form-select class="formGroup-input" 
-							    		v-else-if="!checkboxBarcoding" 
-							    		v-model="row.item.barcoding"  	 
-							    		:disabled="!isNew" 
-							    		text-field="text"
-										value-field="value"
-										:options="modules.basestack_consensus.resources.run_config.barcoding.map((x) => { return {text: x.name, value: x}   })">
-									</b-form-select>
-							 		
-							    	<b-form-file 
-					                 :disabled="!isNew" 
-					                 v-else
-					                 aria-describedby="seq_file" 
-					                 @change="changeFile({
-					                 	event: $event, 
-					                 	target: `config.modules.basestack_consensus.resources.run_config.barcoding`,
-										file_target: `modules.basestack_consensus.resources.run_config.barcoding`,
-										sublevel: 0
-					                 })"
-					                 :placeholder="'Choose a barcoding cfg file'"
-					                 drop-placeholder="Drop barcoding cfg file"
-					                 >
-				                	</b-form-file>			 
-							    </template>
-							    <template  v-slot:cell(filename)="row">
-							    	<b-form-textarea
-							          v-model="row.item.filename"
-							          label="Filename"
-					                  class="formGroup-input"
-							          type="text"
-							          disabled
-							          :state="row.item.validation"
-							          placeholder="run_config.txt"
-							    	>
-							    	</b-form-textarea>								 
-									  <b-form-invalid-feedback :state="row.item.validation">
-								        run_config.txt not found
-								      </b-form-invalid-feedback>
-								  </template> -->
-							</b-table>
+							
 						</b-input-group-append>
-						<b-form-checkbox
-					      v-model="customPrimerAdd"
-					      :disabled="!isNew"
-					      v-if="isNew"
-					      :aria-describedby="ariaDescribedby"
-					     
-					    >Define Custom Input
-					    </b-form-checkbox>
-					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_config.validation.required">Specify valid config information</div>
-
+					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.minLength">Specify one or more barcode</div>
+					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.stateManifestID">
+					    	<span  
+					        	style="text-align:center"  >
+					        	No NTC present
+					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
+					        	title="One Sample ID must have NTC (No Template Control)" />
+					      	</span>
+						</div>
 					</b-form-group>
 				</b-col>
-
-				
-
+				<b-col sm="12">
+					
+				</b-col>
 			</b-row>
 			<hr>
 		</div>
 		
     </b-form>
 
-
+	<p class="text-center text-white bg-danger" v-if="submitStatus === 'ERROR'">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</p>
   </div>
 </template>
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
@@ -920,11 +851,15 @@ export default {
 			checkboxBasecalling: false,
 			customPrimerAdd: false,
 			checkboxBarcoding: false,
-			run_config_fields: [
-          		{key: 'key', label: 'Key', sortable: false},
+			run_info_fields: [
 				{key: 'filename', label: 'Filename', sortable: false, class: 'text-center'},
-          		{key: 'custom', label: 'Custom', sortable: false, class: 'text-center'},
-          		{key: 'remove', label: 'Remove', sortable: false},
+          		{key: 'desc', label: 'Description', sortable: false, class: 'text-center'},
+			],
+			run_config_fields: [
+				{key: 'filename', label: 'Filename', sortable: false, class: 'text-center'},
+          		{key: 'barcoding', label: 'Barcoding', sortable: false, class: 'text-center'},
+          		{key: 'primers', label: 'Primers', sortable: false},
+          		{key: 'basecalling', label: 'Basecalling', sortable: false},
 			],
 			manifest_fields: [
 				{key: 'barcode', label: 'Barcode', sortable: false, class: 'text-center'},
@@ -941,6 +876,10 @@ export default {
 				path: null,
 				basename: null,
 				possibleFastqFolders: [],
+				run_info: {
+					desc: null, 
+					filename: 'run_info.txt'
+				}, 
 				fastqDir: {
 					path: null,
 					name: null,
@@ -950,16 +889,13 @@ export default {
 				run_config: {
 					primers: {
 						custom: false,
-						name: null,
-						key: 'primers'
+						name: null
 					}, 
 					basecalling:{
 						custom: false,
-						key: 'basecalling',
 						name: null
 					}, 
 					barcoding:{
-						key: 'barcoding',
 						custom:false,
 						name: null,
 					},
@@ -1033,9 +969,6 @@ export default {
     validations: {
       selectedHistory: {
       		runDir: {
-      			exists: {
-      				required
-      			},
         		manifest:{
         			validation: {
         				required
@@ -1044,6 +977,14 @@ export default {
         				required,
         				minLength: minLength(1),
         				stateManifestID
+        			},
+        			filename:{
+        				required
+        			}
+        		},
+        		run_info:{
+        			validation: {
+        				required
         			},
         			filename:{
         				required
@@ -1059,7 +1000,10 @@ export default {
         		},
         		fastqDir: {
         			validation: {
-        				checked: value => value === true 
+        				required
+        			},
+        			name: {
+        				required
         			},
         			path: {
         				required
@@ -1068,7 +1012,7 @@ export default {
         		specifics: {
         			seq_summary: {
         				exists: {
-        					checked: value => value === true 
+        					checked: value => value === true
         				}
         			}
         		},
@@ -1127,6 +1071,7 @@ export default {
     	barcodingFiles: async function(val){
     		if (this.selectedHistory.runDir.run_config.barcoding.custom){
     			let root = this.parseFileInput(val)
+    			console.log(val,"--------------")
     			const primerV = path.basename(root)
     			const baseP = path.basename(path.dirname(root))
     			const fullname = `${baseP}/${primerV}`		
@@ -1178,9 +1123,6 @@ export default {
       	},
       	changeFile(data){
       		this.$emit('changeFile', data)
-      	},
-      	yes(){
-      		console.log(this.selectedHistory.runDir.run_config.primers)
       	},
       	async rmAttribute(value, target){
       		try{	
@@ -1242,7 +1184,7 @@ export default {
 	      }, 3000);
 	    },
       	formatNames(files) {
-        	return files.length === 1 ? `${files[0].name} selected` : `${files.length} files selected`
+        	return files.length === 1 ? `${files[0].flat(2).length} files selected` : `${files.length} files selected`
       	},
       	adjustManifest(){
       		if (this.placeHolderManifestCount){
@@ -1328,7 +1270,6 @@ export default {
 		
 		async changeRunDir(val, type){			
 		 	this.runDir.path = this.parseFileInput(val)
-		 	console.log("changedrundir")
     		if (this.isNew){
     			this.selectedHistory.runDir.fastqDir = {
 					path: null,
@@ -1344,11 +1285,12 @@ export default {
     		}).catch((err)=>{
     			console.error(err, "error in validation")
     		})
-    		
+
 		},
 		validateRunDirContents(runDir, override){
 			const $this = this
 			this.validatingRunDir = true
+			console.log(runDir, override)
 			return new Promise(function(resolve,reject){
 				FileService.validateRunDirContents({
 					runDir: runDir,
@@ -1369,20 +1311,11 @@ export default {
 				this.fastqFiles = this.stagedFastqFiles
 			}
 			this.selectedHistory = (element.custom ? this.customHistory : element)
-			if (this.selectedHistory.runDir.path){
-				await this.validateRunDirContents(this.selectedHistory.runDir, false).then((response)=>{
-		    		this.selectedHistory.runDir = response.runDir
-		    		if (this.$v.$invalid && this.selectedHistory.runDir.path) {
-			        	this.submitStatus = 'Warning'
-			        } else {
-			    	    this.submitStatus = 'OK'
-			        }
-	    		}).catch((err)=>{
-	    			console.error(err, "error in validation")
-	    		})
-	    	} else {
-	    	    this.submitStatus = 'EMPTY'
-	        }
+			await this.validateRunDirContents(this.selectedHistory.runDir, false).then((response)=>{
+	    		this.selectedHistory.runDir = response.runDir
+    		}).catch((err)=>{
+    			console.error(err, "error in validation")
+    		})
 		},
 		async setToggle(dir, dirValue, dispatch, dispatchValue){
 			// this.data[dispatch] = dispatchValue
@@ -1436,7 +1369,7 @@ export default {
 					protocolDir: this.protocolDir ,
 					custom: true
 				}
-			
+				// const newReport = JSON.parse(`{"runDir":{"path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4","basename":"20200519_2000_X3_FAN44250_e97e74b4","possibleFastqFolders":[{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20}],"run_info":{"filename":"run_info.txt","validation":true},"fastqDir":{"name":"fastq","path":"/home/brianmerritt/Desktop/test-data-2/20200519_2000_X3_FAN44250_e97e74b4/fastq","directory":true,"validation":true,"files":20},"run_config": {"primers": {"custom": true,"val": null},"basecalling":"dna_r9.4.1_450bps_hac.cfg","barcoding":"barcode_arrs_nb12.cfg","filename":"run_config.txt","validation":true},"manifest":{"entries":[{"barcode":"NB01","id":"NTC"},{"barcode":"NB03","id":"MDHP-0056"},{"barcode":"NB11","id":"MDHP-0065---"}],"filename":"manifest.txt","validation":true},"specifics":{"throughput":{"exists":false,"name":null,"required":false},"seq_summary":{"exists":true,"name":null,"required":true},"drift_correction":{"exists":true,"name":null,"required":false}}},"primerDir":null,"name":"tes2","currentDateTime":"2021-02-17T13-23-29","reportDir":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test","meta":{"run_info":{"name":"run_info.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_info.txt"},"run_config":{"name":"run_config.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/run_config.txt"},"manifest":{"name":"manifest.txt","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/meta/manifest.txt"}},"modules":[{"key":"barcode-demux","title":"Demultiplexing","step":1,"status":null,"statusType":"file","statusCompleteFilename":"1-barcode-demux.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/1-barcode-demux"},{"key":"length-filter","title":"Length Filter","step":2,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/2-length-filter"},{"key":"normalization","title":"Normalization","step":3,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/3-normalization"},{"key":"draft-consensus","title":"Consensus Draft","step":4,"status":null,"statusType":"multiple_files","statusCompleteFilename":".complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/4-draft-consensus"},{"key":"post-filter","title":"Post Filter","step":5,"status":null,"statusType":"file","statusCompleteFilename":"module5-example-run.complete","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter"},{"key":"report","title":"Report Generation","step":6,"status":null,"statusType":"file","statusCompleteFilename":"report.pdf","folderpath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline"}],"reportFiles":{"finalReport":{"pdf":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.pdf","name":"report.pdf"},"Rmd":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/report.Rmd","name":"report.Rmd"}},"mutations":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/mutations-table.txt","name":"mutations-table.txt"},"summary":{"path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/run_stats/summary.txt","name":"summary.txt"}},"consensus":{"rootPath":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline","path":"/home/brianmerritt/Documents/Projects/Basestack/client/data/userdata/basestack_consensus/histories/test/consensus/artic-pipeline/5-post-filter","files":{"postfilt":{"all":"postfilt_all.txt","fasta":"postfilt_consensus_all.fasta","summary":"postfilt_summary.txt"},"snp":{"final":"final_snpEff_report.txt"}}}},"reportName":"test-2021-02-17T13-23-29","annotationsDir":null,"running":false,"saved":false,"loaded":false}`)
 		        this.selectedHistory = newReport
 				this.histories.push(newReport)
 
@@ -1479,34 +1412,40 @@ export default {
 	        })				
 		},
 		async run_artic_pipeline() {
-        	this.checkError()
-			await FileService.startModule({
-	            runDir: this.selectedHistory.runDir,
-	            primerDir: this.selectedHistory.primerDir,
-	            reportDir: this.selectedHistory.reportDir,
-	            name: this.selectedHistory.name,
-	            module: 'basestack_consensus',
-	        }).then((response)=>{
-				this.$swal.fire({
-					position: 'center',
-					icon: (response.data.exists ? 'warning' : 'success' ),
-					showConfirmButton:true,
-	                html:  response.data.message
-				});	
-				this.selectedHistory.running = true	        	
-	        }).catch((error)=>{
-	        	console.error(error)
-				this.$swal.fire({
-					position: 'center',
-					icon: 'error',
-					showConfirmButton:true,
-	                html:  error.response.data.message
-				});
-	        })		
+			if (this.$v.$invalid) {
+	          this.submitStatus = 'ERROR'
+	        } 
+	        else {
+	        	this.checkError()
+				await FileService.startModule({
+		            runDir: this.selectedHistory.runDir,
+		            primerDir: this.selectedHistory.primerDir,
+		            reportDir: this.selectedHistory.reportDir,
+		            name: this.selectedHistory.name,
+		            module: 'basestack_consensus',
+		        }).then((response)=>{
+					this.$swal.fire({
+						position: 'center',
+						icon: (response.data.exists ? 'warning' : 'success' ),
+						showConfirmButton:true,
+		                html:  response.data.message
+					});	
+					this.selectedHistory.running = true	        	
+		        }).catch((error)=>{
+		        	console.error(error)
+					this.$swal.fire({
+						position: 'center',
+						icon: 'error',
+						showConfirmButton:true,
+		                html:  error.response.data.message
+					});
+		        })		
+
+			}
 		},
 		bookmarkParams: async function(){
 			if (this.$v.$invalid){
-				this.submitStatus = 'Warning'
+				this.submitStatus = 'ERROR'
 			}
 			else{
 				await FileService.bookmarkSelections({
@@ -1559,20 +1498,19 @@ export default {
 		      }).then((res) => {
 		        if (res.value) {
 			        FileService.removeBookmark({
-		        		reportDir: $this.selectedHistory.reportDir,
-		        		name: $this.selectedHistory.name
+		        		reportDir: $this.selectedHistory.reportDir
 		        	}).then((response)=>{
 		        		this.bookmark = !this.bookmark
 		        		this.fetchHistories().then(()=>{
     						this.histories.length > 0 ? this.selectedHistory = this.histories[0] : this.history = null;
 	        			}).catch((errFetch)=>{console.error(errFetch)})
 		        	}).catch((err)=>{
-		        		let reportpath = this.selectedHistory.reportDir.path
+		        		let path = this.selectedHistory.reportDir.path
 		        		let html  = `
 		        		${err.response.data.message}
 		        		<hr>
 		        		<button variant="outline-primary" id="open_folder_error" 
-		        			@click="open(${reportpath})">
+		        			@click="open(${path})">
 		        			Open Folder
 		        		</button>`
 		        		this.$swal.fire({
@@ -1584,7 +1522,7 @@ export default {
 			                onBeforeOpen: () => {
 						    	const btn = document.querySelector('#open_folder_error')
 						    	btn.addEventListener('click', () => {
-						     		$this.open(reportpath)
+						     		$this.open(path)
 						     	})
 						   }
 
@@ -1605,22 +1543,23 @@ export default {
 		},
 		loadHistory: async function(){
 			if (this.$v.$invalid) {
-	        	this.submitStatus = 'Warning'
-	        } else {
-	    	    this.submitStatus = 'OK'
+	          this.submitStatus = 'ERROR'
 	        }
-    		this.selectedHistory.loaded = true
-    		this.histories = this.histories.map((d,i )=>{
-    			if (d.name != this.selectedHistory.name){
-    				d.loaded = false
-    			} else {
-    				d.loaded = true
-    			}
-    			return d
-    		})
-    		// this.updateData()
+	        else {
+        		this.submitStatus = 'OK'
+        		this.selectedHistory.loaded = true
+        		this.histories = this.histories.map((d,i )=>{
+        			if (d.name != this.selectedHistory.name){
+        				d.loaded = false
+        			} else {
+        				d.loaded = true
+        			}
+        			return d
+        		})
+        		// this.updateData()
 
-            this.fetchConsensusReport('')
+                this.fetchConsensusReport('')
+	        }
 		},
 	    async fetchModuleStatus(mod, index){
 	    	const $this = this
@@ -1727,12 +1666,6 @@ code{
   border-radius: 0 !important;
   border:0px;
   width: 100%;
-}
-
-#run_config_table td::before{
-	margin:0px;
-	text-align: right;
-	width: 40%;
 }
 
 </style>
