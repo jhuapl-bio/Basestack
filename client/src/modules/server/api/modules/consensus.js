@@ -205,11 +205,11 @@ export class BasestackConsensus{
 			{ 
 				finalReport: {
 					pdf: {
-						path: path.join(runReportPath, "report.pdf"),
+						path: path.join(runReportPath, 'consensus', 'artic-pipeline', "report.pdf"),
 						name: "report.pdf"
 					}, 
 					Rmd: {
-						path: path.join(runReportPath, "report.Rmd"),
+						path: path.join(runReportPath, 'consensus', 'artic-pipeline', "report.Rmd"),
 						name: "report.Rmd"					
 					}
 				},

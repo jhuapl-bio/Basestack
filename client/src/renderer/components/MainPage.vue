@@ -270,9 +270,7 @@ export default {
 				return files.path
 			}
   		} else {
-			console.log("selection")
   			files = event.target.files
-  			console.log(files)
 			if(files.length > 0){
 				if (type == 'dir'){
 					root = path.dirname(files[0].path)
