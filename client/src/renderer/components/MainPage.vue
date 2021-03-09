@@ -263,7 +263,9 @@ export default {
 		let root;
 		let dirName;
 		let files;
+		console.log(event)
 		if (event.dataTransfer){
+			console.log("dragging")
   			files = event.dataTransfer.files[0]
   			if (Array.isArray(files)){
 				if(files.length > 0){
@@ -276,7 +278,9 @@ export default {
 				return files.path
 			}
   		} else {
+			console.log("selection")
   			files = event.target.files
+  			console.log(files)
 			if(files.length > 0){
 				if (type == 'dir'){
 					root = path.dirname(files[0].path)
