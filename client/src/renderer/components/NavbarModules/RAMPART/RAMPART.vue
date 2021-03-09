@@ -191,7 +191,8 @@
                 FileService.removeAnnotation({
                   annotationDir: entry,
                   protocolDir: this.selectedHistory.protocolDir,
-                  reportDir: this.selectedHistory.reportDir
+                  reportDir: this.selectedHistory.reportDir,
+                  fullpathHistory: this.selectedHistory.fullpathHistory
                 }).then((response)=>{
                   this.selectedHistory.annotationsDir = null
                   this.selectedHistory.protocolDir = null
@@ -288,12 +289,14 @@
         if (this.$v.$invalid) {
           this.submitStatus = 'ERROR'
         } else {
+          console.log(this.selectedHistory)
           await FileService.startModule({
               runDir: this.selectedHistory.runDir,
               protocolDir: this.selectedHistory.protocolDir,
               removeAnnotations: this.removeAnnotations,
               reportDir: this.selectedHistory.reportDir,
               name: this.selectedHistory.name,
+              fullpathHistory: this.selectedHistory.fullpathHistory,
               annotationsDir: this.selectedHistory.annotationsDir,
               module: 'rampart',
               tag: this.images['jhuaplbio/basestack_consensus'].selectedTag
