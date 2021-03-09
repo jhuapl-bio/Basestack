@@ -16,7 +16,7 @@ export class RAMPART{
 				// Send websocket command to return the results of rampart served at a port through docker. Todo
 				const fastqDir = data.runDir.fastqDir.path
 				const removeAnnotations = data.removeAnnotations
-				const historyPath = data.fullpathHistory
+				
 				let srcProtocol = data.protocolDir.srcPath
 				let relativeProtocol = data.protocolDir.relativePath // Must define relative due to linux bind mount limitations
 
@@ -27,7 +27,7 @@ export class RAMPART{
 
 
 				const currentDateTime = moment().format('YYYY-MM-DDTHH-mm-ss')
-				const metaFile = path.join(historyPath, "report-meta.json")
+				const metaFile = path.join(reportDir.path, "report-meta.json")
 				const fastqDirBase = data.runDir.path
 				// Manual Error checking section
 

@@ -298,7 +298,6 @@ export async function fetch_histories(){
 	let response = []
 	for (let i = 0; i < histories.length; i++){
 		const fullpathHistory = path.join(historyPath, histories[i])
-
 		let validHistory = await validateHistory(fullpathHistory,histories[i])
 		if(validHistory){
 			try{
