@@ -27,7 +27,6 @@ export class BasestackConsensus{
 			const reportDir = data.reportDir
 			const meta = reportDir.meta
 			const run_config = meta.run_config
-			const run_info = meta.run_info
 			const manifest = meta.manifest
 			// const versionDir = path.basename(primerDir)
 			// const primerNameDir = path.basename(path.dirname(primerDir))
@@ -35,9 +34,8 @@ export class BasestackConsensus{
 
 			//Error checking for artic consensus generation
 			//Read file presence
-			await checkFileExist(path.dirname(run_info.path), run_info.name)
-			await checkFileExist(path.dirname(run_config.path), run_info.name)
-			await checkFileExist(path.dirname(manifest.path), run_info.name)
+			await checkFileExist(path.dirname(run_config.path), run_config.filename)
+			await checkFileExist(path.dirname(manifest.path), manifest.filename)
 			await checkFileExist(fastqDir, ".fastq")
 
 			// await checkFileExist(primerDir.fullpath, ".tsv")
@@ -55,7 +53,6 @@ export class BasestackConsensus{
 			const tmpfastqDir = "/opt/basestack_consensus/sequencing_runs/example-run/fastq_pass"
 
 			// const tmpConsensusScripts = "/root/idies/workspace/covid19"
-			const tmpRunInfo = tmpfastqDir + run_info
 			const tmpManifest = tmpfastqDir + manifest
 			const tmpRunConfig = tmpfastqDir + run_config
 			const consensusDir = path.join(reportDir.path,'consensus','artic-pipeline')
@@ -72,7 +69,6 @@ export class BasestackConsensus{
 				await writeFolder(baseDir)
 			}
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
-			await copyFile(run_info.path, path.join(baseDir,  data.runDir.run_info.filename))
 			await copyFile(manifest.path, path.join(baseDir,  data.runDir.manifest.filename))
 			let volumes = [ 
 				reportDir.path, tmpreportDir,
@@ -140,10 +136,6 @@ export class BasestackConsensus{
 		const reportDir = {
 			path: runReportPath,
 			meta: {
-				run_info: {
-					name: "run_info.txt",
-					path: path.join(metaDir, 'run_info.txt')
-				},
 				run_config: {
 					name: "run_config.txt",
 					path: path.join(metaDir, 'run_config.txt')
@@ -268,13 +260,9 @@ export class BasestackConsensus{
 		  	//write the meta data file for the run
 		  	
 		  	//
-		  	let tsv_file_content = runDir.run_info.desc + "\n"
-		  	logger.info("%s", "Bookmark run info")
-		  	await writeFile(path.join(metaDir, runDir.run_info.filename), tsv_file_content+"\n").then((response)=>{
-		  		logger.info("%s %s", "Success in writing runInfo files")
-		  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
+	
 		  	
-		  	tsv_file_content = "primers\t"+runDir.run_config.primers.name+"\n"+
+		  	let tsv_file_content = "primers\t"+runDir.run_config.primers.name+"\n"+
 		  	'basecalling\t'+ runDir.run_config.basecalling.name+"\n" +
 		  	'barcoding\t'+ runDir.run_config.barcoding.name +"\n"
 

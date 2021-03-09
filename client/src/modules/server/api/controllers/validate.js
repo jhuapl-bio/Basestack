@@ -163,7 +163,6 @@ export async function checkFolderExistsAccept(filepath){
 export async function validate_run_dir(params){
 	const runDir = params.runDir
 	const override = params.override 
-	const run_info = runDir.run_info.filename
 	const run_config = runDir.run_config.filename
 	const manifest = runDir.manifest.filename
 	const runDir_path = runDir.path
@@ -174,10 +173,6 @@ export async function validate_run_dir(params){
 		fastq: {
 			exists: false,
 			valid: false,
-		},
-		run_info: {
-			exists: false,
-			valid: false
 		},
 		run_config: {
 			exists: false,
@@ -208,7 +203,6 @@ export async function validate_run_dir(params){
 	}
 	runDir.fastqDir.validation = false
 	runDir.run_config.validation = false
-	runDir.run_info.validation = false
 	runDir.manifest.validation = false
 	
 
@@ -218,11 +212,9 @@ export async function validate_run_dir(params){
 		// const fastqFolderPath = path.join(runDir_path, fastqFolderName)
 		const manifestPath = path.join(runDir_path, manifest)
 		const run_configPath = path.join(runDir_path, run_config)
-		const run_infoPath = path.join(runDir_path, run_info)
 		const run_dirExists  = await checkFolderExists(runDir_path,  true)
 		runDir.exists = run_dirExists	
 		const run_configExists = await checkFileExist(runDir_path, run_config, true)
-		const run_infoExists = await checkFileExist(runDir_path, run_info, true)
 		const manifestExists = await checkFileExist(runDir_path, manifest, true)
 		const throughputExists = await checkFileExist(runDir_path, 'throughput_.*.csv', true)
 		const seq_summaryExists  = await checkFileExist(runDir_path, 'sequencing_summary.*txt', true)
@@ -257,7 +249,6 @@ export async function validate_run_dir(params){
 				return false
 			}
 		})
-		console.log(validFolders)
 		let promises = []
 		validFolders.forEach((d)=>{			
 			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
@@ -286,13 +277,6 @@ export async function validate_run_dir(params){
 			
 		}
 		runDir.run_config.validation = run_configExists
-		if(run_infoExists && override){
-			validation['run_info']['exists'] = run_infoExists
-			content = await readTableFile(run_infoPath, '\t')	
-			runDir.run_info.desc = content[0][1]
-			
-		}
-		runDir.run_info.validation = run_infoExists
 		if(manifestExists && override){
 			validation['manifest']['exists'] = manifestExists
 			content = await readTableFile(manifestPath, '\t')	
@@ -329,12 +313,27 @@ export  function convert_custom(val, map, target){ //convert legacy runs to obje
 				return {custom: val2[0].custom,  name: val2[0][target], path: val2[0].path}
 			}
 			else{
-				return {custom: false,  name: val, not_found: true}
+				return {custom: true,  name: val, not_found: true}
 			}
 		}else {
 			return {custom: false,  name: val}
 		}
 	} else {
-		return val
+		// return val
+		if (map){
+			const val2 = map.filter((d)=>{
+				return d[target] == val[target]
+			})
+			console.log(val2, target, val, val2.length)
+			if (val2.length > 0){
+				return val2[0]
+			}
+			else{
+				val.not_found = true
+				return val
+			}
+		} else{
+			return val
+		}
 	}
 }
