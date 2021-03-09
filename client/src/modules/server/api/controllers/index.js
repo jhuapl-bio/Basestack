@@ -93,6 +93,7 @@ export async function initialize(params){
 		function customizer(objValue, srcValue) { //https://lodash.com/docs/#merge
 		  if (Array.isArray(objValue)) {
 		    const unio = lodash.union(objValue, srcValue);
+		    console.log(unio, objValue, srcValue)
 		  	return lodash.uniqBy(unio, tag)
 		  }
 		}
@@ -223,22 +224,21 @@ export async function add_selections(params){
 		let meta = await readFile(store.meta.userMeta)
 		meta = JSON.parse(meta)
 		let depth  = get(params.file_target, meta, params.type)
-
 		let push = false
 		if (params.key){
 			if (depth.some(e => params.value[params.key] === e[params.key] )) {
-				console.log("already found")
+				push = false
 			} else {
-				console.log("not found, adding")	
 				push = true			
 			}
 		}
 		else {
 			if(!depth.includes(params.value)){
 				push = true
+			} else {
+				push = false
 			}
 		}
-		console.log("pushing?", push)
 		if (push){
 			let st = get(params.target, store, params.type) 
 			st.push(params.value)
@@ -267,12 +267,7 @@ export async function rm_selections(params){
 		meta = JSON.parse(meta)
 		let depth  = get(params.file_target, meta, params.type)
 		let st = get(params.target, store, params.type) 
-		// console.log("\t===========",store.config.modules.basestack_consensus.resources.run_config.primers,"=======\n")
-
-		// console.log("\t\-->",meta.modules.basestack_consensus.resources.run_config.primers, "<--")
 		let found = false
-		console.log(params.key)
-		console.log(depth, "\n\t\t", st)
 		if (params.key){
 			depth = depth.filter((d)=>{
 				return d[params.key] !== params.value[params.key]
