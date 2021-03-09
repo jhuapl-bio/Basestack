@@ -319,7 +319,7 @@ export  function convert_custom(val, map, target){ //convert legacy runs to obje
 			return {custom: false,  name: val}
 		}
 	} else {
-		// return val
+		// return va
 		if (map){
 			const val2 = map.filter((d)=>{
 				return d[target] == val[target]

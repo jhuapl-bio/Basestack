@@ -1328,6 +1328,7 @@ export default {
 		
 		async changeRunDir(val, type){			
 		 	this.runDir.path = this.parseFileInput(val)
+		 	console.log("changedrundir")
     		if (this.isNew){
     			this.selectedHistory.runDir.fastqDir = {
 					path: null,
@@ -1343,7 +1344,7 @@ export default {
     		}).catch((err)=>{
     			console.error(err, "error in validation")
     		})
-
+    		
 		},
 		validateRunDirContents(runDir, override){
 			const $this = this
@@ -1368,11 +1369,20 @@ export default {
 				this.fastqFiles = this.stagedFastqFiles
 			}
 			this.selectedHistory = (element.custom ? this.customHistory : element)
-			await this.validateRunDirContents(this.selectedHistory.runDir, false).then((response)=>{
-	    		this.selectedHistory.runDir = response.runDir
-    		}).catch((err)=>{
-    			console.error(err, "error in validation")
-    		})
+			if (this.selectedHistory.runDir.path){
+				await this.validateRunDirContents(this.selectedHistory.runDir, false).then((response)=>{
+		    		this.selectedHistory.runDir = response.runDir
+		    		if (this.$v.$invalid && this.selectedHistory.runDir.path) {
+			        	this.submitStatus = 'Warning'
+			        } else {
+			    	    this.submitStatus = 'OK'
+			        }
+	    		}).catch((err)=>{
+	    			console.error(err, "error in validation")
+	    		})
+	    	} else {
+	    	    this.submitStatus = 'EMPTY'
+	        }
 		},
 		async setToggle(dir, dirValue, dispatch, dispatchValue){
 			// this.data[dispatch] = dispatchValue
