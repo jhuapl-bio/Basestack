@@ -259,23 +259,42 @@ export default {
             })
           }
       },
-      parseFileInput(val){
+      parseFileInput(event, type){
 		let root;
 		let dirName;
-		const files = val;
-		if (Array.isArray(files)){
+		let files;
+		console.log(event)
+		if (event.dataTransfer){
+			console.log("dragging")
+  			files = event.dataTransfer.files[0]
+  			if (Array.isArray(files)){
+				if(files.length > 0){
+					root = path.dirname(files[0].path)
+					return root
+				} else {
+					return null
+				}
+			} else {
+				return files.path
+			}
+  		} else {
+  			files = event.target.files
 			if(files.length > 0){
-				root = path.dirname(files[0].path)
+				if (type == 'dir'){
+					root = path.dirname(files[0].path)
+				} else {
+					root = files[0].path
+				}
 				return root
 			} else {
-				return null
+				return files.path
 			}
-		} else {
-			return val.path
-		}
+  			
+  		}
 	  },
       async changeFile(data){
       		const event = data.event
+
       		const file_target = data.file_target
       		const target = data.target
       		const sublevel = data.sublevel
@@ -285,8 +304,10 @@ export default {
 			const V = path.basename(root);
 			let baseP  = root; let i = 0;
 			let fullname = V;
+			console.log(baseP, fullname)
 			while (i < sublevel){
 				baseP = path.dirname(baseP)
+				console.log(baseP)
 			 	fullname = `${path.basename(baseP)}/${fullname}`		
 			  	i++;
 			}	
@@ -298,6 +319,7 @@ export default {
 					type: 'arr',
 					key: "name"
 				})
+				console.log(response)		
     		} catch(err){
     			console.error(err)
     			this.$swal.fire({
@@ -335,7 +357,6 @@ export default {
 			this.$set(this, 'docker', response.data.data.docker)
 			const images = response.data.data.images.entries
 			this.initial = response.data.data.ready
-			// console.log(this.modules['rampart'])
 			if (!this.initial){
 				this.init().catch((err)=>{
 					console.error(`${err} in initializing the backend service`)

@@ -73,7 +73,6 @@ export async function validateVideo(videoPath){
 }
 export async function getRecursiveFiles(path, pattern){
 	return new Promise((resolve, reject)=>{
-		console.log(path, "<<<<<")
 		let glob_pattern = "/**/*";
 		if (pattern){
 			glob_pattern = pattern;
@@ -164,20 +163,16 @@ export async function checkFolderExistsAccept(filepath){
 export async function validate_run_dir(params){
 	const runDir = params.runDir
 	const override = params.override 
-	const run_info = runDir.run_info.filename
 	const run_config = runDir.run_config.filename
 	const manifest = runDir.manifest.filename
 	const runDir_path = runDir.path
 	const fastqFolderName = runDir.fastqDir.name
+	console.log(fastqFolderName, "Validate")
 	const basename = path.basename(runDir_path)
 	const validation = {
 		fastq: {
 			exists: false,
 			valid: false,
-		},
-		run_info: {
-			exists: false,
-			valid: false
 		},
 		run_config: {
 			exists: false,
@@ -215,7 +210,6 @@ export async function validate_run_dir(params){
 	}
 	runDir.fastqDir.validation = false
 	runDir.run_config.validation = false
-	runDir.run_info.validation = false
 	runDir.manifest.validation = false
 	
 
@@ -225,9 +219,9 @@ export async function validate_run_dir(params){
 		// const fastqFolderPath = path.join(runDir_path, fastqFolderName)
 		const manifestPath = path.join(runDir_path, manifest)
 		const run_configPath = path.join(runDir_path, run_config)
-		const run_infoPath = path.join(runDir_path, run_info)
+		const run_dirExists  = await checkFolderExists(runDir_path,  true)
+		runDir.exists = run_dirExists	
 		const run_configExists = await checkFileExist(runDir_path, run_config, true)
-		const run_infoExists = await checkFileExist(runDir_path, run_info, true)
 		const manifestExists = await checkFileExist(runDir_path, manifest, true)
 		const throughputExists = await checkFileExist(runDir_path, 'throughput_.*.csv', true)
 		const seq_summaryExists  = await checkFileExist(runDir_path, 'sequencing_summary.*txt', true)
@@ -250,12 +244,23 @@ export async function validate_run_dir(params){
 		}
 		
 		const drift_correctionExists = await checkFileExist(runDir_path, 'drift_correction.*csv', true)
-		let possibleFolders  = await getFolders(runDir_path)
-		possibleFolders = possibleFolders.filter((d)=>{
-			return d.name != 'artic-pipeline'
-		})
+		let possibleFolders = [];
+		if (run_dirExists){
+			possibleFolders  = await getFolders(runDir_path)
+		} else {
+			logger.info("run dir doesnt exists, runDir_pat:  %s", runDir_path)
+		}
+
 		let validFolders = []; let checkExists = [];
-		console.log(runDir.run_config.primers)
+		if (override){
+			possibleFolders = possibleFolders.filter((d)=>{
+				return d.name != 'basestack'
+			})
+		} else {
+			possibleFolders = [runDir.fastqDir]
+		}
+
+		
 		for (let i = 0; i < possibleFolders.length; i++){
 			checkExists.push(checkFileExist(possibleFolders[i].path, ".fastq$", true, true))
 		}
@@ -270,19 +275,23 @@ export async function validate_run_dir(params){
 			}
 		})
 		let promises = []
-		validFolders.forEach((d)=>{
-			
+		validFolders.forEach((d)=>{			
 			promises.push(getRecursiveFiles(d.path, "/**/*.fastq"))
-			
 		})
 		response = await Promise.all(promises)
 		response.forEach((d,i)=>{
 			validFolders[i].files = (d.length ? d.length : null)
 		})
 		runDir.possibleFastqFolders  = validFolders
-		if (validFolders.length > 0){
-			runDir.fastqDir = validFolders[0]
+		if (validFolders.length == 0){
+			runDir.fastqDir.files = 0
+		} else {
+			runDir.fastqDir.validation = true
+			if (override){
+				runDir.fastqDir = validFolders[0]
+			}
 		}
+		
 		if(run_configExists && override){
 			validation['run_config']['exists'] = run_configExists
 			content = await readTableFile(run_configPath, '\t')
@@ -291,13 +300,6 @@ export async function validate_run_dir(params){
 			runDir.run_config.barcoding = convert_custom(content[2][1], store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name', 'arr') 	
 		}
 		runDir.run_config.validation = run_configExists
-		if(run_infoExists && override){
-			validation['run_info']['exists'] = run_infoExists
-			content = await readTableFile(run_infoPath, '\t')	
-			runDir.run_info.desc = content[0][1]
-			
-		}
-		runDir.run_info.validation = run_infoExists
 		if(manifestExists && override){
 			validation['manifest']['exists'] = manifestExists
 			content = await readTableFile(manifestPath, '\t')	
@@ -329,12 +331,11 @@ function make_custom(val, map, target){
 			const val2 = map.filter((d)=>{
 				return d[target] == val
 			})
-			console.log(val2, "convertcustom")
 			if (val2.length > 0){
 				return {custom: val2[0].custom,  name: val2[0][target], path: val2[0].path}
 			}
 			else{
-				return {custom: false,  name: val, not_found: true}
+				return {custom: true,  name: val, not_found: true}
 			}
 		} else {
 			return {custom: false,  name: val}
