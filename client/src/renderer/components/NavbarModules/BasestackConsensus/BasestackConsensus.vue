@@ -13,7 +13,7 @@
 			<b-row class="nopadcolumn">
 				<b-col sm="12" style="" class="nopadcolumn">
 					<h4 style="text-align:left">Job Histories</h4>
-						<b-alert show v-if="submitStatus === 'ERROR'" variant="danger">Please have a valid manifest, run_config, fastq folder, minion specific run files, and run_info set.</b-alert>
+						<b-alert show v-if="submitStatus === 'ERROR'" variant="danger">Please have a valid manifest, run_config, fastq folder, minion specific run files set.</b-alert>
   						<b-alert show v-else-if="submitStatus === 'Warning'" variant="warning">Warning, one or more required items are missing, consider fixing this issue</b-alert>
 						<b-form-group
 				            label="Select Run"
@@ -1060,6 +1060,9 @@ export default {
       	},
       	changeFile(data){
       		this.$emit('changeFile', data)
+      	},
+      	yes(){
+      		console.log(this.selectedHistory.runDir.run_config.primers)
       	},
       	async rmAttribute(value, target){
       		try{	
