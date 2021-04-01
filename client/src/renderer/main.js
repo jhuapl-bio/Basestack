@@ -14,6 +14,8 @@ import router from './router'
 import store from './store'
 import { BootstrapVue } from 'bootstrap-vue'
 import VueSweetalert2 from 'vue-sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css';
+
 import Vuelidate from 'vuelidate'
 import Multiselect from 'vue-multiselect'
 import VTooltip from 'v-tooltip'
