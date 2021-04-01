@@ -83,7 +83,7 @@ export class BasestackConsensus{
 				volumes.push(data.runDir.run_config.primers.path)
 				volumes.push(`${tmpPrimerSchemes}/${data.runDir.run_config.primers.name}`)
 				command[2] +=(`; mkdir -p /opt/basestack_consensus/primer_schemes/${data.runDir.run_config.primers.name} &&
-					ln -sf ${tmpPrimerSchemes}/${data.runDir.run_config.primers.name} /optfff/basestack_consensus/primer_schemes/${data.runDir.run_config.primers.name}`)
+					ln -sf ${tmpPrimerSchemes}/${data.runDir.run_config.primers.name} /opt/basestack_consensus/primer_schemes/${data.runDir.run_config.primers.name}`)
 			}
 			if (data.runDir.run_config.barcoding.custom && data.runDir.run_config.barcoding.path){
 				volumes.push(data.runDir.run_config.barcoding.path)
