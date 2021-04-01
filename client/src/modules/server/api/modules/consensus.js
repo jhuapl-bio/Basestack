@@ -70,6 +70,10 @@ export class BasestackConsensus{
 			}
 			await copyFile(run_config.path, path.join(baseDir,  data.runDir.run_config.filename))
 			await copyFile(manifest.path, path.join(baseDir,  data.runDir.manifest.filename))
+			let run_info_exists = await checkFileExist(data.runDir.path, 'run_info.txt')
+			if (!run_info_exists){
+				await writeFile(path.join(data.runDir.path, 'run_info.txt'))
+			}
 			let volumes = [ 
 				reportDir.path, tmpreportDir,
 				baseDir, tmpbaseDir,
