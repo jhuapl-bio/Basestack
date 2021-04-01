@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -149,7 +149,7 @@
     "vue-router": "^3.0.1",
     "vue-scroll-snap": "^0.1.10",
     "vue-scrollto": "^2.18.2",
-    "vue-sweetalert2": "^4.1.1",
+    "vue-sweetalert2": "^4.2.1",
     "vue2-dropzone": "^3.6.0",
     "vuedraggable": "^2.24.1",
     "vuelidate": "^0.7.5",
