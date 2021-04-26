@@ -21,8 +21,8 @@
 				2. Add your user to the docker group
 					a. `sudo usermod -aG docker $USER`
 				3. Ensure all root-created files map as your user id in docker containers and volumes (Do both of these)
-					a.1. `echo $USER:$(id -u):1 | sudo tee -a /etc/subuid`
-					a.2. `echo $USER:$(id -g):1 | sudo tee -a /etc/subgid`
+					a.1. `sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subuid`
+					a.2. `sudo sed -i "1s/^/$USER:$(id -g):1\n/" /etc/subgid`
 				4. Create Docker container namespace
 					a. `echo "{\"userns-remap\": \"$USER\"}" | sudo tee -a /etc/docker/daemon.json`
 						- If you dont have the file already created (isn't created by default)
