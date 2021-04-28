@@ -16,7 +16,7 @@ export async function docker_init(params){
 	let config = null
 	const meta  = store.dockerConfig
 	if (meta ){
-		config = meta.dockerConfig
+		config = meta
 		dockerObj = new Docker(config);
 	} else {
 		dockerObj = new Docker();

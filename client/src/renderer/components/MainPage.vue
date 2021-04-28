@@ -84,6 +84,7 @@
             		@updateHistory="updateHistory" 
             		@updateModules="updateModules"
             		@updateImages="updateImages"
+            		@toast="toast" 
             		@open="open"
             		@changeFile="changeFile"
             		class="contentDiv"
@@ -163,7 +164,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 0,
+    		tab: 1,
 	        entries: null,
 	        resources: null,
 	        docker: {},
@@ -412,6 +413,16 @@ export default {
       toggleCollapse(){
         this.collapsed = !this.collapsed;
         this.$emit('toggleCollapseParent', this.collapsed)
+      },
+      toast(toaster, config, append = false) {
+      	console.log(config)
+        this.$bvToast.toast(`${config.message}`, {
+          title: `${config.title}`,
+          variant: `${config.variant}`,
+          toaster: toaster,
+          solid: true,
+          appendToast: append
+        })
       }
 	}
 };

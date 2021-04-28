@@ -25,6 +25,7 @@
             	</span> 
 	    	</h4>
 	    </div>
+      	<Docker v-if="resources && docker.stats" v-bind:resources="resources" v-bind:docker="docker"></Docker>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
   	</div>
@@ -395,6 +396,7 @@
     import ModuleConfig from "@/components/NavbarModules/ModuleInstall/ModuleConfig"
     import Disk from "@/components/NavbarModules/System/Disk";
   	import Memory from "@/components/NavbarModules/System/Memory";
+  	import Docker from "@/components/NavbarModules/System/Docker";
     import path from 'path'
 	export default {
 		name: 'moduleinstall',
@@ -403,7 +405,8 @@
 	    	SemipolarSpinner ,
 	    	ModuleConfig,
 	    	Disk,
-	    	Memory
+	    	Memory,
+	    	Docker
 	    },
 	    props: ['modules', "images", "resources", "docker"],
 
