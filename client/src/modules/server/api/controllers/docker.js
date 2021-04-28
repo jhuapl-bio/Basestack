@@ -15,7 +15,7 @@ let dockerObj;
 export async function docker_init(params){
 	let config = null
 	const meta  = store.dockerConfig
-	if (meta ){
+	if (meta && meta.socketPath){
 		config = meta
 		dockerObj = new Docker(config);
 	} else {
