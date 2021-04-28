@@ -201,7 +201,6 @@ export async function fetch_external_dockers(key){
 		let json =  await axios.get(url)
 		let latest = null;
 		latest = json.data
-		console.log(latest)
 		store.config.images[key].latest_digest = latest.images[0].digest
 	} catch(err){
 		logger.error(`${err} error in fetching external dockers`)
