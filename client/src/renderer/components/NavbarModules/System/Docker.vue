@@ -1,18 +1,19 @@
 <template>
-    <div v-if="docker.running">
+    <div v-if="docker">
       <span class="text-center">Docker System</span>
       <b-table
         striped
         hover
+        responsive
+        style="overflow-wrap: normal;"
         class="text-center"
         :fields="fields_docker"
-        :items="[resources.docker]"
+        :items="[docker.stats]"
       >
       </b-table>
     </div>
     
 </template>
-
 <script>
   export default {
     props: ['resources', 'docker'],
@@ -20,29 +21,29 @@
       return {
         fields_docker: [
           {
-            key: 'operatingSystem',
-            label: 'OS'
+            key: 'ServerVersion',
+            label: "Version"
           },
           {
-            key: 'dockerRootDir',
-            label: 'Root Directory'
-          },
-          {
-            key: 'kernelVersion',
+            key: 'KernelVersion',
             label: 'Kernel'
           },
           {
-            key: 'containersRunning',
-            label: 'Running Containers'
-          },
-          {
-            key: 'driver',
+            key: 'Driver',
             label: 'Driver'
           },
           {
-            key: 'serverVersion',
-            label: 'Version'
+            key: 'Images',
+            label: 'Images'
           },
+          {
+            key: 'ContainersRunning',
+            label: 'Running Containers'
+          },
+          {
+            key: 'DockerRootDir',
+            label: 'Data'
+          }
         ]
       }
     },

@@ -202,7 +202,6 @@ export async function fetch_external_dockers(key){
 		let json =  await axios.get(url)
 		let latest = null;
 		latest = json.data
-		console.log(latest)
 		store.config.images[key].latest_digest = latest.images[0].digest
 	} catch(err){
 		logger.error(`${err} error in fetching external dockers`)
@@ -302,7 +301,6 @@ export async function fetch_histories(){
 				    		store.config.modules.basestack_consensus.resources.run_config.basecalling, 'name') 	
 				    	contentobj.runDir.run_config.barcoding = convert_custom(contentobj.runDir.run_config.barcoding, 
 				    		store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name') 	
-						// console.log(contentobj.runDir.run_config.primers)
 						contentobj.fullpathHistory = fullpathHistory
 						response.push(contentobj)
 					}
@@ -321,21 +319,26 @@ export async function fetch_resources(){
 		let cpu = await si.cpu()
 		let disk = await si.fsSize()
 		let system = await si.system()
-		// console.log(disk)
-		let docker = await si.dockerInfo()
 		let os  = await si.osInfo()
-		// console.log(docker)
-		return {cpu: cpu, mem: mem, disk: disk, system: system, docker: docker, os: os}
+		return {cpu: cpu, mem: mem, disk: disk, system: system, os: os}
 	} catch(err){
 		logger.error(`${err} <-- error in fetching resources`)
 		throw err
 	}
 }
-export async function fetch_docker_version(){
+export async function fetch_docker_stats(){
 	try{
-		// let response = await store.docker.info()
-		let response = await store.docker.version()
-		return response
+		let docker_info  = await store.docker.info()
+		let docker = {
+			KernelVersion: docker_info.KernelVersion,  
+			Driver: docker_info.Driver,
+			Images: docker_info.Images,
+			ContainersRunning: docker_info.ContainersRunning,
+			ServerVersion: docker_info.ServerVersion,
+			DockerRootDir: docker_info.DockerRootDir,
+			host: (process.env.DOCKER_HOST ? process.env.DOCKER_HOST : null)
+		}
+		return docker
 	} catch(err){
 		logger.error(`${err} <-- error in fetching docker version`)
 		throw err
@@ -357,6 +360,7 @@ export async function fetch_status(){
 			installed: true, //placeholder for now
 			running: false,
 			version: null,
+			stats: null,
 			socket: ( store.docker  ?  store.docker.modem.socketPath : null) 
 		},
 		resources: null,
@@ -384,10 +388,21 @@ export async function fetch_status(){
 	try{
 		let docker_status = await fetch_docker_status()
 		response.docker.running = true
+		try{
+			let docker_stats = await fetch_docker_stats()
+			response.docker.stats = docker_stats
+		} catch(err2){
+			response.docker.stats = null
+			errors.push(err2)
+		}
 	} catch(err){
 		response.docker.running = false
 		errors.push(err)
 	}
+
+
+
+
 	response.ready = store.meta.ready
 	// logger.info("%j %j", response.docker.running, response.docker.installed)
 	return response
