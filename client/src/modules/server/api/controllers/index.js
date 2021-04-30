@@ -93,7 +93,6 @@ export async function initialize(params){
 		function customizer(objValue, srcValue) { //https://lodash.com/docs/#merge
 		  if (Array.isArray(objValue)) {
 		    const unio = lodash.union(objValue, srcValue);
-		    console.log(unio, objValue, srcValue)
 		  	return lodash.uniqBy(unio, tag)
 		  }
 		}
@@ -135,8 +134,14 @@ export async function initialize(params){
 
 export async function updateDockerSocket(socket){
 	try{
-		
-		store.docker  = new Docker({socketPath: socket})
+		if (socket == ''){
+			socket = null
+		}
+		if (socket){
+			store.docker  = new Docker({socketPath: socket})
+		} else {
+			store.docker  = new Docker()
+		}
 		await ammendJSON({
 			value: socket,
 			file: path.join(store.meta.writePath, "meta.json"),
