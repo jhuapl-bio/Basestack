@@ -48,7 +48,7 @@
                     trigger: 'hover',
                     targetClasses: ['it-has-a-tooltip'],
                     }"
-                  @click="dockerSocket = ''; updateSocket();">Default
+                  @click="dockerSocket = null; updateSocket();">Default
                 </b-button>
                 <b-button class="tabButton"
                   v-tooltip="{
@@ -83,7 +83,7 @@
             targetClasses: ['it-has-a-tooltip'],
             }"
             @click="advanced = !advanced;"
-          > Change Socket
+          > {{ ( advanced ? 'Hide Advanced' : 'Advanced' ) }}
             <font-awesome-icon class="configure"   icon="cog" size="sm"  />
       </span>
     </b-row>
@@ -164,7 +164,7 @@
           let response = await FileService.updateSocket({
             socket: this.dockerSocket
           })
-          this.toast('b-toaster-top-right', {variant: 'info', message: `Changed to: ${$this.dockerSocket}`, title: 'Docker Socket Updated' } )
+          this.toast('b-toaster-top-right', {variant: 'info', message: (this.dockerSocket ? `Changed to ${$this.dockerSocket}` : "Changed to Default endpoint"), title: 'Docker Socket Updated' } )
         } catch(err){
           console.error(err)
         }
