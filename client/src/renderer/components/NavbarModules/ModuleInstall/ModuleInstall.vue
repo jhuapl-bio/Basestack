@@ -383,7 +383,7 @@
 				</ModuleConfig>
 			</b-col>
 		</b-row>
-      	<Docker @toast="toast" v-if="resources && docker.stats" v-bind:resources="resources" v-bind:docker="docker"></Docker>
+      	<Docker @toast="toast" v-if="resources " v-bind:resources="resources" v-bind:docker="docker"></Docker>
 	    <hr>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
