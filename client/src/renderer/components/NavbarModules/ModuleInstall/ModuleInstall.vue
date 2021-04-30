@@ -92,7 +92,7 @@
 						            trigger: 'hover',
 						            targetClasses: ['it-has-a-tooltip'],
 						            }" v-on:click="selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)">
-					            	<font-awesome-icon class="configure" icon="play-circle" size="sm" />
+					            	<font-awesome-icon class="configure" icon="download" size="sm" />
 					            </span>
 				            </b-col>
 				            <b-col sm="4"  v-if="!element.status.running" style="text-align:center"> 
@@ -384,6 +384,7 @@
 			</b-col>
 		</b-row>
       	<Docker v-if="resources && docker.stats" v-bind:resources="resources" v-bind:docker="docker"></Docker>
+	    <hr>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
   	</div>

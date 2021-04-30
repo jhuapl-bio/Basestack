@@ -57,6 +57,26 @@ body {
   outline:none !important;
   border:0px;
 }
+.warnButton{
+  border-radius: 0px;
+  border:none !important;
+  color: #000000 !important;
+  background-color: #FFFFCC!important;
+  width:100%;
+  outline:none !important;
+  border:0px;
+}
+.defaultButton{
+  border-radius: 0px;
+  border:none !important;
+  background-color: #2b57b9 !important;
+  fill:none !important;
+  color: #FFFFFF !important;
+  width:100%;
+  outline:none !important;
+  border:0px;
+}
+
 .sideButton:focus,.tabButton:focus, .collapseButton:focus, .collapseButton:active{
    outline: none !important;
    box-shadow: none;
@@ -67,6 +87,11 @@ body {
   background-color: #2b57b9 !important;
   fill: #2b57b9 !important;
   color: #fff !important;
+}
+.defaultButton:hover, .warnButton:hover{
+  color: #2b57b9 !important;
+  background: #fff !important;
+  fill: #fff !important;
 }
 .collapseButton{
   margin:auto;
