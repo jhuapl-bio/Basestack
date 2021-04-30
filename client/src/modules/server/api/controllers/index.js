@@ -134,7 +134,14 @@ export async function initialize(params){
 
 export async function updateDockerSocket(socket){
 	try{
-		store.docker  = new Docker({socketPath: socket})
+		if (socket == ''){
+			socket = null
+		}
+		if (socket){
+			store.docker  = new Docker({socketPath: socket})
+		} else {
+			store.docker  = new Docker()
+		}
 		await ammendJSON({
 			value: socket,
 			file: path.join(store.meta.writePath, "meta.json"),

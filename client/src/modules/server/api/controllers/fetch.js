@@ -336,7 +336,7 @@ export async function fetch_docker_stats(){
 			ContainersRunning: docker_info.ContainersRunning,
 			ServerVersion: docker_info.ServerVersion,
 			DockerRootDir: docker_info.DockerRootDir,
-			host: (process.env.DOCKER_HOST ? process.env.DOCKER_HOST : null)
+			MemTotal: docker_info.MemTotal
 		}
 		return docker
 	} catch(err){
@@ -361,7 +361,9 @@ export async function fetch_status(){
 			running: false,
 			version: null,
 			stats: null,
-			socket: ( store.docker  ?  store.docker.modem.socketPath : null) 
+			socket: ( store.docker  ?  store.docker.modem.socketPath : null),
+			host: (process.env.DOCKER_HOST ? process.env.DOCKER_HOST : null),
+			xdg_runtime_dir: (process.env.XDG_RUNTIME_DIR ? process.env.XDG_RUNTIME_DIR : null)
 		},
 		resources: null,
 		images: null,
