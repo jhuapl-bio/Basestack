@@ -9,38 +9,16 @@
         :items="[info_table]"
       >
       </b-table>
-      <CPU v-if="resources" v-bind:resources="resources"></CPU>
-      <Memory v-if="resources" v-bind:resources="resources"></Memory>
-      <Disk v-if="resources" v-bind:resources="resources"></Disk>
       <Docker v-if="resources" v-bind:resources="resources" v-bind:docker="docker"></Docker>
-      <OS v-if="resources" v-bind:resources="resources"></OS>
-      <span class="center-align-icon;" style="text-align:center; cursor:pointer; margin:auto; float:right"
-            v-tooltip="{
-            content: 'Advanced Configuration(s)',
-            placement: 'top',
-            classes: ['info'],
-            trigger: 'hover',
-            targetClasses: ['it-has-a-tooltip'],
-            }"
-            @click="advanced = !advanced"
-          > Advanced
-            <font-awesome-icon class="configure"   icon="cog" size="sm"  />
-      </span>
       <span  class="text-danger" v-if="!docker.running">Docker is not connected or installed</span>
       <span v-else>Docker is installed and running</span>
       <hr>
-      <b-row class="text-center" v-if="advanced">  
-        <b-col sm="6">
-          <b-form-input v-model="dockerSocket"  placeholder="">
-          </b-form-input>
-        </b-col>
-        <b-col sm="6">
-          <b-button  @click="updateSocket()">Update Socket</b-button>
-          <br>
-          <span>Current Socket Configuration: {{ docker.socket }}</span>
-        </b-col>
-        <hr>
-      </b-row>
+      <CPU v-if="resources" v-bind:resources="resources"></CPU>
+      <Memory v-if="resources" v-bind:resources="resources"></Memory>
+      <Disk v-if="resources" v-bind:resources="resources"></Disk>
+      <OS v-if="resources" v-bind:resources="resources"></OS>
+      
+
       <!-- </b-form-text> -->
 
     </b-col>
@@ -65,8 +43,6 @@
     },
     data () {
       return {
-        dockerSocket: '',
-        advanced: false,
         fields_system: [
           {
             key: 'basestack',
@@ -101,18 +77,6 @@
     mounted(){
     },
     methods: {
-      async updateSocket(socket){
-        
-        try{
-          let response = await FileService.updateSocket({
-            socket: this.dockerSocket
-          })
-          console.log(response)
-        } catch(err){
-          console.error(err)
-        }
-        
-      }
     }
   };
 </script>

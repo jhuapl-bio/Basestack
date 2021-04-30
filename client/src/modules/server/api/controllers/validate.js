@@ -167,7 +167,6 @@ export async function validate_run_dir(params){
 	const manifest = runDir.manifest.filename
 	const runDir_path = runDir.path
 	const fastqFolderName = runDir.fastqDir.name
-	console.log(fastqFolderName, "Validate")
 	const basename = path.basename(runDir_path)
 	const validation = {
 		fastq: {
@@ -184,22 +183,29 @@ export async function validate_run_dir(params){
 		},
 		seq_summary:{
 			exists: false,
-			valid: true
+			count: 0,
+			name: "Sequencing summary",
+			valid: true,
+			errors: []
 		},
 		throughput: {
 			exists: false,
-			valid: true
+			name: "Throughput",
+			valid: true,
+			errors: []
 		},
 		drift_correction: {
+			name: "Drift Correction",
 			exists: false,
-			valid: true
+			valid: true,
+			errors: []
 		}
 
 	}
 	runDir.specifics = {
-		throughput: {exists: false, name: null, required: false},
-		seq_summary: {exists: false, name: null, required: true},
-		drift_correction: {exists: false, name: null, required: false}
+		throughput: {exists: false, errors: [],  name: "Throughput"},
+		seq_summary: {exists: false, errors: [], name: "Sequencing Summary"},
+		drift_correction: {exists: false, errors: [], name: "Drift Correction"}
 	}
 	runDir.fastqDir.validation = false
 	runDir.run_config.validation = false
@@ -218,6 +224,20 @@ export async function validate_run_dir(params){
 		const manifestExists = await checkFileExist(runDir_path, manifest, true)
 		const throughputExists = await checkFileExist(runDir_path, 'throughput_.*.csv', true)
 		const seq_summaryExists  = await checkFileExist(runDir_path, 'sequencing_summary.*txt', true)
+		
+		let count_seq_summary = 0 
+		try{
+			count_seq_summary = await getRecursiveFiles(runDir_path, '/**/*sequencing_summary*.txt')
+			if (count_seq_summary.length > 1){
+				runDir.specifics.seq_summary.errors.push(
+					`More than one seq summary file found. Please remove all additional ones and place them 
+					 ONLY in the Base Run Directory. \n Files found:\n\t ${count_seq_summary}`
+					)				
+			}	
+		}catch(err){
+			logger.error("Error in fetching seq sequencing_summary count  %s", err)
+		}
+		
 		const drift_correctionExists = await checkFileExist(runDir_path, 'drift_correction.*csv', true)
 		let possibleFolders = [];
 		if (run_dirExists){
