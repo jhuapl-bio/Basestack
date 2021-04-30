@@ -224,7 +224,11 @@ export async function validate_run_dir(params){
 		const manifestExists = await checkFileExist(runDir_path, manifest, true)
 		const throughputExists = await checkFileExist(runDir_path, 'throughput_.*.csv', true)
 		const seq_summaryExists  = await checkFileExist(runDir_path, 'sequencing_summary.*txt', true)
-		
+		if (!seq_summaryExists){
+			runDir.specifics.seq_summary.errors.push(
+					`Sequencing Summary textfile does not exist. Please generate one from Basecalling`
+					)
+		}
 		let count_seq_summary = 0 
 		try{
 			count_seq_summary = await getRecursiveFiles(runDir_path, '/**/*sequencing_summary*.txt')
