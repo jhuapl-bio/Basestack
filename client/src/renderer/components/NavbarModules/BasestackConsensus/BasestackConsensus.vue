@@ -925,20 +925,7 @@ export default {
     		 	this.changeRunDir(flat, 'dir')
     		} 
     	},
-    	submitStatus: function(val){
-    		if (val == 'ERROR' || val == 'Warning'){
-	    		let message = "No Error to report"
-	    		let variant = 'danger'
-	    		if (val == 'ERROR'){
-	    			message = 'Please submit a valid Run Config, Manifest, Fastq Folder, and Run Directory. Also be sure that all errors are absent from the Specifics table'
-	    		} else if (val =='Warning'){
-	    			variant='warning'
-	    			message = "Warning, one or more required items are missing, consider fixing this issue"
-	    		}
-    			this.toast('b-toaster-top-center', {variant: variant, message: message, title: 'Error Message' } )
-    		}
-    	},
-    	
+
     	primerFiles: async function(val){
     		if (this.selectedHistory.runDir.run_config.primers.custom){
     			let root = this.parseFileInput(val)
@@ -1168,7 +1155,7 @@ export default {
 		
 		async changeRunDir(val, type){			
 		 	this.runDir.path = this.parseFileInput(val)
-		 	console.log("changedrundir")
+		 	this.submitStatus = null
     		if (this.isNew){
     			this.selectedHistory.runDir.fastqDir = {
 					path: null,
@@ -1214,6 +1201,7 @@ export default {
 		    		this.selectedHistory.runDir = response.runDir
 		    		if (this.$v.$invalid && this.selectedHistory.runDir.path) {
 			        	this.submitStatus = 'Warning'
+			        	this.sendSubmitMessage()
 			        } else {
 			    	    this.submitStatus = 'OK'
 			        }
@@ -1347,6 +1335,7 @@ export default {
 		bookmarkParams: async function(){
 			if (this.$v.$invalid){
 				this.submitStatus = 'Warning'
+				this.sendSubmitMessage()
 			}
 			else{
 				await FileService.bookmarkSelections({
@@ -1433,10 +1422,27 @@ export default {
 		        }
 		    });
 		},
-
+		sendSubmitMessage(config){
+			if (config){
+				this.$emit('toast', 'b-toaster-top-full', config)
+			} else {
+	    		if (this.submitStatus == 'ERROR' || this.submitStatus == 'Warning'){
+		    		let message = "No Error to report"
+		    		let variant = 'danger'
+		    		if (this.submitStatus == 'ERROR'){
+		    			message = 'Please submit a valid Run Config, Manifest, Fastq Folder, and Run Directory. Also be sure that all errors are absent from the Specifics table'
+		    		} else if (this.submitStatus =='Warning'){
+		    			variant='warning'
+		    			message = "Warning, one or more required items are missing or malformed. Consider fixing this issue as unforeseen issues can arise"
+		    		}
+	    			this.toast('b-toaster-top-center', {variant: variant, message: message, title: 'Error Message' } )
+	    		}
+			}
+		},
 		bookmarkSelections: async function(){
 			if (this.$v.$invalid) {
 	          this.submitStatus = 'ERROR'
+	          this.sendSubmitMessage()
 	        }
 	        else {
         		this.submitStatus = 'OK'
@@ -1446,6 +1452,7 @@ export default {
 		loadHistory: async function(){
 			if (this.$v.$invalid) {
 	        	this.submitStatus = 'Warning'
+	        	this.sendSubmitMessage()
 	        } else {
 	    	    this.submitStatus = 'OK'
 	        }
