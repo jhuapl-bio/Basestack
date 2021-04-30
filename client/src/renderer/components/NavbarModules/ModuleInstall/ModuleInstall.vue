@@ -383,7 +383,7 @@
 				</ModuleConfig>
 			</b-col>
 		</b-row>
-      	<Docker v-if="resources && docker.stats" v-bind:resources="resources" v-bind:docker="docker"></Docker>
+      	<Docker @toast="toast" v-if="resources && docker.stats" v-bind:resources="resources" v-bind:docker="docker"></Docker>
 	    <hr>
     	<Memory v-if="resources" v-bind:resources="resources"></Memory>
       	<Disk v-if="resources" v-bind:hoverElement="hoverElement" v-bind:resources="resources"></Disk>
@@ -727,6 +727,9 @@
 	    			this.showLog = true
 	    		}
 	    	},
+	    	toast(toaster, val){
+		      this.$emit('toast', toaster, val)
+		    },
 	    	async remove_docker(image, i){
 	    		const $this = this
 				this.$swal.fire({

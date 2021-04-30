@@ -13,8 +13,6 @@
 			<b-row class="nopadcolumn">
 				<b-col sm="12" style="" class="nopadcolumn">
 					<h4 style="text-align:left">Job Histories</h4>
-						<b-alert show v-if="submitStatus === 'ERROR'" variant="danger">Please have a valid manifest, run_config, fastq folder, minion specific run files set.</b-alert>
-  						<b-alert show v-else-if="submitStatus === 'Warning'" variant="warning">Warning, one or more required items are missing, consider fixing this issue</b-alert>
 						<b-form-group
 				            label="Select Run"
 				            label-cols-sm="1"
@@ -249,22 +247,24 @@
 				      		</span>
 						</template>
 						<b-input-group-append>
-							
 							<b-table
 					          show-empty
 					          small
-					          stacked
 					          label=""
 					          v-if="selectedHistory.runDir.specifics"
 					          style="width: 100%"
 			                  class="formGroup-input"
-					          :items="[selectedHistory.runDir.specifics]"
+					          :items="[
+					          	selectedHistory.runDir.specifics.seq_summary, 
+					          	selectedHistory.runDir.specifics.drift_correction, 
+					          	selectedHistory.runDir.specifics.throughput 
+					          ]"
 					          :fields="specifics_table_fields"
 							  sticky-header="300px"						        
 							>
-								<template v-slot:cell()="cell">
+								<template #cell(exists)="data">
 									<span 
-										:class="[cell.value.exists ? 'center-align-icon success-icon' : (cell.value.required ? 'center-align-icon  warn-icon' : 'center-align-icon warn-icon')]" 
+										:class="[(data.value ? 'center-align-icon success-icon' :'center-align-icon  warn-icon' )]" 
 										style="margin:auto; text-align:center" v-tooltip="{
 							            content: 'Presence in Run Directory?',
 							            placement: 'top',
@@ -272,7 +272,20 @@
 							            trigger: 'hover',
 							            targetClasses: ['it-has-a-tooltip'],
 							            }">
-				            			<font-awesome-icon :icon="cell.value.exists ? 'check' : (cell.value.required ? 'times-circle' : 'exclamation')" size="sm" />
+				            			<font-awesome-icon :icon="(data.value ? 'check' : 'exclamation')" size="sm" />
+					            	</span>								 
+							    </template>
+							    <template #cell(errors)="data">
+									<span v-if="data.value && data.value.length > 0"
+										:class="['center-align-icon  warn-icon']" 
+										style="margin:auto; text-align:center; cursor: pointer;" v-tooltip="{
+							            content: 'Click me to show errors',
+							            placement: 'top',
+							            classes: ['danger'],
+							            trigger: 'hover',
+							            targetClasses: ['it-has-a-tooltip'],
+							            }">
+				            			<font-awesome-icon @click="toast('b-toaster-top-full', {variant: 'danger', message: data.value, title: 'Error Message' } )"  :icon="'exclamation'" size="sm" />
 					            	</span>								 
 							    </template>
 							</b-table>
@@ -430,7 +443,7 @@
 				            		<font-awesome-icon class="configure"  v-b-toggle.sidebar-right icon="cog" size="sm"  />
 							    </span>		
 						</template>
-						<b-sidebar id="sidebar-right" title="Sidebar" right shadow>
+						<b-sidebar id="sidebar-right" title="Manifest Config" right shadow>
 							<b-table
 					          show-empty
 					          small
@@ -668,195 +681,6 @@
 										<font-awesome-icon class="configure warn-icon" icon="minus"/>
 									</span>
 								</template>
-
-								<!-- 
-
-									<b-table
-										:items="[1]"
-				         				:fields="!row.item.primers.custom ?  ['Custom'] : ['Custom', 'Remove']"
-				         				bordered
-				         				style="text-align:center"
-									>	
-										<template  v-slot:cell(Custom)>
-											<b-form-checkbox
-										      v-model="customPrimerAdd"
-										      :disabled="!isNew"
-										      v-if="isNew"
-										      name="customPrimerAdd"
-										    >
-										    </b-form-checkbox>
-									    </template>
-									    <template  v-slot:cell(Remove) >
-									    	<span v-if="row.item.primers.custom && isNew"   v-on:click="rmAttribute(row.item.primers, 'primers').then((val)=>{ row.item.primers = val});"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
-							            		v-tooltip="{
-										            content: 'Remove primer',
-										            placement: 'top',
-										            classes: ['info'],
-										            trigger: 'hover',
-										            targetClasses: ['it-has-a-tooltip'],
-										            }"
-								            	> Remove 
-												<font-awesome-icon class="configure warn-icon" icon="minus"/>
-											</span>
-									    </template>
-
-									</b-table>
-									<b-alert show v-if="row.item.primers.not_found && !isNew" variant="warning">{{row.item.primers}} - Unsaved primer scheme</b-alert>
-									<b-form-select class="formGroup-input" 
-										v-model="row.item.primers"  
-										:disabled="!isNew"
-										v-else-if="!customPrimerAdd"  
-										text-field="text"
-										value-field="value"
-										:options="modules.basestack_consensus.resources.run_config.primers.map((x) => { return {text: x.name, value: x}   })">
-									</b-form-select>
-									
-									<b-form-file 
-				                 	 directory
-				                 	 v-else
-					                 :no-traverse="true"
-					                 :multiple="true"
-					          		 :file-name-formatter="formatNames"
-					                 :disabled="!isNew" 
-					                 aria-describedby="seq_file" 
-					                 @change="changeFile(
-					                 {
-					                 	event: $event, 
-					                 	target: `config.modules.basestack_consensus.resources.run_config.primers`,
-										file_target: `modules.basestack_consensus.resources.run_config.primers`,
-										sublevel: 1
-					                 })"
-					                 :placeholder="'Choose a primer scheme folder'"
-					                 drop-placeholder="Drop primer scheme folder"
-					                 >
-				                	</b-form-file>
-								 </template>
-								<template  v-slot:cell(basecalling)="row" >
-									<b-row :disabled="!isNew" >
-										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
-											<b-form-checkbox
-											  :disabled="!isNew"
-											  v-if="isNew"
-										      v-model="checkboxBasecalling"
-										    >
-										      Add Custom
-										    </b-form-checkbox>
-										</b-col>
-										<b-col sm="6">
-											<span v-if="row.item.basecalling.custom && isNew"   v-on:click="rmAttribute(row.item.basecalling, 'basecalling'); row.item.basecalling = {name: null, custom: false}"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
-							            		v-tooltip="{
-										            content: 'Remove custom basecaller config',
-										            placement: 'top',
-										            classes: ['info'],
-										            trigger: 'hover',
-										            targetClasses: ['it-has-a-tooltip'],
-										            }"
-								            	> Remove 
-												<font-awesome-icon class="configure warn-icon" icon="minus"/>
-											</span>
-											<span v-if="row.item.basecalling.custom && !isNew" style="justify-content: right !important" class="configure center-align-icon text-info justify-content-end" 
-							            		v-tooltip="{
-										            content: 'Custom Basecaller',
-										            placement: 'top',
-										            classes: ['info '],
-										            trigger: 'hover',
-										            targetClasses: ['it-has-a-tooltip'],
-										            }"
-								            	>Custom
-												<font-awesome-icon class="configure warn-icon" icon="cog"/>
-											</span>
-										</b-col>
-									</b-row>
-									<b-alert show v-if="row.item.basecalling.not_found && !isNew" variant="warning">{{row.item.basecalling.name}} - Unsaved basecaller config</b-alert>
-									
-									<b-form-select class="formGroup-input"  
-										v-model="row.item.basecalling"  
-										:disabled="!isNew"
-										text-field="text"
-										v-else-if="!checkboxBasecalling"
-										value-field="value"
-										:options="modules.basestack_consensus.resources.run_config.basecalling.map((x) => { return {text: x.name, value: x}   })">
-									</b-form-select>
-									<b-form-file 
-					                 :disabled="!isNew" 
-					                 v-else
-					                 aria-describedby="seq_file" 
-					                 @change="changeFile({
-					                 	event: $event, 
-					                 	target: `config.modules.basestack_consensus.resources.run_config.basecallinig`,
-										file_target: `modules.basestack_consensus.resources.run_config.basecalling`,
-										sublevel: 0
-					                 })"
-					                 :placeholder="'Choose a basecalling cfg file'"
-					                 drop-placeholder="Drop basecalling cfg file"
-					                 >
-				                	</b-form-file>
-							    </template>
-								<template  v-slot:cell(barcoding)="row">
-									<b-row>
-										<b-col sm="(row.item.basecalling.custom ? 6 : 12)" style="display:flex">
-											<b-form-checkbox
-										      v-model="checkboxBarcoding"
-										      :disabled="!isNew"
-										      v-if="isNew"
-										    >
-										      Add Custom
-										    </b-form-checkbox>
-										</b-col>
-										<b-col sm="6">
-											<span v-if="row.item.barcoding.custom && isNew"   v-on:click="rmAttribute(row.item.barcoding, 'barcoding'); row.item.barcoding = {name: null, custom: false}"  style="justify-content: right !important" class="configure center-align-icon justify-content-end" 
-							            		v-tooltip="{
-										            content: 'Remove custom barcoding config',
-										            placement: 'top',
-										            classes: ['info'],
-										            trigger: 'hover',
-										            targetClasses: ['it-has-a-tooltip'],
-										            }"
-								            	> Remove 
-												<font-awesome-icon class="configure warn-icon" icon="minus"/>
-											</span>
-										</b-col>
-									</b-row>
-									<b-alert show v-if="row.item.barcoding.not_found && !isNew" variant="warning">{{row.item.barcoding.name}} - Unsaved barcoding config</b-alert>
-							    	<b-form-select class="formGroup-input" 
-							    		v-else-if="!checkboxBarcoding" 
-							    		v-model="row.item.barcoding"  	 
-							    		:disabled="!isNew" 
-							    		text-field="text"
-										value-field="value"
-										:options="modules.basestack_consensus.resources.run_config.barcoding.map((x) => { return {text: x.name, value: x}   })">
-									</b-form-select>
-							 		
-							    	<b-form-file 
-					                 :disabled="!isNew" 
-					                 v-else
-					                 aria-describedby="seq_file" 
-					                 @change="changeFile({
-					                 	event: $event, 
-					                 	target: `config.modules.basestack_consensus.resources.run_config.barcoding`,
-										file_target: `modules.basestack_consensus.resources.run_config.barcoding`,
-										sublevel: 0
-					                 })"
-					                 :placeholder="'Choose a barcoding cfg file'"
-					                 drop-placeholder="Drop barcoding cfg file"
-					                 >
-				                	</b-form-file>			 
-							    </template>
-							    <template  v-slot:cell(filename)="row">
-							    	<b-form-textarea
-							          v-model="row.item.filename"
-							          label="Filename"
-					                  class="formGroup-input"
-							          type="text"
-							          disabled
-							          :state="row.item.validation"
-							          placeholder="run_config.txt"
-							    	>
-							    	</b-form-textarea>								 
-									  <b-form-invalid-feedback :state="row.item.validation">
-								        run_config.txt not found
-								      </b-form-invalid-feedback>
-								  </template> -->
 							</b-table>
 						</b-input-group-append>
 						<b-form-checkbox
@@ -932,9 +756,9 @@ export default {
           		{key: 'adm', label: 'Action', sortable: false, class: 'text-center'},
 			],
 			specifics_table_fields: [
-				{key: 'throughput', label: 'Throughput', sortable: false, class: 'text-center'},
-				{key: 'seq_summary', label: 'Sequencing Summary', sortable: false, class: 'text-center'},
-				{key: 'drift_correction', label: 'Drift Correction', sortable: false, class: 'text-center'},
+				{key: 'exists', label: 'Exists', sortable: false, class: 'text-center'},
+				{key: 'name', label: 'Filename', sortable: false, class: 'text-center'},
+				{key: 'errors', label: 'Errors', sortable: false, class: 'text-center'},
 			],
 			showBookmarkTooltip: false,
 			runDir:{
@@ -970,9 +794,9 @@ export default {
 					filename: 'manifest.txt'
 				},
 				specifics: {
-					throughput: {exists: false, name: null},
-					seq_summary: {exists: false, name: null},
-					drift_correction: {exists: false, name: null}
+					throughput: {exists: false, name: 'Throughput', errors: null},
+					seq_summary: {exists: false, name: 'Sequencing Summary', errors: null},
+					drift_correction: {exists: false, name: 'Drift Correction', errors: null}
 				}
 			},
 			validatingRunDir: false,
@@ -1069,6 +893,9 @@ export default {
         			seq_summary: {
         				exists: {
         					checked: value => value === true 
+        				},
+        				errors: {
+        					checked: value => value && value.length == 0 
         				}
         			}
         		},
@@ -1097,6 +924,19 @@ export default {
 	    		const flat  = val.flat(2) //flatten up to 2 directories down
     		 	this.changeRunDir(flat, 'dir')
     		} 
+    	},
+    	submitStatus: function(val){
+    		if (val == 'ERROR' || val == 'Warning'){
+	    		let message = "No Error to report"
+	    		let variant = 'danger'
+	    		if (val == 'ERROR'){
+	    			message = 'Please submit a valid Run Config, Manifest, Fastq Folder, and Run Directory. Also be sure that all errors are absent from the Specifics table'
+	    		} else if (val =='Warning'){
+	    			variant='warning'
+	    			message = "Warning, one or more required items are missing, consider fixing this issue"
+	    		}
+    			this.toast('b-toaster-top-center', {variant: variant, message: message, title: 'Error Message' } )
+    		}
     	},
     	
     	primerFiles: async function(val){
@@ -1688,6 +1528,9 @@ export default {
 		checkError(){
 			if (this.selectedHistory.runDir && this.selectedHistory.name) {this.submitStatus = "OK"; }
 		},
+		toast(toaster, val){
+        	this.$emit('toast', toaster, val)
+      	},
 		async resetCustom(fresh){
 			this.newState = true
 			this.history = this.customHistory
