@@ -340,6 +340,31 @@ function make_custom(val, map, target){
 		} else {
 			return {custom: false,  name: val}
 		}
+	} else if (convert) {
+		if (!Array.isArray(val) && typeof val !== 'object'){
+			val = val.split(/[\s,]+/)
+		} else {
+			val = [val]
+		}
+		let converted_list = [];
+		console.log(val, "<<<<Val")
+		val.forEach((element)=>{
+			if (map){
+				const val2 = map.filter((d)=>{
+					return d[target] == element
+				})
+				if (val2.length > 0){
+					converted_list.push({custom: val2[0].custom,  name: val2[0][target], path: val2[0].path})
+				}
+				else{
+					converted_list.push({custom: true,  name: element, not_found: true})
+				}
+			} else {
+				converted_list.push({custom: false,  name: element})
+			}
+		})
+		console.log("list", converted_list)
+		return converted_list
 	} else {
 		if (map){
 			const val2 = map.filter((d)=>{

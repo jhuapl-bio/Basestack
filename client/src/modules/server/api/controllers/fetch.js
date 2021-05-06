@@ -300,6 +300,7 @@ export async function fetch_histories(){
 		const fullpathHistory = path.join(historyPath, histories[i])
 
 		let validHistory = await validateHistory(fullpathHistory,histories[i])
+		console.log(validHistory, fullpathHistory)
 		if(validHistory){
 			try{
 				await readFile(path.join(fullpathHistory, "report-meta.json"), false).then(async (content, error)=>{

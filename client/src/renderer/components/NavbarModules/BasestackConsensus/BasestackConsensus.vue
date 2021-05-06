@@ -1033,6 +1033,7 @@ export default {
     		}
     	},
     	selectedHistory: function(val){
+    		console.log(this.overrideManifest)
     		if (!val.custom){
     			this.isNew = false //Change this	
     		} else {
