@@ -296,9 +296,7 @@ export async function validate_run_dir(params){
 			content = await readTableFile(run_configPath, '\t')
 			runDir.run_config.primers = convert_custom(content[0][1], store.config.modules.basestack_consensus.resources.run_config.primers, 'name') 	
 			runDir.run_config.basecalling = convert_custom( content[1][1], store.config.modules.basestack_consensus.resources.run_config.basecalling, 'name') 				
-			runDir.run_config.barcoding = convert_custom(content[2][1], store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name') 	
-			
-			
+			runDir.run_config.barcoding = convert_custom(content[2][1], store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name', 'arr') 	
 		}
 		runDir.run_config.validation = run_configExists
 		if(manifestExists && override){
@@ -326,9 +324,8 @@ export async function validate_run_dir(params){
 	}
 }
 
-
-export  function convert_custom(val, map, target){ //convert legacy runs to object for use in custom input configurations
-	if (typeof val !== 'object' ){	
+function make_custom(val, map, target){
+	if (typeof val !== 'object'){	
 		if (map){
 			const val2 = map.filter((d)=>{
 				return d[target] == val
@@ -339,11 +336,10 @@ export  function convert_custom(val, map, target){ //convert legacy runs to obje
 			else{
 				return {custom: true,  name: val, not_found: true}
 			}
-		}else {
+		} else {
 			return {custom: false,  name: val}
 		}
 	} else {
-		// return va
 		if (map){
 			const val2 = map.filter((d)=>{
 				return d[target] == val[target]
@@ -359,4 +355,23 @@ export  function convert_custom(val, map, target){ //convert legacy runs to obje
 			return val
 		}
 	}
+}
+
+
+export  function convert_custom(val, map, target, convert){ //convert legacy runs to object for use in custom input configurations
+	if (convert) {
+		if (!Array.isArray(val) && typeof val !== 'object'){
+			val = val.split(/[\s,]+/)
+		} else if (!Array.isArray(val) || typeof val === 'string'){
+			val = [val]
+		}
+		let converted_list = [];
+		val.forEach((element)=>{
+			converted_list.push(make_custom(element, map, target))
+		})
+		return converted_list
+	} else {	
+		return make_custom(val, map, target)
+	}
+		
 }

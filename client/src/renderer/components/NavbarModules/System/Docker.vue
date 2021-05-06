@@ -28,7 +28,7 @@
           :fields="fields_setup_docker"
           :items="[docker]"
         >
-          <template  v-slot:cell(socket_field_button)="row">
+          <template  v-slot:cell(socket_field_button)>
             <div style="display:flex; text-align:center">
                 <b-button  class="defaultButton"
                   v-tooltip="{
@@ -62,12 +62,12 @@
                 </b-button>
               </div>
           </template>
-          <template  v-slot:cell(socket_field)="row">
+          <template  v-slot:cell(socket_field)>
               <b-form-input v-model="dockerSocket"  placeholder="">
               </b-form-input>
               
           </template>
-          <template  v-slot:cell(current_socket)="row">
+          <template  v-slot:cell(current_socket)>
               <p v-if="docker.socket">{{ docker.socket }}</p>
           </template>
 
