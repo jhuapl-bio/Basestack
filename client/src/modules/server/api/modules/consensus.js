@@ -267,7 +267,7 @@ export class BasestackConsensus{
 	
 		  	let barcoding_specification = null;
 		  	if (Array.isArray(runDir.run_config.barcoding)){
-		  		barcoding_specification = runDir.run_config.barcoding.map((d)=>{ return d.name }).join(",")
+		  		barcoding_specification = runDir.run_config.barcoding.map((d)=>{ return d.name }).join(" ")
 		  	} else {
 		  		barcoding_specification = runDir.run_config.barcoding.name		  		
 		  	}

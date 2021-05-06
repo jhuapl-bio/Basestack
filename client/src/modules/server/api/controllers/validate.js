@@ -324,9 +324,7 @@ export async function validate_run_dir(params){
 	}
 }
 
-
-export  function convert_custom(val, map, target, convert){ //convert legacy runs to object for use in custom input configurations
-	console.log(convert, val,"<<<<")
+function make_custom(val, map, target){
 	if (typeof val !== 'object'){	
 		if (map){
 			const val2 = map.filter((d)=>{
@@ -338,36 +336,10 @@ export  function convert_custom(val, map, target, convert){ //convert legacy run
 			else{
 				return {custom: true,  name: val, not_found: true}
 			}
-		}else {
+		} else {
 			return {custom: false,  name: val}
 		}
-	} else if (convert) {
-		if (!Array.isArray(val) && typeof val !== 'object'){
-			val = val.split(/[\s,]+/)
-		} else {
-			val = [val]
-		}
-		let converted_list = [];
-		console.log(val, "<<<<Val")
-		val.forEach((element)=>{
-			if (map){
-				const val2 = map.filter((d)=>{
-					return d[target] == element
-				})
-				if (val2.length > 0){
-					converted_list.push({custom: val2[0].custom,  name: val2[0][target], path: val2[0].path})
-				}
-				else{
-					converted_list.push({custom: true,  name: element, not_found: true})
-				}
-			} else {
-				converted_list.push({custom: false,  name: element})
-			}
-		})
-		console.log("list", converted_list)
-		return converted_list
 	} else {
-		// return va
 		if (map){
 			const val2 = map.filter((d)=>{
 				return d[target] == val[target]
@@ -383,4 +355,23 @@ export  function convert_custom(val, map, target, convert){ //convert legacy run
 			return val
 		}
 	}
+}
+
+
+export  function convert_custom(val, map, target, convert){ //convert legacy runs to object for use in custom input configurations
+	if (convert) {
+		if (!Array.isArray(val) && typeof val !== 'object'){
+			val = val.split(/[\s,]+/)
+		} else if (!Array.isArray(val) || typeof val === 'string'){
+			val = [val]
+		}
+		let converted_list = [];
+		val.forEach((element)=>{
+			converted_list.push(make_custom(element, map, target))
+		})
+		return converted_list
+	} else {	
+		return make_custom(val, map, target)
+	}
+		
 }
