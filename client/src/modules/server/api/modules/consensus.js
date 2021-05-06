@@ -258,16 +258,23 @@ export class BasestackConsensus{
 			await checkFileExist(path, ".bed")
 		}
 		try {
-			await checkFolderExistsReject(reportPath) //uncomment if you'd like to not overwrite the folder
+			if (type != 'update'){
+				await checkFolderExistsReject(reportPath) //uncomment if you'd like to not overwrite the folder
+			}
 		  	//write the meta data file for the run
 		  	
 		  	//
 	
-		  	
+		  	let barcoding_specification = null;
+		  	if (Array.isArray(runDir.run_config.barcoding)){
+		  		barcoding_specification = runDir.run_config.barcoding.map((d)=>{ return d.name }).join(" ")
+		  	} else {
+		  		barcoding_specification = runDir.run_config.barcoding.name		  		
+		  	}
+
 		  	let tsv_file_content = "primers\t"+runDir.run_config.primers.name+"\n"+
 		  	'basecalling\t'+ runDir.run_config.basecalling.name+"\n" +
-		  	'barcoding\t'+ runDir.run_config.barcoding.name +"\n"
-
+		  	'barcoding\t'+ barcoding_specification+"\n"
 		  	logger.info("%s", "Bookmark run config file")
 		  	await writeFile(path.join(metaDir, runDir.run_config.filename), tsv_file_content +"\n" ).then((response)=>{
 		  		logger.info("%s %s", "Success in writing runInfo file")

@@ -575,6 +575,7 @@ router.post("/selections/rm", (req,res,next)=>{ //this method needs to be rework
 	( async function() {
 		try {
 			await rm_selections(req.body).then((response)=>{
+				console.log("return response rm attributes", new Date())
 				logger.info("Success in removal of field %j", response)
 					res.status(200).json({status: 200, message: "Completed removal of field for module", data: response });
 				}).catch((err)=>{

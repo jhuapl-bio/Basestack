@@ -51,9 +51,9 @@ export  var module_status = async function(params, mod){
 					reject(error)
 				}
 				if(exists){
-		    		mod.status = [1, 1]
+		    		mod.status = [1, 1, completeFile]
 		    	} else {
-		    		mod.status = [0, 1]
+		    		mod.status = [0, 1, completeFile]
 		    	}
 		    	resolve(mod)
 			})	
@@ -62,17 +62,20 @@ export  var module_status = async function(params, mod){
 			let module_dir = mod.folderpath;
 			(async ()=>{
 				const exists = await checkFolderExists(module_dir)
+				let files_complete = [];
 				if (exists){
 					let files = await getFiles(module_dir)
 					let count = 0;
 					for (let j = 0; j < files.length; j++){
 						if(files[j].includes(mod.statusCompleteFilename)){
+
 							count +=1
+							files_complete.push(files[j])
 						}
 					}
-					mod.status = [count, modules.length]
+					mod.status = [count, modules.length, files_complete]
 				} else {
-					mod.status = [0, modules.length]
+					mod.status = [0, modules.length, files_complete]
 				}
 				resolve(mod)
 
