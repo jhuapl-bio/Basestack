@@ -1006,9 +1006,6 @@ export default {
       	changeFile(data){
       		this.$emit('changeFile', data)
       	},
-      	yes(){
-      		console.log(this.selectedHistory.runDir.run_config.primers)
-      	},
       	async rmAttribute(value, target){
       		try{	
       			let res = await this.$swal({

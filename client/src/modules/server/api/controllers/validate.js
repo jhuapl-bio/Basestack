@@ -348,7 +348,6 @@ export  function convert_custom(val, map, target){ //convert legacy runs to obje
 			const val2 = map.filter((d)=>{
 				return d[target] == val[target]
 			})
-			console.log(val2, target, val, val2.length)
 			if (val2.length > 0){
 				return val2[0]
 			}
