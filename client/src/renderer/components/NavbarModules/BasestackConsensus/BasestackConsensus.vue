@@ -314,16 +314,15 @@
 		    	              class="formGroup-input"
 					          type="text"
 					          required
-					          disabled
 						      :state="selectedHistory.runDir.manifest.validation"
 					          placeholder="manifest.txt"
 					    	></b-form-input>
-					    	  <b-form-invalid-feedback 
+					    	<b-form-invalid-feedback 
 					    	  v-b-tooltip.hover
-                        		title="You will need to create it manually on the left or make it directly within the run folder"
+	                    		title="You will need to create it manually on the left or make it directly within the run folder"
 					    	  :state="selectedHistory.runDir.manifest.validation">
 						        manifest.txt not found. 
-						      </b-form-invalid-feedback>
+						    </b-form-invalid-feedback>
 					    	<hr>
 					    	<b-button v-on:click="addManifestRow(0)"  class="btn tabButton" v-if="selectedHistory.runDir.manifest.entries.length ==0 && selectedHistory.custom">
 								<span>
@@ -346,13 +345,14 @@
 					          sticky-header="250px"	
 							>
 						        <template  v-slot:cell(barcode)="row">
+
 							    	<b-form-input
 							          v-model.trim="selectedHistory.runDir.manifest.entries[row.index].barcode"
 							          label="barcode"
 							          @input="changeBarcode($event, row.index)"
 					                  class="formGroup-input"
 							          type="text"
-			           				  :disabled="!isNew"
+			           				  :disabled="!isNew && !overrideManifest"
 						              :state="stateValidationNull(row.item.barcode)"
 							          placeholder="NB01"
 							    	></b-form-input>									 
@@ -364,12 +364,12 @@
 							          @input="changeID($event, row.index)"
 					                  class="formGroup-input"
 							          type="text"
-			           				  :disabled="!isNew"
+			           				  :disabled="!isNew && !overrideManifest"
 							          placeholder="MDHP-00057"
 							          :state="stateManifestID(row.item.id)"							          
 							    	></b-form-input>									 
 							    </template>
-							    <template  v-if="selectedHistory.custom" v-slot:cell(adm)="row">
+							    <template  v-if="overrideManifest || selectedHistory.custom"   v-slot:cell(adm)="row">
 							    	<b-row class="nopadcolumn">
 							    		<b-col sm="2">
 									    	<b-button v-on:click="addManifestRow(row.index)"  class="btn cntrButton" >
@@ -404,7 +404,6 @@
 
 								
 							</b-table>
-							
 						</b-input-group-append>
 					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.minLength">Specify one or more barcode</div>
 					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.stateManifestID">
@@ -415,6 +414,7 @@
 					        	title="One Sample ID must have NTC (No Template Control)" />
 					      	</span>
 						</div>
+						
 					</b-form-group>
 					<b-form-group
 			            label-align-sm="center"
@@ -423,59 +423,57 @@
 			            label-for="filterInput"
 			            class="mb-0 formGroup"
 			           
-			         >
+			         >	
 						<template slot="label">
-						    <span  
+						    <span 
 					        	style="text-align:center"  >
-					        	Define Standard Manifest Scheme
-					        	<font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-					        	title="Select a Barcode Name (e.g. NB) and Sample ID. Increments by 1" />
+					        	Modify Manifest
 				      		</span>
-				      		<span :hidden="!isNew" class="center-align-icon;"
-				            		v-tooltip="{
-							            content: 'Define Default Manifest',
-							            placement: 'top',
-							            classes: ['info'],
-							            trigger: 'hover',
-							            targetClasses: ['it-has-a-tooltip'],
-							            }"
-				            	>
-				            		<font-awesome-icon class="configure"  v-b-toggle.sidebar-right icon="cog" size="sm"  />
-							    </span>		
+				      		<span  class="center-align-icon;"
+			            		v-tooltip="{
+						            content: 'Define Manifest',
+						            placement: 'top',
+						            classes: ['info'],
+						            trigger: 'hover',
+						            targetClasses: ['it-has-a-tooltip'],
+						            }"
+			            	>
+			            		<font-awesome-icon class="configure"  v-b-toggle.sidebar-right icon="cog" size="sm"  />
+						    </span>		
 						</template>
-						<b-sidebar id="sidebar-right" title="Manifest Config" right shadow>
+						<b-sidebar id="sidebar-right" title="Manifest Config" right shadow @shown="overrideManifest=true" @hidden="overrideManifest=false">
+							<h3 style="text-align:center">Create a Baseline Manifest</h3>
 							<b-table
 					          show-empty
 					          small
 					          label=""
 					          stacked
 					          responsive
-					          :hidden="!isNew"
 					          style="width: 100%"
 			                  class="formGroup-input"
 					          :items="[1]"
-					          :fields="['Barcode', 'SampleID', 'Count', 'Adjust']"
+					          :fields="['Barcode', 'SampleID', 'Count', 'Submit']"
 							  sticky-header="300px"						        
 							>
 								<template  v-slot:cell(Barcode)>
-									<b-form-textarea :disabled="!isNew"
+									<b-form-textarea 
 				                 		v-model="placeHolderBarcode"
 				                 		class="formGroup-input"
 				                 	>
 				                	</b-form-textarea>								 
 							    </template>
 							    <template  v-slot:cell(Count)>
-									<b-form-select class="formGroup-input" :disabled="!isNew" v-model="placeHolderManifestCount"   :options="[12, 24, 96]"></b-form-select>							 
+									<b-form-select class="formGroup-input"  v-model="placeHolderManifestCount"   :options="[12, 24, 96]"></b-form-select>							 
 							    </template>
 							    <template  v-slot:cell(SampleID)>
 									<b-form-textarea 
 				                 	v-model="placeHolderSampleID"
-				                 	class="formGroup-input" :disabled="!isNew"
+				                 	class="formGroup-input" 
 				                 	>
 				                	</b-form-textarea>						 
 							    </template>
-							    <template  v-slot:cell(Adjust)>
-									<span :hidden="!isNew" class="center-align-icon;"
+							    <template  v-slot:cell(Submit)>
+									<span class="center-align-icon;"
 					            		v-tooltip="{
 								            content: 'Adjust The Placeholder Manifest',
 								            placement: 'top',
@@ -488,6 +486,18 @@
 								    </span>					 
 							    </template>
 							</b-table>
+							<hr>
+							<div style="text-align:center" :hidden="selectedHistory.custom">
+								<h3 v-if="overrideManifest">Override Saved</h3>
+			            		<font-awesome-icon
+			            		v-tooltip="{
+						            content: 'Adjust manifest mid-run',
+						            placement: 'top',
+						            classes: ['info'],
+						            trigger: 'hover',
+						            targetClasses: ['it-has-a-tooltip'],
+						            }" class="configure"  @click="updateBookmark()" icon="cog" size="sm"  />
+						    </div>
 						</b-sidebar >
 					</b-form-group>
 				</b-col>
@@ -615,7 +625,7 @@
 									'barcoding'
 								]"
 								small
-								style="text-align:center"
+								style="text-align:left"
 							>
 								<template  v-slot:cell(key)="row" >
 									<p style="text-transform: capitalize">{{row.item}}</p>
@@ -625,32 +635,13 @@
 									<b-form-select class="formGroup-input" 
 										v-model="selectedHistory.runDir.run_config[row.item]"  
 										:disabled="!isNew"
-										v-else-if="!customPrimerAdd"  
+										:multiple="(row.item == 'barcoding' ? true : false)"
+										v-else
 										text-field="text"
 										value-field="value"
+										style="text-align:left"
 										:options="modules.basestack_consensus.resources.run_config[row.item].map((x) => { return {text: x.name, value: x}   })">
 									</b-form-select>
-									
-									<b-form-file 
-				                 	 :directory="row.item == 'primers' ? true : false"
-				                 	 v-else
-					                 :no-traverse="true"
-					                 :multiple="row.item == 'primers' ? true : false"
-					          		 :file-name-formatter="formatNames"
-					                 :disabled="!isNew" 
-					                 aria-describedby="seq_file" 
-					                 @change="changeFile(
-					                 {
-					                 	event: $event, 
-					                 	target: `config.modules.basestack_consensus.resources.run_config.${row.item}`,
-										file_target: `modules.basestack_consensus.resources.run_config.${row.item}`,
-										type: row.item == 'primers' ? 'dir' : 'file',
-										sublevel: row.item == 'primers' ? 1 : 0
-					                 })"
-					                 :placeholder="`Choose ${row.item} input`"
-					                 :drop-placeholder="`Drop ${row.item} input`"
-					                 >
-				                	</b-form-file>
 								</template>
 								<template  v-slot:cell(custom)="row">
 									<font-awesome-icon :class="[ 'text-success' ]" 
@@ -683,15 +674,48 @@
 								</template>
 							</b-table>
 						</b-input-group-append>
-						<b-form-checkbox
-					      v-model="customPrimerAdd"
-					      :disabled="!isNew"
-					      v-if="isNew"
-					      :aria-describedby="ariaDescribedby"
-					     
-					    >Define Custom Input
-					    </b-form-checkbox>
+					    <span 
+				        	style="text-align:center"  >
+				        	Modify Config File
+			      		</span>
+			      		<span  class="center-align-icon;"
+		            		v-tooltip="{
+					            content: 'Define Default Primer, Barcoding, or Basecalling',
+					            placement: 'top',
+					            classes: ['info'],
+					            trigger: 'hover',
+					            targetClasses: ['it-has-a-tooltip'],
+					            }"
+		            	>
+		            		<font-awesome-icon class="configure"  v-b-toggle.sidebar-right-run-config icon="cog" size="sm"  />
+					    </span>	
 					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_config.validation.required">Specify valid config information</div>
+					   	<b-sidebar id="sidebar-right-run-config" title="Customize Run Config" right shadow @shown="customPrimerAdd=true" @hidden="customPrimerAdd=false">
+					   		<b-input-group-append v-for="key in ['primers', 'basecalling', 'barcoding']" > 
+					   			<hr>
+					   			<h3 style="text-align: center">{{key}}</h3>
+					   			<br>
+								<b-form-file 
+			                 	 :directory="key == 'primers' ? true : false"
+				                 :no-traverse="true"
+				                 :multiple="key == 'primers' ? true : false"
+				          		 :file-name-formatter="formatNames"
+				                 :disabled="!isNew" 
+				                 aria-describedby="seq_file" 
+				                 @change="changeFile(
+				                 {
+				                 	event: $event, 
+				                 	target: `config.modules.basestack_consensus.resources.run_config.${key}`,
+									file_target: `modules.basestack_consensus.resources.run_config.${key}`,
+									type: key == 'primers' ? 'dir' : 'file',
+									sublevel: key == 'primers' ? 1 : 0
+				                 })"
+				                 :placeholder="`Choose ${key} input`"
+				                 :drop-placeholder="`Drop ${key} input`"
+				                 >
+			                	</b-form-file>
+							</b-input-group-append>
+						</b-sidebar >
 
 					</b-form-group>
 				</b-col>
@@ -782,11 +806,14 @@ export default {
 						key: 'basecalling',
 						name: null
 					}, 
-					barcoding:{
-						key: 'barcoding',
-						custom:false,
-						name: null,
-					},
+					barcoding:[
+						{
+							custom:false,
+							name: null,
+							key: 'barcoding'
+						}
+					],
+					
 					filename: 'run_config.txt'
 				}, 
 				manifest: {
@@ -804,8 +831,7 @@ export default {
 			fastqDir: null,
 			name: null,
 			fastqFiles: [],
-
-
+			overrideManifest: false,
 			state:false,
 
 			primerDir: null,
@@ -952,29 +978,31 @@ export default {
     		}
     	},
     	barcodingFiles: async function(val){
-    		if (this.selectedHistory.runDir.run_config.barcoding.custom){
-    			let root = this.parseFileInput(val)
-    			const primerV = path.basename(root)
-    			const baseP = path.basename(path.dirname(root))
-    			const fullname = `${baseP}/${primerV}`		
-    			try{	
-	    			let response =  await FileService.addSelection({
-						target: `config.modules.basestack_consensus.resources.run_config.barcoding`,
-						file_target: "modules.basestack_consensus.resources.run_config.barcoding",
-						value: { name: fullname, custom: true, path: root},
-						type: 'arr',
-						key: "name"
-					})
-	    		} catch(err){
-	    			console.error(err)
-	    			this.$swal.fire({
-						position: 'center',
-						icon: 'error',
-						showConfirmButton:true,
-		                title:  err.response.data.message
-					});
+    		for (entry in this.selectedHistory.runDir.run_config.barcoding){
+	    		if (entry.custom){
+	    			let root = this.parseFileInput(val)
+	    			const primerV = path.basename(root)
+	    			const baseP = path.basename(path.dirname(root))
+	    			const fullname = `${baseP}/${primerV}`		
+	    			try{	
+		    			let response =  await FileService.addSelection({
+							target: `config.modules.basestack_consensus.resources.run_config.barcoding`,
+							file_target: "modules.basestack_consensus.resources.run_config.barcoding",
+							value: { name: fullname, custom: true, path: root},
+							type: 'arr',
+							key: "name"
+						})
+		    		} catch(err){
+		    			console.error(err)
+		    			this.$swal.fire({
+							position: 'center',
+							icon: 'error',
+							showConfirmButton:true,
+			                title:  err.response.data.message
+						});
+		    		}
 	    		}
-    		}
+	    	}
     	},
     	name: function(val){
     		if (this.isNew){
@@ -982,12 +1010,17 @@ export default {
     		}
     	},
     	selectedHistory: function(val){
+    		console.log(this.overrideManifest)
     		if (!val.custom){
     			this.isNew = false //Change this	
-    			this.manifest_fields[2].thClass ='d-none'
-    			this.manifest_fields[2].tdClass = 'd-none'
-    		} else{
+    		} else {
     			this.isNew = true
+    		}
+    		if (!this.overrideManifest){
+    			// this.manifest_fields[2].thClass ='d-none'
+    			// this.manifest_fields[2].tdClass = 'd-none'
+    		} else{
+    			
     			this.manifest_fields[2].thClass = null
     			this.manifest_fields[2].tdClass = null
     		}
@@ -1091,7 +1124,7 @@ export default {
 			this.$set(this.selectedHistory.runDir.manifest.entries, index, {id:val, barcode:this.selectedHistory.runDir.manifest.entries[index].barcode})
 		},
 		addManifestRow(index){
-			this.selectedHistory.runDir.manifest.entries.splice(index, 0, [{id:null, barcode:null}])
+			this.selectedHistory.runDir.manifest.entries.splice(index, 0, {id:null, barcode:null})
 		},
 		rmManifestRow(index){
 			this.selectedHistory.runDir.manifest.entries.splice(index, 1)
@@ -1332,7 +1365,7 @@ export default {
 				});
 	        })		
 		},
-		bookmarkParams: async function(){
+		bookmarkParams: async function(type){
 			if (this.$v.$invalid){
 				this.submitStatus = 'Warning'
 				this.sendSubmitMessage()
@@ -1342,6 +1375,7 @@ export default {
 	        		runDir: this.selectedHistory.runDir,
 	        		primerDir: this.selectedHistory.primerDir,
 	        		name: this.selectedHistory.name,
+	        		type: type
 	        	}).then((response)=>{
 	        		this.bookmark = !this.bookmark
 	        		this.history = null
@@ -1447,6 +1481,16 @@ export default {
 	        else {
         		this.submitStatus = 'OK'
         		await this.bookmarkParams('made').catch(() => null);
+	        }
+		},
+		updateBookmark: async function(){
+			if (this.$v.$invalid) {
+	          this.submitStatus = 'ERROR'
+	          this.sendSubmitMessage()
+	        }
+	        else {
+        		this.submitStatus = 'OK'
+        		await this.bookmarkParams('update').catch(() => null);
 	        }
 		},
 		loadHistory: async function(){

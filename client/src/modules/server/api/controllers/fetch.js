@@ -281,6 +281,7 @@ export async function fetch_histories(){
 		const fullpathHistory = path.join(historyPath, histories[i])
 
 		let validHistory = await validateHistory(fullpathHistory,histories[i])
+		console.log(validHistory, fullpathHistory)
 		if(validHistory){
 			try{
 				await readFile(path.join(fullpathHistory, "report-meta.json"), false).then(async (content, error)=>{
@@ -298,9 +299,10 @@ export async function fetch_histories(){
 				    	contentobj.runDir.run_config.primers = convert_custom(contentobj.runDir.run_config.primers, 
 				    		store.config.modules.basestack_consensus.resources.run_config.primers, 'name') 	
 				    	contentobj.runDir.run_config.basecalling = convert_custom(contentobj.runDir.run_config.basecalling,
-				    		store.config.modules.basestack_consensus.resources.run_config.basecalling, 'name') 	
+				    		store.config.modules.basestack_consensus.resources.run_config.basecalling, 'name') 
+				    	console.log(contentobj.runDir.run_config.barcoding)	
 				    	contentobj.runDir.run_config.barcoding = convert_custom(contentobj.runDir.run_config.barcoding, 
-				    		store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name') 	
+				    		store.config.modules.basestack_consensus.resources.run_config.barcoding, 'name', 'arr') 	
 						contentobj.fullpathHistory = fullpathHistory
 						response.push(contentobj)
 					}
