@@ -147,7 +147,16 @@
 					>
 						<template  v-slot:cell(modules_complete)="row">
 							<div v-if="row.item.status" style="text-align:center; margin:auto">
-				                <span >{{row.item.status.join("/")}}</span>
+				                <span 
+				                v-tooltip="{
+							            content: `${Array.isArray(row.item.status[2]) ? row.item.status[2].join('<br>') : ''}`,
+							            placement: 'top',
+							            classes: ['info'],
+							            trigger: 'hover',
+							            targetClasses: ['it-has-a-tooltip'],
+							            }"
+
+				                >{{row.item.status[0]}}/{{row.item.status[1]}}</span>
 						    </div>							 
 					    </template>
 					    <template  v-slot:cell(status)="row">
@@ -616,6 +625,7 @@
 				      		</span>
 						</template>
 						<b-input-group-append id="run_config">
+
 							<b-table
 								id="run_config_table"
 								:fields="run_config_fields"
@@ -634,8 +644,8 @@
 									<b-alert show v-if="selectedHistory.runDir.run_config[row.item].not_found && !isNew" variant="warning">{{selectedHistory.runDir.run_config[row.item].name}} - Unsaved {{row.item}}</b-alert>
 									<b-form-select class="formGroup-input" 
 										v-model="selectedHistory.runDir.run_config[row.item]"  
-										:disabled="!isNew"
 										:multiple="(row.item == 'barcoding' ? true : false)"
+										:disabled="!isNew && !customPrimerAdd"
 										v-else
 										text-field="text"
 										value-field="value"
@@ -649,10 +659,10 @@
 										icon="check" 
 									/>
 									<font-awesome-icon :class="['text-warning']" 
-										v-else-if="selectedHistory.runDir.run_config[row.item].name && selectedHistory.runDir.run_config[row.item].custom && selectedHistory.runDir.run_config[row.item].not_found "  
+										v-else-if="(Array.isArray(selectedHistory.runDir.run_config[row.item]) && selectedHistory.runDir.run_config[row.item].some((d)=>{ return d.not_found }))  || selectedHistory.runDir.run_config[row.item].name && selectedHistory.runDir.run_config[row.item].custom && selectedHistory.runDir.run_config[row.item].not_found "  
 										icon="times-circle"
 										v-tooltip="{
-								            content: `${selectedHistory.runDir.run_config[row.item].name} not present in list of options, consider registering it via the custom toggle`,
+								            content: `${Array.isArray(selectedHistory.runDir.run_config[row.item]) ? selectedHistory.runDir.run_config[row.item].filter((d)=>{ return d.not_found }).map((d)=>{return d.name}) : selectedHistory.runDir.run_config[row.item].name} not present in list of options, consider registering it via the custom toggle`,
 								            placement: 'top',
 								            classes: ['text-info', 'bg-dark'],
 								            trigger: 'hover',
@@ -660,7 +670,7 @@
 									/>
 								</template>
 								<template  v-slot:cell(remove)="row">
-									<span v-if="selectedHistory.runDir.run_config[row.item].custom && !selectedHistory.runDir.run_config[row.item].not_found && isNew"   v-on:click="rmAttribute(selectedHistory.runDir.run_config[row.item], row.item ).then((val)=>{ selectedHistory.runDir.run_config[row.item] = val});"  style="justify-content: right !important" class="center-align-icon justify-content-end" 
+									<span v-if="( selectedHistory.runDir.run_config[row.item].custom && !selectedHistory.runDir.run_config[row.item].not_found  || (Array.isArray(selectedHistory.runDir.run_config[row.item]) && selectedHistory.runDir.run_config[row.item].some((d)=>{ return d.custom && !d.not_found }))) && isNew"   v-on:click="rmAttribute(selectedHistory.runDir.run_config[row.item], row.item ).then((val)=>{ selectedHistory.runDir.run_config[row.item] = []});"  style="justify-content: right !important" class="center-align-icon justify-content-end" 
 					            		v-tooltip="{
 								            content: 'Remove',
 								            placement: 'top',
@@ -690,7 +700,7 @@
 		            		<font-awesome-icon class="configure"  v-b-toggle.sidebar-right-run-config icon="cog" size="sm"  />
 					    </span>	
 					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_config.validation.required">Specify valid config information</div>
-					   	<b-sidebar id="sidebar-right-run-config" title="Customize Run Config" right shadow @shown="customPrimerAdd=true" @hidden="customPrimerAdd=false">
+					   	<b-sidebar id="sidebar-right-run-config" title="Customize Run Config"  left shadow @shown="customPrimerAdd=true" @hidden="customPrimerAdd=false">
 					   		<b-input-group-append v-for="key in ['primers', 'basecalling', 'barcoding']" > 
 					   			<hr>
 					   			<h3 style="text-align: center">{{key}}</h3>
@@ -700,7 +710,6 @@
 				                 :no-traverse="true"
 				                 :multiple="key == 'primers' ? true : false"
 				          		 :file-name-formatter="formatNames"
-				                 :disabled="!isNew" 
 				                 aria-describedby="seq_file" 
 				                 @change="changeFile(
 				                 {
@@ -715,6 +724,17 @@
 				                 >
 			                	</b-form-file>
 							</b-input-group-append>
+							<div style="text-align:center" :hidden="selectedHistory.custom">
+								<h3 v-if="customPrimerAdd">Override Saved</h3>
+			            		<font-awesome-icon
+			            		v-tooltip="{
+						            content: 'Adjust run config mid-run',
+						            placement: 'top',
+						            classes: ['info'],
+						            trigger: 'hover',
+						            targetClasses: ['it-has-a-tooltip'],
+						            }" class="configure"  @click="updateBookmark()" icon="cog" size="sm"  />
+						    </div>
 						</b-sidebar >
 
 					</b-form-group>
@@ -1010,7 +1030,6 @@ export default {
     		}
     	},
     	selectedHistory: function(val){
-    		console.log(this.overrideManifest)
     		if (!val.custom){
     			this.isNew = false //Change this	
     		} else {
@@ -1039,9 +1058,6 @@ export default {
       	changeFile(data){
       		this.$emit('changeFile', data)
       	},
-      	yes(){
-      		console.log(this.selectedHistory.runDir.run_config.primers)
-      	},
       	async rmAttribute(value, target){
       		try{	
       			let res = await this.$swal({
@@ -1054,19 +1070,35 @@ export default {
 			        confirmButtonText: 'Yes, remove it!'
 		      	})
 		        if (res.value) {
-	    			let response = await FileService.rmSelection({
-	    				target: `config.modules.basestack_consensus.resources.run_config.${target}`,
-						file_target: `modules.basestack_consensus.resources.run_config.${target}`,
-						value: value,
-						type: 'arr',
-						key: "name"
-					})
-					this.$swal({
-				        title: `Removed attribute`,
-				        type: 'success',
-				        confirmButtonColor: '#2b57b9',
-			      	})
-			      	return response.data.data
+		        	let value_list  = [];
+		        	if (Array.isArray(value)){
+		        		value_list = value.filter((d)=>{
+		        			return d.custom
+		        		})
+		        	} else {
+		        		value_list = [value]
+		        	}
+		        	let promise_all = [];
+		        	value_list.forEach((value)=>{
+		        		promise_all.push(
+		        			FileService.rmSelection({
+			    				target: `config.modules.basestack_consensus.resources.run_config.${target}`,
+								file_target: `modules.basestack_consensus.resources.run_config.${target}`,
+								value: value,
+								type: 'arr',
+								key: "name"
+							})
+		        		)
+		        	})
+		        	Promise.all(promise_all).then((response)=>{
+		        		this.$swal({
+					        title: `Removed attribute ${response}`,
+					        type: 'success',
+					        confirmButtonColor: '#2b57b9',
+				      	})
+				      	console.log("end", new Date())
+				      	return response
+		        	})	
 	    		} else {
 	    			return value
 	    		}
@@ -1418,7 +1450,7 @@ export default {
 		        showCancelButton: true,
 		        confirmButtonColor: '#2b57b9',
 		        cancelButtonColor: '#a60139',
-		        confirmButtonText: 'Yes, cancel it!'
+		        confirmButtonText: 'Yes, remove it!'
 		      }).then((res) => {
 		        if (res.value) {
 			        FileService.removeBookmark({
