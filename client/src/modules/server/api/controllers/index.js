@@ -301,6 +301,7 @@ export async function rm_selections(params){
 		meta = JSON.parse(meta)
 		let depth  = get(params.file_target, meta, params.type)
 		let st = get(params.target, store, params.type) 
+		console.log("index start parse", new Date(), params.value)
 		let found = false
 		if (params.key){
 			depth = depth.filter((d)=>{
@@ -319,11 +320,13 @@ export async function rm_selections(params){
 			})
 		}
 		set(params.target, st, store, params.type)
+		console.log("index start writing", new Date(),  params.value)
 		await ammendJSON({
 			value: depth,
 			file: store.meta.userMeta,
 			attribute: params.file_target
 		})	
+		console.log("index complete writing", new Date(),  params.value)
 		let obj = {custom: false}
 		obj[params.target]  = null
 		return obj

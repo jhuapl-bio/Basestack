@@ -1033,7 +1033,6 @@ export default {
     		}
     	},
     	selectedHistory: function(val){
-    		console.log(this.overrideManifest)
     		if (!val.custom){
     			this.isNew = false //Change this	
     		} else {
@@ -1061,9 +1060,6 @@ export default {
       	},
       	changeFile(data){
       		this.$emit('changeFile', data)
-      	},
-      	yes(){
-      		console.log(this.selectedHistory.runDir.run_config.primers)
       	},
       	async rmAttribute(value, target){
       		try{	
