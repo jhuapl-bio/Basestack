@@ -1278,7 +1278,6 @@ export default {
 	        }
 		},
 		async setToggle(dir, dirValue, dispatch, dispatchValue){
-			// this.data[dispatch] = dispatchValue
 			this.updateData()
 			dir = dirValue
 		},
