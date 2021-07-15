@@ -260,6 +260,13 @@ var menu = Menu.buildFromTemplate([
             }
           },
           {
+            label: "Enable Hypervisor",
+            click(){
+              let bat = exec("powershell -Command \"Start-Process powershell \'bcdedit /set hypervisorlaunchtype auto\' -Verb runAs \"", { cwd: app.getPath('desktop'), detached:true }); 
+              spawned_logs(bat, {throwError: true, process: "Add docker-users"})
+            }
+          },
+          {
             label: "Show System Info",
             click(){
               // "net localgroup docker-users %USERNAME% /add"
