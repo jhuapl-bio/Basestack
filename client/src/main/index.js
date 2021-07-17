@@ -195,7 +195,7 @@ var menu = Menu.buildFromTemplate([
               {
                 label: '1. Download WSL2',
                 click() { 
-                let batDownload = exec("curl.exe https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi -o wsl_installer.msi", { cwd: app.getPath('desktop') }); 
+                let batDownload = exec("curl.exe https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi -o wsl_update_x64.msi", { cwd: app.getPath('desktop') }); 
                 batDownload.stderr.on('data', (data) => {
                     logger.error(`${data.toString()} err`);
                     mainWindow.webContents.send('mainNotification', {
