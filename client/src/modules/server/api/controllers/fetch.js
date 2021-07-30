@@ -390,7 +390,6 @@ export async function fetch_status(){
 	}
 	let dockers;
 	let errors = [];
-
 	try{
 		let re = await fetch_modules()
 		response.images = re.images

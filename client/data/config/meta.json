@@ -110,9 +110,11 @@
             "icon": "dna",
             "component": "BasestackConsensus",
             "module": true,
-            "status": null,
+            "objectname": "BasestackConsensus",
+            "objectfile": "modules/consensus",
             "tooltip": "Generate consensus sequences and receive a report.",
             "image": "jhuaplbio/basestack_consensus",
+            "status": null,
             "meta": "${writePath}/basestack_consensus/meta.json",
             "config": {
                 "estimated_size": 14500,
@@ -188,13 +190,20 @@
             "title": "RAMPART",
             "icon": "viruses",
             "component": "RAMPART",
-            "module": true,
+            "module": false,
             "status": null,
+            "objectname": "RAMPART",
+            "objectfile": "modules/rampart",
             "tooltip": "Fast annotation of input fastq files using the artic network",
             "image": "jhuaplbio/basestack_consensus",
+            "pipelines": {
+                "rampart": {
+                    "status": null,
+                    "cmd": null
+                }
+            },
             "meta": "${writePath}/rampart/meta.json",
             "config": {
-                "annotationsPath": "",
                 "protocolDir": "${resourcePath}/rampart/protocols",
                 "basePath": "${resourcePath}/rampart",
                 "initial": false
@@ -205,8 +214,10 @@
             "title": "Tutorial",
             "icon": "video",
             "component": "Tutorial",
-            "module": true,
+            "module": false,
             "status": null,
+            "objectname": "Tutorial",
+            "objectfile": "modules/tutorial",
             "image": "basestack_tutorial",
             "meta": "${writePath}/basestack_tutorial/meta.json",
             "config": {
@@ -219,7 +230,41 @@
                 "basePath": "${resourcePath}/basestack_tutorial",
                 "force": true,
                 "initial": true
+            },
+            "pipelines": {
+                "basestack_tutorial": {
+                    "status": null,
+                    "cmd": null
+                }
             }
+        },
+        "basestack_mytax": {
+            "name": "basestack_mytax",
+            "title": "Mytax",
+            "icon": "dna",
+            "component": "Mytax",
+            "module": false,
+            "status": null,
+            "objectname": "Mytax",
+            "objectfile": "modules/mytax",
+            "image": "jhuaplbio/basestack_mytax",
+            "meta": "${writePath}/basestack_mytax/meta.json",
+            "config": {
+                "base": "http://localhost",
+                "port": 8088,
+                "initial": false
+            },
+            "pipelines": {
+                "basestack_mytax_visualization": {
+                    "status": null,
+                    "cmd": "bash -c 'cd sunburst && python3 -m http.server 8088' "
+                },
+                "basestack_mytax_classify":{
+                    "status": null,
+                    "cmd": "kraken -v "
+                }
+            }
+            
         },
         "basestack_mytax": {
             "name": "basestack_mytax",

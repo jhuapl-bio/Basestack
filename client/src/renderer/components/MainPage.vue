@@ -171,7 +171,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 0,
+    		tab: 5,
 	        entries: null,
 	        resources: null,
 	        docker: {},
@@ -363,6 +363,7 @@ export default {
 				})
 			}
 			const modules = response.data.data.modules.entries
+			console.log(modules)
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
 			let completed = response.data.data.images.completed
