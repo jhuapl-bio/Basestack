@@ -371,7 +371,6 @@ export async function fetch_status(){
 	}
 	let dockers;
 	let errors = [];
-
 	try{
 		let re = await fetch_modules()
 		response.images = re.images
@@ -386,6 +385,7 @@ export async function fetch_status(){
 		logger.error(err)
 		errors.push(err)
 	}
+	
 
 	try{
 		let docker_status = await fetch_docker_status()
@@ -433,9 +433,10 @@ export async function fetch_modules(){
 			if (value.module && store.modules[key]){
 				store.config.modules[key].status = store.modules[key].status
 				store.config.modules[key].status.stream = store.config.modules[key].status.stream.splice(-200)
-				store.config.modules[key].status.installed = store.config.images[value.image].status.installed
+				store.config.modules[key].installed = store.config.images[value.image].status.installed
 			}
 		}
+		
 		return {
 			images: {
 				entries: store.config.images,

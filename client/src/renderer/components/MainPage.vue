@@ -22,7 +22,7 @@
           	v-bind:key="entry.name"
           	class="ma-0 pa-0"
             > 
-            <template v-slot:title v-if="(!entry.module || entry.status.installed )  && initial">
+            <template v-slot:title v-if="(!entry.module || entry.installed )  && initial">
             	<div class="tab-parent" style="display: flex; justify-content: space-between;"
 				>	
 					<div class="tab-item" style="">
@@ -69,7 +69,7 @@
 		            </div>
 	        	</div>
   			</template>
-  			<div v-if="(!entry.module || entry.status.installed )  && initial">
+  			<div v-if="(!entry.module || entry.installed )  && initial">
   				<h2 class="header" style="text-align:center">{{entry.title}}
 			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
 			        :title="entry.tooltip"
@@ -129,6 +129,7 @@ import IGV from '@/components/NavbarModules/IGV/IGV'
 import RAMPART from '@/components/NavbarModules/RAMPART/RAMPART'
 import BasestackConsensus from "@/components/NavbarModules/BasestackConsensus/BasestackConsensus"
 import ModuleInstall from "@/components/NavbarModules/ModuleInstall/ModuleInstall"
+import Mytax from "@/components/NavbarModules/Mytax/Mytax"
 import Logs from "@/components/NavbarModules/Logs/Logs"
 import About from "@/components/NavbarModules/About/About"
 import Tutorial from "@/components/NavbarModules/Tutorial/Tutorial"
@@ -141,6 +142,7 @@ export default {
 	components:{
 		Introduction,
 		System,
+		Mytax,
 		Nextstrain,
 		RAMPART,
 		IGV, 
@@ -164,7 +166,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 0,
+    		tab: 5,
 	        entries: null,
 	        resources: null,
 	        docker: {},
@@ -357,8 +359,8 @@ export default {
 					console.error(`${err} in initializing the backend service`)
 				})
 			}
-			// console.log(images)
 			const modules = response.data.data.modules.entries
+			console.log(modules)
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
 			let completed = response.data.data.images.completed

@@ -20,21 +20,21 @@ const { getPrimerDirsVersions, fetch_protocols, fetch_primers, fetch_videos, fet
 const { writeFolder, writeFile, ammendJSON, readFile, get, set } = require("./IO.js")
 const fs  = require("fs")
 const fs_promise = require("fs").promises
-const containerNames = ['rampart','basestack_consensus', 'basestack_tutorial']
+const containerNames = ['rampart','basestack_consensus', 'basestack_tutorial', 'basestack_mytax']
 const moment = require('moment');
 const { DockerObj } = require("../modules/docker.js")
-
-const { Tutorial } = require("../modules/tutorial")
+// const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
-const { RAMPART } = require('../modules/rampart')
+// const { RAMPART } = require('../modules/rampart')
+// const { BasestackMytax } = require('../modules/mytax')
+
 const {docker_init} = require("./docker.js")
 const lodash = require("lodash")
 
 export async function initialize(params){
 	// logger.info("%s <------ initialize", store.meta)
 	try{
-		// let re = await setup_data()''
-
+		// let re = await setup_data()''f
 		store.meta.ready  = false
 		let userMeta = path.join(store.meta.writePath, "meta.json")
 		let metaExists = await checkFileExist(store.meta.writePath, "meta.json", true)
@@ -71,6 +71,7 @@ export async function initialize(params){
 		}
 		store.dockerConfig = meta.dockerConfig
 		store.docker = await docker_init();
+		console.log("fetching")
 		let response = await fetch_modules()
 		for (const [key, image] of Object.entries(store.config.images)){
 			if (!meta.images || !meta.images[key]){
@@ -91,7 +92,6 @@ export async function initialize(params){
 						}
 					}
 				}
-				
 			}
 		}
 		let tag = "name"
@@ -113,11 +113,41 @@ export async function initialize(params){
 				}
 				tag = "name"
 				const merged  = lodash.mergeWith( value.resources, meta.modules[key].resources, customizer)
-				let obj = await initialize_module_object(container_name)
-				if (value.config.initial && response.images.entries[value.image].installed){
-					let response = await obj.cancel()
-					let response_start = await start_module({module: container_name, tag: "latest"})
+				let objectname = value.objectname
+				let objectfile = value.objectfile
+				if (! objectname){
+					objectname = value.name
 				}
+				if (! objectfile ) {
+					objectfile = `./modules/${objectname}`
+				}
+				const { docker } = require(`../${objectfile}`)
+				store.factory[value.name] = new docker()
+				let obj = await initialize_module_object(value)
+				// for (const [pipeline, conf] of Object.entries(value.pipelines)){
+				// 	const { docker } = require(`../${objectfile}`)
+				// 	store.factory[pipeline] = new docker()
+				// 	let obj = await initialize_module_object(value)
+				// }
+
+				// if (value.config.initial && response.images.entries[value.image].status.installed){
+				// 	let response2 = await obj.cancel()
+				// 	let response_start = await start_module({module: container_name, tag: "latest"})
+				// }
+				// if (value.submodules){
+				// 	for (const [key2, value2] of Object.entries(value.submodules)){
+				// 		let obj = await initialize_module_object(value2)
+				// 		// console.log("______")
+				// 		// console.log(value2.config, key2, response.images.entries[value.image].status.installed, response.images.entries[value.image])
+				// 		// console.log("______")
+				// 		// if (value2.config.initial && response.images.entries[value.image].status.installed){
+				// 		// 	console.log("key2______")
+				// 		// 	let response2 = await obj.cancel()
+				// 		// 	let response_start = await start_module({module: key2, tag: "latest"})
+				// 		// }
+
+				// 	}
+				// }
 			}	
 		}
 		await ammendJSON({
@@ -128,6 +158,7 @@ export async function initialize(params){
 			logger.error(err)
 			throw err
 		})
+		
 		store.meta.ready = true
 		return response
 	} catch(err){
@@ -163,16 +194,15 @@ export async function updateDockerSocket(socket){
 }
 
 
-async function initialize_module_object(container_name){
+async function initialize_module_object(container){
 	let obj;
-	if (container_name == 'rampart'){
-		obj  = new DockerObj('jhuaplbio/basestack_consensus', 'rampart', new RAMPART());
-	} else if (container_name == 'basestack_tutorial'){
-		obj = new DockerObj('basestack_tutorial', 'basestack_tutorial', new Tutorial());
-	} else if (container_name == 'basestack_consensus'){
-		obj  = new DockerObj('jhuaplbio/basestack_consensus', 'basestack_consensus', new BasestackConsensus());
-	} 
-
+	let container_name = container.name
+	let objectname = container.objectname
+	if (! objectname){
+		objectname = container.name
+	}
+	console.log("new init module object", container)
+	obj = new DockerObj(container.image, container.name, store.factory[container.name])
 	obj.config = store.config.modules[container_name]
 	store.modules[container_name]  = obj
 	store.statusIntervals.modules[container_name] = null
@@ -187,13 +217,15 @@ async function initialize_module_object(container_name){
 
 export async function start_module(params){
 	let container_name;
+	console.log(container_name)
 	try{
 		container_name = params.module
+		console.log(params)
 		let obj; 
 		if (store.modules[container_name]){
 			obj = store.modules[container_name]
 		} else {
-			obj = await initialize_module_object(container_name)
+			obj = await initialize_module_object(params)
 		}
 		let response = await obj.start(params)
 		store.modules[container_name] = obj;
