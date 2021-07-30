@@ -51,6 +51,21 @@
                 }
 	            
             }
+        },
+        "jhuaplbio/basestack_mytax": {
+            "status": null,
+            "name": "jhuaplbio/basestack_mytax",
+            "title": "Mytax",
+            "estimated_size": 9.5,
+            "private": false,
+            "tags": [],
+            "installation": {
+                "type": "online",
+                "file": null,
+                "active": false,
+                "resources": null,
+                "path": "jhuaplbio/basestack_mytax"
+            }
         }
     },
     "modules": {
@@ -78,9 +93,11 @@
             "icon": "dna",
             "component": "BasestackConsensus",
             "module": true,
-            "status": null,
+            "objectname": "BasestackConsensus",
+            "objectfile": "modules/consensus",
             "tooltip": "Generate consensus sequences and receive a report.",
             "image": "jhuaplbio/basestack_consensus",
+            "status": null,
             "meta": "${writePath}/basestack_consensus/meta.json",
             "config": {
                 "estimated_size": 14500,
@@ -90,60 +107,77 @@
             },
             "resources": {
                 "run_config":{
-                    "barcoding": [
-                        {"name": "barcode_arrs_16s.cfg", "custom": false},
-                        {"name": "barcode_arrs_dual_nb24_pcr96.cfg", "custom": false},
-                        {"name": "barcode_arrs_lwb.cfg", "custom": false},
-                        {"name": "barcode_arrs_nb12.cfg", "custom": false},
-                        {"name": "barcode_arrs_nb24.cfg", "custom": false},
-                        {"name": "barcode_arrs_nb96.cfg", "custom": false},
-                        {"name": "barcode_arrs_pcr12.cfg", "custom": false},
-                        {"name": "barcode_arrs_pcr96.cfg", "custom": false},
-                        {"name": "barcode_arrs_rab.cfg", "custom": false},
-                        {"name": "barcode_arrs_rbk096.cfg", "custom": false},
-                        {"name": "barcode_arrs_rbk4.cfg", "custom": false},
-                        {"name": "barcode_arrs_rbk.cfg", "custom": false},
-                        {"name": "barcode_arrs_rlb.cfg", "custom": false},
-                        {"name": "barcode_arrs_vmk2.cfg", "custom": false},
-                        {"name": "barcode_arrs_vmk.cfg", "custom": false},
-                        {"name": "configuration.cfg", "custom": false},
-                        {"name": "configuration_dual.cfg", "custom": false}
-                    ],
-                    "basecalling" : [
-                        {"name": "dna_r10.3_450bps_fast.cfg", "custom": false},
-                        {"name": "dna_r10.3_450bps_fast_prom.cfg", "custom": false},
-                        {"name": "dna_r10.3_450bps_hac.cfg", "custom": false},
-                        {"name": "dna_r10.3_450bps_hac_prom.cfg", "custom": false},
-                        {"name": "dna_r10_450bps_fast.cfg", "custom": false},
-                        {"name": "dna_r10_450bps_hac.cfg", "custom": false},
-                        {"name": "dna_r9.4.1_450bps_fast.cfg", "custom": false},
-                        {"name": "dna_r9.4.1_450bps_fast_prom.cfg", "custom": false},
-                        {"name": "dna_r9.4.1_450bps_hac.cfg", "custom": false},
-                        {"name": "dna_r9.4.1_450bps_hac_prom.cfg", "custom": false},
-                        {"name": "dna_r9.4.1_450bps_hac_prom_fw205.cfg", "custom": false},
-                        {"name": "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg", "custom": false},
-                        {"name": "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac_prom.cfg", "custom": false},
-                        {"name": "dna_r9.5_450bps_1d2_raw.cfg", "custom": false},
-                        {"name": "dna_r9.5_450bps.cfg", "custom": false},
-                        {"name": "rna_r9.4.1_70bps_fast.cfg", "custom": false},
-                        {"name": "rna_r9.4.1_70bps_fast_prom.cfg", "custom": false},
-                        {"name": "rna_r9.4.1_70bps_hac.cfg", "custom": false},
-                        {"name": "rna_r9.4.1_70bps_hac_prom.cfg", "custom": false}
-                    ],
-                    "primers": [
-                        {
-                            "name": "nCoV-2019/V3",
-                            "custom": false
-                        },
-                        {
-                            "name": "nCoV-2019/V2",
-                            "custom": false
-                        },
-                        {
-                            "name": "nCoV-2019/V1",
-                            "custom": false
-                        }
-                    ]
+                    "barcoding": {
+                        "items": [
+                            {"name": "barcode_arrs_16s.cfg", "custom": false},
+                            {"name": "barcode_arrs_dual_nb24_pcr96.cfg", "custom": false},
+                            {"name": "barcode_arrs_lwb.cfg", "custom": false},
+                            {"name": "barcode_arrs_nb12.cfg", "custom": false},
+                            {"name": "barcode_arrs_nb24.cfg", "custom": false},
+                            {"name": "barcode_arrs_nb96.cfg", "custom": false},
+                            {"name": "barcode_arrs_pcr12.cfg", "custom": false},
+                            {"name": "barcode_arrs_pcr96.cfg", "custom": false},
+                            {"name": "barcode_arrs_rab.cfg", "custom": false},
+                            {"name": "barcode_arrs_rbk096.cfg", "custom": false},
+                            {"name": "barcode_arrs_rbk4.cfg", "custom": false},
+                            {"name": "barcode_arrs_rbk.cfg", "custom": false},
+                            {"name": "barcode_arrs_rlb.cfg", "custom": false},
+                            {"name": "barcode_arrs_vmk2.cfg", "custom": false},
+                            {"name": "barcode_arrs_vmk.cfg", "custom": false},
+                            {"name": "configuration.cfg", "custom": false},
+                            {"name": "configuration_dual.cfg", "custom": false}
+                        ],
+                        "type": "string",
+                        "element": "select",
+                        "required": true,
+                        "customizable": true
+                        
+                    },
+                    "basecalling" : {
+                        "items": [
+                            {"name": "dna_r10.3_450bps_fast.cfg", "custom": false},
+                            {"name": "dna_r10.3_450bps_fast_prom.cfg", "custom": false},
+                            {"name": "dna_r10.3_450bps_hac.cfg", "custom": false},
+                            {"name": "dna_r10.3_450bps_hac_prom.cfg", "custom": false},
+                            {"name": "dna_r10_450bps_fast.cfg", "custom": false},
+                            {"name": "dna_r10_450bps_hac.cfg", "custom": false},
+                            {"name": "dna_r9.4.1_450bps_fast.cfg", "custom": false},
+                            {"name": "dna_r9.4.1_450bps_fast_prom.cfg", "custom": false},
+                            {"name": "dna_r9.4.1_450bps_hac.cfg", "custom": false},
+                            {"name": "dna_r9.4.1_450bps_hac_prom.cfg", "custom": false},
+                            {"name": "dna_r9.4.1_450bps_hac_prom_fw205.cfg", "custom": false},
+                            {"name": "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg", "custom": false},
+                            {"name": "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac_prom.cfg", "custom": false},
+                            {"name": "dna_r9.5_450bps_1d2_raw.cfg", "custom": false},
+                            {"name": "dna_r9.5_450bps.cfg", "custom": false},
+                            {"name": "rna_r9.4.1_70bps_fast.cfg", "custom": false},
+                            {"name": "rna_r9.4.1_70bps_fast_prom.cfg", "custom": false},
+                            {"name": "rna_r9.4.1_70bps_hac.cfg", "custom": false},
+                            {"name": "rna_r9.4.1_70bps_hac_prom.cfg", "custom": false}
+                        ],
+                        "type": "string",
+                        "element": "select",
+                        "required": true
+                    },
+                    "primers": { 
+                        "items": [
+                            {
+                                "name": "nCoV-2019/V3",
+                                "custom": false
+                            },
+                            {
+                                "name": "nCoV-2019/V2",
+                                "custom": false
+                            },
+                            {
+                                "name": "nCoV-2019/V1",
+                                "custom": false
+                            }
+                        ],
+                        "type": "string",
+                        "element": "multi-select",
+                        "required": true
+                    }
                 }
             }
         },
@@ -152,13 +186,20 @@
             "title": "RAMPART",
             "icon": "viruses",
             "component": "RAMPART",
-            "module": true,
+            "module": false,
             "status": null,
+            "objectname": "RAMPART",
+            "objectfile": "modules/rampart",
             "tooltip": "Fast annotation of input fastq files using the artic network",
             "image": "jhuaplbio/basestack_consensus",
+            "pipelines": {
+                "rampart": {
+                    "status": null,
+                    "cmd": null
+                }
+            },
             "meta": "${writePath}/rampart/meta.json",
             "config": {
-                "annotationsPath": "",
                 "protocolDir": "${resourcePath}/rampart/protocols",
                 "basePath": "${resourcePath}/rampart",
                 "initial": false
@@ -169,8 +210,10 @@
             "title": "Tutorial",
             "icon": "video",
             "component": "Tutorial",
-            "module": true,
+            "module": false,
             "status": null,
+            "objectname": "Tutorial",
+            "objectfile": "modules/tutorial",
             "image": "basestack_tutorial",
             "meta": "${writePath}/basestack_tutorial/meta.json",
             "config": {
@@ -183,7 +226,41 @@
                 "basePath": "${resourcePath}/basestack_tutorial",
                 "force": true,
                 "initial": true
+            },
+            "pipelines": {
+                "basestack_tutorial": {
+                    "status": null,
+                    "cmd": null
+                }
             }
+        },
+        "basestack_mytax": {
+            "name": "basestack_mytax",
+            "title": "Mytax",
+            "icon": "dna",
+            "component": "Mytax",
+            "module": false,
+            "status": null,
+            "objectname": "Mytax",
+            "objectfile": "modules/mytax",
+            "image": "jhuaplbio/basestack_mytax",
+            "meta": "${writePath}/basestack_mytax/meta.json",
+            "config": {
+                "base": "http://localhost",
+                "port": 8088,
+                "initial": false
+            },
+            "pipelines": {
+                "basestack_mytax_visualization": {
+                    "status": null,
+                    "cmd": "bash -c 'cd sunburst && python3 -m http.server 8088' "
+                },
+                "basestack_mytax_classify":{
+                    "status": null,
+                    "cmd": "kraken -v "
+                }
+            }
+            
         },
         "igv": {
             "name": "igv",
