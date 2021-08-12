@@ -110,11 +110,9 @@
             "icon": "dna",
             "component": "BasestackConsensus",
             "module": true,
-            "objectname": "BasestackConsensus",
-            "objectfile": "modules/consensus",
+            "status": null,
             "tooltip": "Generate consensus sequences and receive a report.",
             "image": "jhuaplbio/basestack_consensus",
-            "status": null,
             "meta": "${writePath}/basestack_consensus/meta.json",
             "config": {
                 "estimated_size": 14500,
@@ -190,20 +188,13 @@
             "title": "RAMPART",
             "icon": "viruses",
             "component": "RAMPART",
-            "module": false,
+            "module": true,
             "status": null,
-            "objectname": "RAMPART",
-            "objectfile": "modules/rampart",
             "tooltip": "Fast annotation of input fastq files using the artic network",
             "image": "jhuaplbio/basestack_consensus",
-            "pipelines": {
-                "rampart": {
-                    "status": null,
-                    "cmd": null
-                }
-            },
             "meta": "${writePath}/rampart/meta.json",
             "config": {
+                "annotationsPath": "",
                 "protocolDir": "${resourcePath}/rampart/protocols",
                 "basePath": "${resourcePath}/rampart",
                 "initial": false
@@ -214,10 +205,8 @@
             "title": "Tutorial",
             "icon": "video",
             "component": "Tutorial",
-            "module": false,
+            "module": true,
             "status": null,
-            "objectname": "Tutorial",
-            "objectfile": "modules/tutorial",
             "image": "basestack_tutorial",
             "meta": "${writePath}/basestack_tutorial/meta.json",
             "config": {
@@ -230,12 +219,6 @@
                 "basePath": "${resourcePath}/basestack_tutorial",
                 "force": true,
                 "initial": true
-            },
-            "pipelines": {
-                "basestack_tutorial": {
-                    "status": null,
-                    "cmd": null
-                }
             }
         },
         "basestack_mytax": {
@@ -243,7 +226,7 @@
             "title": "Mytax",
             "icon": "dna",
             "component": "Mytax",
-            "module": false,
+            "module": true,
             "status": null,
             "objectname": "Mytax",
             "objectfile": "modules/mytax",
@@ -253,18 +236,41 @@
                 "base": "http://localhost",
                 "port": 8088,
                 "initial": false
-            },
-            "pipelines": {
-                "basestack_mytax_visualization": {
-                    "status": null,
-                    "cmd": "bash -c 'cd sunburst && python3 -m http.server 8088' "
-                },
-                "basestack_mytax_classify":{
-                    "status": null,
-                    "cmd": "kraken -v "
-                }
             }
-            
+        },
+        "basestack_mytax_report": {
+            "name": "basestack_mytax_report",
+            "title": "MytaxReport",
+            "icon": "dna",
+            "component": "MyTaxReport",
+            "module": true,
+            "status": null,
+            "objectname": "MyTaxReport",
+            "objectfile": "modules/mytax_report",
+            "image": "jhuaplbio/basestack_mytax",
+            "meta": "${writePath}/basestack_mytax/meta.json",
+            "config": {
+                "initial": false
+            },
+            "resources": {
+                   "classifiers": [
+                        { "name": "kraken", "dbs": ["minikraken", "flukraken", "custom"] },
+                        { "name": "centrifuge", "dbs": ["flucentrifuge", "custom"] }
+                        
+                    ]
+            },
+            "pipelines": [
+                {
+                    "key": "basestack_mytax_report",
+                    "status": null,
+                    "title": "Create Report and JSON"
+                },
+                {
+                    "key": "basestack_mytax_build_flukraken",
+                    "status": null,
+                    "title": "Build Standard Flukraken"
+                }
+            ]
         },
         "basestack_mytax": {
             "name": "basestack_mytax",

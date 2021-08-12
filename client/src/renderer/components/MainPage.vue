@@ -171,7 +171,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 5,
+    		tab: 6,
 	        entries: null,
 	        resources: null,
 	        docker: {},
@@ -263,9 +263,7 @@ export default {
 		let root;
 		let dirName;
 		let files;
-		console.log(event)
 		if (event.dataTransfer){
-			console.log("dragging")
   			files = event.dataTransfer.files[0]
   			if (Array.isArray(files)){
 				if(files.length > 0){
@@ -304,10 +302,8 @@ export default {
 			const V = path.basename(root);
 			let baseP  = root; let i = 0;
 			let fullname = V;
-			console.log(baseP, fullname)
 			while (i < sublevel){
 				baseP = path.dirname(baseP)
-				console.log(baseP)
 			 	fullname = `${path.basename(baseP)}/${fullname}`		
 			  	i++;
 			}	
@@ -319,7 +315,6 @@ export default {
 					type: 'arr',
 					key: "name"
 				})
-				console.log(response)		
     		} catch(err){
     			console.error(err)
     			this.$swal.fire({
@@ -363,7 +358,6 @@ export default {
 				})
 			}
 			const modules = response.data.data.modules.entries
-			console.log(modules)
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
 			let completed = response.data.data.images.completed
