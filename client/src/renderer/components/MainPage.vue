@@ -130,6 +130,7 @@ import RAMPART from '@/components/NavbarModules/RAMPART/RAMPART'
 import BasestackConsensus from "@/components/NavbarModules/BasestackConsensus/BasestackConsensus"
 import ModuleInstall from "@/components/NavbarModules/ModuleInstall/ModuleInstall"
 import Mytax from "@/components/NavbarModules/Mytax/Mytax"
+import MyTaxReport from "@/components/NavbarModules/MyTaxReport/MyTaxReport"
 import Logs from "@/components/NavbarModules/Logs/Logs"
 import About from "@/components/NavbarModules/About/About"
 import Tutorial from "@/components/NavbarModules/Tutorial/Tutorial"
@@ -151,6 +152,7 @@ export default {
 		Logs,
 		About,
 		Tutorial,
+		MyTaxReport,
 		HalfCircleSpinner
 	},
 	data(){
@@ -166,7 +168,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 5,
+    		tab: 6,
 	        entries: null,
 	        resources: null,
 	        docker: {},
@@ -258,9 +260,7 @@ export default {
 		let root;
 		let dirName;
 		let files;
-		console.log(event)
 		if (event.dataTransfer){
-			console.log("dragging")
   			files = event.dataTransfer.files[0]
   			if (Array.isArray(files)){
 				if(files.length > 0){
@@ -296,18 +296,14 @@ export default {
       		let val = event
       		
 			let root = this.parseFileInput(event, data.type)
-			console.log(root)
 			const V = path.basename(root);
 			let baseP  = root; let i = 0;
 			let fullname = V;
-			console.log(baseP, fullname)
 			while (i < sublevel){
 				baseP = path.dirname(baseP)
-				console.log(baseP)
 			 	fullname = `${path.basename(baseP)}/${fullname}`		
 			  	i++;
 			}	
-			console.log(fullname)		
 			try{	
     			let response =  await FileService.addSelection({
 					target: `${target}`,
@@ -316,7 +312,6 @@ export default {
 					type: 'arr',
 					key: "name"
 				})
-				console.log(response)		
     		} catch(err){
     			console.error(err)
     			this.$swal.fire({
@@ -360,7 +355,6 @@ export default {
 				})
 			}
 			const modules = response.data.data.modules.entries
-			console.log(modules)
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
 			let completed = response.data.data.images.completed
@@ -417,7 +411,6 @@ export default {
         this.$emit('toggleCollapseParent', this.collapsed)
       },
       toast(toaster, config, append = false) {
-      	console.log(config)
         this.$bvToast.toast(`${config.message}`, {
           title: `${config.title}`,
           variant: `${config.variant}`,

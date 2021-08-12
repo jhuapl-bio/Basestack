@@ -3,7 +3,8 @@ const { store } = require('../store/global')
 const {logger}  = require('../controllers/logger')
 const { readFile, ammendJSON, copyFile, writeFolder } = require("../controllers/IO.js")
 let docker = store.docker
-
+const { Tutorial } = require("../modules/tutorial")
+const { BasestackConsensus } = require('../modules/consensus')
 export class DockerObj {
 	constructor(image, container_name, obj){
 		this.image = image;

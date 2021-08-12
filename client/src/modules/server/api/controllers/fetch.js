@@ -7,13 +7,12 @@
    - # **********************************************************************
   */
 const fs = require("fs")
-const { convert_custom, checkFileExist, checkFolderExistsReject, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions, validate_run_dir }  = require("./validate.js")
+const { convert_custom, checkFileExist,  checkFolderExists, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
 var   { store }  = require("../store/global.js")
 var { logger } = require("../controllers/logger.js")
-const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO.js")
+const { getFiles, readFile,  writeFolder } = require("./IO.js")
 const si = require('systeminformation');
-import Docker from 'dockerode';
 
 
 const axios = require("axios")
@@ -434,7 +433,7 @@ export async function fetch_modules(){
 				store.config.modules[key].status = store.modules[key].status
 				store.config.modules[key].status.stream = store.config.modules[key].status.stream.splice(-200)
 				store.config.modules[key].installed = store.config.images[value.image].status.installed
-			}
+			} 
 		}
 		
 		return {

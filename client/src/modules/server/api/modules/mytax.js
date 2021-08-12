@@ -1,8 +1,8 @@
 const { store } = require('../store/global')
 const {logger}  = require('../controllers/logger')
 const path = require("path")
-// export  class BasestackMytax {
-export class docker {
+export  class BasestackMytax {
+// export class docker {
 	constructor(){
         this.title = "basestack_mytax"
 		this.docker_module = store.config.images["jhuaplbio/basestack_mytax"] 

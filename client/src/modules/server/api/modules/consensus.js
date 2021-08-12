@@ -10,10 +10,9 @@ const {
 const {copyFile, writeFolder, readTableFile,getFiles, writeFile, readFile, removeFile } = require("../controllers/IO.js")
 const moment = require("moment")
 
-// export default class BasestackConsensus{
-export class docker {
+export class BasestackConsensus{
 	constructor(){
-		this.title = "basestack_consensus"
+
 	}
 	async build(data) {
 		try {

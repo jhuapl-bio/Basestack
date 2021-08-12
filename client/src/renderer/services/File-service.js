@@ -111,6 +111,9 @@ class FileService {
   fetchMeta(){
     return Api().get(`${baseEndpoint}/meta/fetch`)                
   }
+  fetchStatus(params){
+    return Api().post(`${baseEndpoint}/status/modules/fetch`, params)
+  }
   updateSocket(params){
     return Api().post(`${baseEndpoint}/docker/socket`, params)   
   }         
