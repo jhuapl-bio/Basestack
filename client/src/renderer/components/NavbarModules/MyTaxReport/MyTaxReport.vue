@@ -267,7 +267,6 @@ export default {
 				}
 			}
 			const $this = this
-			console.log(this.cmd)
 			await FileService.startModule({
 				module: 'basestack_mytax_report',
       			submodule: 'basestack_mytax_report',

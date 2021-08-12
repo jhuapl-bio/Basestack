@@ -171,6 +171,7 @@ export  class BasestackMytaxReport {
             let binds = []
 			let command = ""
 			let cmd_option = data.cmd
+			console.log(data)
 			if (cmd_option.key == 'basestack_mytax_build_flukraken'){
 				command = [ 'bash', '-c', `source /opt/conda/etc/profile.d/conda.sh &&\
 					conda activate mytax && bash build_flukraken.sh -k /opt/databases/`
