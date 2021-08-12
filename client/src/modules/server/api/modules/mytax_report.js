@@ -122,13 +122,12 @@ export  class BasestackMytaxReport {
             let binds = []
 			let command = ""
 			let cmd_option = data.cmd
-			console.log(data)
 			if (cmd_option.key == 'basestack_mytax_build_flukraken'){
 				command = [ 'bash', '-c', `source /opt/conda/etc/profile.d/conda.sh &&\
 					conda activate mytax && bash build_flukraken.sh -k /opt/databases/`
 				]
 				binds.push(data.data.dirpath + ":/opt/databases"  )
-				
+
 			} else{
 				binds.push(data.data.dirpath + ":/opt/data")
 				command = ['bash', '-c']
@@ -136,6 +135,9 @@ export  class BasestackMytaxReport {
 				let e = ""
 				if (data.db.compressed){
 					e = `tar -xvzf /opt/databases/${db}.tar.gz -C /opt/databases/ && `
+				}
+				if (data.db.name == 'custom'){
+					binds.push(`${data.db.info.dirpath}:/opt/databases/${db}`)
 				}
 				
 				
@@ -160,10 +162,7 @@ export  class BasestackMytaxReport {
 		        "Volumes": {
 		        }
 
-			};	
-			console.log("command", command)
-			
-					
+			};					
 			resolve({options: options, command: command })
 		})
 	}

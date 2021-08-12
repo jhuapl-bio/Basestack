@@ -68,6 +68,7 @@
 						deselect-label="" 
 						select-label=""
 						track-by="name" 
+						open-direction="top"
 						label="name" 
 						:preselect-first="true"
 						placeholder="Select one" 
@@ -77,18 +78,30 @@
 					>
 					</multiselect>
 				</b-form-group>
+				<b-form-group
+					v-if="db && db.name == 'custom'"
+					id="fieldset-1"
+					label="DB Path"
+					label-for="input-1"
+					description="Path of pre-processed database"
+				>
+					<b-button
+						@click="electronOpenDir('db')"
+					> Select Folder
+					</b-button><p v-if="db.info && db.info.dirname">{{db.info.dirname}}</p>
+				</b-form-group>
 			</div>
 			<div v-else>
 				<b-form-group
 					id="fieldset-1"
 					label="Flukraken DB Path"
 					label-for="input-1"
-					description="Warning, folder must not be empty"
+					description="Path to build flukraken db"
 				>
 					<b-button
-						@click="electronOpenDir"
+						@click="electronOpenDir('data')"
 					> Select Folder
-					</b-button>
+					</b-button><p v-if="data && data.dirname">{{data.dirname}}</p>
 				</b-form-group>
 			</div>
 			<b-form-group>
@@ -202,10 +215,13 @@ export default {
 		formatNames(files) {
         	return files.length === 1 ? `${files[0].name} selected` : `${files.length} files selected`
       	},
-		electronOpenDir(evt){
+		electronOpenDir(key){
 			this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
-				this.data = { dirpath: message, dirname: path.dirname(message) }
-
+				if (key == 'data'){
+					this.data = { dirpath: message, dirname: path.basename(message) }
+				} else {
+					this.db.info = { dirpath: message, dirname: path.basename(message) }
+				}
 			})
 			this.$electron.ipcRenderer.send("openDirSelect", "")
 			
