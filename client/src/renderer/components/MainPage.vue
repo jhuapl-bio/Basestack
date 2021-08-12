@@ -168,7 +168,7 @@ export default {
 			},
 			initial:false,
 			collapsed:false,
-    		tab: 6,
+    		tab: 0,
 	        entries: null,
 	        resources: null,
 	        docker: {},
@@ -425,7 +425,7 @@ export default {
 
 <style>
 #mainpage{
-	height:100%;
+	height:100vh;
 	width: 100%;
 	position:absolute;
 	/*overflow-y:hidden;*/
@@ -435,7 +435,7 @@ export default {
 	-webkit-background-clip: padding-box; /* for Safari */
     background-clip: padding-box; /* for IE9+, Firefox 4+, Opera, Chrome */
 	padding: 0px;
-	height:100% !important;
+	height:100vh !important;
 	/*position:absolute;*/
 	/*margin:auto;*/
 	overflow-y:hidden;

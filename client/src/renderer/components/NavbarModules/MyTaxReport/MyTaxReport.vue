@@ -81,20 +81,12 @@
 					id="fieldset-1"
 					label="Flukraken DB Path"
 					label-for="input-1"
+					description="Warning, folder must not be empty"
 				>
-					<b-form-file 
-						ref="seq_file" 
-						:id="'seq_file'" 
-						aria-describedby="seq_file" 
-						@change="eventChange"
-						directory
-						webkitdirectory
-						:multiple="true"
-						:placeholder="'Choose a folder to make flukraken db'"
-						drop-placeholder="Drop folder path here..."
-					> 
-					</b-form-file>
-					<!-- <input type="file" :value="dbPath" id="ctrl" webkitdirectory directory multiple/> -->
+					<b-button
+						@click="electronOpenDir"
+					> Select Folder
+					</b-button>
 				</b-form-group>
 			</div>
 			<b-form-group>
@@ -183,14 +175,11 @@ export default {
 			classifier: null,
 			db_options: ['flukraken', 'minikraken'],
 			module_status_fields: [
-				{key: 'title', label: 'Title', sortable: false, class: 'text-center'},
-          		{key: 'step', label: 'Step', sortable: false, class: 'text-center'},
-          		{key: 'status', label: 'Exists', sortable: false, class: 'text-center'}
+				
 			],	
 		}
 	}, 
 	mounted(){
-		
 	},
 	computed: {
 	  
@@ -198,12 +187,10 @@ export default {
 	watch : {
 		fastqFolder(val) {
 			this.data = { dirpath: path.dirname(val.path), filepath: val.path, filename: val.name }
-			this.get_status(this.data)
 		},
-		dbPath(val){
-			console.log(val)
-			this.data = val
-		},
+		data(val){
+			this.get_status(val)
+		}
 	},
 
 	beforeDestroy(){
@@ -211,28 +198,51 @@ export default {
 		this.interval = null		
     },
 	methods: {
-		eventChange(event){
-			console.log("evvvent", event.target.value)
+		formatNames(files) {
+        	return files.length === 1 ? `${files[0].name} selected` : `${files.length} files selected`
+      	},
+		electronOpenDir(evt){
+			this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
+				this.data = { dirpath: message, dirname: path.dirname(message) }
+
+				console.log(this.data)
+			})
+			this.$electron.ipcRenderer.send("openDirSelect", "")
+			
 		},
 		open_link (link,e) {
 			e.stopPropagation()
 			this.$emit("open", link)
       	},
 		async start_module(){
-			if (!this.fastqFolder || this.fastqFolder.length  == 0){
-				this.$swal.fire({
-					position: 'center',
-					icon: 'error',
-					showConfirmButton:true,
-	                title:  "No fastq Folder selected"
-				})
+			if (this.cmd.key == "basestack_mytax_report"){
+				if (!this.fastqFolder || this.fastqFolder.length  == 0){
+					this.$swal.fire({
+						position: 'center',
+						icon: 'error',
+						showConfirmButton:true,
+						title:  "No fastq Folder selected"
+					})
+					return 
+				}
+				
+			} else {
+				if (!this.data){
+					this.$swal.fire({
+						position: 'center',
+						icon: 'error',
+						showConfirmButton:true,
+						title:  "No dir selected to create database"
+					})
+					return 
+				}
 			}
 			const $this = this
+			console.log(this.cmd)
 			await FileService.startModule({
 				module: 'basestack_mytax_report',
       			submodule: 'basestack_mytax_report',
 				db_name: this.db,
-				db_path: this.db_path.path,
 				classifier_name: this.classifier.name,
 				cmd: this.cmd,
                 data: this.data
@@ -281,8 +291,9 @@ export default {
       	},
 		async get_status(data){
 			const $this = this
-			FileService.fetchStatus({ data: $this.data, container: "basestack_mytax_report"}).then((response)=>{
+			FileService.fetchStatus({ data: $this.data, container: "basestack_mytax_report", pipeline: this.cmd }).then((response)=>{
 				$this.module_statuses = response.data.data
+				console.log($this.module_statuses)
 			})
 		
 		}
@@ -292,7 +303,7 @@ export default {
 
 <style>
 #mytaxreport{
-	height:100%;
+	height:100vh;
     overflow-y:auto;
     width: 100%;
 }

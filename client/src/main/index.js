@@ -441,6 +441,23 @@ function createWindow () {
   ipcMain.on("checkUpdates", (event, arg) => {
     checkUpdates()
   })
+  ipcMain.on("openDirSelect", (event, arg) => {
+    dialog.showOpenDialog({
+      properties: ['openDirectory']
+    }).then((val, err)=>{
+      if (err){
+        throw err
+      } else {
+        mainWindow.webContents.send("getValue", val.filePaths[0])
+      }
+      
+    }).catch((err)=>{
+      throw err
+    })
+    
+  })
+
+
   mainWindow.webContents.on('did-finish-load', function () {
     let quitUpdateInstall = false;
     logger.info("Basestack is finished loading")
