@@ -261,16 +261,7 @@
                                 { "name":"flukraken", "compressed":true},
                                 { "name":"custom"}
                             ] 
-                        },
-                        { 
-                            "name": "centrifuge", 
-                            "dbs": [
-                                { "name":"flucentrifuge", "compressed":true},
-                                { "name":"custom"}
-                                
-                            ] 
-                        }
-                        
+                        }                        
                     ]
             },
             "pipelines": [
