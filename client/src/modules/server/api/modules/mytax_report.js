@@ -122,6 +122,7 @@ export  class BasestackMytaxReport {
             let binds = []
 			let command = ""
 			let cmd_option = data.cmd
+			console.log(data)
 			if (cmd_option.key == 'basestack_mytax_build_flukraken'){
 				command = [ 'bash', '-c', `source /opt/conda/etc/profile.d/conda.sh &&\
 					conda activate mytax && bash build_flukraken.sh -k /opt/databases/`
@@ -130,18 +131,24 @@ export  class BasestackMytaxReport {
 				
 			} else{
 				binds.push(data.data.dirpath + ":/opt/data")
-				let db = data.db_name
+				command = ['bash', '-c']
+				let db = data.db.name
+				let e = ""
+				if (data.db.compressed){
+					e = `tar -xvzf /opt/databases/${db}.tar.gz -C /opt/databases/ && `
+				}
+				
+				
 				const filename = data.data.filename
-				command = [ 'bash', '-c', `source /opt/conda/etc/profile.d/conda.sh &&\
+				command.push(`${e} source /opt/conda/etc/profile.d/conda.sh &&\
 				conda activate mytax && kraken --db /opt/databases/${db} --output /opt/data/${data.data.filename}.out /opt/data/${data.data.filename} &&\
 				kraken-report --db /opt/databases/${db}  /opt/data/${data.data.filename}.out | tee  /opt/data/${data.data.filename}.report &&\
 				bash krakenreport_fullstring.sh -i /opt/data/${data.data.filename}.report -k /opt/databases/${db} -o /opt/data/${data.data.filename}.fullstring
-				bash krakenreport2json.sh -i /opt/data/${data.data.filename}.fullstring -o /opt/data/${data.data.filename}.json` ]
+				bash krakenreport2json.sh -i /opt/data/${data.data.filename}.fullstring -o /opt/data/${data.data.filename}.json` )
 			}
 
 			let options = {
 				name: "basestack_mytax_report",
-				user: store.meta.uid.toString() + ":"+store.meta.gid.toString(),
 				"ExposedPorts": {
 		        },
 			    "HostConfig": {
@@ -154,6 +161,7 @@ export  class BasestackMytaxReport {
 		        }
 
 			};	
+			console.log("command", command)
 			
 					
 			resolve({options: options, command: command })

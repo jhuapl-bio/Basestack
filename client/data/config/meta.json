@@ -233,8 +233,22 @@
             },
             "resources": {
                    "classifiers": [
-                        { "name": "kraken", "dbs": ["minikraken", "flukraken", "custom"] },
-                        { "name": "centrifuge", "dbs": ["flucentrifuge", "custom"] }
+                        { 
+                            "name": "kraken", 
+                            "dbs": [
+                                { "name":"minikraken", "compressed":false},
+                                { "name":"flukraken", "compressed":true},
+                                { "name":"custom"}
+                            ] 
+                        },
+                        { 
+                            "name": "centrifuge", 
+                            "dbs": [
+                                { "name":"flucentrifuge", "compressed":true},
+                                { "name":"custom"}
+                                
+                            ] 
+                        }
                         
                     ]
             },
