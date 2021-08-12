@@ -67,6 +67,8 @@
 					<multiselect v-model="db" 
 						deselect-label="" 
 						select-label=""
+						track-by="name" 
+						label="name" 
 						:preselect-first="true"
 						placeholder="Select one" 
 						:options="classifier.dbs" 
@@ -169,11 +171,10 @@ export default {
 			data: null,
 			module_statuses: [],
 			cmd: null,
+			db:null,
 			interval: null,
 			dbPath: null,
-			db: "minikraken",
 			classifier: null,
-			db_options: ['flukraken', 'minikraken'],
 			module_status_fields: [
 				
 			],	
@@ -205,7 +206,6 @@ export default {
 			this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
 				this.data = { dirpath: message, dirname: path.dirname(message) }
 
-				console.log(this.data)
 			})
 			this.$electron.ipcRenderer.send("openDirSelect", "")
 			
@@ -238,11 +238,10 @@ export default {
 				}
 			}
 			const $this = this
-			console.log(this.cmd)
 			await FileService.startModule({
 				module: 'basestack_mytax_report',
       			submodule: 'basestack_mytax_report',
-				db_name: this.db,
+				db: this.db,
 				classifier_name: this.classifier.name,
 				cmd: this.cmd,
                 data: this.data

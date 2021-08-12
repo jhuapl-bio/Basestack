@@ -63,14 +63,14 @@ let mainWindow
 
 const { store } = require("../modules/server/api/store/global.js")
 const {logger } = require("../modules/server/api/controllers/logger.js")
-const { 
-  cancel_container
- } = require('../modules/server/api/controllers/index.js')
-let open_server; let close_server; //let  cancel_container;
+
+let open_server; let close_server; let  cancel_container;
 if (process.env.NODE_ENV === 'production'){
     open_server = require("../modules/server/server.js").open_server
     close_server = require("../modules/server/server.js").close_server
-    
+    const { 
+      cancel_container
+     } = require('../modules/server/api/controllers/index.js')
 }
 
 
