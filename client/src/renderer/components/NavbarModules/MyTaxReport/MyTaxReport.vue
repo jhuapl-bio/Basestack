@@ -27,53 +27,76 @@
 				>
 				</multiselect>
 			</b-form-group>
-			<b-form-group
-				id="fieldset-1"
-				label="Classifier"
-				label-for="input-1"
+			<div v-if="cmd && cmd.key == 'basestack_mytax_report' ">
+				<b-form-group
+					id="fieldset-1"
+					label="Classifier"
+					label-for="input-1"
+					>
+					<multiselect v-model="classifier" 
+						deselect-label="" 
+						track-by="name" 
+						select-label=""
+						:preselect-first="true"
+						label="name" placeholder="Select one" 
+						:options="modules.basestack_mytax_report.resources.classifiers" 
+						:searchable="false" 
+						:allow-empty="false"
+					>
+					</multiselect>
+				</b-form-group>
+				<b-form-group
+					id="fieldset-1"
+					description=""
+					label="Fastq File"
+					label-for="input-1"
+					>
+					<b-form-file 
+						v-model="fastqFolder"
+						:placeholder="'Choose a fastq file'"
+						drop-placeholder="Drop file here..."
+					>
+					</b-form-file>
+				</b-form-group>
+				<b-form-group
+					v-if="classifier"
+					id="fieldset-1"
+					label="Database"
+					label-for="input-1"
+					>
+					<multiselect v-model="db" 
+						deselect-label="" 
+						select-label=""
+						:preselect-first="true"
+						placeholder="Select one" 
+						:options="classifier.dbs" 
+						:searchable="false" 
+						:allow-empty="false"
+					>
+					</multiselect>
+				</b-form-group>
+			</div>
+			<div v-else>
+				<b-form-group
+					id="fieldset-1"
+					label="Flukraken DB Path"
+					label-for="input-1"
 				>
-				<multiselect v-model="classifier" 
-					deselect-label="" 
-					track-by="name" 
-					select-label=""
-					:preselect-first="true"
-					label="name" placeholder="Select one" 
-					:options="modules.basestack_mytax_report.resources.classifiers" 
-					:searchable="false" 
-					:allow-empty="false"
-				>
-				</multiselect>
-			</b-form-group>
-			<b-form-group
-				id="fieldset-1"
-				description=""
-				label="Fastq File"
-				label-for="input-1"
-				>
-				<b-form-file 
-					v-model="fastqFolder"
-					:placeholder="'Choose a fastq file'"
-					drop-placeholder="Drop file here..."
-				>
-				</b-form-file>
-			</b-form-group>
-			<b-form-group
-				v-if="classifier"
-				id="fieldset-1"
-				label="Database"
-				label-for="input-1"
-				>
-				<multiselect v-model="db" 
-					deselect-label="" 
-					select-label=""
-					:preselect-first="true"
-					placeholder="Select one" 
-					:options="classifier.dbs" 
-					:searchable="false" 
-					:allow-empty="false"
-				>
-				</multiselect>
-			</b-form-group>
+					<b-form-file 
+						ref="seq_file" 
+						:id="'seq_file'" 
+						aria-describedby="seq_file" 
+						@change="eventChange"
+						directory
+						webkitdirectory
+						:multiple="true"
+						:placeholder="'Choose a folder to make flukraken db'"
+						drop-placeholder="Drop folder path here..."
+					> 
+					</b-form-file>
+					<!-- <input type="file" :value="dbPath" id="ctrl" webkitdirectory directory multiple/> -->
+				</b-form-group>
+			</div>
 			<b-form-group>
 				<span v-b-tooltip.hover.top 
 					title="Start Mytax"
@@ -155,6 +178,7 @@ export default {
 			module_statuses: [],
 			cmd: null,
 			interval: null,
+			dbPath: null,
 			db: "minikraken",
 			classifier: null,
 			db_options: ['flukraken', 'minikraken'],
@@ -176,6 +200,10 @@ export default {
 			this.data = { dirpath: path.dirname(val.path), filepath: val.path, filename: val.name }
 			this.get_status(this.data)
 		},
+		dbPath(val){
+			console.log(val)
+			this.data = val
+		},
 	},
 
 	beforeDestroy(){
@@ -183,6 +211,9 @@ export default {
 		this.interval = null		
     },
 	methods: {
+		eventChange(event){
+			console.log("evvvent", event.target.value)
+		},
 		open_link (link,e) {
 			e.stopPropagation()
 			this.$emit("open", link)
@@ -201,6 +232,7 @@ export default {
 				module: 'basestack_mytax_report',
       			submodule: 'basestack_mytax_report',
 				db_name: this.db,
+				db_path: this.db_path.path,
 				classifier_name: this.classifier.name,
 				cmd: this.cmd,
                 data: this.data
