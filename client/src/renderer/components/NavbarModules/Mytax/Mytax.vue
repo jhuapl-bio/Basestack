@@ -8,56 +8,24 @@
   -->
 <template>
   <div id="mytax" >
-	  <b-form-file 
-			ref="seq_folder" 
-			:id="'seq_folder'" 
-			aria-describedby="seq_folder" 
-			v-model="fastqFolder"
-			directory
-			webkitdirectory
-			:no-traverse="false"
-			:multiple="true"
-			:placeholder="'Choose a run Folder'"
-			drop-placeholder="Drop folder here..."
-		>
-	  </b-form-file>
-	  <b-button v-if="!modules.basestack_mytax.status.running" v-on:click="run_module_pipeline()"  class="btn tabButton" >
-		<div class="in-line-Button" >
-			<span>
-				<font-awesome-icon   icon="hourglass-start"/>
-			</span>
-			<span>Run Pipeline</span></div>
-	  </b-button>
-	
-	  <span v-b-tooltip.hover.top 
-		title="Start Mytax"
-		v-if="!modules.basestack_mytax.status.running"
-		class="center-align-icon configure"
-			@click="start_module()" >
-		<font-awesome-icon  icon="sync" style="margin-left: 10px; margin-right: 10px"/>
-	</span>
-		
-	<span v-b-tooltip.hover.top
-		v-else 
-		title="Cancel Mytax Sync"
-		class="center-align-icon configure"
-			@click="cancel_module()" >
-		<font-awesome-icon  icon="times" style="margin-left: 10px; margin-right: 10px"/>
-	</span>
-	
-	  <b-row>
-		<b-table
-			small
-			id="module_table"
-			class="formGroup-input"
-			:items="[]"
-			:fields="module_status_fields"
-			sticky-header="700px"						        
-		>
+	  <b-form-group>
+		<span v-b-tooltip.hover.top 
+			title="Start Mytax"
+			v-if="!modules.basestack_mytax.status.running"
+			class="center-align-icon configure"
+				@click="start_module()" > Start Module
+			<font-awesome-icon  icon="sync" style="margin-left: 10px; margin-right: 10px"/>
+		</span>
 			
-		</b-table>  
-	  </b-row>
-	<b-row v-if="modules.basestack_mytax_visualization && modules.basestack_mytax.status && modules.basestack.status.running">
+		<span v-b-tooltip.hover.top
+			v-else 
+			title="Cancel Mytax Sync"
+			class="center-align-icon configure"
+				@click="cancel_module()" > Cancel Module
+			<font-awesome-icon  icon="times" style="margin-left: 10px; margin-right: 10px"/>
+		</span>
+	</b-form-group>
+	<b-row v-if="modules.basestack_mytax && modules.basestack_mytax.status && modules.basestack_mytax.status.running">
 		<object id ="mytaxObj" type="text/html" :data="`${modules.basestack_mytax.config.base}:${modules.basestack_mytax.config.port}`">
 		</object>
 	</b-row>
@@ -90,13 +58,7 @@ export default {
 	props: ['modules', 'images', 'selectedTag'],
 	data(){
 		return {
-			fastqFolder: null,
-			module_status_fields: [
-				{key: 'title', label: 'Title', sortable: false, class: 'text-center'},
-          		{key: 'step', label: 'Step', sortable: false, class: 'text-center'},
-          		{key: 'modules_complete', label: 'Modules Complete', sortable: false, class: 'text-center'},
-          		{key: 'status', label: 'Status(es)', sortable: false, class: 'text-center'}
-			],	
+				
 		}
 	}, 
 	async mounted(){
@@ -115,34 +77,10 @@ export default {
 			e.stopPropagation()
 			this.$emit("open", link)
       	},
-		async run_module_pipeline(){
-			if (!this.fastqFolder || this.fastqFolder.length  == 0){
-				this.$swal.fire({
-					position: 'center',
-					icon: 'error',
-					showConfirmButton:true,
-	                title:  "No fastq Folder selected"
-				})
-			}
-			await FileService.startModule({
-				module: 'basestack_mytax_classify',
-      			submodule: 'basestack_mytax_pipeline',
-      		}).then((response)=>{
-				this.count +=1
-        	}).catch((error)=>{
-		        console.error("-----------------", error)
-        		this.$swal.fire({
-					position: 'center',
-					icon: 'error',
-					showConfirmButton:true,
-	                title:  error.response.data.message
-				})
-        	})
-		},
 		async start_module(){
       		await FileService.startModule({
-				module: 'basestack_mytax_visualization',
-      			submodule: 'basestack_mytax_visualization',
+				module: 'basestack_mytax',
+      			submodule: 'basestack_mytax',
       		}).then((response)=>{
 				this.count +=1
         	}).catch((error)=>{

@@ -3,8 +3,7 @@ const {logger}  = require('../controllers/logger')
 const { writeFile, readFile, ammendJSON } = require("../controllers/IO.js")
 const {  checkFileExist } = require("../controllers/validate.js")
 const path = require("path")
-// export default class Tutorial{
-export class docker {
+export class Tutorial{
 	constructor(){
 		this.docker_module = store.config.images["basestack_tutorial"] 
 		this.basePath = path.join(store.meta.resourcePath, "tutorials")

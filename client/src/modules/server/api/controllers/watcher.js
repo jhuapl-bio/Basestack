@@ -40,6 +40,45 @@ export var watch_consensus = async function (params){
 	}
 
 }
+
+export var list_module_statuses = async function(modules){
+	return new Promise(function(resolve,reject){
+		let promises = []
+		modules.forEach((prom)=>{
+			promises.push(get_status_complete(prom.filepath))
+		})
+		Promise.all(promises).then((d, i)=>{
+			modules.map((mod, j)=>{
+				mod.status = d[j]
+			})
+			resolve(modules)
+		}).catch((err)=>{
+			reject(err)
+		})
+	})
+}
+
+async function get_status_complete (filepath){
+	return new Promise(function(resolve,reject){
+		let status = 0
+		fs.exists(filepath, function(exists, error){
+			if (error){
+				status = 0
+			}
+			else if(exists){
+				status = 1
+			} else {
+				status = 0
+			}
+			resolve(status)
+		})	
+	})
+}
+
+
+
+
+
 export  var module_status = async function(params, mod){
 	return new Promise(function(resolve,reject){
 		const reportDir = params.reportDir

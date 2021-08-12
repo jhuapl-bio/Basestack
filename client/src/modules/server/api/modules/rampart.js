@@ -6,10 +6,9 @@ const {validateAnnotation, checkFolderExists, checkFileExist } = require("../con
 const {store} = require('../store/global')
 
 
-// export default class RAMPART{
-export class docker {	
+export class RAMPART{	
 	constructor(){
-		this.title = "basestack rampart"
+
 	}
 	async build(data) {
 		return new Promise(function(resolve,reject){

@@ -1,14 +1,3 @@
-/*  
-   - # **********************************************************************
-   - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
-   - #
-   - # All Rights Reserved.
-   - # For any other permission, please contact the Legal Office at JHU/APL.
-   - # **********************************************************************
-  */
-
-/* eslint-disable no-inner-declarations */
-
 
 import Docker from 'dockerode';
 import  path  from "path"
@@ -20,21 +9,23 @@ const { getPrimerDirsVersions, fetch_protocols, fetch_primers, fetch_videos, fet
 const { writeFolder, writeFile, ammendJSON, readFile, get, set } = require("./IO.js")
 const fs  = require("fs")
 const fs_promise = require("fs").promises
-const containerNames = ['rampart','basestack_consensus', 'basestack_tutorial', 'basestack_mytax']
+const containerNames = ['rampart','basestack_consensus', 'basestack_tutorial']
 const moment = require('moment');
 const { DockerObj } = require("../modules/docker.js")
-// const { Tutorial } = require("../modules/tutorial")
-const { BasestackConsensus } = require('../modules/consensus')
-// const { RAMPART } = require('../modules/rampart')
-// const { BasestackMytax } = require('../modules/mytax')
 
+const { Tutorial } = require("../modules/tutorial")
+const { BasestackConsensus } = require('../modules/consensus')
+const { RAMPART } = require('../modules/rampart')
+const { BasestackMytax } = require("../modules/mytax")
+const { BasestackMytaxReport } = require("../modules/mytax_report")
 const {docker_init} = require("./docker.js")
 const lodash = require("lodash")
 
 export async function initialize(params){
 	// logger.info("%s <------ initialize", store.meta)
 	try{
-		// let re = await setup_data()''f
+		// let re = await setup_data()''
+
 		store.meta.ready  = false
 		let userMeta = path.join(store.meta.writePath, "meta.json")
 		let metaExists = await checkFileExist(store.meta.writePath, "meta.json", true)
@@ -71,7 +62,6 @@ export async function initialize(params){
 		}
 		store.dockerConfig = meta.dockerConfig
 		store.docker = await docker_init();
-		console.log("fetching")
 		let response = await fetch_modules()
 		for (const [key, image] of Object.entries(store.config.images)){
 			if (!meta.images || !meta.images[key]){
@@ -92,6 +82,7 @@ export async function initialize(params){
 						}
 					}
 				}
+				
 			}
 		}
 		let tag = "name"
@@ -113,41 +104,11 @@ export async function initialize(params){
 				}
 				tag = "name"
 				const merged  = lodash.mergeWith( value.resources, meta.modules[key].resources, customizer)
-				let objectname = value.objectname
-				let objectfile = value.objectfile
-				if (! objectname){
-					objectname = value.name
+				let obj = await initialize_module_object(container_name)
+				if (value.config.initial && response.images.entries[value.image].installed){
+					let response = await obj.cancel()
+					let response_start = await start_module({module: container_name, tag: "latest"})
 				}
-				if (! objectfile ) {
-					objectfile = `./modules/${objectname}`
-				}
-				const { docker } = require(`../${objectfile}`)
-				store.factory[value.name] = new docker()
-				let obj = await initialize_module_object(value)
-				// for (const [pipeline, conf] of Object.entries(value.pipelines)){
-				// 	const { docker } = require(`../${objectfile}`)
-				// 	store.factory[pipeline] = new docker()
-				// 	let obj = await initialize_module_object(value)
-				// }
-
-				// if (value.config.initial && response.images.entries[value.image].status.installed){
-				// 	let response2 = await obj.cancel()
-				// 	let response_start = await start_module({module: container_name, tag: "latest"})
-				// }
-				// if (value.submodules){
-				// 	for (const [key2, value2] of Object.entries(value.submodules)){
-				// 		let obj = await initialize_module_object(value2)
-				// 		// console.log("______")
-				// 		// console.log(value2.config, key2, response.images.entries[value.image].status.installed, response.images.entries[value.image])
-				// 		// console.log("______")
-				// 		// if (value2.config.initial && response.images.entries[value.image].status.installed){
-				// 		// 	console.log("key2______")
-				// 		// 	let response2 = await obj.cancel()
-				// 		// 	let response_start = await start_module({module: key2, tag: "latest"})
-				// 		// }
-
-				// 	}
-				// }
 			}	
 		}
 		await ammendJSON({
@@ -158,7 +119,6 @@ export async function initialize(params){
 			logger.error(err)
 			throw err
 		})
-		
 		store.meta.ready = true
 		return response
 	} catch(err){
@@ -194,15 +154,23 @@ export async function updateDockerSocket(socket){
 }
 
 
-async function initialize_module_object(container){
+async function initialize_module_object(container_name){
 	let obj;
-	let container_name = container.name
-	let objectname = container.objectname
-	if (! objectname){
-		objectname = container.name
+	if (container_name == 'rampart'){
+		obj  = new DockerObj('jhuaplbio/basestack_consensus', 'rampart', new RAMPART());
+	} else if (container_name == 'basestack_tutorial'){
+		obj = new DockerObj('basestack_tutorial', 'basestack_tutorial', new Tutorial());
+	} else if (container_name == 'basestack_consensus'){
+		obj  = new DockerObj('jhuaplbio/basestack_consensus', 'basestack_consensus', new BasestackConsensus());
+	} 
+	else if (container_name == 'basestack_mytax'){
+		obj  = new DockerObj('jhuaplbio/basestack_mytax', 'basestack_mytax', new BasestackMytax());
+	} else if (container_name == 'basestack_mytax_report'){
+		obj  = new DockerObj('jhuaplbio/basestack_mytax', 'basestack_mytax_report', new BasestackMytaxReport());
+	}  else {
+		return;
 	}
-	console.log("new init module object", container)
-	obj = new DockerObj(container.image, container.name, store.factory[container.name])
+
 	obj.config = store.config.modules[container_name]
 	store.modules[container_name]  = obj
 	store.statusIntervals.modules[container_name] = null
@@ -217,16 +185,15 @@ async function initialize_module_object(container){
 
 export async function start_module(params){
 	let container_name;
-	console.log(container_name)
 	try{
 		container_name = params.module
-		console.log(params)
 		let obj; 
 		if (store.modules[container_name]){
 			obj = store.modules[container_name]
 		} else {
-			obj = await initialize_module_object(params)
+			obj = await initialize_module_object(container_name)
 		}
+		console.log(container_name)
 		let response = await obj.start(params)
 		store.modules[container_name] = obj;
 		return response
@@ -309,7 +276,6 @@ export async function rm_selections(params){
 		meta = JSON.parse(meta)
 		let depth  = get(params.file_target, meta, params.type)
 		let st = get(params.target, store, params.type) 
-		console.log("index start parse", new Date(), params.value)
 		let found = false
 		if (params.key){
 			depth = depth.filter((d)=>{
@@ -328,13 +294,11 @@ export async function rm_selections(params){
 			})
 		}
 		set(params.target, st, store, params.type)
-		console.log("index start writing", new Date(),  params.value)
 		await ammendJSON({
 			value: depth,
 			file: store.meta.userMeta,
 			attribute: params.file_target
 		})	
-		console.log("index complete writing", new Date(),  params.value)
 		let obj = {custom: false}
 		obj[params.target]  = null
 		return obj
