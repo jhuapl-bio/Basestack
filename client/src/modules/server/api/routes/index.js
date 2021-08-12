@@ -188,7 +188,7 @@ router.post("/consensus/status", (req,res,next)=>{ //this method needs to be rew
 router.post("/status/modules/fetch", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function(){
 		try {
-			await store.modules[req.body.container].obj.watch(req.body.data).then((response)=>{
+			await store.modules[req.body.container].obj.watch(req.body).then((response)=>{
 				res.status(200).json({status: 200, message: "Check status", data: response });
 			}).catch((err)=>{
 				logger.error("%s %s", "There was an error checking the status", err)
