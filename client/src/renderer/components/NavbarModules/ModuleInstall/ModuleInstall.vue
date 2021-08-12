@@ -321,7 +321,7 @@
 			        </div>
 			    </button>
 			</b-col>
-			<b-col sm="12" v-if="selectedElement"  class="text-center">
+			<b-col sm="6" v-if="selectedElement"  class="text-center">
 			    <button class="btn tabButton" style="border-radius: 10px; margin:auto" v-on:click="openFolder(meta.logFolder)" v-tooltip="{
 			        content: '',
 			        placement: 'top',
