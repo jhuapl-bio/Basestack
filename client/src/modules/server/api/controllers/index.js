@@ -1,14 +1,3 @@
-/*  
-   - # **********************************************************************
-   - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
-   - #
-   - # All Rights Reserved.
-   - # For any other permission, please contact the Legal Office at JHU/APL.
-   - # **********************************************************************
-  */
-
-/* eslint-disable no-inner-declarations */
-
 
 import Docker from 'dockerode';
 import  path  from "path"
@@ -27,6 +16,8 @@ const { DockerObj } = require("../modules/docker.js")
 const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
 const { RAMPART } = require('../modules/rampart')
+const { BasestackMytax } = require("../modules/mytax")
+const { BasestackMytaxReport } = require("../modules/mytax_report")
 const {docker_init} = require("./docker.js")
 const lodash = require("lodash")
 
@@ -172,6 +163,13 @@ async function initialize_module_object(container_name){
 	} else if (container_name == 'basestack_consensus'){
 		obj  = new DockerObj('jhuaplbio/basestack_consensus', 'basestack_consensus', new BasestackConsensus());
 	} 
+	else if (container_name == 'basestack_mytax'){
+		obj  = new DockerObj('jhuaplbio/basestack_mytax', 'basestack_mytax', new BasestackMytax());
+	} else if (container_name == 'basestack_mytax_report'){
+		obj  = new DockerObj('jhuaplbio/basestack_mytax', 'basestack_mytax_report', new BasestackMytaxReport());
+	}  else {
+		return;
+	}
 
 	obj.config = store.config.modules[container_name]
 	store.modules[container_name]  = obj
@@ -195,6 +193,7 @@ export async function start_module(params){
 		} else {
 			obj = await initialize_module_object(container_name)
 		}
+		console.log(container_name)
 		let response = await obj.start(params)
 		store.modules[container_name] = obj;
 		return response
@@ -277,7 +276,6 @@ export async function rm_selections(params){
 		meta = JSON.parse(meta)
 		let depth  = get(params.file_target, meta, params.type)
 		let st = get(params.target, store, params.type) 
-		console.log("index start parse", new Date(), params.value)
 		let found = false
 		if (params.key){
 			depth = depth.filter((d)=>{
@@ -296,13 +294,11 @@ export async function rm_selections(params){
 			})
 		}
 		set(params.target, st, store, params.type)
-		console.log("index start writing", new Date(),  params.value)
 		await ammendJSON({
 			value: depth,
 			file: store.meta.userMeta,
 			attribute: params.file_target
 		})	
-		console.log("index complete writing", new Date(),  params.value)
 		let obj = {custom: false}
 		obj[params.target]  = null
 		return obj

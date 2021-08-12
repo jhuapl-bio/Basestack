@@ -26,7 +26,8 @@ let whiteListedModules = ['express']
 let serverConfig = {
   target: 'node',
    entry: {
-     server: path.join(__dirname, '../src/modules/index.server.js')
+     server: path.join(__dirname, '../src/modules/index.server.js'),
+     meta: path.join(__dirname, '../data/config/meta.json'),
    },
    devtool: 'source-map',
    mode: 'development',
