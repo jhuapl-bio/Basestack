@@ -22,7 +22,7 @@
           	v-bind:key="entry.name"
           	class="ma-0 pa-0"
             > 
-            <template v-slot:title v-if="(!entry.module || entry.status.installed )  && initial">
+            <template v-slot:title v-if="(!entry.module || entry.installed )  && initial">
             	<div class="tab-parent" style="display: flex; justify-content: space-between;"
 				>	
 					<div class="tab-item" style="">
@@ -69,7 +69,7 @@
 		            </div>
 	        	</div>
   			</template>
-  			<div v-if="(!entry.module || entry.status.installed )  && initial">
+  			<div v-if="(!entry.module || entry.installed )  && initial">
   				<h2 class="header" style="text-align:center">{{entry.title}}
 			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
 			        :title="entry.tooltip"
@@ -129,6 +129,8 @@ import IGV from '@/components/NavbarModules/IGV/IGV'
 import RAMPART from '@/components/NavbarModules/RAMPART/RAMPART'
 import BasestackConsensus from "@/components/NavbarModules/BasestackConsensus/BasestackConsensus"
 import ModuleInstall from "@/components/NavbarModules/ModuleInstall/ModuleInstall"
+import Mytax from "@/components/NavbarModules/Mytax/Mytax"
+import MyTaxReport from "@/components/NavbarModules/MyTaxReport/MyTaxReport"
 import Logs from "@/components/NavbarModules/Logs/Logs"
 import About from "@/components/NavbarModules/About/About"
 import Tutorial from "@/components/NavbarModules/Tutorial/Tutorial"
@@ -141,6 +143,7 @@ export default {
 	components:{
 		Introduction,
 		System,
+		Mytax,
 		Nextstrain,
 		RAMPART,
 		IGV, 
@@ -149,6 +152,7 @@ export default {
 		Logs,
 		About,
 		Tutorial,
+		MyTaxReport,
 		HalfCircleSpinner
 	},
 	data(){
@@ -256,9 +260,7 @@ export default {
 		let root;
 		let dirName;
 		let files;
-		console.log(event)
 		if (event.dataTransfer){
-			console.log("dragging")
   			files = event.dataTransfer.files[0]
   			if (Array.isArray(files)){
 				if(files.length > 0){
@@ -294,18 +296,14 @@ export default {
       		let val = event
       		
 			let root = this.parseFileInput(event, data.type)
-			console.log(root)
 			const V = path.basename(root);
 			let baseP  = root; let i = 0;
 			let fullname = V;
-			console.log(baseP, fullname)
 			while (i < sublevel){
 				baseP = path.dirname(baseP)
-				console.log(baseP)
 			 	fullname = `${path.basename(baseP)}/${fullname}`		
 			  	i++;
 			}	
-			console.log(fullname)		
 			try{	
     			let response =  await FileService.addSelection({
 					target: `${target}`,
@@ -314,7 +312,6 @@ export default {
 					type: 'arr',
 					key: "name"
 				})
-				console.log(response)		
     		} catch(err){
     			console.error(err)
     			this.$swal.fire({
@@ -357,7 +354,6 @@ export default {
 					console.error(`${err} in initializing the backend service`)
 				})
 			}
-			// console.log(images)
 			const modules = response.data.data.modules.entries
 			let errors_modules = response.data.data.modules.errors
 			let errors_images = response.data.data.images.errors
@@ -415,7 +411,6 @@ export default {
         this.$emit('toggleCollapseParent', this.collapsed)
       },
       toast(toaster, config, append = false) {
-      	console.log(config)
         this.$bvToast.toast(`${config.message}`, {
           title: `${config.title}`,
           variant: `${config.variant}`,
@@ -430,7 +425,7 @@ export default {
 
 <style>
 #mainpage{
-	height:100%;
+	height:100vh;
 	width: 100%;
 	position:absolute;
 	/*overflow-y:hidden;*/
@@ -440,7 +435,7 @@ export default {
 	-webkit-background-clip: padding-box; /* for Safari */
     background-clip: padding-box; /* for IE9+, Firefox 4+, Opera, Chrome */
 	padding: 0px;
-	height:100% !important;
+	height:100vh !important;
 	/*position:absolute;*/
 	/*margin:auto;*/
 	overflow-y:hidden;

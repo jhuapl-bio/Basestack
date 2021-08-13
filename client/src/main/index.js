@@ -69,8 +69,8 @@ if (process.env.NODE_ENV === 'production'){
     open_server = require("../modules/server/server.js").open_server
     close_server = require("../modules/server/server.js").close_server
     const { 
-     cancel_container
-    } = require('../modules/server/api/controllers/index.js')
+      cancel_container
+     } = require('../modules/server/api/controllers/index.js')
 }
 
 
@@ -195,7 +195,7 @@ var menu = Menu.buildFromTemplate([
               {
                 label: '1. Download WSL2',
                 click() { 
-                let batDownload = exec("curl.exe https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi -o wsl_installer.msi", { cwd: app.getPath('desktop') }); 
+                let batDownload = exec("curl.exe https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi -o wsl_update_x64.msi", { cwd: app.getPath('desktop') }); 
                 batDownload.stderr.on('data', (data) => {
                     logger.error(`${data.toString()} err`);
                     mainWindow.webContents.send('mainNotification', {
@@ -256,6 +256,13 @@ var menu = Menu.buildFromTemplate([
             click(){
               // "net localgroup docker-users %USERNAME% /add"
               let bat = exec("powershell \"Start-Process -Verb RunAs cmd.exe \' /K net localgroup docker-users %USERNAME% /add\' \"  ", { cwd: app.getPath('desktop') }); 
+              spawned_logs(bat, {throwError: true, process: "Add docker-users"})
+            }
+          },
+          {
+            label: "Enable Hypervisor",
+            click(){
+              let bat = exec("powershell -Command \"Start-Process powershell \'bcdedit /set hypervisorlaunchtype auto\' -Verb runAs \"", { cwd: app.getPath('desktop'), detached:true }); 
               spawned_logs(bat, {throwError: true, process: "Add docker-users"})
             }
           },
@@ -441,6 +448,23 @@ function createWindow () {
   ipcMain.on("checkUpdates", (event, arg) => {
     checkUpdates()
   })
+  ipcMain.on("openDirSelect", (event, arg) => {
+    dialog.showOpenDialog({
+      properties: ['openDirectory']
+    }).then((val, err)=>{
+      if (err){
+        throw err
+      } else {
+        mainWindow.webContents.send("getValue", val.filePaths[0])
+      }
+      
+    }).catch((err)=>{
+      throw err
+    })
+    
+  })
+
+
   mainWindow.webContents.on('did-finish-load', function () {
     let quitUpdateInstall = false;
     logger.info("Basestack is finished loading")
@@ -545,8 +569,27 @@ function createWindow () {
   mainWindow.on("close", (e)=>{
     // e.preventDefault();
     
-
-  //options object for dialog.showMessageBox(...)
+    try{
+      cancel_container({module: 'rampart', silent:true})
+    } catch(err){
+      console.log(err)
+    }
+    try{
+        cancel_container({module: 'basestack_consensus', silent:true})
+    } catch(err){
+      console.log(err)
+    }
+    try{
+        cancel_container({module: 'basestack_tutorial', silent: true})
+    } catch(err){
+      console.log(err)
+    }
+    try{
+      cancel_container({module: 'basestack_mytax', silent:true})
+    } catch(err){
+      console.log(err)
+    }
+    //options object for dialog.showMessageBox(...)
     let options = {}
 
     //Can be "none", "info", "error", "question" or "warning".
@@ -577,7 +620,11 @@ function createWindow () {
     options.noLink = true
 
     //Normalize the keyboard access keys
-    options.normalizeAccessKeys = true  
+    // options.normalizeAccessKeys = true  
+    // dialog.showMessageBox(WIN, options, (response, checkboxChecked) => {
+    //   console.log(response)
+    //   console.log(checkboxChecked) //true or false
+    //  })
 
 
 
@@ -586,6 +633,7 @@ function createWindow () {
 
   mainWindow.on('closed', (e) => {
     mainWindow= null
+    
   })
 }
 

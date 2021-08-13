@@ -18,9 +18,12 @@
                 <div style="width:100%; background:#1d3a7b;">
                   <b-img style="" :src="require('../../../assets/icon_256x256.png')" fluid alt="JUHAPL"></b-img>
                 </div>
-                <span class="center-align-icon; " >Need Help installing Basestack? Please swipe right for more information
-                  <font-awesome-icon    icon="question-circle" size="sm"  />
+                <span class="center-align-icon; " >
+                  <p style="color: black">Need Help installing Basestack? Please swipe right for more information <font-awesome-icon    icon="question-circle" size="sm"  /></p>
+                  
+                  <p style="color: black">See our <a target="_blank" href="https://jhuapl-bio.github.io/Basestack/" @click="open_link('https://jhuapl-bio.github.io/Basestack/', $event)">Website</a> for more info</p>
                 </span>
+                
                 <b-table
                   class="text-center"
                   :fields="releaseNotificationFields"
@@ -181,6 +184,7 @@
     methods: {
       open_link (link,e) {
       e.stopPropagation()
+      e.preventDefault()
         this.$electron.shell.openExternal(link)
       },
       updateImages(val){

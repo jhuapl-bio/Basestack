@@ -614,7 +614,6 @@
 			            label-size="sm"
 			            label-for="filterInput"
 			            class="mb-0 formGroup"
-			            v-slot="{ ariaDescribedby }"
 			         >
 			         	<template slot="label">
 						    <span  
@@ -701,7 +700,7 @@
 					    </span>	
 					    <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.run_config.validation.required">Specify valid config information</div>
 					   	<b-sidebar id="sidebar-right-run-config" title="Customize Run Config"  left shadow @shown="customPrimerAdd=true" @hidden="customPrimerAdd=false">
-					   		<b-input-group-append v-for="key in ['primers', 'basecalling', 'barcoding']" > 
+					   		<b-input-group-append :key="key" v-for="key in ['primers', 'basecalling', 'barcoding']" > 
 					   			<hr>
 					   			<h3 style="text-align: center">{{key}}</h3>
 					   			<br>
@@ -998,7 +997,7 @@ export default {
     		}
     	},
     	barcodingFiles: async function(val){
-    		for (entry in this.selectedHistory.runDir.run_config.barcoding){
+    		for (let entry in this.selectedHistory.runDir.run_config.barcoding){
 	    		if (entry.custom){
 	    			let root = this.parseFileInput(val)
 	    			const primerV = path.basename(root)
@@ -1278,7 +1277,6 @@ export default {
 	        }
 		},
 		async setToggle(dir, dirValue, dispatch, dispatchValue){
-			// this.data[dispatch] = dispatchValue
 			this.updateData()
 			dir = dirValue
 		},

@@ -7,13 +7,12 @@
    - # **********************************************************************
   */
 const fs = require("fs")
-const { convert_custom, checkFileExist, checkFolderExistsReject, checkFolderExists, checkFolderExistsAccept,  validateVideo, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions, validate_run_dir }  = require("./validate.js")
+const { convert_custom, checkFileExist,  checkFolderExists, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
 var   { store }  = require("../store/global.js")
 var { logger } = require("../controllers/logger.js")
-const { removeFile, getFiles, copyFile, readFile,  writeFolder } = require("./IO.js")
+const { getFiles, readFile,  writeFolder } = require("./IO.js")
 const si = require('systeminformation');
-import Docker from 'dockerode';
 
 
 const axios = require("axios")
@@ -371,7 +370,6 @@ export async function fetch_status(){
 	}
 	let dockers;
 	let errors = [];
-
 	try{
 		let re = await fetch_modules()
 		response.images = re.images
@@ -386,6 +384,7 @@ export async function fetch_status(){
 		logger.error(err)
 		errors.push(err)
 	}
+	
 
 	try{
 		let docker_status = await fetch_docker_status()
@@ -433,9 +432,10 @@ export async function fetch_modules(){
 			if (value.module && store.modules[key]){
 				store.config.modules[key].status = store.modules[key].status
 				store.config.modules[key].status.stream = store.config.modules[key].status.stream.splice(-200)
-				store.config.modules[key].status.installed = store.config.images[value.image].status.installed
-			}
+				store.config.modules[key].installed = store.config.images[value.image].status.installed
+			} 
 		}
+		
 		return {
 			images: {
 				entries: store.config.images,
