@@ -66,6 +66,23 @@
                 "resources": null,
                 "path": "jhuaplbio/basestack_mytax"
             }
+        },
+        "florianbw/pavian": {
+            "status": null,
+            "title": "Pavian",
+            "name": "florianbw/pavian",
+            "estimated_size": 10.6,
+            "private": false,
+            "tags": [],
+            "installation": {
+                "srcFiles": [
+                ],
+                "type": "online",
+                "file": null,
+                "active": false,
+                "resources": null,
+                "path": "florianbw/pavian"
+            }
         }
     },
     "modules": {
@@ -255,6 +272,24 @@
                     "title": "Build Standard Flukraken"
                 }
             ]
+        },
+        "pavian": {
+            "name": "pavian",
+            "title": "Pavian",
+            "icon": "tree",
+            "component": "Pavian",
+            "module": true,
+            "status": null,
+            "image": "florianbw/pavian",
+            "meta": "${writePath}/pavian/meta.json",
+            "config": {
+                "base": "http://localhost",
+                "mp4": "mp4",
+                "material": "material",
+                "port": 8087,
+                "force": true,
+                "initial": true
+            }
         },
         "igv": {
             "name": "igv",

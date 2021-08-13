@@ -139,6 +139,27 @@ export default {
 					},
 				},
 				{
+					name: 'pavian',
+					tooltip: null,
+					title: "Pavian",
+					log: [],
+					pause: false,
+					interval:null,
+					async startLog(){
+						this.interval = setInterval(()=>{
+							if(!(this.pause)){
+								FileService.fetchLog({name: 'pavian', type: 'container'}).then((message)=>{
+									if (message.data.status != 201){
+										this.log = message.data.data
+									}
+								}).catch((err)=>{
+									this.pause = true
+								})
+							}
+						}, 1000)
+					},
+				},
+				{
 					name: 'tutorial',
 					title: "Tutorial",
 					log: [],

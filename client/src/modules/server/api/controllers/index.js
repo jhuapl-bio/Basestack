@@ -17,6 +17,7 @@ const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
 const { RAMPART } = require('../modules/rampart')
 const { BasestackMytax } = require("../modules/mytax")
+const { Pavian } = require("../modules/pavian")
 const { BasestackMytaxReport } = require("../modules/mytax_report")
 const {docker_init} = require("./docker.js")
 const lodash = require("lodash")
@@ -167,7 +168,11 @@ async function initialize_module_object(container_name){
 		obj  = new DockerObj('jhuaplbio/basestack_mytax', 'basestack_mytax', new BasestackMytax());
 	} else if (container_name == 'basestack_mytax_report'){
 		obj  = new DockerObj('jhuaplbio/basestack_mytax', 'basestack_mytax_report', new BasestackMytaxReport());
-	}  else {
+	}  
+	else if (container_name == 'pavian'){
+		obj  = new DockerObj('florianbw/pavian', 'pavian', new Pavian());
+	}	
+	else {
 		return;
 	}
 

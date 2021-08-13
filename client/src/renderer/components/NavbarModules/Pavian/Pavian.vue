@@ -7,11 +7,11 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="mytax" >
+  <div id="pavian" >
 	  <b-form-group>
 		<span v-b-tooltip.hover.top 
-			title="Start Mytax"
-			v-if="!modules.basestack_mytax.status.running"
+			title="Start Pavian"
+			v-if="!modules.pavian.status.running"
 			class="center-align-icon configure"
 				@click="start_module()" > Start Module
 			<font-awesome-icon  icon="sync" style="margin-left: 10px; margin-right: 10px"/>
@@ -19,18 +19,18 @@
 			
 		<span v-b-tooltip.hover.top
 			v-else 
-			title="Cancel Mytax Sync"
+			title="Cancel"
 			class="center-align-icon configure"
 				@click="cancel_module()" > Cancel Module
 			<font-awesome-icon  icon="times" style="margin-left: 10px; margin-right: 10px"/>
 		</span>
 	</b-form-group>
-	<b-row v-if="modules.basestack_mytax && modules.basestack_mytax.status && modules.basestack_mytax.status.running">
-		<object id ="mytaxObj" type="text/html" :data="`${modules.basestack_mytax.config.base}:${modules.basestack_mytax.config.port}`">
+	<b-row v-if="modules.pavian && modules.pavian.status && modules.pavian.status.running">
+		<object id ="mytaxObj" type="text/html" :data="`${modules.pavian.config.base}:${modules.pavian.config.port}`">
 		</object>
 	</b-row>
 	<b-row v-else>
-		<h4>Mytax isn't running</h4>
+		<h4>Pavian isn't running</h4>
 		<span v-b-tooltip.hover.top 
 				title="Reload module ui, check logs if issues persist"
 				class="center-align-icon configure"
@@ -48,7 +48,7 @@
 import FileService from '@/services/File-service.js'
 
 export default {
-	name: 'Mytax',
+	name: 'Pavian',
 	components: {
 	},
 	props: ['modules', 'images', 'selectedTag'],
@@ -75,8 +75,7 @@ export default {
       	},
 		async start_module(){
       		await FileService.startModule({
-				module: 'basestack_mytax',
-      			submodule: 'basestack_mytax',
+				module: 'pavian',
       		}).then((response)=>{
 				this.count +=1
         	}).catch((error)=>{
@@ -91,7 +90,7 @@ export default {
       	},
       	async cancel_module(){
       		await FileService.cancelModule({
-				module: 'basestack_mytax'
+				module: 'pavian'
         	}).then((response)=>{
         		this.$swal.fire({
 					position: 'center',
@@ -115,7 +114,7 @@ export default {
 </script>
 
 <style>
-#mytax{
+#pavian{
 	height:100%;
     overflow-y:auto;
     width: 100%;
