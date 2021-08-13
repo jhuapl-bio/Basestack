@@ -131,6 +131,8 @@ import BasestackConsensus from "@/components/NavbarModules/BasestackConsensus/Ba
 import ModuleInstall from "@/components/NavbarModules/ModuleInstall/ModuleInstall"
 import Mytax from "@/components/NavbarModules/Mytax/Mytax"
 import MyTaxReport from "@/components/NavbarModules/MyTaxReport/MyTaxReport"
+import Pavian from "@/components/NavbarModules/Pavian/Pavian"
+
 import Logs from "@/components/NavbarModules/Logs/Logs"
 import About from "@/components/NavbarModules/About/About"
 import Tutorial from "@/components/NavbarModules/Tutorial/Tutorial"
@@ -153,6 +155,7 @@ export default {
 		About,
 		Tutorial,
 		MyTaxReport,
+		Pavian,
 		HalfCircleSpinner
 	},
 	data(){

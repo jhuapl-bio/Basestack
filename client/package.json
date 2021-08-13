@@ -132,6 +132,7 @@
     "electron-updater": "^4.3.5",
     "epic-spinners": "^1.1.0",
     "express": "^4.17.1",
+    "file-system": "^2.2.2",
     "jquery": "^3.5.0",
     "js-cookie": "^2.2.1",
     "mkdirp": "^1.0.4",
