@@ -321,7 +321,6 @@ export default {
 			const $this = this
 			FileService.fetchStatus({ data: $this.data, container: "basestack_mytax_report", pipeline: this.cmd }).then((response)=>{
 				$this.module_statuses = response.data.data
-				console.log($this.module_statuses)
 			})
 		
 		}
