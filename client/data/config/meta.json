@@ -51,6 +51,21 @@
                 }
 	            
             }
+        },
+        "jhuaplbio/basestack_mytax": {
+            "status": null,
+            "name": "jhuaplbio/basestack_mytax",
+            "title": "Mytax",
+            "estimated_size": 9.5,
+            "private": false,
+            "tags": [],
+            "installation": {
+                "type": "online",
+                "file": null,
+                "active": false,
+                "resources": null,
+                "path": "jhuaplbio/basestack_mytax"
+            }
         }
     },
     "modules": {
@@ -184,6 +199,62 @@
                 "force": true,
                 "initial": true
             }
+        },
+        "basestack_mytax": {
+            "name": "basestack_mytax",
+            "title": "Mytax",
+            "icon": "dna",
+            "component": "Mytax",
+            "module": true,
+            "status": null,
+            "objectname": "Mytax",
+            "objectfile": "modules/mytax",
+            "image": "jhuaplbio/basestack_mytax",
+            "meta": "${writePath}/basestack_mytax/meta.json",
+            "config": {
+                "base": "http://localhost",
+                "port": 8088,
+                "initial": false
+            }
+        },
+        "basestack_mytax_report": {
+            "name": "basestack_mytax_report",
+            "title": "MytaxReport",
+            "icon": "dna",
+            "component": "MyTaxReport",
+            "module": true,
+            "status": null,
+            "objectname": "MyTaxReport",
+            "objectfile": "modules/mytax_report",
+            "image": "jhuaplbio/basestack_mytax",
+            "meta": "${writePath}/basestack_mytax/meta.json",
+            "config": {
+                "initial": false
+            },
+            "resources": {
+                   "classifiers": [
+                        { 
+                            "name": "kraken", 
+                            "dbs": [
+                                { "name":"minikraken", "compressed":false},
+                                { "name":"flukraken", "compressed":true},
+                                { "name":"custom"}
+                            ] 
+                        }                        
+                    ]
+            },
+            "pipelines": [
+                {
+                    "key": "basestack_mytax_report",
+                    "status": null,
+                    "title": "Create Report and JSON"
+                },
+                {
+                    "key": "basestack_mytax_build_flukraken",
+                    "status": null,
+                    "title": "Build Standard Flukraken"
+                }
+            ]
         },
         "igv": {
             "name": "igv",

@@ -185,6 +185,34 @@ router.post("/consensus/status", (req,res,next)=>{ //this method needs to be rew
 	})
 })
 
+router.post("/status/modules/fetch", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	(async function(){
+		try {
+			await store.modules[req.body.container].obj.watch(req.body).then((response)=>{
+				res.status(200).json({status: 200, message: "Check status", data: response });
+			}).catch((err)=>{
+				logger.error("%s %s", "There was an error checking the status", err)
+				res.status(419).send({status: 419, message: "There was an error"});
+			})
+			// await module_status(
+			// 	req.body.selectedHistory,
+			// 	req.body.module
+			// ).then((response)=>{
+			// 	const mod = response
+			// 	res.status(200).json({status: 200, message: "Check status", data: mod });
+			// }).catch((err)=>{
+			// 	logger.error("%s %s", "There was an error checking the status", err)
+			// 	res.status(419).send({status: 419, message: "There was an error"});
+			// })
+		} catch(err2){
+			logger.error("%s %s", "Error in getting status of complete file", err2)
+			res.status(419).send({status: 419, message: error_alert(2) });
+		}
+	})().catch((err2)=>{
+		console.error(err2, "Error in module status")
+	})
+})
+
 router.get("/log/:container_name/:type", (req,res,next)=>{
 	try {
 		if (req.params.type == 'container'){
