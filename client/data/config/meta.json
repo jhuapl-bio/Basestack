@@ -284,7 +284,6 @@
             "meta": "${writePath}/pavian/meta.json",
             "config": {
                 "base": "http://localhost",
-                "mp4": "mp4",
                 "material": "material",
                 "port": 8087,
                 "force": true,
