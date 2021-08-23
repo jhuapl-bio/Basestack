@@ -91,6 +91,19 @@
 					</b-button><p v-if="db.info && db.info.dirname">{{db.info.dirname}}</p>
 				</b-form-group>
 			</div>
+			<div v-else-if="cmd && cmd.key == 'basestack_mytax_process_db'">
+				<b-form-group
+					id="fieldset-1"
+					label="DB Path"
+					label-for="input-1"
+					description="Path to db to process"
+				>
+					<b-button
+						@click="electronOpenDir('data')"
+					> Select Folder
+					</b-button><p v-if="data && data.dirname">{{data.dirname}}</p>
+				</b-form-group>
+			</div>
 			<div v-else>
 				<b-form-group
 					id="fieldset-1"
