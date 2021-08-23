@@ -164,6 +164,10 @@
                     ],
                     "primers": [
                         {
+                            "name": "nCoV-2019/V4",
+                            "custom": false
+                        },
+                        {
                             "name": "nCoV-2019/V3",
                             "custom": false
                         },
@@ -274,6 +278,11 @@
                     "key": "basestack_mytax_build_flukraken",
                     "status": null,
                     "title": "Build Standard Flukraken"
+                },
+                {
+                    "key": "basestack_mytax_process_db",
+                    "status": null,
+                    "title": "Pre-Process Kraken Database"
                 }
             ]
         },
