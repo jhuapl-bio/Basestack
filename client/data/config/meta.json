@@ -164,11 +164,11 @@
                     ],
                     "primers": [
                         {
-                            "name": "nCoV-2019/V4",
+                            "name": "nCoV-2019/V3",
                             "custom": false
                         },
                         {
-                            "name": "nCoV-2019/V3",
+                            "name": "nCoV-2019/V4",
                             "custom": false
                         },
                         {
