@@ -61,6 +61,55 @@ export  class BasestackMytaxReport {
 							{key: 'status', label: 'Exists', sortable: false, class: 'text-center'}
 						]
 				}	
+			} else if (req.pipeline.key == 'basestack_mytax_process_db') {
+				modules =  
+					{
+					items: [
+						{
+							key: "kdb",
+							title: "KDB File",
+							step: 1,
+							status: null,
+							statusType: 'file',
+							filepath: `${data.dirpath}/database.kdb`
+						},
+						{
+							key: "names",
+							title: "Names.dmp",
+							step: 2,
+							status: null,
+							statusType: 'file',
+							filepath: `${data.dirpath}/taxonomy/names.dmp`
+						},
+						{
+							key: "nodes",
+							title: "Nodes.dmp",
+							step: 3,
+							status: null,
+							statusType: 'file',
+							filepath: `${data.dirpath}/taxonomy/nodes.dmp`
+						},
+						{
+							key: "idx",
+							title: "Idx (Index)",
+							step: 4,
+							status: null,
+							statusType: 'file',
+							filepath: `${data.dirpath}/database.idx`
+						},
+						{
+							key: "joined_full",
+							title: "Joined.full",
+							step: 5,
+							status: null,
+							statusType: 'file',
+							filepath: `${data.dirpath}/taxonomy/joined.full`
+						}
+					],
+					header: [
+						
+					]
+				}
 			} else {
 				modules =  
 					{
@@ -125,6 +174,12 @@ export  class BasestackMytaxReport {
 			if (cmd_option.key == 'basestack_mytax_build_flukraken'){
 				command = [ 'bash', '-c', `source /opt/conda/etc/profile.d/conda.sh &&\
 					conda activate mytax && bash build_flukraken.sh -k /opt/databases/`
+				]
+				binds.push(data.data.dirpath + ":/opt/databases"  )
+
+			} else if (cmd_option.key == 'basestack_mytax_process_db'){
+				command = [ 'bash', '-c', `source /opt/conda/etc/profile.d/conda.sh &&\
+					conda activate mytax && bash process_krakendb.sh -k /opt/databases`
 				]
 				binds.push(data.data.dirpath + ":/opt/databases"  )
 
