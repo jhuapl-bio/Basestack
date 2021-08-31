@@ -7,3 +7,4 @@ client/data/
 client/package-lock.json
 client/dist
 client/node_modules
+!client/data/config
