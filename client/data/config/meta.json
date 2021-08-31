@@ -168,6 +168,10 @@
                             "custom": false
                         },
                         {
+                            "name": "nCoV-2019/V4",
+                            "custom": false
+                        },
+                        {
                             "name": "nCoV-2019/V2",
                             "custom": false
                         },
@@ -270,6 +274,11 @@
                     "key": "basestack_mytax_build_flukraken",
                     "status": null,
                     "title": "Build Standard Flukraken"
+                },
+                {
+                    "key": "basestack_mytax_process_db",
+                    "status": null,
+                    "title": "Pre-Process Kraken Database"
                 }
             ]
         },
@@ -284,7 +293,6 @@
             "meta": "${writePath}/pavian/meta.json",
             "config": {
                 "base": "http://localhost",
-                "mp4": "mp4",
                 "material": "material",
                 "port": 8087,
                 "force": true,
