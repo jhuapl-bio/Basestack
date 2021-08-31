@@ -270,6 +270,11 @@
                     "key": "basestack_mytax_build_flukraken",
                     "status": null,
                     "title": "Build Standard Flukraken"
+                },
+                {
+                    "key": "basestack_mytax_process_db",
+                    "status": null,
+                    "title": "Pre-Process Kraken DB"
                 }
             ]
         },
