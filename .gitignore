@@ -3,8 +3,8 @@ client/package-lock.json
 client/data/userdata
 client/data/logs
 client/.env
-client/data/
 client/package-lock.json
 client/dist
 client/node_modules
-!client/data/config
+client/data/userdata
+client/data/logs
