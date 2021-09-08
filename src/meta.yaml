@@ -1,0 +1,366 @@
+system: &system
+  logs:
+    path: "${writePath}/logs"
+# images: &images
+#   jhuaplbio/basestack_consensus: &images.basestack_consensus
+#     title: "Consensus"
+#     name: "jhuaplbio/basestack_consensus"
+#     config: 
+#       private: False
+#       tags: []
+#       type: "online"
+#       installation:
+#         location: "jhuaplbio/basestack_consensus"
+#       estimated_size: 10.6
+#     dependencies: null
+#     resources: # These are included in the docker image pull
+#       barcoding: &images.basestack_consensus.resources.barcoding
+#         items: &images.basestack_consensus.resources.barcoding.items
+#           - "barcode_arrs_16s.cfg"
+#           - "barcode_arrs_dual_nb24_pcr96.cfg"
+#           - "barcode_arrs_lwb.cfg"
+#           - "barcode_arrs_nb12.cfg"
+#           - "barcode_arrs_nb24.cfg"
+#           - "barcode_arrs_nb96.cfg"
+#           - "barcode_arrs_pcr12.cfg"
+#           - "barcode_arrs_pcr96.cfg"
+#           - "barcode_arrs_rab.cfg"
+#           - "barcode_arrs_rbk096.cfg"
+#           - "barcode_arrs_rbk4.cfg"
+#           - "barcode_arrs_rbk.cfg"
+#           - "barcode_arrs_rlb.cfg"
+#           - "barcode_arrs_vmk2.cfg"
+#           - "barcode_arrs_vmk.cfg"
+#           - "configuration.cfg"
+#           - "configuration_dual.cfg"
+#       basecalling": &images.basestack_consensus.resources.basecalling
+#         items: &images.basestack_consensus.resources.basecalling.items
+#             - "dna_r10.3_450bps_fast.cfg"
+#             - "dna_r10.3_450bps_fast_prom.cfg"
+#             - "dna_r10.3_450bps_hac.cfg"
+#             - "dna_r10.3_450bps_hac_prom.cfg"
+#             - "dna_r10_450bps_fast.cfg"
+#             - "dna_r10_450bps_hac.cfg"
+#             - "dna_r9.4.1_450bps_fast.cfg"
+#             - "dna_r9.4.1_450bps_fast_prom.cfg"
+#             - "dna_r9.4.1_450bps_hac.cfg"
+#             - "dna_r9.4.1_450bps_hac_prom.cfg"
+#             - "dna_r9.4.1_450bps_hac_prom_fw205.cfg"
+#             - "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg"
+#             - "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac_prom.cfg"
+#             - "dna_r9.5_450bps_1d2_raw.cfg"
+#             - "dna_r9.5_450bps.cfg"
+#             - "rna_r9.4.1_70bps_fast.cfg"
+#             - "rna_r9.4.1_70bps_fast_prom.cfg"
+#             - "rna_r9.4.1_70bps_hac.cfg"
+#             - "rna_r9.4.1_70bps_hac_prom.cfg"
+#       primers: &images.basestack_consensus.resources.primers
+#         items: &images.basestack_consensus.resources.primers.items
+#           - "nCoV-2019/V3"
+#           - "nCoV-2019/V2"
+#           - "nCoV-2019/V1"
+#   basestack_tutorial: &images.basestack_tutorial
+#     title: "Workshop Tutorials"
+#     name: "basestack_tutorial"
+#     config: 
+#       private: True
+#       tags: []
+#       type: "online"
+#       dependencies: 
+#         - { &images.basestack_tutorial.dependencies.aws_key
+#             name: "AWS Key File",
+#             default: "new_user_credentials.csv",
+#             key: 'aws_key',
+#             required: True,
+#             type: "file",
+#             src: null,
+#             srcFormat: null,
+#             cmd: {
+#               type: "copy",
+#               top: "/src/aws_key.csv"
+#             },
+#             tooltip: "new_user_credential.tsv file provided in the google drive for workshop attendees"
+#         }
+#       installation: 
+#         srcFiles: 
+#           - "Dockerfile"
+#           - "express.js"
+#         location: "${resourcePath}/basestack_tutorial/installation"
+#         resourcesPath: "${writePath}/basestack_tutorial/resources"
+#   jhuaplbio/basestack_mytax:
+#     title: "Mytax"
+#     name: "jhuaplbio/basestack_mytax"
+#     config: 
+#       private: False
+#       tags: []
+#       type: "online"
+#       installation:
+#         location: "jhuaplbio/basestack_mytax"
+#       estimated_size: 9.5
+#     dependencies: null
+modules: &modules
+  - name: "introduction"
+    icon: "home"
+    title: "Home"
+    component: "Introduction"
+    module: False
+    tooltip: null
+    image: null
+  - name: "moduleinstall"
+    icon: "cog"
+    title: "Install Modules"
+    component: "ModuleInstall"
+    module: False
+    tooltip: "Install or Modify Modules as Docker Images"
+    image: null
+  - name: "pavian"
+    title: "Pavian"
+    icon: "tree"
+    component: "Pavian"
+    module: True
+    status: null
+    dependencies: 
+      - target: "florianbw/pavian"
+        type: "docker"
+    tooltip: "View Kraken-style Classification Reports"
+    workflow: 
+      command: "docker-compose"
+      file: "docker-compose.yml"
+      build:
+        command: "pull pavian"
+      services: 
+        - command: "up pavian"
+          stop: "stop pavian "
+          name: "pavian"
+          init: true
+  - name: "mytax"
+    title: "Mytax"
+    icon: "dna"
+    component: "Mytax"
+    module: True
+    status: null
+    dependencies: 
+      - target: "jhuaplbio/basestack_mytax"
+        type: "docker"
+    tooltip: "Run Kraken Classification and View"
+    workflow: 
+      command: "docker-compose"
+      file: "docker-compose.yml"
+      build:
+        command: "pull mytax_visualization"
+      services: 
+        - command: "up mytax_visualization"
+          stop: "stop mytax_visualization"
+          name: mytax_visualization
+          init: true
+        - command: "up mytax_report"
+          stop: "stop mytax_report"
+          name: mytax_report
+          init: false
+          variables:
+          - name: db
+            element: "select"
+            source: ""
+          - name: input
+            element: "file"
+            source: ""
+          - name: inputdir
+            element: "string"
+            source: ""
+        - command: "up mytax_process_db"
+          stop: "stop mytax_process_db"
+          name: mytax_process_db
+          init: false
+          variables:
+          - name: inputdir
+            element: "string"
+            source: ""
+            
+    # - name: "test"
+    # title: "Test"
+    # icon: "tree"
+    # component: "Test"
+    # module: True
+    # status: null
+    # dependencies: 
+      
+    # tooltip: "Test Server Native Pipelines"
+    # workflow: 
+    #   command: "python3"
+    #   services: 
+    #     - command: "-m http.server"
+    #       stop: "SIGKILL"
+    #       name: "test"
+    #       init: true
+
+  # - basestack_consensus: &modules.basestack_consensus
+  #   name: "basestack_consensus"
+  #   title: "Consensus" 
+  #   icon: "dna"
+  #   component: "BasestackConsensus"
+  #   module: True
+  #   objectname: "BasestackConsensus"
+  #   objectfile: "modules/consensus"
+  #   tooltip: "Generate consensus sequences and receive a report"
+  #   images:
+  #     jhuaplbio/basestack_consensus:
+  #       title: "Consensus"
+  #       name: "jhuaplbio/basestack_consensus"
+  #       config: 
+  #         private: False
+  #         tags: []
+  #         type: "online"
+  #         installation:
+  #           location: "jhuaplbio/basestack_consensus"
+  #         estimated_size: 10.6
+  #       dependencies: null
+  #   pipelines:
+  #     - basestack_consensus: &pipelines.basestack_consensus
+  #       title: "Consensus (Artic)"
+  #       cmd: ['bash', '-c', 'echo Starting consensus pipeline...' ]
+  #       inputs: 
+  #         - run: &pipelines.basestack_consensus.inputs.run
+  #             type: "dir"
+  #             element: "dir-input"
+  #             src: null
+  #             save-config: null
+  #         - fastq_folder: &pipelines.basestack_consensus.inputs.fastq_folder
+  #             type: "dir"
+  #             element: "multi-select"
+  #             derived: *pipelines.basestack_consensus.inputs.run
+  #             save-config: null
+  #         - sequencing_summary: &pipelines.basestack_consensus.inputs.sequencing_summary
+  #             type: "file"
+  #             element: "text"
+  #             required: True
+  #             derived: *pipelines.basestack_consensus.inputs.run
+  #             checks: ['exists']
+  #         - drift_correction: &pipelines.basestack_consensus.inputs.drift_correction
+  #             type: "file"
+  #             element: "text"
+  #             required: True
+  #             derived: *pipelines.basestack_consensus.inputs.run
+  #             checks: ['exists']
+  #         - throughput: &pipelines.basestack_consensus.inputs.throughput
+  #             type: "file"
+  #             element: "text"
+  #             required: True
+  #             derived:  *pipelines.basestack_consensus.inputs.run
+  #             checks: ['exists']
+  #         - manifest: &pipelines.basestack_consensus.inputs.manifest
+  #           type: "file"
+  #           derived: *pipelines.basestack_consensus.inputs.run
+  #           content:
+  #             items:
+  #               header: False
+  #               delim: "tab"
+  #               type: "dynamic"
+  #         - primers: 
+  #             type: "string"
+  #             element: "select"
+  #             required: True
+  #             items: &images.basestack_consensus.resources.primers.items
+  #             - "nCoV-2019/V3"
+  #             - "nCoV-2019/V2"
+  #             - "nCoV-2019/V1"
+  #             custom-config: 
+  #                 custom: true
+  #                 save-config: {}
+  #                 bind: "/opt/basestack_consensus/code/ont-guppy-cpu/data/"
+  #                 type: "file"
+  #                 checks: 
+  #                   - "exists"
+  #         - barcoding: 
+  #           type: "string"
+  #           element: "multi-select"
+  #           required: True
+  #           items: &images.basestack_consensus.resources.barcoding.items
+  #               - "barcode_arrs_16s.cfg"
+  #               - "barcode_arrs_dual_nb24_pcr96.cfg"
+  #               - "barcode_arrs_lwb.cfg"
+  #               - "barcode_arrs_nb12.cfg"
+  #               - "barcode_arrs_nb24.cfg"
+  #               - "barcode_arrs_nb96.cfg"
+  #               - "barcode_arrs_pcr12.cfg"
+  #               - "barcode_arrs_pcr96.cfg"
+  #               - "barcode_arrs_rab.cfg"
+  #               - "barcode_arrs_rbk096.cfg"
+  #               - "barcode_arrs_rbk4.cfg"
+  #               - "barcode_arrs_rbk.cfg"
+  #               - "barcode_arrs_rlb.cfg"
+  #               - "barcode_arrs_vmk2.cfg"
+  #               - "barcode_arrs_vmk.cfg"
+  #               - "configuration.cfg"
+  #               - "configuration_dual.cfg"
+  #           custom-config: 
+  #             custom: True
+  #             save-config: 
+  #             bind: "/opt/basestack_consensus/code/ont-guppy-cpu/data/barcoding/"
+  #             type: "file"
+  #             checks:
+  #               - "exists"
+  #         - basecalling:
+  #             type: "string"
+  #             element: "select"
+  #             required: True
+  #             items: &images.basestack_consensus.resources.basecalling.items
+  #               - "dna_r10.3_450bps_fast.cfg"
+  #               - "dna_r10.3_450bps_fast_prom.cfg"
+  #               - "dna_r10.3_450bps_hac.cfg"
+  #               - "dna_r10.3_450bps_hac_prom.cfg"
+  #               - "dna_r10_450bps_fast.cfg"
+  #               - "dna_r10_450bps_hac.cfg"
+  #               - "dna_r9.4.1_450bps_fast.cfg"
+  #               - "dna_r9.4.1_450bps_fast_prom.cfg"
+  #               - "dna_r9.4.1_450bps_hac.cfg"
+  #               - "dna_r9.4.1_450bps_hac_prom.cfg"
+  #               - "dna_r9.4.1_450bps_hac_prom_fw205.cfg"
+  #               - "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg"
+  #               - "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac_prom.cfg"
+  #               - "dna_r9.5_450bps_1d2_raw.cfg"
+  #               - "dna_r9.5_450bps.cfg"
+  #               - "rna_r9.4.1_70bps_fast.cfg"
+  #               - "rna_r9.4.1_70bps_fast_prom.cfg"
+  #               - "rna_r9.4.1_70bps_hac.cfg"
+  #               - "rna_r9.4.1_70bps_hac_prom.cfg"
+  #             custom-config: 
+  #                 custom: true
+  #                 save-config: {}
+  #                 bind: "/opt/basestack_consensus/code/ont-guppy-cpu/data/"
+  #                 type: "file"
+  #                 checks:
+  #                   - "exists"
+  - name: "igv"
+    icon: "globe"
+    title: "IGV"
+    component: "IGV"
+    module: False
+    tooltip: "View the externally hosted (internet required) page from Integrative Genomics Viewer"
+    image: null
+  - name: "nextstrain"
+    icon: "tree"
+    title: "Nextstrain"
+    component: "Nextstrain"
+    module: False
+    tooltip: "Compare mutations on Nextstrain (internet access required)"
+    image: null
+  - name: "logs"
+    icon: "book-open"
+    title: "Log Streams"
+    component: "Logs"
+    module: False
+    tooltip: "View currently running logs of processes"
+  - name: "about"
+    icon: "address-card"
+    title: "Contact"
+    component: "About"
+    module: False
+    tooltip: ""
+    image: null
+  - name: "system"
+    icon: "cog"
+    title: "System"
+    component: "System"
+    module: False
+    tooltip: "View your system information including available space, Docker status and more"
+    image: null

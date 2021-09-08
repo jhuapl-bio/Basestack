@@ -1,0 +1,21 @@
+version: '2.3'
+
+networks:
+  basestack_network:
+services:
+  pavian:
+    privileged: false
+    init: true
+    image: florianbw/pavian
+    networks:
+      basestack_network:
+        aliases:
+          - docker
+    networks:
+      - default
+      - basestack_network
+    command: ""
+    ports:
+        - "0.0.0.0:8087:80"
+    restart: "no"
+    container_name: pavian
