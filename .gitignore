@@ -31,3 +31,4 @@ dist/*
 data/*
 .env
 src/system/server/dist
+client/*
