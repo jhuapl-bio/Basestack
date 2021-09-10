@@ -2,23 +2,29 @@ version: '2.3'
 
 networks:
   basestack_network:
+  some-network:
+    external: true
 
 volumes:
   basestack_data:
   basestack_docker:
   basestack_docker_certs_ca:
   basestack_docker_certs_client:
+  some-docker-certs-ca:
+    external: true
+  some-docker-certs-client:
+    external: true
 
 services:
   basestack_orchestrator:
     privileged: true
     image: jhuaplbio/basestack_orchestrator
-    stdin_open: true # docker run -i
+    stdin_open: false # docker run -i
+    tty: true
     networks:
-      basestack_network:
-        aliases:
-          - docker
-    tty: true 
+        some-network:
+          aliases: 
+            - docker
     ports:
       - "0.0.0.0:8087:8087"
       - "0.0.0.0:8088:8088"
@@ -29,27 +35,51 @@ services:
     volumes:
       - .:/opt/app
       - basestack_docker:/var/lib/docker
-      - basestack_docker_certs_ca:/certs/ca
-      - basestack_docker_certs_client:/certs/client
+      - some-docker-certs-ca:/certs/ca
+      - some-docker-certs-client:/certs/client
     environment:
       DOCKER_TLS_CERTDIR: "/certs"
-    command: "--dns 8.8.8.8"
+    command: ""
+    # command: "--dns 8.8.8.8 && docker container run -it --name test --rm --privileged  jhuaplbio/basestack_mytax bash -c 'apt-get update && apt-get install -y iputils-ping && ping www.google.com'"
     restart: unless-stopped
     container_name: basestack_orchestrator  
-  basestack_dockstore:
+  basestack_init:
     image: jhuaplbio/basestack_orchestrator
     stdin_open: true # docker run -i
     depends_on:
       - basestack_orchestrator
     tty: true 
     init: true
+    networks:
+        - default
+        - basestack_network
     volumes:
         - .:/opt/app
         - basestack_docker_certs_client:/certs/client:ro
     environment:
       DOCKER_TLS_CERTDIR: "/certs"
-    command: "dockstore tool launch --entry quay.io/collaboratory/dockstore-tool-bamstats:1.25-6_1.0 --json Dockstore.json"
-    # command: "bash"
+    command: "bash"
+    # command: "docker container run -it --rm 7aa296ad0030 bash -c 'curl https://raw.githubusercontent.com/nextstrain/nextclade/1.2.3/data/sars-cov-2/tree.json'"
+    restart: "no"
+    container_name: basestack_init
+  basestack_dockstore:
+    image: jhuaplbio/basestack_orchestrator
+    stdin_open: false # docker run -i
+    networks:
+        - default
+        - basestack_network
+    depends_on:
+      - basestack_orchestrator
+    tty: false
+    init: true
+    volumes:
+        - .:/opt/app
+        - basestack_docker_certs_client:/certs/client:ro
+    environment:
+      DOCKER_TLS_CERTDIR: "/certs"
+    # command: "dockstore tool launch --entry quay.io/collaboratory/dockstore-tool-bamstats:1.25-6_1.0 --json Dockstore.json"
+    command: docker container run -it --name test --rm --privileged  jhuaplbio/basestack_mytax bash -c "apt-get update && apt-get install -y iputils-ping && ping www.google.com"
+    # command: "docker container run -it --name test --rm --privileged  jhuaplbio/basestack_mytax bash -c \"apt-get install iputils-ping\" "
     restart: "no"
     container_name: basestack_dockstore
   basestack_dev_server:

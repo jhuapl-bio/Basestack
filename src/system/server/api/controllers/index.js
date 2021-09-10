@@ -178,30 +178,11 @@ export async function updateDockerSocket(socket){
 		if (socket){
 			store.docker  = new Docker({socketPath: socket})
 		} else {
-			store.docker  = new Docker()
+			store.docker  = new Docker() 
 		}
 		await ammendJSON({
 			value: socket,
 			file: path.join(store.system.writePath, "system.json"),
-			attribute: 'dockerConfig.socketPath'
-		}).catch((err)=>{
-			logger.error(err)
-			throw err
-		})
-		return 
-	} catch(err){
-		logger.error(err)
-		throw err
-	}
-}
-
-export async function updateDockerSocket(socket){
-	try{
-		console.log(socket, docker)
-		docker  = new Docker({socketPath: socket})
-		await ammendJSON({
-			value: socket,
-			file: path.join(store.meta.writePath, "meta.json"),
 			attribute: 'dockerConfig.socketPath'
 		}).catch((err)=>{
 			logger.error(err)

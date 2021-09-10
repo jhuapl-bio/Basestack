@@ -130,23 +130,7 @@ export const spawnLog =  function( stream, loggingObject ){
 }
 
 
-export const dockerlogger = createLogger({
-  level: 'info',
-  format: combine(
-    label({ label: 'server log' }),
-    timestamp(),
-    format.splat(),
-    myFormat
-  ),
-  defaultMeta: { service: 'user-service' },
-  transports: [
-    //
-    // - Write to all logs with level `info` and below to `combined.log` 
-    // - Write all logs error (and below) to `error.log`.
-    //
-    new transports.File({ filename: meta.dockerLogFile, maxsize: 1000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
-  ]
-});
+
 
 
 export var error_alert = function(err){

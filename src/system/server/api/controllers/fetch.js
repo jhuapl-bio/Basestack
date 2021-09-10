@@ -210,25 +210,6 @@ export async function fetch_external_dockers(key){
 	}
 }
 
-export async function fetch_external_dockers(key){
-	let url = `https://registry.hub.docker.com/v2/repositories/${store.config.images[key].installation.path}/tags/latest`
-	try{
-		logger.info(url)
-		const element = store.config.images[key]
-		store.config.images[key].status.fetching_available_images.errors = null
-		store.config.images[key].status.fetching_available_images.status = true
-		let json =  await axios.get(url)
-		let latest = null;
-		latest = json.data
-		store.config.images[key].latest_digest = latest.images[0].digest
-	} catch(err){
-		logger.error(`${err} error in fetching external dockers`)
-		store.config.images[key].status.fetching_available_images.errors  = err
-	} finally{
-		logger.info("Checked the presence of "+key)
-		store.config.images[key].status.fetching_available_images.status = false
-	}
-}
 
 async function check_image_promise(image){
 	return new Promise((resolve, reject)=>{
@@ -410,6 +391,17 @@ export async function fetch_docker_stats(){
 	}
 }
 
+
+export async function fetch_docker_version(){
+	try{
+		let response = await store.docker.version()
+		return response
+	} catch(err){
+		logger.error(`${err} <-- error in fetching docker status via ping`)
+		throw err
+	}
+}
+
 export async function fetch_status(){
 	let response = {
 		system: {
@@ -457,10 +449,10 @@ export async function fetch_status(){
 		errors.push(err)
 	}
 	try{
-		let docker_status = await fetch_docker_status()
+		let docker_status = await getDockerStatus()
 		response.docker.running = true
-		try{
-			let docker_stats = await getDockerStatus()
+		try{ 
+			let docker_stats = await fetch_docker_stats()
 			response.system.docker.stats = docker_stats
 		} catch(err2){
 			response.system.docker.stats = null
@@ -473,7 +465,7 @@ export async function fetch_status(){
 	response.ready = store.system.ready
 	// logger.info("%j %j", response.docker.running, response.docker.installed)
 	return response
-}
+} 
 
 export async function fetch_modules(){
 	try{

@@ -325,7 +325,6 @@ export async function validate_run_dir(params){
 		throw err
 	}
 }
-
 function make_custom(val, map, target){
 	if (typeof val !== 'object'){	
 		if (map){
@@ -338,12 +337,6 @@ function make_custom(val, map, target){
 			else{
 				return {custom: true,  name: val, not_found: true}
 			}
-		} else {
-			return {custom: false,  name: val}
-		}
-	} else if (convert) {
-		if (!Array.isArray(val) && typeof val !== 'object'){
-			val = val.split(/[\s,]+/)
 		} else {
 			return {custom: false,  name: val}
 		}
@@ -364,6 +357,8 @@ function make_custom(val, map, target){
 		}
 	}
 }
+
+
 
 
 export  function convert_custom(val, map, target, convert){ //convert legacy runs to object for use in custom input configurations

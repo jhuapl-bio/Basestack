@@ -1,4 +1,4 @@
-FROM  docker:stable-dind
+FROM  docker:20.10.8-dind
 WORKDIR /opt
 #Install gcc for pip installation processes
 RUN apk add --no-cache --virtual .build-deps gcc musl-dev curl bash  linux-headers
@@ -17,7 +17,7 @@ RUN python3 -m ensurepip
 
 
 RUN pip3 install --no-cache --upgrade pip 
-RUN pip3 install --upgrade  setuptools cython wheel 
+RUN pip3 install --upgrade  setuptools==57.4.0 cython wheel 
 RUN pip3 install snakemake 
 ENV PATH="/usr/local/singularity/bin:${PATH}"
 
@@ -33,7 +33,11 @@ ENV DOCKSTORE_ROOT=1
 RUN mkdir -p ~/.dockstore \
     && printf "token: dummy-token\nserver-url: https://dockstore.org/api\nDOCKSTORE_ROOT=1\n" | tee ~/.dockstore/config
 RUN curl -o requirements.txt "https://dockstore.org/api/metadata/runner_dependencies?client_version=1.11.5&python_version=3" 
-RUN apk add libxslt-dev &&  pip install -r requirements.txt && cwltool --version
+RUN apk add libxslt-dev && cat requirements.txt
+RUN  pip install -r requirements.txt && cwltool --version
+# RUN echo 'alias curl="curl -k"' | tee -a  ~/.bashrc
+# RUN mkdir -p  /etc/docker/ && echo '{"dns": ["8.8.4.4", "8.8.8.8"]} ' | tee /etc/docker/daemon.json
+# RUN mkdir -p  /etc/docker/ && echo '{"dns": [ "172.17.0.9"]} ' | tee /etc/docker/daemon.json
 #Install snakemake and docker-compose
 #Remove unneeded files
 WORKDIR /opt/app

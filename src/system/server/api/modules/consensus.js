@@ -19,7 +19,7 @@ export class BasestackConsensus{
 			// Send websocket command to return the results of articserved at a port through docker
 			// Likely volume could be used here that is mounted somehwere in host OS or we cna return a json/tsv 
 			//get the current datetime for this report
-			const currentDateTime = moment().format('YYYY-MM-DDTHH-mm-ss')
+			const currentDateTime = moment().format('YYYY-MM-DDTHH-mm-ss') 
 			// const primerDir = data.primerDir
 			const fastqDir = data.runDir.fastqDir.path //get parent directory that contians fastq_pass
 			const consensusScripts = path.join(store.system.dockerimagesPath, "sciserver", "covid19")
