@@ -32,3 +32,5 @@ data/*
 .env
 src/system/server/dist
 client/*
+*.zip
+cromwell*
