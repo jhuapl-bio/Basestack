@@ -136,6 +136,8 @@ import Pavian from "@/components/NavbarModules/Pavian/Pavian"
 import Logs from "@/components/NavbarModules/Logs/Logs"
 import About from "@/components/NavbarModules/About/About"
 import Tutorial from "@/components/NavbarModules/Tutorial/Tutorial"
+import Oxford_Demo from "@/components/NavbarModules/Demos/Oxford_Demo"
+
 import {HalfCircleSpinner} from 'epic-spinners'
 import FileService from '@/services/File-service.js'
 import path from "path"
@@ -156,6 +158,7 @@ export default {
 		Tutorial,
 		MyTaxReport,
 		Pavian,
+		Oxford_Demo,
 		HalfCircleSpinner
 	},
 	data(){

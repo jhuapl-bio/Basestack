@@ -383,7 +383,7 @@ function spawned_logs(bat, config){
             message: (code == 0 ? `${config.process} succeeded` : `${config.process} failed`),
             disable_popup: true
         })
-      }
+      } 
       logger.info(message);
     });
 }
@@ -425,14 +425,13 @@ function createWindow () {
     })
   } else {
     mainWindow = new BrowserWindow({
-      height: 1000,
       useContentSize: true,
-      width: 1080,
       title: "Basestack",
       webPreferences: {webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
       icon: path.join(__dirname, "static", 'img', 'jhulogo.png')
     })
   }
+  mainWindow.maximize();
   mainWindow.webContents.session.clearCache(function(){
   //some callback.
   });

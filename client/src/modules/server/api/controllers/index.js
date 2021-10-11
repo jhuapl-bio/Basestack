@@ -15,8 +15,12 @@ const { DockerObj } = require("../modules/docker.js")
 
 const { Tutorial } = require("../modules/tutorial")
 const { BasestackConsensus } = require('../modules/consensus')
+
+const { Oxford_Demo } = require("../modules/oxford-demo.js")
+
+
 const { RAMPART } = require('../modules/rampart')
-const { BasestackMytax } = require("../modules/mytax")
+const { BasestackMytax } = require("../modules/mytax") 
 const { Pavian } = require("../modules/pavian")
 const { BasestackMytaxReport } = require("../modules/mytax_report")
 const {docker_init} = require("./docker.js")
@@ -133,7 +137,7 @@ export async function updateDockerSocket(socket){
 	try{
 		if (socket == ''){
 			socket = null
-		}
+		} 
 		if (socket){
 			store.docker  = new Docker({socketPath: socket})
 		} else {
@@ -172,6 +176,9 @@ async function initialize_module_object(container_name){
 	else if (container_name == 'pavian'){
 		obj  = new DockerObj('florianbw/pavian', 'pavian', new Pavian());
 	}	
+	else if (container_name == 'oxford_demo'){
+		obj  = new DockerObj('jhuaplbio/oxford-demo', 'oxford_demo', new Oxford_Demo());
+	}
 	else {
 		return;
 	}
