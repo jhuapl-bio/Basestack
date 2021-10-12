@@ -2,7 +2,7 @@ name: Build/preRelease
 
 on:
   push:
-    branches: staging
+    branches: main
 
 jobs:
   release:
