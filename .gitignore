@@ -1,4 +1,5 @@
 node_modules*
+.DS_STORE
 client/package-lock.json
 client/data/userdata
 client/data/logs
