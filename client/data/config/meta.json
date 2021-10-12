@@ -15,6 +15,7 @@
                     "Dockerfile"
                 ],
                 "type": "online",
+                "types": ["online", "offline"],
                 "file": null,
                 "active": false,
                 "resources": null,
@@ -33,6 +34,7 @@
                     "Dockerfile",
                     "express.js"
                 ],
+                "types": ["online", "offline"],
                 "type": "online",
                 "file": null,
                 "active": false,
@@ -61,6 +63,7 @@
             "tags": [],
             "installation": {
                 "type": "online",
+                "types": ["online", "offline"],
                 "file": null,
                 "active": false,
                 "resources": null,
@@ -77,11 +80,31 @@
             "installation": {
                 "srcFiles": [
                 ],
+                "types": ["online", "offline"],
                 "type": "online",
                 "file": null,
                 "active": false,
                 "resources": null,
                 "path": "florianbw/pavian"
+            }
+        },
+        "jhuaplbio/oxford-demo": {
+            "status": null,
+            "title": "Oxford Demo",
+            "name": "jhuaplbio/oxford-demo",
+            "estimated_size": 6.7,
+            "private": true,
+            "tags": [],
+            "installation": {
+                "srcFiles": [
+                ],
+                "types": ["offline"],
+                "online_disabled": true,
+                "type": "offline",
+                "file": null,
+                "active": false,
+                "resources": null,
+                "path": "jhuaplbio/oxford-demo"
             }
         }
     },
@@ -295,6 +318,23 @@
                 "base": "http://localhost",
                 "material": "material",
                 "port": 8087,
+                "force": true,
+                "initial": true
+            }
+        },
+        "oxford_demo": {
+            "name": "oxford_demo",
+            "title": "Oxford Demo",
+            "icon": "dna",
+            "component": "Oxford_Demo",
+            "module": true,
+            "status": null,
+            "image": "jhuaplbio/oxford-demo",
+            "meta": "${writePath}/oxford_demo/meta.json",
+            "config": {
+                "base": "http://localhost",
+                "material": "material",
+                "port": 8089,
                 "force": true,
                 "initial": true
             }

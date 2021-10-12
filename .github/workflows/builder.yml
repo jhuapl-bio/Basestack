@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [macos-latest, linux-latest, windows-latest]
 
     steps:
       - name: Check out Git repository
