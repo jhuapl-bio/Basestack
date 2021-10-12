@@ -13,7 +13,6 @@ exports.default = async function notarizing(context) {
     appBundleId: 'com.yourcompany.yourAppId',
     appPath: `${appOutDir}/${appName}.app`,
     appleApiKey: process.env.API_KEY_ID,
-    appleApiIssuer: process.env.API_KEY_ISSUER_ID,
-    ascProvider: 'TV5X8WHGW3'
+    appleApiIssuer: process.env.API_KEY_ISSUER_ID  
   });
 };
