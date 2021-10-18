@@ -64,13 +64,13 @@
 		            		<font-awesome-icon class="configure" :icon="entry.icon"/>
 		            	</span>
 		            	<span style="  text-anchor: end; text-align:right; vertical-align:middle; white-space: nowrap; padding-left: 10px; font-size: 0.8em" v-if="!collapsed">
-		            		{{ entry.title }}
+		            		{{  ( entry.shorttitle  ? entry.shorttitle : entry.title )       }}
 		            	</span>
 		            </div>
 	        	</div>
   			</template>
   			<div v-if="(!entry.module || entry.installed )  && initial">
-  				<h2 class="header" style="text-align:center">{{entry.title}}
+  				<h2 class="header" style="text-align:center">{{  entry.title     }}
 			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
 			        :title="entry.tooltip"
 			        style="" >
