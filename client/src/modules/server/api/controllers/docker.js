@@ -11,13 +11,13 @@ const path = require("path")
 var  { store }  = require("../store/global.js")
 // var docker = new Docker();
 let dockerObj;
-
+ 
 export async function docker_init(params){
 	let config = null
 	const meta  = store.dockerConfig
 	if (meta && meta.socketPath){
 		config = meta
-		dockerObj = new Docker(config);
+		dockerObj = new Docker(config); 
 	} else {
 		dockerObj = new Docker();
 	}
