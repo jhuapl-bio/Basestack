@@ -37,6 +37,7 @@ jobs:
           package_root: client/
           mac_certs: ${{ secrets.MAC_CERT }}
           mac_certs_password: ${{ secrets.MAC_P }}
+          max_attempts: 3
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
