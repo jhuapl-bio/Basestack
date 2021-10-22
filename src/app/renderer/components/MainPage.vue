@@ -8,7 +8,6 @@
   -->
 <template>
 	<div class="mainContent">
-    <div style=" height:100vh; width:100%">
 		<b-tabs 
 	        v-model="tab" 
 	        nav-wrapper-class="w-3" 
@@ -16,24 +15,17 @@
         	active-nav-item-class="activeTabButton"
         	style="height: 100vh; " 
         	vertical
-        	v-if="meta && meta.modules && system.docker && status.images"        	
         >
           <b-tab  
-          	v-for="entry in meta.modules" 
+          	v-for="(entry, key) in modules"
           	v-bind:key="entry.name"
           	class="ma-0 pa-0"
-            >
-			<!-- <template v-slot:title v-if="(!entry.module || status.images[entry.image].installed )">
-				<div class="tab-parent" style="display: flex; justify-content: space-between;"
+            > 
+            <template v-slot:title v-if="(entry.module  ) ">
+            	<div class="tab-parent" style="display: flex; justify-content: space-between;"
 				>	
 					<div class="tab-item" style="">
-						
-		            	<span 
-						v-if="entry.module 
-							&& meta.images[entry.image].latest_digest != status.images[entry.image].installed_digest 
-							&& !meta.images[entry.image].private 
-							&& !status.images[entry.image].fetching_available_images" 
-						style="text-align:left; text-anchor: start;"
+		            	<span style="text-align:left; text-anchor: start;"
 		            	v-tooltip="{
 			            content: 'An Update is available',
 			            placement: 'top',
@@ -44,41 +36,13 @@
 		            	>
 		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
 		            	</span>
-		            	<span v-else-if="entry.name == 'moduleinstall' && !system.docker.running" style="text-align:left; text-anchor: start;"
-		            	v-tooltip="{
-			            content: 'Docker is not running. See Services Tab at the top of Basestack or refer to the README',
-			            placement: 'top',
-			            classes: ['info'],
-			            trigger: 'hover',
-			            targetClasses: ['it-has-a-tooltip'],
-			            }"
-		            	>
-		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
-		            	</span>
-		            	<span v-else-if="entry.name == 'moduleinstall' && !system.docker.installed" style="text-align:left; text-anchor: start;"
-		            	v-tooltip="{
-			            content: 'Docker is not installed. See README on installing Docker for Basestack',
-			            placement: 'top',
-			            classes: ['info'],
-			            trigger: 'hover',
-			            targetClasses: ['it-has-a-tooltip'],
-			            }"
-		            	>
-		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
-		            	</span>
-		            	<span v-else
-		            	 style="text-align:left; text-anchor: start;">
-		            		<font-awesome-icon class="configure" :icon="entry.icon"/>
-		            	</span>
-		            	<span 
-							style="text-anchor: end; text-align:right; vertical-align:middle; white-space: nowrap; padding-left: 10px; font-size: 0.8em" 
-							v-if="!collapsed">
-		            		{{ entry.title }}
-		            	</span>
+		            	<span style="  text-anchor: end; text-align:right; vertical-align:middle; white-space: nowrap; padding-left: 10px; font-size: 0.8em" v-if="!collapsed">
+							{{ entry.title }}
+						</span>
 		            </div>
 	        	</div>
   			</template>
-  			<div v-if="(!entry.module || status.images[entry.image].installed ) ">
+  			<div v-if="(entry.module ) ">
   				<h2 class="header" style="text-align:center">{{entry.title}}
 			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
 			        :title="entry.tooltip"
@@ -86,42 +50,36 @@
 			        <font-awesome-icon class="help" icon="question-circle"  />
 			      </span>
 			    </h2>
-            	<component							
-					v-if="status.images"		
-            		:is="entry.component" 
-            		class="contentDiv"
-					:moduleName="entry.name"
+
+            	<component 
+            		:is="'Framework'"
+					:moduleIdx="key"
+            		:workflows="entry.workflows"
             	>            	
             	</component>
             </div>
-			<template v-slot:tabs-start  style="padding:0px !important; ">
+          </b-tab>
+      	  	<template v-slot:tabs-start  style="padding:0px !important; ">
 		          <b-nav-item role="presentation"  href="#">
-		          	<button 
-					  class="btn collapseButton"  
-					  @click="toggleCollapse()">
-					  	<div :id="'collapseSidebar'" class="in-line-Button" >
-						  <span><font-awesome-icon  style="margin:auto; justify-content: center;text-align:center " icon="bars"/>
-						  </span>
-						</div>
-					</button>
+		          	<button class="btn collapseButton"  @click="toggleCollapse()"><div :id="'collapseSidebar'" class="in-line-Button" ><span><font-awesome-icon  style="margin:auto; justify-content: center;text-align:center " icon="bars"/></span></div></button>
 		          </b-nav-item>	      	  		
       	  	</template>
       	  	<template v-slot:tabs-end >
 	          	<div id="emblem"><img v-bind:class="[collapsed ? 'shrunkButtonImg' : 'ButtonImg']" src="../../static/img/apl_sheild_blue_only.png" /></div>
-	        </template> -->
-		  </b-tab> 
-		</b-tabs>
-        <div v-else style="top: 35%; margin:auto">
-            <h4 style="text-align:center; margin:auto; top: 35%">Loading</h4>
-            <half-circle-spinner
-                :animation-duration="1000"
-                style="vertical-align:middle !important; margin:auto; top: 35%"
-                :size="100"
-                :color="'#2b57b9'"
-            >
-            </half-circle-spinner>
-        </div>
-    </div> 
+	        </template>
+        </b-tabs>
+        <!-- <div v-else style=" height:100vh; width:100%">
+        	<div style="top: 35%; margin:auto">
+	        	<h4 style="text-align:center; margin:auto; top: 35%">Loading</h4>
+	        	<half-circle-spinner
+		          :animation-duration="1000"
+		          style="vertical-align:middle !important; margin:auto; top: 35%"
+				  :size="100"
+		          :color="'#2b57b9'"
+		     	>
+		     	</half-circle-spinner>
+		 	</div>
+	    </div> -->
 	</div>
 </template>
 
@@ -140,36 +98,21 @@ export default {
 		Framework
 	},
 	
-	props: ['meta', 'components'],
+	props: ['modules', 'defaults'],
 	data(){
 		return{
 			tab: 1,
+			modulesInner: [],
 			collapsed: false,
 			status: {},
 			system: {},
 		}
 	},
 	created(){
-		for(let c=0; c<this.components.length; c++) {
-			let componentName = this.components[c];
-			if (componentName != "Framework"){
-				const lc = require(`@/components/NavbarModules/${componentName}/${componentName}`).default
-				this.$options.components[componentName] = lc
-			}
-		}
+		
 	},
 	watch:{
-		initial(val){
-			if (!val){
-				try{
-					this.init().catch((err)=>{
-						console.error(`Error in initializing the backend ${err}`)
-					})
-				} catch(err){
-					console.error(err)
-				}
-			}
-		}
+		
 	},
 	computed: {
 	  myProps() {
@@ -180,14 +123,7 @@ export default {
 	},
 	mounted(){
 		const $this = this				
-		this.getStatus().then(()=>{
-			this.started = true
-			this.interval = setInterval(()=>{
-				if (!this.intervalChecking){
-					$this.getStatus()
-				}
-			}, 2500)
-		})
+		
 		
 	},
 
@@ -209,24 +145,14 @@ export default {
 		  
 		  this.component(component)
 	  },
-      async getStatus(){
-      	try{
-      		this.intervalChecking = true
-	      	let response = await FileService.getModules()	
-			await this.$store.dispatch("UPDATESYSTEM", response.data.data.system)
-			await this.$store.dispatch("UPDATEMETA", response.data.data.meta)
-			await this.$store.dispatch("UPDATESTATUS", response.data.data.status.status)
-			this.system = response.data.data.system
-			this.status = response.data.data.status.status
-			
-			
-		} catch(err){
-			this.initial=false
-			console.error(`${err} error in getting status`)
-		} finally {
-			this.intervalChecking = false
-		}
-      }
+	  toggleCollapseParent(){
+      	this.data.collapsed = !this.collapsed
+      },
+      toggleCollapse(){
+        this.collapsed = !this.collapsed;
+        this.$emit('toggleCollapseParent', this.collapsed)
+      },
+      
 	}
 };
 </script>

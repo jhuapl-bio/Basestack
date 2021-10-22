@@ -11,6 +11,8 @@ import { getField, updateField } from 'vuex-map-fields'
 function getDefaultState(){
   return {
     meta: {},
+    defaults: [],
+    modules:[],
     system: {},
     status: {},
     staged: {
@@ -72,9 +74,16 @@ const actions = {
       resolve()
     })
   },
-  UPDATEMETA({ commit }, meta){
+  UPDATEMODULES({ commit }, meta){
     return new Promise((resolve, reject)=>{
-      commit('META', meta)
+      commit('MODULES', meta)
+      resolve()
+    })
+  },
+  UPDATEDEFAULTS({ commit }, meta){
+    return new Promise((resolve, reject)=>{
+      console.log("yes")
+      commit('DEFAULTS', meta)
       resolve()
     })
   },
@@ -119,8 +128,11 @@ const actions = {
 };
 
 const mutations = {
-  META (state, meta){
-    state.meta = meta
+  DEFAULTS (state, meta){
+    state.defaults = meta
+  },
+  MODULES (state, meta){
+    state.modules = meta
   },
   SYSTEM (state, system){
     state.system = system
@@ -174,6 +186,8 @@ const mutations = {
 const getters = {
   getSystem: state => state.system,
   getMeta: state => state.meta,
+  getDefaults: state => state.defaults,
+  getModules: state => state.modules,
   getStatus: state => state.status,
   getStaged: state => state.staged
 }

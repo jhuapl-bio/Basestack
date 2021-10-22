@@ -1,0 +1,7 @@
+logs:
+  path: "${writePath}/logs"
+  error: "${writePath}/logs/errorClient.log"
+  logfile:  "${writePath}/logs/loggerClient.log"
+  dockerLogFile: "${writePath}/logs/dockerLog.log"
+
+

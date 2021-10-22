@@ -10,7 +10,10 @@
 <template>
   <div id="app">
   <div v-if="ready && running" >
-      <MainPage :meta="meta" :components="Object.values(meta.modules).map((d)=>{ return d.component})" class="mainPage"></MainPage>
+      <MainPage 
+        v-bind:defaults="defaults"
+        v-bind:modules="modules"
+      ></MainPage>
   </div>
   <div v-else-if="!ready">
       <h3>Initiating....</h3>
@@ -41,37 +44,41 @@ export default {
   data(){
     return {
       ready:false,
-      meta: null,
+      modules: false,
+      defaults: false,
       running: false
     }
   },
 	async mounted(){
-    let response = await this.init()
-    await this.$store.dispatch("UPDATEMETA", response.data.data)
-    this.meta = response.data.data
+    await this.init()
+    this.$electron.ipcRenderer.send('mainN')
+    await this.$store.dispatch("UPDATEDEFAULTS", this.defaults)
+    await this.$store.dispatch("UPDATEDEMODULES", this.modules)
     this.ready = true
     
 	},
   methods: {
     async init(){
       try{
-        let meta = await FileService.getMeta()
-        let serverStatus = await FileService.getServerStatus()
+        let modules = await FileService.getModules()
+        let defaults= await FileService.getDefaults()
+        // let serverStatus = await FileService.getServerStatus()
         let dockerStatus = await FileService.getDockerStatus()
-        this.meta = meta.data.data
+        this.defaults = defaults.data.data
+        this.modules = modules.data.data
         this.running = true
-        return response
+        return 
       } catch(err){
         console.error(err, "Backend server is not running")
         this.running = false
         this.ready = true
-        // this.$swal.fire({
-        //           position: 'center',
-        //           icon: 'error',
-        //           showConfirmButton:true,
-        //           title:  "Error in starting initialization",
-        //           text:  err.response.data.message
-        //       }) 
+        this.$swal.fire({
+                  position: 'center',
+                  icon: 'error',
+                  showConfirmButton:true,
+                  title:  "Error in starting initialization",
+                  text:  err.response.data.message
+              }) 
         throw err
       } finally{
         this.ready = true

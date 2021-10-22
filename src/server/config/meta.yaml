@@ -1,0 +1,40 @@
+logs:
+  path: "${writePath}/logs"
+  error: "${writePath}/logs/error.log"
+  logfile:  "${writePath}/logs/logger.log"
+  dockerLogFile: "${writePath}/logs/dockerLog.log"
+default:
+  path: ${resourcePath}/server/config/default
+  items:
+    - default:
+      path: "${resourcePath}/server/config/default/index.yml"
+      format: "single"
+      type: "yml"
+modules: 
+  path: "${resourcePath}/server/config/modules"
+  items:
+    - workflows:
+      path: "${resourcePath}/server/config/modules/workflows/"
+      filename: "index.yml"
+      format: "dir"
+      type: "yml"
+user: "${writePath}/meta.json"
+orchestrators:
+  dind:
+    path: ${resourcePath}/server/config/modules/dind/index.yml
+    format: "single"
+    type: "yml"
+    build: 
+      file: "${resourcePath}/server/config/modules/dind/Dockerfile"
+    config:
+      file: ${resourcePath}/server/config/modules/dind/dockerConfig.json #used by the Docker API, refere to the url for more information
+  subclient:
+    build:
+      file: "${resourcePath}/server/config/modules/dind/Dockerfile"
+    config:
+      file: ${resourcePath}/server/config/modules/subclient/dockerConfig.json #used by the Docker API, refere to the url for more information
+  default:
+    build:
+      file: ""
+    config:
+      file: ${resourcePath}/server/config/modules/default/dockerConfig.json

@@ -261,8 +261,12 @@ function init () {
   }
   // if ()
   // startServer(devClient).then((res)=>{
+    console.log("init renderer")
     startRenderer(devClient).then((res, rej) => {
+      console.log("start render done, starting main")
       startMain(devClient).then(()=>{
+
+        console.log("startelectrion")
         startElectron()      
       })
     })

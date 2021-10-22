@@ -6,7 +6,6 @@
   // - # For any other permission, please contact the Legal Office at JHU/APL.
   // - # **********************************************************************
 
-import devtools from '@vue/devtools'
 
 import Vue from 'vue'
 import axios from 'axios'
@@ -32,8 +31,14 @@ import path from "path"
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import ToggleButton from 'vue-js-toggle-button'
 import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
+
+
 library.add( faDownload, faHandshakeSlash, faSlash, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench,faAngleUp, faCheck, faTimesCircle, faAngleDown, faPlus, faMinus, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree,faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
- 
+let config = process.env.logfile
+let configError = process.env.errorfile
+console.log(process.env)
+let logger = require("../../shared/logger.js").logger(configError, config)
+
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.prototype.$eventHub = new Vue(); // Global event bus
 // window.localStorage.clear()
@@ -66,10 +71,47 @@ Vue.use(VueScrollTo);
 // if (process.env.NODE_ENV === 'development') {
 //   devtools.connect('localhost', process.env.rendererBasePort)
 // }
+Vue.prototype.$logger = logger
+import upperFirst from 'lodash/upperFirst'
+import camelCase from 'lodash/camelCase'
+
+const requireComponent = require.context(
+  // The relative path of the components folder
+  './components/Framework/Mods',
+  // Whether or not to look in subfolders
+  false,
+  // The regular expression used to match base component filenames
+  /Base[A-Z]\w+\.(vue)$/
+)
+
+
+
+requireComponent.keys().forEach(fileName => {
+  // Get component config
+  const componentConfig = requireComponent(fileName)
+
+  // Get PascalCase name of component
+  const componentName = upperFirst(
+    camelCase(
+      // Gets the file name regardless of folder depth
+      fileName
+        .split('/')
+        .pop()
+        .replace(/\.\w+$/, '')
+    )
+  )
+  // Register component globally
+  Vue.component(
+    componentName,
+    // Look for the component options on `.default`, which will
+    // exist if the component was exported with `export default`,
+    // otherwise fall back to module's root.
+    componentConfig.default || componentConfig
+  )
+})
 
 Vue.directive('pin', {
   bind: function (el, binding, vnode) {
-      console.log(binding,"yes")
       Object.entries(binding.value).forEach((d)=>{
         el[d[0]] = d[1]
       })

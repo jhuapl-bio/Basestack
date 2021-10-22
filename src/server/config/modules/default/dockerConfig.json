@@ -1,0 +1,25 @@
+{ 
+    "name": null,
+    "ExposedPorts": {
+        "80/tcp": {}
+    },
+    "HostConfig": {
+        "AutoRemove": false,
+        "Privileged": false,
+        "Binds": [
+        ],
+        "PortBindings": {
+        }
+    },
+    "Volumes": {
+    },  
+    "Env": [
+    ], 
+    "NetworkingConfig": {
+        "EndpointsConfig": {
+        }
+    },
+    "Tty": false,
+    "Image": null,
+    "Cmd": []
+}

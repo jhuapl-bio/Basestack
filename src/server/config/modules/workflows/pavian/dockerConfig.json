@@ -1,0 +1,30 @@
+{ 
+    "name": null,
+    "ExposedPorts": {
+        "80/tcp": {}
+    },
+    "HostConfig": {
+        "AutoRemove": true,
+        "Privileged": false,
+        "Binds": [
+        ],	 
+        "PortBindings": {
+            "80/tcp": [
+                {
+                    "HostPort": "8087"
+                }
+            ]
+        }
+    },
+    "Volumes": {
+    },  
+    "Env": [
+    ], 
+    "NetworkingConfig": {
+        "EndpointsConfig": {
+        }
+    },
+    "Tty": false,
+    "Image": "florianbw/pavian",
+    "Cmd": []
+}

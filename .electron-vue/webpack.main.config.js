@@ -15,6 +15,7 @@ let mainConfig = {
   
   entry: {
     main: path.join(__dirname, '../src/app/main/index.js'),
+    config: path.join(__dirname, '../src/app/config/meta.yaml')
   },
   externals: [
     ...Object.keys(dependencies || {})
@@ -29,6 +30,11 @@ let mainConfig = {
       {
         test: /\.node$/,
         use: 'node-loader'
+      },
+      {
+        test: /\.ya?ml$/,
+        type: 'json', // Required by Webpack v4
+        use: 'yaml-loader'
       }
     ]
   },
@@ -46,7 +52,7 @@ let mainConfig = {
     new ESLintPlugin(),
   ],
   resolve: {
-    extensions: ['.js', '.json', '.node']
+    extensions: ['.js', '.json', '.node', '.yaml']
   },
   watchOptions: {
     ignored: '../src/modules/**'

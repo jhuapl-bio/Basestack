@@ -1,0 +1,20 @@
+- name: "dind" #Top level is the left-hand selection of the menu and the major module to install 
+  workflows: # Workflows are inner tabs. Each inner tab can have multiple images or dependencies associated with it
+    - name: "dind"
+      dependencies: 
+        - target: "jhuaplbio/basestack_orchestrator"
+          type: "docker"
+          build:
+            file: "Dockerfile"
+            location: "local"
+      services: # Each workflow can run multiple services or commands
+        - command: []
+          name: "basestack_dind"
+          init: false
+          force_restart: false
+          force_init: false
+          config: "dind/dockerConfig.json"
+          orchestrated: true
+          ports: #These are ports to be usable by the orchestrator. All contianers spawned INSIDE the orchestrator daemon can use these. Any ports outside will not be usable/seeable
+            - [8095, 8099]
+

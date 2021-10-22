@@ -1,0 +1,13 @@
+version: '2.3'
+
+
+services:
+  pavian:
+    privileged: false
+    init: true
+    image: florianbw/pavian
+    command: []
+    ports:
+        - "8097:80/tcp"
+    restart: "no"
+    container_name: pavian

@@ -14,8 +14,20 @@ if (process.env.NODE_ENV == 'production'){
   baseEndpoint = 'api'
 }
 class FileService {
-  getMeta(){
-    return Api().get(`${baseEndpoint}/meta/fetch`)    
+  getDefaults(){
+    return Api().get(`${baseEndpoint}/defaults/get`)    
+  }
+  getModules(){
+    return Api().get(`${baseEndpoint}/modules/get`)    
+  }
+  getModulesStatus(){
+    return Api().get(`${baseEndpoint}/modules/get/status`)    
+  }
+  getWorkflowStatus(params){
+    return Api().get(`${baseEndpoint}/workflow/status/${params.module}/${params.workflow}/${params.service}`)    
+  }
+  getServiceProgress(params){
+    return Api().post(`${baseEndpoint}/service/progress`, params)    
   }
   getDockerStatus(){
     return Api().get(`${baseEndpoint}/docker/status/fetch`)    
@@ -24,14 +36,15 @@ class FileService {
     return Api().get(`${baseEndpoint}/server/status/fetch`)    
   }
   cancelModule(params) {
-    return Api().post(`${baseEndpoint}/modules/cancel`, params)
+    return Api().post(`${baseEndpoint}/workflow/stop`, params)
+  }
+  startModule(params){
+    return Api().post(`${baseEndpoint}/workflow/run`, params)
   }
   openMinKNOW(){
   	return Api().get(`${baseEndpoint}/openMinKNOW`)
   }
-  startModule(params){
-    return Api().post(`${baseEndpoint}/modules/start`, params)
-  }
+  
   watchConsensus(params){
     return Api().post(`${baseEndpoint}/consensus/watch`, params)
   }
@@ -110,9 +123,6 @@ class FileService {
   fetchVideo(params){
     return Api().post(`${baseEndpoint}/videos/fetch`, params)            
   }
-  getModules(){
-    return Api().get(`${baseEndpoint}/status/fetch`)                
-  }
   fetchMeta(){
     return Api().get(`${baseEndpoint}/meta/fetch`)                
   }
@@ -122,9 +132,6 @@ class FileService {
   updateSocket(params){
     return Api().post(`${baseEndpoint}/docker/socket`, params)   
   }         
-  fetchDockerTags(params){
-    return Api().post(`${baseEndpoint}/tags/fetch`, params)                    
-  }
   selectTag(params){
     return Api().post(`${baseEndpoint}/tags/select`, params)  
   }
@@ -137,12 +144,5 @@ class FileService {
   fetchDockerTags(params){
     return Api().post("http://localhost:5003/tags/fetch", params)                    
   }
-  selectTag(params){
-    return Api().post(`${baseEndpoint}/tags/select`, params)  
-  }
-  updateSocket(params){
-    return Api().post("http://localhost:5003/docker/socket", params)            
-  }
-
 }
 export default new FileService();

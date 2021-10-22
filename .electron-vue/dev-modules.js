@@ -158,7 +158,7 @@ function startServer (devClient){
 function startMain (devClient) {
   return new Promise((resolve, reject) => {
     console.log("Starting main  dev-runner")
-    mainConfig.entry.main = [path.join(__dirname, '../src/main/index.dev.js')].concat(mainConfig.entry.main)
+    mainConfig.entry.main = [path.join(__dirname, '../src/app/main/index.dev.js')].concat(mainConfig.entry.main)
     mainConfig.mode = 'development'
     process.env.devClient = devClient
     const compiler = webpack(mainConfig)
