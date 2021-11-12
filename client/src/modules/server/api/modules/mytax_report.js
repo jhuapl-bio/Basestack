@@ -168,7 +168,7 @@ export  class BasestackMytaxReport {
 				python3  /opt/software/mytax/generate_hierarchy.py \
 					-o /opt/data/${data.data.filename}.fullstring \
 					--report /opt/data/${data.data.filename}.report  \
-					-taxdump /opt/databases/${db}/${ ( data.db.taxonomy ? data.db.taxonomy : '/taxdump'  ) }/nodes.dmp
+					-taxdump ${( data.db.taxonomy ? data.db.taxonomy : '/taxdump'  ) }/nodes.dmp
 				bash krakenreport2json.sh -i /opt/data/${data.data.filename}.fullstring -o /opt/data/${data.data.filename}.json` )
 			}
 
@@ -186,6 +186,7 @@ export  class BasestackMytaxReport {
 		        }
 
 			};		
+			console.log(command)
 			resolve({options: options, command: command })
 		})
 	}

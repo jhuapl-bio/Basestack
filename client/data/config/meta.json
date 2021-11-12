@@ -297,7 +297,7 @@
                             ], 
                             "dbs": [
                                 { "name":"minikraken2_v2_8GB_201904_UPDATE", "compressed": false, "fullname": "minikraken2", "taxonomy": "/taxdump"},
-                                { "name":"flukraken2", "compressed": false, "fullname": "flukraken2", "taxonomy": "taxonomy"},
+                                { "name":"flukraken2", "compressed": false, "fullname": "flukraken2", "taxonomy": "/opt/databases/flukraken2/taxonomy" },
                                 { "name":"custom"}
                             ] 
                         },
