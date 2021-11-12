@@ -29,15 +29,7 @@
 		<object id ="mytaxObj" type="text/html" :data="`${modules.basestack_mytax.config.base}:${modules.basestack_mytax.config.port}`">
 		</object>
 	</b-row>
-	<b-row v-else>
-		<h4>Mytax isn't running</h4>
-		<span v-b-tooltip.hover.top 
-				title="Reload module ui, check logs if issues persist"
-				class="center-align-icon configure"
-  			 @click="start_module()" >
-  			<font-awesome-icon  icon="sync" style="margin-left: 10px; margin-right: 10px"/>
-  		</span>
-	</b-row> 
+	 
   </div> 
   
 </template>

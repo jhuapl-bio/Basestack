@@ -252,7 +252,7 @@ export default {
 	methods: {
       open (link) {
           try{        
-                this.$electron.shell.openPath(link)
+            this.$electron.shell.openPath(link)
           } catch(err){
             this.$swal.fire({
               position: 'center',
