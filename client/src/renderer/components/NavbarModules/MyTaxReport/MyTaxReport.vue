@@ -83,25 +83,48 @@
 					id="fieldset-1"
 					label="DB Path"
 					label-for="input-1"
-					description="Path of pre-processed database"
+					description="Path of classifier's database"
 				>
 					<b-button
 						@click="electronOpenDir('db')"
+						v-if="!classifier.basenameFile"
+						v-b-tooltip.top="classifier.tooltip"
 					> Select Folder
-					</b-button><p v-if="db.info && db.info.dirname">{{db.info.dirname}}</p>
+					</b-button>
+					<b-form-file
+						v-else
+						v-model="dbFile"
+						v-b-tooltip.top="classifier.tooltip"
+					>
+					</b-form-file><p v-if="db.info && db.info.dirname">{{db.info.dirname}}</p>
+				</b-form-group>
+				<b-form-group
+					v-if="db "
+					id="fieldset-2"
+					label="Taxonomy Location" 
+					label-for="input-1"
+					description="Customize taxonomy location"
+				>
+					<b-form-input
+						v-model="db.taxonomy"
+					>
+					</b-form-input>
+
 				</b-form-group>
 			</div>
-			<div v-else-if="cmd && cmd.key == 'basestack_mytax_process_db'">
+			<div v-else-if="cmd && cmd.key == 'basestack_decompress_mytax_db'">
 				<b-form-group
 					id="fieldset-1"
 					label="DB Path"
 					label-for="input-1"
 					description="Path to db to process"
 				>
-					<b-button
-						@click="electronOpenDir('data')"
-					> Select Folder
-					</b-button><p v-if="data && data.dirname">{{data.dirname}}</p>
+					
+					<b-form-file
+						v-model="decompressFile"
+						v-b-tooltip.top="classifier.tooltip"
+					>
+					</b-form-file>
 				</b-form-group>
 			</div>
 			<div v-else>
@@ -109,7 +132,7 @@
 					id="fieldset-1"
 					label="Flukraken DB Path"
 					label-for="input-1"
-					description="Path to build flukraken db"
+					description="Path to build flu db for classifer"
 				>
 					<b-button
 						@click="electronOpenDir('data')"
@@ -162,7 +185,19 @@
 						style="margin: auto"
 						:color="'#2b57b9'"
 					/><p style="margin:auto; text-align:center">Running</p>
-			</span>  
+			</span>
+			<b-form-group
+				v-if="classifier && classifier.externals"
+				label="External Resources"
+			><hr><ul>
+				<li
+					disabled
+					v-for="external in classifier.externals"
+					:key="external.name"> 
+					<a href="" v-on:click="open_link(external.url ,$event)" >{{ ( external.label ? external.label : external.name )}}</a>
+				</li>
+				</ul>
+			</b-form-group>  
 		</b-col>
 	</b-row>
   </div> 
@@ -171,7 +206,7 @@
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
 
 <script>
-
+ 
 import FileService from '@/services/File-service.js'
 import moment from "moment"
 import Multiselect from 'vue-multiselect'
@@ -201,6 +236,8 @@ export default {
 			interval: null,
 			dbPath: null,
 			classifier: null,
+			dbFile: null,
+			decompressFile: null,
 			module_status_fields: [
 				
 			],	
@@ -214,6 +251,13 @@ export default {
 	watch : {
 		fastqFolder(val) {
 			this.data = { dirpath: path.dirname(val.path), filepath: val.path, filename: val.name }
+		},
+		decompressFile(val){
+			this.data = { dirpath: path.dirname(val.path), filepath: val.path, filename: val.name }
+		},
+		dbFile(val){
+			console.log(val)
+			this.db.info = { taxonomy: ( !val.db.taxonomy ? "/taxdump" : val.db.taxonomy  ), dirpath: path.dirname(val.path), dirname: path.join( path.basename(  path.dirname(val.path)), path.basename(val.path).split(/\./)[0] ) }
 		},
 		data(val){
 			this.get_status(val)
@@ -232,17 +276,18 @@ export default {
 			this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
 				if (key == 'data'){
 					this.data = { dirpath: message, dirname: path.basename(message) }
-				} else {
+				}  else {
 					this.db.info = { dirpath: message, dirname: path.basename(message) }
 				}
 			})
-			this.$electron.ipcRenderer.send("openDirSelect", "")
+			this.$electron.ipcRenderer.send("openDirSelect", "key")
 			
 		},
 		open_link (link,e) {
 			e.stopPropagation()
-			this.$emit("open", link)
-      	},
+			e.preventDefault()
+			this.$electron.shell.openExternal(link)
+		},
 		async start_module(){
 			if (this.cmd.key == "basestack_mytax_report"){
 				if (!this.fastqFolder || this.fastqFolder.length  == 0){
@@ -273,7 +318,7 @@ export default {
 				db: this.db,
 				classifier_name: this.classifier.name,
 				cmd: this.cmd,
-                data: this.data
+                data: this.data 
       		}).then((response)=>{
 				this.count +=1
 				this.$swal({
