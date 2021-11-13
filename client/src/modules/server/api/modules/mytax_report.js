@@ -141,9 +141,8 @@ export  class BasestackMytaxReport {
 			} else{
 				binds.push(data.data.dirpath + ":/opt/data") 
 				let db = ( data.db.name == 'custom' ? data.db.info.dirname : data.db.name )
-				
-				let e = `source /opt/conda/etc/profile.d/conda.sh &&\
-				conda activate mytax && `
+				console.log(data)
+				let e = `source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && `
 				// let e = "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && "
 				if (data.db.compressed){
 					e = `tar -xvzf /opt/databases/${data.db.fullname} -C /opt/databases/ && `
@@ -151,15 +150,18 @@ export  class BasestackMytaxReport {
 				if (data.db.name == 'custom'){  
 						binds.push(`${data.db.info.dirpath}:/opt/databases/${db}`)
 				}
-				if (data.classifier_name == 'centrifuge'){
+				if (data.classifier_name == 'centrifuge'){ 
 					e = `${e} $CONDA_PREFIX/lib/centrifuge/centrifuge -f -x /opt/databases/${db}/${path.basename(db)}  --report /opt/data/${data.data.filename}.centrifuge.report -q /opt/data/${data.data.filename} >  /opt/data/${data.data.filename}.out   &&\
 							$CONDA_PREFIX/lib/centrifuge/centrifuge-kreport  -x /opt/databases/${db}/${path.basename(db)} /opt/data/${data.data.filename}.centrifuge.report > /opt/data/${data.data.filename}.report && `
 					// e = `${e} $CONDA_PREFIX/lib/centrifuge/centrifuge-kreport  -x /opt/databases/${db}/${path.basename(db)} --output /opt/data/${data.data.filename}.out /opt/data/${data.data.filename}.centrifuge.report > /opt/data/${data.data.filename}.report && `
 				} else if (data.classifier_name == 'kraken2'){
-					e = `${e} 
-					export KRAKEN2_DEFAULT_DB="/opt/databases/${db}"
+					e = `${e}  export KRAKEN2_DEFAULT_DB="/opt/databases/${db}" && \
 					kraken2  --output /opt/data/${data.data.filename}.out  --report /opt/data/${data.data.filename}.report  /opt/data/${data.data.filename} && `
 					// e = `${e} `
+				} else {
+						e = `${e} echo "Running DEPRECATED kraken1" && \
+						kraken --db /opt/databases//${db} --output /opt/data/${data.data.filename}.out /opt/data/${data.data.filename} &&\
+						kraken-report --db /opt/databases/${db} /opt/data/${data.data.filename}.out | tee  /opt/data/${data.data.filename}.report && `
 				}
 				command = ['bash', '-c']
 				
