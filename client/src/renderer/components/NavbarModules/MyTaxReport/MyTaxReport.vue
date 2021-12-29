@@ -39,6 +39,7 @@
 						select-label=""
 						:preselect-first="true"
 						label="name" placeholder="Select one" 
+						@update="console.log('yes'); db=null"
 						:options="modules.basestack_mytax_report.resources.classifiers" 
 						:searchable="false" 
 						:allow-empty="false"
@@ -60,6 +61,7 @@
 				</b-form-group>
 				<b-form-group
 					v-if="classifier"
+					
 					id="fieldset-1"
 					label="Database"
 					label-for="input-1"
@@ -261,6 +263,9 @@ export default {
 		},
 		data(val){
 			this.get_status(val)
+		},
+		classifier(val){
+			this.db = this.classifier.dbs[0]
 		}
 	},
 
@@ -295,7 +300,7 @@ export default {
 						position: 'center',
 						icon: 'error',
 						showConfirmButton:true,
-						title:  "No fastq Folder selected"
+						title:  "No fastq file selected"
 					})
 					return 
 				}

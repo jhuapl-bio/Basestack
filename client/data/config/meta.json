@@ -329,6 +329,29 @@
                             "dbs": [
                                 { "name":"custom"}
                             ] 
+                        },
+                        { 
+                            "name": "kraken1", 
+                            "tooltip": "Select a kraken 1 database directory",
+                            "externals": [
+                                {
+                                    "name": "manual",
+                                    "label": "Manual",
+                                    "url": "https://ccb.jhu.edu/software/kraken/MANUAL.html",
+                                    "type": "link"
+                                },
+                                {
+                                    "name": "dbs",
+                                    "label": "Minikraken1 database",
+                                    "url": "http://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz",
+                                    "type": "download"
+                                }
+                                
+                            ], 
+                            "dbs": [
+                                { "name":"minikraken_20171013_4GB", "compressed": false, "fullname": "minikraken_20171019_4GB.tgz", "taxonomy": "/taxdump"},
+                                { "name":"custom"}
+                            ] 
                         }
                     ]
             },
