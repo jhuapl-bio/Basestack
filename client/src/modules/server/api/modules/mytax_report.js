@@ -11,7 +11,7 @@ export  class BasestackMytaxReport {
 		this.modules = {}
 	}
 	async watch(req){
-		const $this = this
+		const $this = this 
 		return new Promise(function(resolve,reject){
 			const data = req.data
 			let filename = data.filename

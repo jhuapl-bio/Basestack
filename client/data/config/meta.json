@@ -294,7 +294,7 @@
                                     "type": "download"
                                 },
                                 {
-                                    "name": "dbs",
+                                    "name": "mitogenome",
                                     "label": "Marine Mitogenome database",
                                     "url": "https://github.com/jhuapl-bio/ONRMitoGenome/tree/main/marine_mammal_mitochondrion-refseq-20210629",
                                     "type": "download"
