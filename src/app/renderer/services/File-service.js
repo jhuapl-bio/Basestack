@@ -20,11 +20,32 @@ class FileService {
   getModules(){
     return Api().get(`${baseEndpoint}/modules/get`)    
   }
+  buildModule(params){
+    return Api().post(`${baseEndpoint}/module/build`, params)    
+  }
+  buildModuleDependency(params){
+    return Api().post(`${baseEndpoint}/module/build/dependency`, params)    
+  }
+  getServices(){
+    return Api().get(`${baseEndpoint}/services/get`)    
+  }
+  getProcedures(){
+    return Api().get(`${baseEndpoint}/procedures/get`)    
+  }
   getModulesStatus(){
     return Api().get(`${baseEndpoint}/modules/get/status`)    
   }
-  getWorkflowStatus(params){
-    return Api().get(`${baseEndpoint}/workflow/status/${params.module}/${params.workflow}/${params.service}`)    
+  getServiceStatus(params){
+    return Api().get(`${baseEndpoint}/service/status/${params.service}`)    
+  }
+  getAllServiceStatus(){
+    return Api().get(`${baseEndpoint}/services/status`)    
+  }
+  getProceduresStatus(params){
+    return Api().get(`${baseEndpoint}/procedures/status`, params)    
+  }
+  getProceduresStatusSelect(params){
+    return Api().post(`${baseEndpoint}/procedures/status/select`, params)    
   }
   getServiceProgress(params){
     return Api().post(`${baseEndpoint}/service/progress`, params)    
@@ -32,19 +53,27 @@ class FileService {
   getDockerStatus(){
     return Api().get(`${baseEndpoint}/docker/status/fetch`)    
   }
+  getResources(){
+    return Api().get(`${baseEndpoint}/status/fetch`)    
+  }
   getServerStatus(){
     return Api().get(`${baseEndpoint}/server/status/fetch`)    
   }
-  cancelModule(params) {
-    return Api().post(`${baseEndpoint}/workflow/stop`, params)
+  cancelProcedure(params) {
+    return Api().post(`${baseEndpoint}/procedure/stop`, params)
   }
-  startModule(params){
-    return Api().post(`${baseEndpoint}/workflow/run`, params)
+  cancelService(params) {
+    return Api().post(`${baseEndpoint}/service/stop`, params)
+  }
+  startService(params){
+    return Api().post(`${baseEndpoint}/service/run`, params)
+  }
+  startProcedure(params){
+    return Api().post(`${baseEndpoint}/procedure/run`, params)
   }
   openMinKNOW(){
   	return Api().get(`${baseEndpoint}/openMinKNOW`)
   }
-  
   watchConsensus(params){
     return Api().post(`${baseEndpoint}/consensus/watch`, params)
   }

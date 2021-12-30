@@ -21,6 +21,23 @@
                 v-if="row.item.status == 1" 
                 icon="check" 
             />
+            <span v-else-if="running" 
+                style="margin:auto; text-align: center"
+            >
+                <half-circle-spinner
+                        :animation-duration="4000"
+                        :size="10"
+                        v-tooltip="{
+                        placement: 'top',
+                        classes: ['info'],
+                        trigger: 'hover',
+                        targetClasses: ['it-has-a-tooltip'],
+                        }"
+                        style="margin: auto"
+                        :color="'#2b57b9'"
+                    />
+
+            </span>	
             <font-awesome-icon :class="[ 'text-warning' ]" 
                 v-else
                 icon="stop-circle" 
@@ -32,8 +49,13 @@
 </template>
 
 <script>
+import {HalfCircleSpinner} from 'epic-spinners'
+
 export default {
 	name: 'progresses',
+    components: {
+        HalfCircleSpinner
+    },
     data() {
         return {
             value: null,
@@ -46,7 +68,7 @@ export default {
 	methods: {
 	
 	},
-	props: ['progresses'],
+	props: ['progresses', 'running'],
     mounted(){
     },
     watch: {

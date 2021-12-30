@@ -1,149 +1,64 @@
-- name: "mytax"
+mytax:
   title: "Mytax"
   icon: "dna"
-  component: "Mytax"
   module: True
   tooltip: "Run Kraken Classification and View"
-  workflows:
-    - name: "mytax_report" 
-      dependencies:
-        - target: "jhuaplbio/basestack_mytax"
-          type: "docker"
-        - source: 
-            url: "http://www.google.com"
-            target: "${writePath}/workflows/mytax/index.html"
-          type: "file"
-          overwrite: false
-          target: "${writePath}/workflows/mytax/index.html"
-        - source: 
-            url: "http://ccb.jhu.edu/software/kraken/dl/accuracy.tgz"
-            type: "file"
-            remove: true
-            target: "${writePath}/workflows/mytax/accuracy.tgz"
-          type: "download"
-          decompress: 
-            source: "${writePath}/workflows/mytax/accuracy.tgz"
-            format: "tgz"
-          overwrite: False
-          target: "${writePath}/workflows/mytax/accuracy"
-        - source: 
-            url: "http://ccb.jhu.edu/software/kraken/dl/seqid2taxid.map"
-            type: "file"
-            target: "${writePath}/workflows/mytax/seqid2taxid.map"
-          type: "download"
-          overwrite: false
-          decompress: False
-          target: "${writePath}/workflows/mytax/seqid2taxid.map"
-        - source: 
-            url: "http://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
-            type: "file"
-            remove: false
-            target: "${writePath}/workflows/mytax/minikraken_20171019_4GB.tgz"
-          type: "download"
-          decompress: 
-            format: "tgz"
-            source: "${writePath}/workflows/mytax/minikraken_20171019_4GB.tgz"
-          target: "${writePath}/workflows/mytax/minikraken_20171019_4GB"
-          overwrite: false
-      services: 
-        - command: ["python3", "-m", "http.server", "8081"]
-          name: mytax_visualization
-          image: "jhuaplbio/basestack_mytax"
-          init: true
-          label: "Visualization"
-          force_restart: true 
-          config: null
-          workingdir: "/opt/software/mytax/sunburst"
-          ports: 
-            - 8081
-          variables:
-            - name: port
-              element: "render"
-              source: "8081"
-          orchestrated: false #orchestrated means it runs from dind rather than natively
-        - command: ["bash","-c", "echo $name" ]
-          name: mytax_test_variables
-          label: "Test" 
-          image: "jhuaplbio/basestack_mytax"
-          init: false
-          force_restart: true
-          config: null
-          workingdir: "/opt/test-data"
-          orchestrated: false #orchestrated means it r
-          variables:
-            - name: name
-              element: "string"
-              source: "hello testing"
-        - command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && 
-            kraken --db ${db} --output ${file}.out ${file} && 
-            kraken-report --db ${db}  ${file}.out | tee  ${file}.report && 
-            bash krakenreport_fullstring.sh -i ${file}.report -k ${db} -o ${file}.fullstring &&
-            bash krakenreport2json.sh -i ${file}.fullstring -o ${file}.json" 
-          ]
-          name: mytax_report
-          label: "Report"
-          image: "jhuaplbio/basestack_mytax"
-          init: false
-          force_restart: true
-          force_init: false
-          config: null
-          workingdir: "/opt/test-data"
-          orchestrated: false #orchestrated means it r
-          progress: 
-            - label: "Out"
-              element: "file" 
-              source: "${0.source}.out"   #Source must be a variable reference if referencing an env variable run          
-            - label: "Report"
-              element: "file" 
-              source: "${0.source}.report" 
-            - label: "Fullstring"
-              element: "file" 
-              source: "${0.source}.fullstring" 
-            - label: "JSON"
-              element: "file" 
-              source: "${0.source}.json" 
-          variables:
-            - name: file
-              label: "Input File"
-              element: "file"
-              bind_parent_dir: true
-              bind: "/opt/data"
-              source: ""
-            - name: db
-              label: "Input kraken-processed DB"
-              options:
-                - element: null
-                  name: "Minikraken2017"
-                  variables:
-                    value: "minikraken"
-                  source: "/opt/databases/${value}" #This ${} is converted into the variable attribute of selected option only!
-                - element: null
-                  name: "Flukraken2021"
-                  source: "/opt/databases/${value}" 
-                  variables:
-                    value: "flukraken"
-                  cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken"
-                  placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index. 
-                - element: "dir"
-                  name: "Custom DB"
-                  source: "" 
-                  bind: "/opt/databases" 
-        - command: ["bash", "-c", "source /opt/conda/etc/profile.d/conda.sh &&
-					        conda activate mytax && ls ${db} && pwd && bash process_krakendb.sh -k ${db}"
-          ]
-          name: mytax_process_db
-          label: "Process Kraken DB"
-          image: "jhuaplbio/basestack_mytax"
-          init: false
-          force_restart: true
-          force_init: false
-          config: null
-          workingdir: "/opt"
-          orchestrated: false #Process Database for kraken use in mytax
-          variables:
-            - name: db
-              label: "Input kraken-unprocessed DB"
-              element: "dir"
-              source: "" 
-              bind: "/opt/databases"
-            
+  dependencies:
+    - target: "jhuaplbio/basestack_mytax"
+      type: "docker"
+    # - source: 
+    #     url: "http://www.google.com"
+    #     type: "file"
+    #     user: anonymous
+    #     target: "${writePath}/workflows/mytax/googlefile.tar.gz"
+    #   label: "Minikraken2"
+    #   type: "download" 
+    #   decompress: 
+    #     format: "tgz"
+    #     source: "${writePath}/workflows/mytax/googlefile.tar.gz"
+    #   target: "${writePath}/workflows/mytax/googlefile.txt"
+    #   overwrite: true
+    - source: 
+        url: "ftp.ccb.jhu.edu"
+        type: "file"
+        user: anonymous 
+        path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
+        password: null
+        protocol: "ftp"
+        remove: false
+        target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+      label: "Minikraken2"
+      type: "download" 
+      decompress: 
+        format: "tgz"
+        source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+      target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+      overwrite: false
+    - source: 
+        url: "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed%2Bh%2Bv.tar.gz"
+        type: "file"
+        remove: false
+        target: "${writePath}/workflows/mytax/centrifuge/centrifuge.tgz"
+      type: "download" 
+      decompress: 
+        format: "tgz"
+        overwrite: true
+        target: "${writePath}/workflows/mytax/centrifuge/p_compressed+h+v.2.cf"
+        source: "${writePath}/workflows/mytax/centrifuge/centrifuge.tgz"
+      target: "${writePath}/workflows/mytax/centrifuge/centrifuge"
+      overwrite: false 
+      label: "Minicentrifuge"
+    - source: 
+        url: "http://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+        type: "file"
+        remove: false
+        target: "${writePath}/workflows/mytax/minikraken_20171019_4GB.tgz"
+      type: "download" 
+      label: "Minikraken"
+      decompress: 
+        format: "tgz"
+        source: "${writePath}/workflows/mytax/minikraken_20171019_4GB.tgz"
+      target: "${writePath}/workflows/mytax/minikraken_20171013_4GB"
+      overwrite: false
+      
+              

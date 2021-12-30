@@ -201,26 +201,34 @@ export async function getExternalSource(url){
 	} 
 }
 
-
+ 
 
 
 export async function fetch_external_dockers(key){
-	let url = `https://registry.hub.docker.com/v2/repositories/${store.meta.images[key].config.installation.location}/tags/latest`
+	let url = `https://registry.hub.docker.com/v2/repositories/${key}/tags/latest`
 	try{
-		logger.info(url)
-		const element = store.status.images[key]
-		store.status.images[key].fetching_available_images.errors = null
-		store.status.images[key].fetching_available_images.status = true
+		// logger.info(url)
+		// console.log("store", url, store.images)
+		if (! store.images[key] ){
+			store.images[key] = {
+				fetching_available_images: {},
+				latest_digest: {},
+			}
+		}
+		const element = store.images[key]
+		store.images[key].fetching_available_images.errors = null
+		store.images[key].fetching_available_images.status = true
 		let json =  await axios.get(url)
 		let latest = null;
 		latest = json.data
-		store.status.images[key].latest_digest = latest.images[0].digest
+		store.images[key].latest_digest = latest.images[0].digest
+		return store.images[key]
 	} catch(err){
-		logger.error(`${err} error in fetching external dockers`)
-		store.status.images[key].fetching_available_images.errors  = err
+		logger.error(`${err} error in fetching external dockers ${key}`)
+		store.images[key].fetching_available_images.errors  = err
 	} finally{
-		logger.info("Checked the presence of "+key)
-		store.status.images[key].fetching_available_images.status = false
+		// logger.info("Checked the presence of "+key)
+		store.images[key].fetching_available_images.status = false
 	}
 }
 
@@ -274,18 +282,38 @@ export async function check_container(container_name){
 		(async ()=>{
 			var container = await store.docker.getContainer(container_name);
 
-			await container.inspect((err,info)=>{
+			await container.inspect((err,info)=>{ 
 				if (err){
 					resolve({container: null, running: false, exists: false})
-				} else {
+				} else { 
 					resolve({container: container, running: info.State.Running, exists: true })
-				}
+				} 
 			})
-		})().catch((error)=>{
-			logger.error("%s error checking if docker exists", error)
-			resolve({container: null, running: false, exists: false})
+		})().catch((error)=>{ 
+			logger.error("%s error checking if docker exists", error)  
+			resolve({container: null, running: false, exists: false})     
 		})
+       
+	})
+}
 
+
+
+export async function listImages(dind){
+	return new Promise((resolve, reject)=>{
+		if (dind){
+			store.dind.listImages().then((images)=>{
+				console.log("images")
+				resolve(images)
+
+			})
+		} else {
+			store.docker.listImages().then((images)=>{
+				console.log("images")
+				resolve(images)
+
+			})
+		}
 	})
 }
 
@@ -310,12 +338,12 @@ export async function check_image(image){
 					version: installed
 				})
 				
-			})().catch((error)=>{
+			})().catch((error)=>{ 
 				// logger.error(`check image exists failed or doesn't exist`)
 				reject(error)
 			});
 		} catch(err){
-			logger.error("%s %s", err, " error in retrieving docker image name: "+image)
+			logger.error("%s %s", err, " error  in retrieving docker image name: "+image)
 			reject(err)
 		}
 	})
@@ -363,7 +391,7 @@ export async function fetch_histories(){
 				logger.error(`${err} <-- Couldn't read file`)
 			}
 		}
-	}
+	} 
 	return response
 }
 export async function fetch_resources(){
@@ -411,35 +439,33 @@ export async function fetch_docker_version(){
 
 export async function fetch_status(){
 	let response = {
-		system: {
-			docker : {
-				installed: true, //placeholder for now
-				running: false,
-				version: null,
-				stats: null,
-				socket: ( store.docker  ?  store.docker.modem.socketPath : null),
-				host: (process.env.DOCKER_HOST ? process.env.DOCKER_HOST : null),
-				xdg_runtime_dir: (process.env.XDG_RUNTIME_DIR ? process.env.XDG_RUNTIME_DIR : null)
-			},
-			resources: null
+		docker : {
+			installed: true, //placeholder for now
+			running: false,
+			version: null,
+			stats: null,
+			socket: ( store.docker  ?  store.docker.modem.socketPath : null),
+			host: (process.env.DOCKER_HOST ? process.env.DOCKER_HOST : null),
+			xdg_runtime_dir: (process.env.XDG_RUNTIME_DIR ? process.env.XDG_RUNTIME_DIR : null)
 		},
+		resources: null,
 		status: null,
 		meta: null
 	}
 	let dockers;
 	let errors = [];
 
-	response.meta = store.meta
+	// response.meta = store.meta
 
-	try{
-		let re = await fetch_modules()
-		response.status = re
-	} catch(err){
-		errors.push(err)
-	}
+	// try{
+	// 	let re = await fetch_modules()
+	// 	response.status = re
+	// } catch(err){
+	// 	errors.push(err)
+	// }
 	try{
 		let resources = await fetch_resources()
-		response.system.resources = resources
+		response.resources = resources
 	} catch(err){
 		logger.error(err)
 		errors.push(err)
@@ -460,13 +486,13 @@ export async function fetch_status(){
 		response.docker.running = true
 		try{  
 			let docker_stats = await fetch_docker_stats()
-			response.system.docker.stats = docker_stats
+			response.docker.stats = docker_stats
 		} catch(err2){   
-			response.system.docker.stats = null
+			response.docker.stats = null
 			errors.push(err2)
 		}
 	} catch(err){
-		response.system.docker.running = false
+		response.docker.running = false
 		errors.push(err)
 	}
 	response.ready = store.system.ready
@@ -569,9 +595,9 @@ async function formatDockerLoads(image){
 	}
 	catch(err){
 		logger.error(`Initiating Storage of Docker modules and images function formatDockerLoads() failed, error: ${err}`)
-		throw err
+		throw err 
 	}
-}
+} 
 
 
 
@@ -579,7 +605,6 @@ async function formatDockerLoads(image){
 export async function getMeta(){
 	store.system.ready = true
 	// let response = await fetch_modules()
-	console.log("returning meta...")
 	return store.meta
 }
 export async function getServerStatus(){

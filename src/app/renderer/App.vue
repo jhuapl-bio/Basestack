@@ -13,6 +13,8 @@
       <MainPage 
         v-bind:defaults="defaults"
         v-bind:modules="modules"
+        v-bind:procedures="procedures"
+        v-bind:services="services"
       ></MainPage>
   </div>
   <div v-else-if="!ready">
@@ -45,6 +47,8 @@ export default {
     return {
       ready:false,
       modules: false,
+      services: false,
+      procedures: false,
       defaults: false,
       running: false
     }
@@ -60,12 +64,17 @@ export default {
   methods: {
     async init(){
       try{
+        const $this = this
         let modules = await FileService.getModules()
-        let defaults= await FileService.getDefaults()
-        // let serverStatus = await FileService.getServerStatus()
-        let dockerStatus = await FileService.getDockerStatus()
-        this.defaults = defaults.data.data
         this.modules = modules.data.data
+        let defaults= await FileService.getDefaults()
+        let procedures = await FileService.getProcedures()
+        let services = await FileService.getServices()
+        // // let serverStatus = await FileService.getServerStatus()
+        // let dockerStatus = await FileService.getDockerStatus()
+        this.defaults = defaults.data.data
+        this.services = services.data.data
+        this.procedures = procedures.data.data
         this.running = true
         return 
       } catch(err){
@@ -90,15 +99,10 @@ export default {
 
 <style>
 #app { 
-  color: #2b57b9 ;
   border:0px;
   border-style: solid;
-  border-color: #2b57b9 ;
-  height: 100vh;
 }
 .mainPage{
-  height: 100%;
-  width:100%;
   margin:auto;
   /*overflow-y:hidden;*/
 }

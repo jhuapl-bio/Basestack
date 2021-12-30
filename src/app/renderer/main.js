@@ -11,7 +11,7 @@ import Vue from 'vue'
 import axios from 'axios'
 
 import App from './App'
-import router from './router'
+// import router from './router'
 import store from './store'
 import { BootstrapVue } from 'bootstrap-vue'
 import VueSweetalert2 from 'vue-sweetalert2'
@@ -25,15 +25,17 @@ import VTooltip from 'v-tooltip'
 import  VueScrollTo from 'vue-scrollto'
 import {Slide, Carousel } from 'vue-carousel';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDownload, faHandshakeSlash, faSlash, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
 const  { HalfCircleSpinner, AtomSpinner } = require('epic-spinners');
 import path from "path"
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import ToggleButton from 'vue-js-toggle-button'
 import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
+import { BootstrapVueIcons } from 'bootstrap-vue'
+import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
 
 
-library.add( faDownload, faHandshakeSlash, faSlash, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench,faAngleUp, faCheck, faTimesCircle, faAngleDown, faPlus, faMinus, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree,faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
+library.add( faDownload,faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench,faAngleUp, faCheck, faTimesCircle, faAngleDown, faPlus, faMinus, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree,faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
 let config = process.env.logfile
 let configError = process.env.errorfile
 console.log(process.env)
@@ -59,7 +61,7 @@ Vue.component('Slide', Slide)
 Vue.use(require('vue-moment'));
 Vue.use(Multiselect)
 Vue.use(Vuex)
-
+Vue.use(BootstrapVueIcons)
 Vue.use(VTooltip, {
 	defaultBoundariesElement: document.body
 });
@@ -123,7 +125,7 @@ Vue.directive('pin', {
 /* eslint-disable no-new */
 new Vue({
   components: { App },
-  router,
+  // router,
   store,
   template: '<App/>'
 }).$mount('#app')

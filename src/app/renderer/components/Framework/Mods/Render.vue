@@ -8,9 +8,7 @@
   -->
 <template>
   <div class="render" >
-      {{source}}
-        {{status}}
-	<b-row v-if="status.running">
+	<b-row>
 		<object type="text/html" class="renderObj" :data="`http://localhost:${source.source}`">
 		</object>
 	</b-row>
@@ -34,7 +32,6 @@ export default {
 		}
 	}, 
 	async mounted(){
-		console.log("start module")
 		// this.start_module()
 	},
 	computed: {

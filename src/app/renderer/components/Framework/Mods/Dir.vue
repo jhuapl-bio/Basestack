@@ -7,26 +7,16 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="dir" >
-  	<!-- <b-form-file 
-        ref="seq_dir" 
-        :id="'seq_dir'" 
-        aria-describedby="seq_dir" 
-        v-model="valueDir"
-        directory
-        webkitdirectory
-        :no-traverse="false"
-        :multiple="true"
-        @change="electronOpenDir"
-        :placeholder="'Choose a folder'"
-        drop-placeholder="Drop folder here..."
-        :file-name-formatter="formatNames"
-        >
-    </b-form-file> -->
-    <b-button
-        @click="electronOpenDir('data')"
-    > Select Folder
-    </b-button><p v-if="value">{{value}}</p>
+  <div id="dir" class="wb-50 p-1">
+    <div class="entry">
+        <a
+            @click="electronOpenDir('data')"
+            src=""
+            style="cursor:pointer"
+            >Select Folder
+        </a>
+        <p class="entry-label" v-if="value" >{{value}} </p>
+    </div>
   </div>
 </template>
 

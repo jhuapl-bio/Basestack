@@ -1,0 +1,122 @@
+mytax_visualization:
+  init: true
+  hideStatus: true
+  label: "Visualization"
+  force_restart: false
+  config: null
+  depends: 
+    - type: "module"
+      id: "mytax"
+  image: "jhuaplbio/basestack_mytax"
+  workingdir: "/opt/software/mytax/sunburst"
+  ports: 
+    - 8086
+  command: ["bash", "-c", "echo 'Running Mytax Visualization' && python3 -m http.server 8086"]
+  variables:
+    port:
+      element: "render"
+      from: "8086"
+      to: "8086"
+mytax_create_json:
+  label: "Create Report JSON"
+  depends: 
+    - type: "module"
+      id: "mytax"
+  image: "jhuaplbio/basestack_mytax"
+  workingdir: "/opt/test-data"
+  orchestrated: false #orchestrated means it r
+  init: false
+  force_restart: false
+  force_init: false
+  command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax &&
+    python3  /opt/software/mytax/generate_hierarchy.py -o ${file}.fullstring  --report ${file}  -taxdump ${nodes} &&
+    bash krakenreport2json.sh -i ${file}.fullstring -o ${file}.json
+    "
+  ]
+  outputs:
+    json:
+      watch: True
+      type: "file"
+      path: ${file}.json
+  variables:
+    file: 
+      label: "Report From classification, in kraken-style"
+      element: "file"
+      bind_parent_dir: true
+      bind: 
+        from: "%{variables.file.source}"
+        to: "/opt/data"
+      class: "wb-50  p-3 mb-1"
+      source: ""
+    nodes:
+      label: "Nodes.dmp file, gathered from ncbi taxonomy"
+      class: "wb-50 p-3 mb-1"
+      options:
+        - element: null
+          name: "default"
+          variables:
+            name: "nodes.dmp"
+          target: "/taxdump/${name}" #This ${} is converted into the variable attribute of selected option only!
+        - name: file
+          label: "Report From classification, in kraken-style"
+          element: "file"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.nodes.source}"
+            to: "/taxonomy"
+          class: "wb-50  p-3 mb-1"
+          source: null
+mytax_kraken2_report:
+  label: "Kraken2 Report"
+  depends: 
+    - type: "module"
+      id: "mytax"
+  image: "jhuaplbio/basestack_mytax"
+  workingdir: "/opt/test-data"
+  orchestrated: false #orchestrated means it r
+  init: false
+  force_restart: false
+  force_init: false
+  command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && 
+    export KRAKEN2_DEFAULT_DB=${db} && kraken2  --output ${file}.out  --report ${file}.report  ${file}
+    "
+  ]
+  outputs:
+    report:
+      watch: True
+      type: "file"
+      path: ${file}.report 
+  variables:
+    file:
+      label: "Input FASTA/Q File"
+      element: "file"
+      bind_parent_dir: true
+      bind: 
+        from: "%{variables.file.source}"
+        to: "/opt/data"
+      class: "wb-50  p-3 mb-1"
+      source: null
+    db:
+      label: "Input classifier database"
+      class: "wb-50 p-3 mb-1"
+      options:
+        - element: "dir"
+          name: "Minikraken2"
+          source: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+          bind: 
+            from: "%{variables.db.source}"
+            to: "/opt/databases" #This ${} is converted into the variable attribute of selected option only!
+        - element: null
+          name: "Flukraken2-2021"
+          target: "/opt/databases/${name}"
+          variables: 
+            name: "flukraken2"
+          # cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken2"
+          # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index. 
+        - element: "dir"
+          name: "Custom DB"
+          source: null
+          target: null
+          bind: 
+            from: "%{variables.db.source}"
+            to: "/opt/databases" 

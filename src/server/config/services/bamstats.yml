@@ -1,0 +1,48 @@
+bamstats:
+  init: false
+  hideStatus: true
+  label: "Test Bamstats"
+  force_restart: false
+  config: null
+  orchestrated: true
+  depends: 
+    - type: "module"
+      id: "dind"
+  image: "jhuaplbio/basestack_orchestrator"
+  workingdir: "/shared/custom/data/bamstats" #/shared must be identical to that of the Docker in Docker setup. 
+  # command: ["bash", "-c", "ls -lht  && pwd"]
+  # command: ["bash", "-c", "docker run -it --rm  -v /shared:/shared  --name test ubuntu:latest ls /shared"]
+  command: ["bash", "-c", "dockstore tool launch --entry quay.io/collaboratory/dockstore-tool-bamstats:1.25-6_1.0 --json ./Dockstore.json"]
+  outputs:
+    report:
+      watch: True
+      type: "file"
+      path: "${writePath}/custom/data/bamstats/bamstats_report.zip"
+  variables:
+    bamfile:
+      element: "file"
+      bind_parent_dir: true
+      isolated: true
+      copy: 
+        basename: true
+        from: "%{variables.bamfile.source}"
+        to: "${writePath}/data/"
+      bind: 
+        from: "%{variables.bamfile.source}"
+        to: "/shared/data"
+      source: null
+      # source: "/Users/merribb1/Desktop/bamstats/rna.SRR948778.bam"
+    file:
+      element: "configuration-file"
+      bind_parent_dir: true
+      copy: 
+        from: "%{variables.file.source}"
+        to: "${writePath}/custom/data/bamstats/Dockstore.json"
+      bind: 
+        from: "${writePath}/custom/data/bamstats/Dockstore.json"
+        to: "/shared/custom/data/bamstats"
+      source: null
+      # source: "${writePath}/data/services/bamstats/Dockstore.json"
+
+
+

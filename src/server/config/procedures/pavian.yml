@@ -1,0 +1,53 @@
+pavian: #Top level is the left-hand selection of the menu and the major module to install 
+  title: "Pavian"
+  icon: "tree"
+  component: "Pavian"
+  module: True
+  init: false 
+  tooltip: "View Kraken-style Classification Reports"
+  services:
+    - pavian_default
+  # workflows: # Workflows are inner tabs. Each inner tab can have multiple images or dependencies associated with it
+  #   - name: "pavian"
+  #     dependencies: 
+  #       - target: "florianbw/pavian"
+  #         type: "docker"
+  #         build:
+  #           command: "pull florianbw/pavian"
+  #     services: # Each workflow can run multiple services or commands
+  #       - command: ['docker-compose', 'up', '--force-recreate', 'pavian']
+  #         name: "pavian_subclient"
+  #         init: false
+  #         hideStatus: true
+  #         label: "Pavian Orchestrated"
+  #         force_restart: false
+  #         config: null
+  #         orchestrated: true #orchestrated means it runs from dind rather than natively on host
+  #         variables:
+  #           - name: port
+  #             element: "render"
+  #             source: "8097"
+  #       - command: []
+  #         name: "pavian"
+  #         init: True
+  #         image: "florianbw/pavian"
+  #         hideStatus: true
+  #         label: "Pavian Default"
+  #         force_restart: false
+  #         config: "dockerConfig.json"
+  #         orchestrated: false
+  #         ports:  
+  #           - 8087:80
+  #         variables:
+  #           - name: port
+  #             element: "render"
+  #             source: "8087"
+  #       - command: []
+  #         name: "pavian_no_config"
+  #         label: "Pavian Empty"
+  #         image: "florianbw/pavian"
+  #         init: false
+  #         hideStatus: true
+  #         config: false
+  #         orchestrated: false
+

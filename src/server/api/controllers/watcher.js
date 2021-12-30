@@ -11,6 +11,7 @@ const { store }  = require("../../config/store/index.js")
 const chokidar = require("chokidar")
 const { getFiles} = require("./IO.js")
 const {checkFolderExists } = require("./validate.js")
+const { mapVariables } = require("./validate.js")
 var  logger  = store.logger
 const fs = require("fs")
 const glob = require("glob")
@@ -45,16 +46,17 @@ export var watch_consensus = async function (params){
 export var list_module_statuses = async function(paths){
 	return new Promise(function(resolve,reject){ 
 		let promises = [] 
-		paths.forEach((path)=>{
+		console.log(paths,"<<<<")
+		paths.forEach((path)=>{ 
 			promises.push(get_status_complete(path))
-		})
+		}) 
 		let statuses = []
 		Promise.all(promises).then((d, i)=>{
 			statuses = d.map((status, j)=>{
 				return d[j]
 			})
 			resolve(statuses)
-		}).catch((err)=>{
+		}).catch((err)=>{ 
 			reject(err)
 		})
 	})
@@ -72,57 +74,64 @@ async function get_status_complete (filepath){
 			} else {
 				status = 0
 			}
-			console.log(files)
 			resolve(status)
 		})	
 	})
 }
 
-
-
-
-
-export  var module_status = async function(params, mod){
+export  var module_status = async function(params, key, variables, outputs){
+	const $this = this;
 	return new Promise(function(resolve,reject){
-		const reportDir = params.reportDir
-		const modules = reportDir.mod
-		let completeFile = path.join(mod.folderpath, mod.statusCompleteFilename)
-		if (mod.statusType =="file"){
-			fs.exists(completeFile, function(exists, error){
+		let mod = {
+			status: {
+				total: 0, 
+				complete: 0,
+				source: null
+			},
+			key: key
+		}
+		params.path = mapVariables(params.path, variables)
+		if (params.type =="file"){
+			mod.status.total = 1
+			fs.access(params.path, function( error){
 				if (error){
-					reject(error)
+					mod.status.complete = 0
+					mod.status.source = params.path
 				}
-				if(exists){
-		    		mod.status = [1, 1, completeFile]
-		    	} else {
-		    		mod.status = [0, 1, completeFile]
+				else{
+					mod.status.complete = 1
+					mod.status.source = params.path
 		    	}
-		    	resolve(mod)
+				resolve(mod)
+		    	
 			})	
 		} else { // we need to look to see if all of the BC have been completed since it is async
-			let modules = params.runDir.manifest.entries
-			let module_dir = mod.folderpath;
+			mod.status.total = (outputs.length ? outputs.length : 0);
 			(async ()=>{
-				const exists = await checkFolderExists(module_dir)
+				const exists = await checkFolderExists(params.path)
 				let files_complete = [];
 				if (exists){
-					let files = await getFiles(module_dir)
+					let files = await getFiles(params.path)
 					let count = 0;
 					for (let j = 0; j < files.length; j++){
-						if(files[j].includes(mod.statusCompleteFilename)){
-
+						if(files[j].includes(params.pattern)){
 							count +=1
 							files_complete.push(files[j])
 						}
 					}
-					mod.status = [count, modules.length, files_complete]
+					// mod.status = [count, (outputs.length ? outputs.length : 0), files_complete]
+					mod.status.complete = count
+					mod.status.source = files_complete
+					
 				} else {
-					mod.status = [0, modules.length, files_complete]
+					// mod.status = [0, (outputs.length ? outputs.length : 0), files_complete]
+					mod.status.complete = 0
+					mod.status.source =  files_complete
 				}
 				resolve(mod)
-
 			})().catch((err)=>{
-				reject(err)
+				mod.status = [0, 0, []]
+				resolve(mod)
 			})
 		}  
 	})  	

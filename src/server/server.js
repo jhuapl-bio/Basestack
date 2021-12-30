@@ -7,14 +7,17 @@
    - # **********************************************************************
   */
 const express  = require('express')
-const app = express()
-const http  = require("http")
+const app = express() 
+const http  = require("http")   
 const cors =  require("cors")
 const path = require('path')
+var bodyParser = require('body-parser'); 
 
 
 app.use(express.json())
 app.use(express.urlencoded({extended: true, limit: '500mb'}));
+app.use(bodyParser.text({ type: 'text/*' }))
+
 app.use(express.static('public')) 
 
 
@@ -55,14 +58,14 @@ export var open_server = async function(port){
     if (!port){
       port = 5003
     }
-    (async ()=>{
+    (async ()=>{ 
       let router = require("./api/routes/index.js").default
       let upload = require("./api/controllers/upload.js").default
-      app.use(router)
+      app.use(router)     
       app.use(upload.array());
       // store.docker = await docker_init();
-      // console.log("docker init")
       let { init } = require("./api/controllers/index.js")
+
       await init()
     })().then(()=>{
       server = app.listen(port, () => {

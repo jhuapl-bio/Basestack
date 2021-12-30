@@ -4,7 +4,7 @@
         "80/tcp": {}
     },
     "HostConfig": {
-        "AutoRemove": true,
+        "AutoRemove": false,
         "Privileged": false,
         "Binds": [
             "basestack-docker-certs-client:/certs/client:ro"

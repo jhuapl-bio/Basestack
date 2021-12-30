@@ -3,6 +3,11 @@ logs:
   error: "${writePath}/logs/error.log"
   logfile:  "${writePath}/logs/logger.log"
   dockerLogFile: "${writePath}/logs/dockerLog.log"
+shared: 
+  path: "${writePath}/data"
+  services: ${writePath}/custom/services/
+  modules: ${writePath}/custom/modules/
+  procedures: ${writePath}/custom/procedures
 default:
   path: ${resourcePath}/server/config/default
   items:
@@ -11,30 +16,54 @@ default:
       format: "single"
       type: "yml"
 modules: 
-  path: "${resourcePath}/server/config/modules"
-  items:
-    - workflows:
-      path: "${resourcePath}/server/config/modules/workflows/"
-      filename: "index.yml"
-      format: "dir"
-      type: "yml"
-user: "${writePath}/meta.json"
-orchestrators:
-  dind:
-    path: ${resourcePath}/server/config/modules/dind/index.yml
-    format: "single"
+  - path: "${resourcePath}/server/config/modules/workflows/"
+    filename: "index.yml"
+    format: "dir"
     type: "yml"
-    build: 
-      file: "${resourcePath}/server/config/modules/dind/Dockerfile"
-    config:
-      file: ${resourcePath}/server/config/modules/dind/dockerConfig.json #used by the Docker API, refere to the url for more information
-  subclient:
-    build:
-      file: "${resourcePath}/server/config/modules/dind/Dockerfile"
-    config:
-      file: ${resourcePath}/server/config/modules/subclient/dockerConfig.json #used by the Docker API, refere to the url for more information
+  - path: "${writePath}/custom/modules/"
+    format: "files"
+    custom: true
+    type: "yml"
+procedures: 
+  - path: "${resourcePath}/server/config/procedures"
+    format: "files" 
+    type: "yml"
+  - path: "${writePath}/custom/procedures/"
+    format: "files" 
+    custom: true
+    type: "yml"
+services: 
+  - path: "${resourcePath}/server/config/services"
+    format: "files" 
+    type: "yml"
+  - path: "${writePath}/custom/services/"
+    format: "files"
+    custom: true
+    type: "yml"
+orchestrators:
   default:
-    build:
-      file: ""
-    config:
-      file: ${resourcePath}/server/config/modules/default/dockerConfig.json
+    format: "single"
+    type: "json" 
+    path: ${resourcePath}/server/config/default/dockerConfig.json #used by the Docker API, refere to the url for more information
+  subclient:
+    format: "single"
+    type: "json" 
+    path: ${resourcePath}/server/config/procedure_dind/dockerConfigSubclient.json #used by the Docker API, refere to the url for more information
+  dind:
+    service:
+      path: "${resourcePath}/server/config/service_dind/dind.yml"
+      format: "single" 
+      type: "yml"
+      config:
+        file: ${resourcePath}/server/config/service_dind/dockerConfig.json #used by the Docker API, refere to the url for more information
+    procedure:
+      path: "${resourcePath}/server/config/procedure_dind/procedure_dind.yml"
+      format: "single" 
+      type: "yml"
+    module:
+      path: ${resourcePath}/server/config/modules/dind/index.yml
+      format: "single"
+      type: "yml"
+      build: 
+        file: "${resourcePath}/server/config/modules/dind/Dockerfile"
+      

@@ -4,17 +4,17 @@ import path  from "path"
 const { store }  = require("../../config/store/index.js")
 var  logger  = store.logger
 const { checkFileExist, reformatResponseVideo }  = require("./validate.js")
-const { init_base_modules, init_dind } = require("./init.js")
-const {  writeFile, ammendJSON, readFile, get, set } = require("./IO.js")
+const { init_base_modules, init_dind, init_base_procedures, init_base_services } = require("./init.js")
+const {  writeFile, ammendJSON, readFile, get, set } = require("./IO.js") 
 
 
-// const { fetch_videos, fetch_modules,  } = require("./fetch.js")
+const {  listImages  } = require("./fetch.js")
 // const containerNames = ['basestack_consensus', 'basestack_tutorial', 'basestack_mytax']
 // const { BasestackConsensus } = require('../modules/consensus')
 // const { Tutorial } = require("../modules/tutorial")
 // const { RAMPART } = require('../modules/rampart')
 // const { BasestackMytax } = require("../modules/mytax")
-// const { Pavian } = require("../modules/pavian")
+// const { Pavian } = require("../modules/pavian") 
 // const { BasestackMytaxReport } = require("../modules/mytax_report")
 
 const { docker_init } = require("./init.js")
@@ -22,13 +22,26 @@ const lodash = require("lodash")
 
 
 
-export async function init(){  
+export async function init(){   
 	store.ready = true
-	// Initiating the Docker Class
-	store.docker = await docker_init();
-	// //Initiating the Status Class of Modules
+	// Initiating the Docker Class   
+	store.docker = await docker_init();  
+	// //Initiating the Status Class of Modules 
 	let response_orchestrator = await init_dind()
+	// store.dind = await docker_init({
+	// 	host: '172.18.0.3',
+	// 	port: "2376"
+	// })
+	// let images = await listImages(true)
+	// console.log("_____________")
+	// console.log(images,"<<<<") 
+	
+	
+	
 	let response_init = await init_base_modules()
+	let response_init_services = await init_base_services()
+	let response_init_procedures= await init_base_procedures()
+ 
 	// let response = await fetch_modules()
 	console.log("finished initializing")
 }
@@ -193,12 +206,12 @@ export async function init(){
 // 		return 
 // 	} catch(err){
 // 		logger.error(err)
-// 		throw err
-// 	}
+// 		throw err 
+// 	} 
 // }
 
-
-// async function initialize_module_object(container_name){
+ 
+// async function initialize_module_object(container_name){     
 // 	// let obj;
 // 	// if (container_name == 'rampart'){
 // 	// 	obj  = new DockerObj('jhuaplbio/basestack_consensus', 'rampart', new RAMPART());

@@ -1,0 +1,9 @@
+artic_consensus_jhuapl:
+  title: "JHUAPL - Artic Consensus"
+  icon: "dna"
+  module: True
+  tooltip: "Generate SARS-nCoV-2 Consensus(es) and Report File"
+  dependencies:
+    - target: "jhuaplbio/basestack_consensus"
+      type: "docker"
+    

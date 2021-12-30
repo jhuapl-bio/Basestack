@@ -17,7 +17,7 @@ export async function removeAnnotation(params){
 				logger.error(err)
 				throw err
 			})
-	  		return response
+	  		return response 
 	  	}).catch((errinner)=>{logger.error(errinner); throw errinner})
 	} catch (err){
 		logger.error(err)

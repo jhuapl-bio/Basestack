@@ -10,55 +10,157 @@
 	<div class="mainContent">
 		<b-tabs 
 	        v-model="tab" 
-	        nav-wrapper-class="w-3" 
+	        nav-wrapper-class="w-3 sideWrapper" 
 	        left align="center"  
         	active-nav-item-class="activeTabButton"
-        	style="height: 100vh; " 
+        	style="height: 100vh; padding:0px !important" 
         	vertical
         >
+		  <b-tab  
+		  	class="mainTabContent"
+			
+		  >
+		  	<template v-slot:title style="" class="ModuleTabTitle">
+				<div class="tabSide" style="justify-content:center;">
+					<div class="tabSideItem" style="text-align:center"
+					>	
+						<span style=""
+							v-tooltip="{
+							content: 'Dashboard Home',
+							placement: 'top',
+							classes: ['info'],
+							trigger: 'hover',
+							targetClasses: ['it-has-a-tooltip'],
+						}"
+						>
+							<font-awesome-icon class="" icon="home"/>
+						</span>
+					</div>
+					<div class="tabSideItem">
+						<span  v-if="!collapsed">
+							Dashboard
+						</span>
+					</div>
+				</div>
+  			</template>
+		  	<div class="tabContent">
+  				<h2 class="header header-major" style="">Dashboard</h2>
+            	<Dashboard
+					:tab="0"
+					@emitChange="emitChange"
+				></Dashboard>
+				
+            </div>
+			
+			  
+		  </b-tab>
+		  
           <b-tab  
-          	v-for="(entry, key) in modules"
+          	v-for="(entry, key) in procedures"
           	v-bind:key="entry.name"
-          	class="ma-0 pa-0"
+		  	class="mainTabContent"
+			vertical end
             > 
-            <template v-slot:title v-if="(entry.module  ) ">
-            	<div class="tab-parent" style="display: flex; justify-content: space-between;"
-				>	
-					<div class="tab-item" style="">
-		            	<span style="text-align:left; text-anchor: start;"
+            <template v-slot:title  class="ModuleTabTitle" >
+				<div  @mouseover="isHovered = entry.name" @mouseleave="isHovered = null">
+					<div :class="[ 'tabSide',  isHovered == entry.name ? 'tabhovered' : ''  ]" :style="{ 'justify-content': 'center', 'background': getColor(key, 0.2) }" >
+						<div :class="[ 'tabSideItem' ]" style="text-align:center"
+						>
+							<span class="tabIcon"
+								:style="{ 'justify-content': 'center', 'color': getColor(key, 0.8) }"
+								v-tooltip="{
+								content: entry.tooltip,
+								placement: 'top',
+								classes: ['info'],
+								trigger: 'hover',
+								targetClasses: ['it-has-a-tooltip'],
+							}"
+							>
+								<font-awesome-icon class="" :icon="(entry.icon ? entry.icon : 'cog')"/>
+							</span>
+						</div>
+						<div class="tabSideItem" style="text-align:center"
+						>
+							<span style=""
+							v-if="1!==1"
+							v-tooltip="{
+							content: 'An Update is available',
+							placement: 'top',
+							classes: ['info'],
+							trigger: 'hover',
+							targetClasses: ['it-has-a-tooltip'],
+							}"
+							>
+								<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
+							</span>
+						</div>
+						<div class="tabSideItem">
+							<span style="text-align:center; " v-if="!collapsed">
+								{{ entry.title }}
+							</span>
+						</div>
+					</div>
+				</div>
+  			</template>
+  			<div  class="tabContent">
+  				<h3 class="header header-minor" >{{entry.title}}
+			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
+			        :title="entry.tooltip"
+			        style="" >
+			        <font-awesome-icon class="help" icon="question-circle"  />
+			      </span>
+			    </h3>
+
+            	<component 
+            		:is="'Framework'"
+					:moduleIdx="key"
+            		:services="entry.services"
+					:procedure="entry"
+					:procedureIdx="key"
+            	>            	
+            	</component>
+            </div>
+          </b-tab>
+		  <b-tab  
+		  	class="mainTabContent"
+			v-for="(entry, key) in defaults"
+          	v-bind:key="key"
+		  >
+		  	<template v-slot:title >
+            	<div  :class="[ 'tabSide', 'tabSideDefault', isHovered == entry.name ? 'tabhovered' : ''  ]" @mouseover="isHovered = entry.name" @mouseleave="isHovered = null" class="tabSide" style="justify-content:center" >
+					<div class="tabSideItem" style="text-align:center"
+					>
+						<span style=""
 		            	v-tooltip="{
-			            content: 'An Update is available',
+			            content: entry.tooltip,
 			            placement: 'top',
 			            classes: ['info'],
 			            trigger: 'hover',
 			            targetClasses: ['it-has-a-tooltip'],
 			            }"
 		            	>
-		            		<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
+		            		<font-awesome-icon class="configure" :icon="(entry.icon ? entry.icon : 'cog')"/>
 		            	</span>
-		            	<span style="  text-anchor: end; text-align:right; vertical-align:middle; white-space: nowrap; padding-left: 10px; font-size: 0.8em" v-if="!collapsed">
+		            </div>
+					<div class="tabSideItem" style="text-align:center">
+						<span  v-if="!collapsed">
 							{{ entry.title }}
 						</span>
-		            </div>
+					</div>
 	        	</div>
   			</template>
-  			<div v-if="(entry.module ) ">
-  				<h2 class="header" style="text-align:center">{{entry.title}}
-			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
-			        :title="entry.tooltip"
-			        style="" >
-			        <font-awesome-icon class="help" icon="question-circle"  />
-			      </span>
-			    </h2>
-
-            	<component 
-            		:is="'Framework'"
-					:moduleIdx="key"
-            		:workflows="entry.workflows"
+		  	<div >
+  				<component 
+            		:is="entry.component"
+					:modules="modules"
+					:defaults="defaults"
+					:moduleIdx="key+1 + modules.length"
+					:defaultModule="entry"
             	>            	
             	</component>
             </div>
-          </b-tab>
+			  
+		  </b-tab>
       	  	<template v-slot:tabs-start  style="padding:0px !important; ">
 		          <b-nav-item role="presentation"  href="#">
 		          	<button class="btn collapseButton"  @click="toggleCollapse()"><div :id="'collapseSidebar'" class="in-line-Button" ><span><font-awesome-icon  style="margin:auto; justify-content: center;text-align:center " icon="bars"/></span></div></button>
@@ -68,42 +170,56 @@
 	          	<div id="emblem"><img v-bind:class="[collapsed ? 'shrunkButtonImg' : 'ButtonImg']" src="../../static/img/apl_sheild_blue_only.png" /></div>
 	        </template>
         </b-tabs>
-        <!-- <div v-else style=" height:100vh; width:100%">
-        	<div style="top: 35%; margin:auto">
-	        	<h4 style="text-align:center; margin:auto; top: 35%">Loading</h4>
-	        	<half-circle-spinner
-		          :animation-duration="1000"
-		          style="vertical-align:middle !important; margin:auto; top: 35%"
-				  :size="100"
-		          :color="'#2b57b9'"
-		     	>
-		     	</half-circle-spinner>
-		 	</div>
-	    </div> -->
+        
 	</div>
 </template>
 
 <script>
-import {HalfCircleSpinner} from 'epic-spinners'
-import FileService from '@/services/File-service.js'
+
 
 
 import Framework from '@/components/Framework/Framework'
-
+import Dashboard from "@/components/Dashboard/Dashboard"
+import LogDashboard from "@/components/Dashboard/DashboardDefaults/LogDashboard"
+import PlayDashboard from "@/components/Dashboard/DashboardDefaults/PlayDashboard"
+import Sys from "@/components/Dashboard/System/Sys"
+import Library from '@/components/Dashboard/DashboardDefaults/Library'
 
 export default {
 	name: 'mainpage',
 	components:{
-		HalfCircleSpinner,
-		Framework
+		Framework,
+		Dashboard,
+		Library,
+		LogDashboard,
+		PlayDashboard,
+		Sys
 	},
 	
-	props: ['modules', 'defaults'],
+	props: ['modules', 'defaults', 'procedures', 'services'],
 	data(){
 		return{
-			tab: 1,
+			tab:5,
+			colorList: [
+				"rgb(70, 240,240",
+				"rgb(128,0,0",
+				"rgb(128,128,0",
+				"rgb(255,165,0",
+				"rgb(255,255,0",
+				"rgb(0,128,0",
+				"rgb(128,0,128",
+				"rgb(255,0,255",
+				"rgb(255,0,0",
+				"rgb(0,255,0",
+				"rgb(0,128,128",
+				"rgb(0,255,255",
+				"rgb(0,0,255",
+				"rgb(0,0,128",
+			],
 			modulesInner: [],
 			collapsed: false,
+			isHovered: -1,
+			index: 0,
 			status: {},
 			system: {},
 		}
@@ -123,12 +239,28 @@ export default {
 	},
 	mounted(){
 		const $this = this				
-		
-		
 	},
 
 	methods: {
-      open (link) {
+		
+		emitChange(value){
+			this[value.target] = value.value
+	    },
+		hovered(event, entry){
+			entry.hovered = event
+			return event
+		},
+		getColor(key, opacity){
+			const $this = this;
+			// `${colorList.length - colorList[colorList.length % key]}, 0.8)`
+			if (!(this.colorList.length % key+1)){
+				return `${ this.colorList[0] }, ${opacity})`
+			} else {
+				let color = `${this.colorList[this.colorList.length % key+1]}, ${opacity})`
+				return color
+			}
+		},
+      	open (link) {
           try{        
                 this.$electron.shell.openPath(link)
           } catch(err){
@@ -141,9 +273,9 @@ export default {
           }
       },
 	  async componentImport(component){
-		  let componentImport = require(`@/components/NavbarModules/${component}/${component}`)
+		//   let componentImport = require(`@/components/NavbarModules/${component}/${component}`)
 		  
-		  this.component(component)
+		//   this.component(component)
 	  },
 	  toggleCollapseParent(){
       	this.data.collapsed = !this.collapsed
@@ -159,21 +291,11 @@ export default {
 
 <style>
 #mainpage2{
-	height:100%;
-	width: 100%;
 	position:absolute;
 	/*overflow-y:hidden;*/
 }
 
-.mainContent{
-	-webkit-background-clip: padding-box; /* for Safari */
-    background-clip: padding-box; /* for IE9+, Firefox 4+, Opera, Chrome */
-	padding: 0px;
-	height:100vh !important;
-	/*position:absolute;*/
-	/*margin:auto;*/
-	overflow-y:hidden;
-}  
+
   #emblem{
     height: 8%;
     padding-top: 20px;
@@ -184,12 +306,12 @@ export default {
     background:white;
   }
   .shrunkButtonImg{
-    max-width: 100%;
-    max-height: 100%;
+    /* max-width: 100%;
+    max-height: 100%; */
     display:none;
   }
   .ButtonImg{
-    max-height:100%; max-width:100%;
+    /* max-height:100%; max-width:100%; */
  }
 .fa-icon {
   vertical-align: middle !important;

@@ -1,48 +1,45 @@
-- name: "introduction"
-  icon: "home"
-  title: "Home"
-  component: "Introduction"
-  module: False
-  tooltip: null
-  image: null
-- name: "moduleinstall"
-  icon: "cog"
-  title: "Install Modules"
-  component: "ModuleInstall"
+# - name: "introduction"
+#   icon: "home"
+#   title: "Home"
+#   component: "Introduction"
+#   module: False
+#   tooltip: null
+#   image: null
+- name: "library"
+  icon: "book"
+  title: "Library"
+  component: "Library"
   module: False
   tooltip: "Install or Modify Modules as Docker Images"
   image: null
-- name: "igv"
+- name: "playdashboard"
   icon: "globe"
-  title: "IGV"
-  component: "IGV"
-  module: False
-  tooltip: "View the externally hosted (internet required) page from Integrative Genomics Viewer"
-  image: null
-- name: "nextstrain"
-  icon: "tree"
-  title: "Nextstrain"
-  component: "Nextstrain"
-  module: False
-  tooltip: "Compare mutations on Nextstrain (internet access required)"
-  image: null
+  component: "PlayDashboard"
+  title: "Play"
+  tooltip: "View built-in modules, pre-packaged in Basestack"
+  options:
+    - name: "igv"
+      icon: "globe"
+      title: "IGV"
+      component: "IGV"
+      module: False
+      tooltip: "View the externally hosted (internet required) page from Integrative Genomics Viewer"
+    - name: "nextstrain"
+      icon: "tree"
+      title: "Nextstrain"
+      component: "Nextstrain"
+      module: False
+      tooltip: "Compare mutations on Nextstrain (internet access required)"
 - name: "logs"
   icon: "book-open"
-  title: "Log Streams"
-  component: "Logs"
+  title: "Logs"
+  component: "LogDashboard"
   module: False
   tooltip: "View currently running logs of processes"
-- name: "about"
-  icon: "address-card"
-  title: "Contact"
-  component: "About"
-  module: False
-  tooltip: ""
-  image: null
 - name: "system"
   icon: "cog"
   title: "System"
-  component: "System"
+  component: "Sys"
   module: False
   tooltip: "View your system information including available space, Docker status and more"
   image: null

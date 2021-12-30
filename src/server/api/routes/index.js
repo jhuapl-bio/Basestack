@@ -9,11 +9,13 @@
 
 var express = require('express');
 var router = express.Router();
+const YAML = require("yaml") 
 var { store } = require("../../config/store/index.js")
 var { error_alert } = require("../controllers/logger.js")
 const logger = store.logger
+import { Procedure } from "../orchestrators/procedure.js";
 import upload from "../controllers/upload.js"
-
+const path = require("path")
 //Import Validation Scripting
 const { validate_run_dir } = require("../controllers/validate.js")
 
@@ -21,10 +23,12 @@ const { validate_run_dir } = require("../controllers/validate.js")
 const { 
 	remove_images, 
 	prune_images, 
+	pullImage,
+	loadImage,
 	install_images_offline, 
 	install_images_online, 
 	cancel_load_images } = require("../controllers/post-installation.js")
-// const {	init_container_logs } = require("../controllers/dockerLogs.js")
+const {	define_service, define_module, define_procedure } = require("../controllers/init.js")
 const { 
 	getPrimerDirsVersions, 
 	fetch_protocols, 
@@ -35,14 +39,20 @@ const {
 	fetch_video,
 	fetch_histories,
 	fetch_status,
+	listImages,
 	getMeta,
 	getDockerStatus,
 	getServerStatus,
 	fetch_external_dockers
 	} = require("../controllers/fetch.js")
+	
 
 const { 
-	readFile 
+	readFile, 
+	decompress_file,
+	copyFile,
+	writeFile,
+	removeFile
 } = require("../controllers/IO.js")
 
 const { 
@@ -96,9 +106,8 @@ router.get("/meta/fetch", (req,res,next)=>{
 })
 router.get("/server/status/fetch", (req,res,next)=>{
 	try {
-		logger.info("Getting server run status")
 		getMeta().then((response)=>{
-			logger.info(`getting  server run status... ${response}`)
+			// logger.info(`getting  server run status... ${response}`)
 			res.status(200).json({status: 200, data: response, message: "Server is running" });
 		}).catch((err)=>{
 			logger.error(`Error in server status fetch ${err}`)
@@ -392,7 +401,6 @@ router.get("/videos/fetchMeta", (req,res,next)=>{ //this method needs to be rewo
 router.post("/tags/fetch", (req,res,next)=>{ 
 	(async function(){
 		try {
-			console.log("tags");
 			fetch_external_dockers(req.body.name).then((response)=>{
 				res.status(200).json({status: 200, message: "Returning compelted fetch", data: response });
 				}).catch((err1)=>{
@@ -407,14 +415,13 @@ router.post("/tags/fetch", (req,res,next)=>{
 })
 router.post("/tags/select", (req,res,next)=>{ 
 	try {
-		console.log(req.body)
 		store.config.images[req.body.image].selectedTag = req.body
 		res.status(200).json({status: 200, message: "Returning selected tag completed" });
 	} catch(err3){
 		logger.error(err3)
 		res.status(419).send({status: 419, message: error_alert(err3) });
 	}	
-})
+})  
 router.post("/videos/fetch", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	try {
 		res.sendFile(req.body.fullpath)
@@ -423,7 +430,7 @@ router.post("/videos/fetch", (req,res,next)=>{ //this method needs to be reworke
 		res.status(419).send({status: 419, message: error_alert(err2) });
 	}	
 })
-
+ 
 
 
 router.post("/bookmark/add", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
@@ -487,7 +494,6 @@ router.post("/timestamp/remove", (req,res,next)=>{ //this method needs to be rew
 router.post("/docker/socket", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function(){
 		try {
-			console.log(req.body)
 			await updateDockerSocket(req.body.socket)
 			res.status(200).json({status: 200, message: "Updated Docker Socket!", data: null });
 		} catch(err2){
@@ -520,7 +526,6 @@ router.post("/orchestrator/build", (req,res,next)=>{ // build workflow according
 	(async function(){
 		try {
 			let workflow = store.system.orchestrators.dind.workflow
-			console.log(workflow)
 			let response = await workflow.build([0], true)
 			logger.info(`Success in beginning to build workflow orchestrator: ${req.body.module}`)
 			res.status(200).json({status: 200, message: "Completed workflow build", data: response });
@@ -530,26 +535,74 @@ router.post("/orchestrator/build", (req,res,next)=>{ // build workflow according
 		}	
 	})()
 })
-router.post("/workflow/build", (req,res,next)=>{ // build workflow according to name and index
+
+
+router.post("/module/remove", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
-			let workflow = store.modules[req.body.module].workflows[req.body.workflow]
-			let response = await workflow.build(req.body.dependencies, true)
-			logger.info(`Success in beginning to build workflow: ${req.body.module}`)
-			res.status(200).json({status: 200, message: "Completed workflow build", data: response });
+			let module = store.modules[req.body.module]
+			let response = await module.remove()
+			logger.info(`Module removal attempt completed: ${req.body.module} ${response}`)
+			res.status(200).json({status: 200, message: "Completed module removal", data: response });
+		} catch(err2){    
+			logger.error("%s %s", "Error in module removal", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)}); 
+		}	
+	})()
+})
+
+
+router.post("/module/build", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let module = store.modules[req.body.module]
+			let response = await module.build( req.body.overwrite, req.body.params)
+			logger.info(`Success in beginning to building of module: ${req.body.module}`)
+			res.status(200).json({status: 200, message: "Completed module build", data: response });
 		} catch(err2){
 			logger.error("%s %s", "Error in loading images2", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
 		}	
 	})()
 })
-router.get("/workflow/build/status", (req,res,next)=>{ // build workflow according to name and index
+
+router.post("/module/build/dependency/decompress", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
-			let orchestrator = store.modules[req.body.module].workflows[req.body.workflow].services[req.body.service]
-			let response = orchestrator.service.dependencies
-			logger.info(`Success in beginning to build workflow: ${req.body.module}`)
-			res.status(200).json({status: 200, message: "Completed workflow build", data: response });
+			let path = req.body.path
+			let target = req.body.target_path
+			let response = await decompress_file(path, target )
+			logger.info(`Success in beginning to decompress file: ${path}`)
+			res.status(200).json({status: 200, message: "Completed decompression", data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in decompressing file", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+})
+
+router.post("/module/build/dependency", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let module = store.modules[req.body.module]
+			let response = await module.build( req.body.overwrite, req.body.dependency)
+			logger.info(`Success in beginning to building of module: ${req.body.module}`)
+			res.status(200).json({status: 200, message: "Completed module build", data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in loading images2", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+}) 
+ 
+
+router.get("/module/build/status", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){ 
+		try {
+			let orchestrator = store.modules[req.body.module]
+			let response = orchestrator.dependencies 
+			logger.info(`Success in beginning to build  status modules: ${req.body.module}`)
+			res.status(200).json({status: 200, message: "Completed status build of module", data: response });
 		} catch(err2){ 
 			logger.error("%s %s", "Error in loading images2", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
@@ -558,7 +611,6 @@ router.get("/workflow/build/status", (req,res,next)=>{ // build workflow accordi
 })
 router.get("/defaults/get", (req,res,next)=>{ // build workflow according to name and index
 	try {
-		logger.info("getting BASE modules")
 		res.status(200).json({status: 200, message: "retrieved module information", data: store.default    });
 	} catch(err2){
 		logger.error("%s %s", "Error in loading images2", err2)
@@ -568,35 +620,132 @@ router.get("/defaults/get", (req,res,next)=>{ // build workflow according to nam
 
 router.get("/modules/get", (req,res,next)=>{ // build workflow according to name and index
 	try {
-		let modules = store.modules
+		let modules = Object.entries(store.modules)
+		let data = []
+		modules.forEach((module)=>{ 
+			try{
+				let returnables = []
+				let name = module[0]
+				
+				let value = module[1]
+				let dependencies = value.dependencies.map((d)=>{
+					let { streamObj, ...newObj } = d //Remove the stream obj on return 
+					return newObj
+				})
+				
+				data.push({ 
+					name: name,
+					custom: value.custom,
+					dependencies: dependencies
+				})
+			} catch (err){
+				store.logger.error("Could not get module loaded for... %o", module)
+			}
+		})
+		res.status(200).json({status: 200, message: "retrieved module information", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in loading images2", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+router.get("/modules/custom/get", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let modules = Object.entries(store.modules)
+		let data = []
+		modules.forEach((module)=>{ 
+			try{
+				let returnables = []
+				let name = module[0]
+				
+				let value = module[1]
+				if (value.config.custom ){
+					let dependencies = value.dependencies.map((d)=>{
+						let { streamObj, ...newObj } = d //Remove the stream obj on return 
+						return newObj
+					})
+					data.push({ 
+						name: name,
+						custom: value.config.custom,
+						dependencies: dependencies
+					})
+				}
+				
+			} catch (err){
+				store.logger.error("Could not get module loaded for... %o", module)
+			}
+		})
+		res.status(200).json({status: 200, message: "retrieved custom module information", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in loading info for custom modules", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+
+router.get("/images/get", (req,res,next)=>{ // build workflow  according to name and index
+	try {
+		console.log("images");   
+		(async ()=>{             
+			let images = await listImages();           
+			console.log(images) 
+			res.status(200).json({status: 200, message: "retrieved images information", data: images});
+		})().catch((err)=>{ 
+			throw err  
+		})  
+	} catch(err2){
+		logger.error("%s %s", "Error in getting images", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)}); 
+	}	
+})
+router.get("/dind/get", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		(async ()=>{
+			let images = await listImages(true);
+			res.status(200).json({status: 200, message: "retrieved images from dind information", data: images});
+		})().catch((err)=>{
+			throw err
+		})
+	} catch(err2){
+		logger.error("%s %s", "Error in getting images", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+router.get("/module/:moduleName", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let module = store.modules[req.params.moduleName]
+		let returnables = []
+		let dependencies = module.dependencies.map((d)=>{
+			let { streamObj, ...newObj } = d //Remove the stream obj on return 
+			return newObj
+		}) 
+		
+		let data = { 
+			name: req.params.moduleName,
+			dependencies: dependencies
+		}
+		res.status(200).json({status: 200, message: "retrieved module information", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in loading images2", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+
+router.get("/services/get", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let services = Object.entries(store.services)
 		let data = []
 		
-		modules.forEach((module)=>{ 
-			let returnable = {workflows: []}
-
-			Object.keys(module).map((m)=>{ if( m !== 'workflows' && module[m] ){ returnable[m] = module[m]  }   })
-			let staged_workflows = []
-			module.workflows.forEach((workflow , index)=>{
-				let staged_services = []
-				workflow.services.forEach((service)=>{
-					staged_services.push(
-						{
-							status: service.service.status.running,
-							variables: service.service.variables,
-							progress: service.service.progress,
-							service: service.name,
-							label: ( service.service.label ? service.service.label : service.name )
-						}
-					) 
-				})
-				returnable.workflows.push({
-					name: workflow.name,
-					dependencies: workflow.dependencies, 
-					services: staged_services
-				})
+		services.forEach((service)=>{ 
+			let returnables = []
+			let name = service[0]
+			let value = service[1]
+			let dependencies = value.depends
+			let config = value.config
+			data.push({
+				name: name,
+				dependencies: dependencies,
+				config: config
 			})
-			// data.push(...staged_workflows)
-			data.push(returnable)
+		
 
 		})
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
@@ -605,92 +754,477 @@ router.get("/modules/get", (req,res,next)=>{ // build workflow according to name
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
-
-
-
-router.get("/modules/get/status", (req,res,next)=>{ // build workflow according to name and index
+router.get("/services/custom/get", (req,res,next)=>{ // build workflow according to name and index
 	try {
-		let modules = store.modules
-		let data = []		
-		modules.forEach((module)=>{ 
-			let returnable = {name: module.name, workflows: []}
-			let staged_workflows = []
-			module.workflows.forEach((workflow, index)=>{
-				let staged_services = []
-				workflow.services.forEach((service)=>{
-					staged_services.push(
-						{
-							status: service.service.status.running,
-						}
-					) 
+		let services = Object.entries(store.services)
+		let data = []
+		services.forEach((service)=>{ 
+			
+			let name = service[0]
+			let value = service[1]
+			let dependencies = value.depends
+			let config = value.config
+			if (value.config.custom){
+				data.push({
+					name: name,
+					dependencies: dependencies,
+					config: config
 				})
-				returnable.workflows.push({
-					name: workflow.name,
-					services: staged_services
-				})
-			})
-			// data.push(...staged_workflows)
-			data.push(returnable)
+			}
 		})
-		res.status(200).json({status: 200, message: "retrieved module specifics information", data: data });
+		res.status(200).json({status: 200, message: "retrieved module information", data: data });
 	} catch(err2){
 		logger.error("%s %s", "Error in loading images2", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
 
-
-
-router.get("/modules/get", (req,res,next)=>{ // build workflow according to name and index
+router.get("/procedures/get", (req,res,next)=>{ // build workflow according to name and index
 	try {
-		let modules = store.modules
-		let data = []		
-		modules.forEach((module)=>{ 
-			let returnable = {name: module.name, workflows: []}
-			let staged_workflows = []
-			module.workflows.forEach((workflow, index)=>{
-				let staged_services = []
-				workflow.services.forEach((service)=>{
-					staged_services.push(
-						{
-							cmd: service.service.command,
-							variables: service.service.variables
-						}
-					) 
-				})
-				returnable.workflows.push({
-					name: workflow.name,
-					services: staged_services
-				})
+		let procedures = Object.entries(store.procedures)
+		let data = []
+		procedures.forEach((val)=>{ 
+			let returnables = []
+ 
+			let name = val[0]
+			let procedure = val[1]
+
+			let status = procedure.status 
+			
+			let services = {};
+			for (let [key, service] of Object.entries(procedure.services)){
+				services[key] = service.config
+			}
+			data.push({ 
+				name: name,
+				title: procedure.params.title,
+				config: procedure.params,
+				status: status,
+				services: services
 			})
-			// data.push(...staged_workflows)
-			data.push(returnable)
+		
+
 		})
-		res.status(200).json({status: 200, message: "retrieved module specifics information", data: data });
+		res.status(200).json({status: 200, message: "retrieved procedure information", data: data });
 	} catch(err2){
 		logger.error("%s %s", "Error in loading images2", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
+router.get("/procedures/custom/get", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let procedures = Object.entries(store.procedures)
+		let data = []
+		procedures.forEach((val)=>{ 
+			let returnables = []
+			let name = val[0]
+			let procedure = val[1]
+			let status = procedure.status 
+			if (procedure.params.custom){
+				let services = {};
+				for (let [key, service] of Object.entries(procedure.services)){
+					services[key] = service.config
+				}
+				data.push({
+					name: name,
+					title: procedure.params.title, 
+					config: procedure.params,
+					status: status,
+					services: services
+				})
+			}
+		})
+		res.status(200).json({status: 200, message: "retrieved custom procedure information", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting info for custom procedures", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
 
 
-router.post("/workflow/run", (req,res,next)=>{ // build workflow according to name and index
+router.get("/procedure/status/:procedure", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let procedures = []
+		for (let [key, value] of Object.entries(store.procedures)){
+			if (key == req.params.procedure){
+				procedures.push(value)
+			}
+		}
+			
+		let data = {}
+		procedures.forEach((procedure)=>{ 
+			let returnable = {name: procedure.name, services: []}
+			let staged_services = {}
+			if (procedure.services){
+				for (let [key, service] of Object.entries(procedure.services)){
+					data[key] =
+						{ 
+							installed: service.status.fully_installed,
+							exists: service.status.exists,
+							log: service.status.stream,
+							dependencies: service.dependencies
+						}
+					
+				}
+			}
+		})
+		res.status(200).json({status: 200, message: "retrieved procedure specifics information", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting procedure status(es)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+
+
+
+router.get("/procedures/status", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let procedures = Object.entries(store.procedures)
+		let data = []	
+		procedures.forEach((p)=>{ 
+			let name = p[0]
+			let procedure = p[1]
+			let returnable = {name: procedure.name, services: []}
+			let staged_services = []
+			if (procedure.services){
+				procedure.services.forEach((service, index)=>{
+					staged_services.push(
+						{
+							installed: service.status.fully_installed,
+							exists: service.status.exists,
+							log: service.status.stream,
+							name: service.name,
+							dependencies: service.dependencies
+						}
+					) 
+				})
+				returnable.services = staged_services
+				data.push(returnable)
+			}
+		})
+		res.status(200).json({status: 200, message: "retrieved procedure specifics information", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting procedure status(es)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+
+router.get("/services/status", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let data = []	
+		for ( const [key, service ] of Object.entries(store.services)){
+			data.push(
+				{
+					installed: service.status.fully_installed,
+					status: service.status.exists, 
+					name: service.name,
+					dependencies: service.dependencies
+				}
+			) 
+		}
+		res.status(200).json({status: 200, message: "retrieved status(es) for services", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting service status(es)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+
+
+
+router.get("/service/status/", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let data = []	
+		for ( const [key, service ] of Object.entries(store.services)){
+			data.push(
+				{
+					installed: service.status.fully_installed,
+					status: service.status.exists,
+					name: service.name,
+					dependencies: service.dependencies
+				}
+			) 
+		}
+		res.status(200).json({status: 200, message: "retrieved status(es) for services", data: data });
+	} catch(err2){ 
+		logger.error("%s %s", "Error in getting service status(es)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+router.post("/service/save/file", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
-			let orchestrator = store.modules[req.body.module].workflows[req.body.workflow].services[req.body.service]
-			let variables = orchestrator.updateVariables(req.body.variables)
-			let response = await orchestrator.check_then_start(variables)
-			logger.info("%o workflow sent for running", response)
-			res.status(200).json({status: 200, message: `Completed ${orchestrator.name} run start`, data: response });
+			let basename = store.system.shared.services
+			let filename = path.basename(req.body.source)
+			let response = await copyFile(req.body.source, path.join(basename, filename))
+			let st = await readFile(path.join(basename, filename))
+			let parsed = YAML.parse(st)
+			for (let [ key, value ] of Object.entries(parsed)){
+				value.custom = true
+				let re = define_service(key, value)
+				re.setOptions()				
+				store.services[key] = re
+			} 
+			logger.info("Service(s) copied", response)
+			res.status(200).json({status: 200, message: `Completed run  service copy`, data: response });
 		} catch(err2){
-			logger.error("%s %s", "Error in running workflow", err2)
+			logger.error("%s %s", "Error in copying service", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
 		}	
 	})().catch((err2)=>{
-		logger.error("%s %s", "Error in running workflow", err2)
+		logger.error("%s %s", "Error in copying service", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)}); 
+	})
+})
+router.post("/module/save/file", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let basename = store.system.shared.modules
+			let filename = path.basename(req.body.source)
+			let response = await copyFile(req.body.source, path.join(basename, filename))
+			let st = await readFile(path.join(basename, filename))
+			let parsed = YAML.parse(st)
+			for (let [ key, value ] of Object.entries(parsed)){
+				let re = define_module(key, value)
+				value.custom = true
+				store.modules[key] = re
+			} 
+			// console.log(store.modules )
+			logger.info("Module(s) copied", response)
+			res.status(200).json({status: 200, message: `Completed module copy`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in copying module", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in copying module", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)}); 
+	})
+})
+router.post("/module/save/text", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let response = req.body
+			let parsed  = YAML.parse(response)
+			let keys = Object.keys(parsed)
+			let basename = keys[0] 
+			await writeFile(path.join(store.system.shared.modules, basename+".yml"), response)
+			for (let [ key, value ] of Object.entries(parsed)){
+				value.custom = true
+				let re = define_module(key, value)
+				store.modules[key] = re
+			} 
+			logger.info("%o \n module copied", YAML.stringify(response))
+			res.status(200).json({status: 200, message: `Completed run save text to YAML`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in copying module", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in copying module", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)}); 
+	})
+})
+
+router.post("/service/save/text", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let response = req.body
+			let parsed  = YAML.parse(response)
+			let keys = Object.keys(parsed)
+			let basename = keys[0] 
+			await writeFile(path.join(store.system.shared.services, basename+".yml"), response)
+			for (let [ key, value ] of Object.entries(parsed)){
+				let re = define_service(key, value)
+				re.setOptions()				
+				store.services[key] = re
+			} 
+			logger.info("%o \n service copied", YAML.stringify(response))
+			res.status(200).json({status: 200, message: `Completed run save text to YAML`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in copying service", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in copying service", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)}); 
+	})
+})
+
+router.post("/procedure/save/file", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let basename = store.system.shared.procedures
+			let filename = path.basename(req.body.source)
+			let response = await copyFile(req.body.source, path.join(basename, filename))
+			let st = await readFile(path.join(basename, filename))
+			let parsed = YAML.parse(st)
+			for (let [ key, value ] of Object.entries(parsed)){
+				let re = await define_procedure(key, value)
+				value.custom = true
+				re.params.path = path.join(basename, filename)
+				store.procedures[key] = re
+			} 
+			logger.info("Procedure(s) copied", response)
+			res.status(200).json({status: 200, message: `Completed procedure copy`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in copying proceure", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in copying procedure", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)}); 
+	})
+})
+
+router.post("/service/run", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let response;
+			let service = store.services[req.body.service]
+			let params = req.body
+			response = await service.check_then_start(params, false)
+			logger.info("%o service sent for running", response)
+			res.status(200).json({status: 200, message: `Completed run service submission: ${service.name}`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in runnin service", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in running service", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	})
 })
+
+router.post("/service/stop", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){ 
+		try {
+			let response;
+			let service = store.services[req.body.service]
+			response = await service.stop()
+			logger.info("%o stopping service ", response)
+			res.status(200).json({status: 200, message: `Completed stopped of service: ${service.name}`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in stopping service", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	 
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in stopping service", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)}); 
+	})
+}) 
+
+
+router.post("/procedure/run", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){ 
+		try {
+			let response;
+			let procedure  = store.procedures[req.body.procedure];
+			
+			let services = req.body.services
+			services = procedure.updateVariables(services)
+			response = await procedure.start(services)
+			logger.info("%o workflow sent for running", response)
+			res.status(200).json({status: 200, message: `Completed procedure run: ${procedure.params.title}`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in running procedure", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in running procedure", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	})
+})
+router.post("/module/custom/remove", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){ 
+		try {
+			let response;
+			let module = store.modules[req.body.module];
+			if (module.config.custom){
+				let path_to_procedure = module.config.path
+				await removeFile(path_to_procedure)
+				delete store.modules[req.body.module]
+			}
+			logger.info("%o removing module complete", response)
+			res.status(200).json({status: 200, message: `Completed module removal: ${module.name}`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in removing module", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)}); 
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in removing module", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	})
+})
+router.post("/service/custom/remove", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){ 
+		try {
+			let response;
+			let service  = store.services[req.body.service];
+			if (service.config.custom){
+				let path_to_procedure = service.config.path
+				await removeFile(path_to_procedure)
+				delete store.services[req.body.service];
+			}
+			logger.info("%o removing service complete", response)
+			res.status(200).json({status: 200, message: `Completed service removal: ${req.body.service}`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in removing service", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)}); 
+		}	
+	})().catch((err2)=>{ 
+		logger.error("%s %s", "Error in removing procedure", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	})
+})
+router.post("/procedure/custom/remove", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){ 
+		try {
+			let response;
+			let procedure  = store.procedures[req.body.procedure];
+			if (procedure.params.custom){
+				let path_to_procedure = procedure.params.path
+				await removeFile(path_to_procedure)
+				delete store.procedures[req.body.procedure];
+			}
+			logger.info("%o removing procedure complete", response)
+			res.status(200).json({status: 200, message: `Completed procedure removal: ${procedure.params.title}`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in removing procedure", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)}); 
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in removing procedure", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	})
+})
+router.post("/procedure/stop", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let response;
+			let procedure;
+			if (req.body.index){
+				procedure = store.procedures[req.body.index]
+			} else {
+				let index = store.procedures.map((d)=>{return d.name}).indexOf(req.body.procedure)
+				if (index > -1){
+					procedure = store.procedures[index]
+				} else {
+					procedure = store.procedures[0]
+				}
+			}
+			response = await procedure.stop()
+			logger.info("%o procedure stopping ", response)
+			res.status(200).json({status: 200, message: `Completed stopping of: ${procedure.params.title}`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in running procedure", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in running procedure", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	})
+})
+
 router.post("/orchestrator/run", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
@@ -700,7 +1234,7 @@ router.post("/orchestrator/run", (req,res,next)=>{ // build workflow according t
 				orchestrator
 			}
 			let response = await orchestrator.init()
-			let response2 = await orchestrator.check_then_start()
+			let response2 = await orchestrator.check_then_start(null, null)
 			logger.info("%o response sent for running", {})
 			res.status(200).json({status: 200, message: "Completed orchestrator startup", data: response });
 		} catch(err2){
@@ -796,12 +1330,65 @@ router.get("/workflows/status", (req,res,next)=>{
 		res.status(419).send({status: 419, message: error_alert(err3) });
 	}	
 })
-router.get("/workflow/status/:module/:workflow/:service", (req,res,next)=>{ 
+router.get("/service/status/:service", (req,res,next)=>{ 
 	try {
-		let service = store.modules[req.params.module].workflows[req.params.workflow].services[req.params.service]
-		let running = service.service.status
-		res.status(200).json({status: 200, message: "Returning running orchestrated services", 
+		let service = store.services[req.params.service]
+		let running = service.status
+		res.status(200).json({status: 200, message: "Returning running service status", 
 			data: running
+		});
+	} catch(err3){
+		logger.error(err3)
+		res.status(419).send({status: 419, message: error_alert(err3) });
+	}	
+})
+
+router.post("/service/status", (req,res,next)=>{ 
+	try {
+		( async ()=>{
+			let service = store.services[req.body.service]
+			let variables = req.body.variables
+			let outputs = req.body.outputs
+			let watches = await service.getProgress(variables, req.body.outputs)
+			let running = service.status
+			res.status(200).json({status: 200, message: "Returning running service status with params sent", 
+				data: {
+					watches: watches,
+					variables: variables,
+					status: running
+				}
+			});
+		})().catch((err3)=>{
+			logger.error(err3)
+			res.status(419).send({status: 419, message: error_alert(err3) });	
+		})
+			
+	} catch(err3){
+		logger.error(err3)
+		res.status(419).send({status: 419, message: error_alert(err3) });
+	}	
+})
+
+
+
+router.post("/workflow/status/batch", (req,res,next)=>{ 
+	try {
+		let services = req.body
+		let statuses = []
+		let installed = []
+		services.forEach((service)=>{
+			let module = store.modules[service[0]]
+			let workflow = module.workflows[service[1]]
+			let orchestratorService = workflow.services[service[2]]
+			let running = orchestratorService.service.status
+			running.name = orchestratorService.name
+			running.label = orchestratorService.service.label
+			running.module= module.title
+			statuses.push(running)
+		})
+		res.status(200).json({status: 200, message: "Returning running orchestrated services", 
+			statuses: statuses,
+			installed: installed
 		});
 	} catch(err3){
 		logger.error(err3)
@@ -854,27 +1441,22 @@ router.post("/install/imagesOnline", (req,res,next)=>{ //this method needs to be
 		}	
 	})()
 })
-router.post("/install/cancelInstallImage", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+router.post("/module/build/cancel", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	try {
-		const imageName = req.body.imageName
-		let message = ""
-		if (imageName in  store.meta.Images && store.status.images[imageName].running){
-			(async ()=>{
-				await cancel_load_images(imageName)
-			})().then(()=>{
-				res.status(200).json({status: 200, message: "Completely canceled the docker image load process", data:  imageName });
-			}).catch((error)=>{
-				res.status(419).json({status: 419, message: error_alert(error) });				
-			})
-		} else{
-			res.status(419).send({status: 419, message: "No installation occuring for this image", data:[] });
-		}
+		(async function() {
+			const  module  = store.modules[req.body.module];
+			let response = await module.cancel_build()
+			logger.info("Cancel complete for module: %s",  req.body.module) 
+			res.status(200).json({status: 200, message: "Completely canceled the docker image load process", data:  "" });
+		})().catch((err)=>{
+			res.status(419).send({status: 419, message: error_alert(err) });
+		})
 	} catch(err2){
 		logger.error("%s %s", "Error in canceling images installs", err2)
 		res.status(419).send({status: 419, message: error_alert(err2) });
 	}	
 })
-router.post("/install/pruneImages", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+router.post("/images/prune", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function() {
 		try {
 			await prune_images(req.body).then((response)=>{
@@ -888,12 +1470,29 @@ router.post("/install/pruneImages", (req,res,next)=>{ //this method needs to be 
 			logger.error("%s %s", "Error in pruning images", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
 		}	
-	})()
+	})()  
 }) 
-router.post("/install/removeImages", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+router.post("/images/pull", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	( async function() { 
+		try {
+			await pullImage(req.body.name).then((response)=>{
+				logger.info("Success in pull image")
+					res.status(200).json({status: 200, message: "Completed pull of image", data: ""});
+				}).catch((err)=>{
+					logger.error("%s %s", "Error in pulling image: ", err)
+					res.status(419).send({status: 419, message: "There was an error; " + err.message});
+				})			
+		} catch(err2){
+			logger.error("%s %s", "Error in pulling images", err2)
+			res.status(419).send({status: 419, message: error_alert(err2) });
+		}	
+	})().catch((err)=>{})
+})
+ 
+router.post("/images/remove", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	( async function() {
 		try {
-			await remove_images(req.body.imageName).then((response)=>{
+			await remove_images(req.body.name).then((response)=>{
 				logger.info("Success in removing images")
 					res.status(200).json({status: 200, message: "Completed removal of images", data: response });
 				}).catch((err)=>{

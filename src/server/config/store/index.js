@@ -2,13 +2,17 @@
 const path  = require("path")
 import fs from "file-system"
 import YAML from "yaml"
-
-
-export function parseConfigVariables(data){
+ 
+ 
+export function parseConfigVariables(data, format, path){
 	let config = data.replace(/\$\{writePath\}/g, store.system.writePath)
 	config = config.replace(/\$\{resourcePath\}/g, store.system.resourcePath)
 	config = config.replace(/\\/g, "/")
-	config= YAML.parse(config)
+	if (format != 'json' || format != 'JSON'){
+		config= YAML.parse(config)
+	} else{
+		config= YAML.parse(config)
+	}
 	return config
 }
 
@@ -66,17 +70,27 @@ const dockerStagePath = path.join(resourcePath, 'installation');
 export var store = {
 	system: {
 		appVersion: null,
-		writePath: writePath,
+		writePath: writePath, 
 		resourcePath: resourcePath,
 		configPath: path.join(resourcePath, "server", "config", "meta.yaml"),
 		logPath: path.join(writePath, "logs"),
+		dockerConfigs : {},
 		gid: gid,
-		modules: [],
+		modules: {},
+		procedures: [],
 		uid: uid,
 		OS: OS	
 	},
 	partition: "=".repeat(50),
-	modules: [],
+	modules: {},
+	images: {},
+	procedures: [],
+	services: {},
+	config: {
+		procedures: {},
+		services: {},
+		modules: {}
+	},
 	default: [],
 	logger: null
 }

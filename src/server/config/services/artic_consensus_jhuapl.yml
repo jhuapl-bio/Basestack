@@ -1,0 +1,157 @@
+artic_consensus_jhuapl:
+  label: "Report"
+  depends: 
+    - type: "module"
+      id: "mytax"
+  image: "jhuaplbio/basestack_consensus"
+  workingdir: "/opt/data"
+  orchestrated: false #orchestrated means it r
+  init: false
+  force_restart: false
+  force_init: false
+  # command: ["bash","-c", "echo Starting consensus pipeline... "]
+  command: ["bash","-c", "echo Starting consensus pipeline...  && 
+    bash artic-module1-barcode-demux.sh  -i ${dir}"]
+  outputs:
+    demuxes:
+      watch: True
+      type: file
+      path: ${dir}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete
+    length-filter:
+      watch: True
+      type: files
+      pattern: ".complete"
+      total: ${manifest}.length
+      path: ${dir}/artic-pipeline/2-length-filter
+    normalizations:
+      watch: True
+      type: files
+      pattern: ".complete"
+      total: ${manifest}.length
+      path: ${dir}/artic-pipeline/3-normalization
+    consensuses:
+      watch: True
+      type: files
+      total: ${manifest}.length
+      pattern: ".complete"
+      path: ${dir}/artic-pipeline/4-draft-consensus
+    report:
+      watch: True
+      type: file
+      path: ${dir}/artic-pipeline/report.pdf 
+  variables:
+    run_config: 
+      label: "Run Configuration File"
+      element: "file"
+      bind_parent_dir: true
+      bind: 
+        to: "%{variables.dir.bind.to}/run_config.txt"
+        from: "%{variables.dir.source}/run_config.txt"
+      class: "wb-50  p-3 mb-1"
+      hidden: true
+      create:
+        target: "%{variables.dir.source}/run_config.txt"
+        sep: "tab"
+      framework:
+        - ["primers", "%{variables.primer.target}"]
+        - ["basecalling", "%{variables.basecalling.target}"]
+        - ["barcoding", "%{variables.barcoding.target}"]
+      depends: 
+        - ${primer}
+        - ${basecalling}
+        - ${barcoding}
+    dir:
+      label: "Input Long-Reads Full Run Directory"
+      element: "dir"
+      bind_parent_dir: false
+      bind: 
+        from: "%{variables.dir.source}"
+        to: "/opt/data"
+      class: "wb-50  p-3 mb-1"
+      source: null
+    fastq_pass:
+      label: "Input Long-Reads FASTQ Directory"
+      element: "dir"
+      bind_parent_dir: false
+      bind: 
+        to: "%{variables.dir.bind.to}/fastq_pass"
+        from: "%{variables.fastq_pass.source}"
+      class: "wb-50  p-3 mb-1"
+      source: null
+    name:
+      label: "Run Name"
+      element: "string"
+      class: "wb-50  p-3 mb-1"
+      source: "test"
+    primer:
+      label: "Primer Configuration"
+      element: null
+      link: run_config
+      class: "wb-50 p-3 mb-1"
+      options:
+        - "nCoV-2019/V4"
+        - "nCoV-2019/V3"
+        - "nCoV-2019/V2"
+        - "nCoV-2019/V1"
+    basecalling:
+      label: "Basecalling Configuration"
+      element: null
+      link: run_config
+      class: "wb-50 p-3 mb-1"
+      options:
+        - "dna_r10.3_450bps_fast.cfg"
+        - "dna_r10.3_450bps_fast_prom.cfg"
+        - "dna_r10.3_450bps_hac.cfg"
+        - "dna_r10.3_450bps_hac_prom.cfg"
+        - "dna_r10_450bps_fast.cfg"
+        - "dna_r10_450bps_hac.cfg"
+        - "dna_r9.4.1_450bps_fast.cfg"
+        - "dna_r9.4.1_450bps_fast_prom.cfg"
+        - "dna_r9.4.1_450bps_hac.cfg"
+        - "dna_r9.4.1_450bps_hac_prom.cfg"
+        - "dna_r9.4.1_450bps_hac_prom_fw205.cfg"
+        - "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg"
+        - "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac_prom.cfg"
+        - "dna_r9.5_450bps_1d2_raw.cfg"
+        - "dna_r9.5_450bps.cfg"
+        - "rna_r9.4.1_70bps_fast.cfg"
+        - "rna_r9.4.1_70bps_fast_prom.cfg"
+        - "rna_r9.4.1_70bps_hac.cfg"
+        - "rna_r9.4.1_70bps_hac_prom.cfg"
+    barcoding:
+      label: "Barcode Configuration"
+      element: null
+      link: run_config
+      class: "wb-50 p-3 mb-1"
+      options:
+        - "barcode_arrs_16s.cfg"
+        - "barcode_arrs_dual_nb24_pcr96.cfg"
+        - "barcode_arrs_lwb.cfg"
+        - "barcode_arrs_nb12.cfg"
+        - "barcode_arrs_nb24.cfg"
+        - "barcode_arrs_nb96.cfg"
+        - "barcode_arrs_pcr12.cfg"
+        - "barcode_arrs_pcr96.cfg"
+        - "barcode_arrs_rab.cfg"
+        - "barcode_arrs_rbk096.cfg"
+        - "barcode_arrs_rbk4.cfg"
+        - "barcode_arrs_rbk.cfg"
+        - "barcode_arrs_rlb.cfg"
+        - "barcode_arrs_vmk2.cfg"
+        - "barcode_arrs_vmk.cfg"
+        - "configuration.cfg"
+        - "configuration_dual.cfg"
+    manifest:
+      label: "Input Manifest"
+      element: "list"
+      columns: 2
+      bind:
+        from: "%{variables.dir.source}/manifest.txt"
+        to: "%{variables.dir.bind.to}/manifest.txt"
+      bind_parent_dir: true
+      create:
+        target: "%{variables.dir.source}/manifest.txt"
+        sep: "tab"
+      class: "wb-50  p-3 mb-1"
+      source: null
+      

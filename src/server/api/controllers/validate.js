@@ -29,7 +29,6 @@ export async function validatePrimerVersions(primerDir,primerNameDir, fullpathVe
 }
 
 export async function validateProtocol(protocolDir){
-	// console.log('validate protocol ',protocolDir)
 	return new Promise((resolve, reject)=>{
 		(async function(){
 			await checkFileExist(protocolDir, 'protocol.json')
@@ -81,12 +80,67 @@ export async function getRecursiveFiles(path, pattern){
 			if (err){
 				reject(err)
 			}
-			console.log(files)
 			resolve(files)
 		});
 	})
 }
+export function validateFramework(framework, variables){
+	try{
+		framework.forEach((row, i)=>{
+			if (Array.isArray(row)){
+				row.forEach((col, j)=>{
+					col = mapVariables(col, variables)
+					framework[i][j]  = col
+				})
+			} else {
+				row  = mapVariables(row, variables)
+				framework[i] = row
+			}
+		})
+		return framework
+	} catch(err){  
+		store.logger.error(err)
+		return framework
+	}
+}
+export function mapVariables(target, variables){  
+	try{ 
+		if (Array.isArray(target)){
+			let y = target.reduce()  
+			return target
+		} else if (target) { 
+			let inner_variables = target.match(/(\${.+?\}){1}/g)  
+			// Replace variables ${variable} entries in the target section
+			if (inner_variables && Array.isArray(inner_variables)){     
+				inner_variables.forEach((vari)=>{
+					let id = vari.replace(/[\$\{\}]/g, "")
+					// let source = ( selected_option.options ? selected_option.options[selected_option.source] : selected_option.source )
+					if (variables){ 
+						if (id in variables){
+							if (typeof variables[id] === 'object'){
+								target = target.replaceAll(vari, variables[id].source) 
 
+							} else {
+								target = target.replaceAll(vari, variables[id]) 
+							}
+						} else {
+							target = target.replaceAll(vari, "") 
+						}    
+					} else { 
+						target = target.replaceAll(vari, "") 
+					}
+				})
+			} 
+			return target
+			
+		} else {
+			return target
+		} 
+	} catch(err){
+		store.logger.error(err)
+		return target
+	}
+}
 export async function checkFileExist(dir, extension, silent, recursive){
 	return new Promise((resolve, reject)=>{
 		if(dir){
@@ -161,6 +215,8 @@ export async function checkFolderExistsAccept(filepath){
 		})
 	})
 }
+
+
 export async function validate_run_dir(params){
 	const runDir = params.runDir
 	const override = params.override 
@@ -168,7 +224,6 @@ export async function validate_run_dir(params){
 	const manifest = runDir.manifest.filename
 	const runDir_path = runDir.path
 	const fastqFolderName = runDir.fastqDir.name
-	console.log(fastqFolderName, "Validate")
 	const basename = path.basename(runDir_path)
 	const validation = {
 		fastq: {

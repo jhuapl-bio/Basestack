@@ -1,0 +1,9 @@
+dind:
+  title: "Dind"
+  icon: "home"
+  init: false
+  tooltip: "Docker in Docker Orchestrator"
+  force_restart: true
+  config: null  
+  services: # Each workflow can run multiple services or commands
+    - dind

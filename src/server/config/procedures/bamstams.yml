@@ -1,0 +1,10 @@
+bamstats: #Top level is the left-hand selection of the menu and the major module to install 
+  title: "Bamstats"
+  icon: "tree"
+  component: "Bamstats"
+  module: True
+  init: false 
+  tooltip: "Run Bamstats report with Dockstore"
+  services:
+    - orchestrator
+    - bamstats
