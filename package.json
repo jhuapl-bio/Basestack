@@ -23,6 +23,7 @@
         "build:mac-dmg": "node .electron-vue/build.js && electron-builder --mac  dmg",
         "build:mac": "node .electron-vue/build.js && electron-builder --mac",
         "build:macOffline": "node .electron-vue/build.js && cross-env offline=true electron-builder --mac dmg",
+        "build:macOfflineSign": "node .electron-vue/build.js && cross-env electron-builder --mac dmg -p never",
         "build:win": "node .electron-vue/build.js && electron-builder --win",
         "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
         "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
