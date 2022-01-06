@@ -484,7 +484,7 @@ export class Service {
                     try{
  
                         if (selected_option.bind_parent_dir){
-                            env.push(`${name}=${path.join(to, path.basename(from))}`) 
+                            env.push(`${name}=${to}/${path.basename(from)}`) 
                             binds.push(`${path.dirname(from)}:${to}`) 
                         } else {  
                             if (!selected_option.port ){ 
