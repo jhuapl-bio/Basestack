@@ -6,7 +6,7 @@ dind:
       type: "module"
   force_restart: false
   force_init: false
-  config: "${resourcePath}/server/config/procedure_dind/dockerConfig.json"
+  config: "${configPath}/procedure_dind/dockerConfig.json"
   orchestrated: true
   binds: 
     - "${writePath}/custom:/shared/custom"

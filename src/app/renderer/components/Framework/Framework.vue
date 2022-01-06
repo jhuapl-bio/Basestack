@@ -54,7 +54,7 @@
     </b-col> -->
     <b-tabs
       v-model="tab" 
-      nav-wrapper-class="w-3 sideWrapper" 
+      nav-wrapper-class="w-3 " 
       left 
     >
       <b-tab  v-for="[serviceIdx, service] of Object.entries(services)" :title="service.label" :key="serviceIdx">
@@ -74,9 +74,13 @@
 
       </b-tab>
       <template v-slot:tabs-end >
-         <b-button class="btn"  variant="info" v-if="status"
-          style="right:0; position:absolute"
-          @click="start_procedure(procedureIdx)">Start Procedure 
+         <b-button class="btn sideButton"  v-if="status"
+          style="right:0;"
+          @click="start_procedure(procedure.name)">Start Procedure 
+        </b-button>
+        <b-button class="btn " variant="warn" v-if="procedure.custom"
+          style="right:0;"
+          @click="rm_procedure(procedure.name)">Remove Custom Procedure
         </b-button>
       </template>
     </b-tabs>
@@ -126,6 +130,28 @@ export default {
 		sendStatus(event){
       // this.statuses[event.service] = event.status.exists
     },
+    async rm_procedure(procedureIdx){
+      await FileService.rmProcedure({
+        procedure: procedureIdx
+      }).then((response)=>{
+        this.$swal.fire({
+          position: 'center',
+          icon: 'success',
+          showConfirmButton:true,
+          title:  response.data.message
+        })
+  			this.count +=1
+
+      }).catch((error)=>{
+        console.error(error)
+        this.$swal.fire({
+          position: 'center',
+          icon: 'error',
+          showConfirmButton:true,
+          title:  error.response.data.message
+        })
+      })
+    },
     async cancel_procedure(procedureIdx){
       await FileService.cancelProcedure({
         procedure: procedureIdx
@@ -162,9 +188,16 @@ export default {
         this.intervalChecking = false
       }
     },
-    async start_procedure(procedureIdx, services){
+    async start_procedure(name, services){
+      console.log(services, this.name)
+      this.$swal.fire({
+          position: 'center',
+          icon: 'success',
+          showConfirmButton:true,
+          title:  "Sent Procedure job to run..."
+      })
       await FileService.startProcedure({
-        procedure: procedureIdx,
+        procedure: name, 
         services: this.services
       }).then((response)=>{
 			  this.count +=1
@@ -191,6 +224,8 @@ export default {
 
         'string': "String",
         "file": "File",
+        "list": "List",
+        "configuration-file": "File",
         "render": "Render"
 
       },
@@ -207,9 +242,9 @@ export default {
   },
   mounted(){
     const $this = this;
-    setInterval(()=>{
-      $this.getStatus()
-    }, 2000)
+    // setInterval(()=>{
+    //   $this.getStatus()
+    // }, 2000)
   },
   
     

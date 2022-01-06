@@ -201,6 +201,21 @@ export async function getExternalSource(url){
 	} 
 }
 
+
+export async function getRemoteConfigurations(url){
+	var clone = require("git-clone/promise");
+	try{
+		logger.info("%s %s", "Getting url: ", url)
+		let json = await clone(url, "/Users/Desktop/tmp")
+		console.log( json )
+		logger.info("%s %o", "returned json: ", json.data)
+		return json
+	} catch(err){
+		logger.error(`${err} error in fetching external url`)
+		throw err 
+	} 
+}
+
  
 
 
@@ -394,6 +409,10 @@ export async function fetch_histories(){
 	} 
 	return response
 }
+
+
+
+
 export async function fetch_resources(){
 	try{
 		let mem = await si.mem()

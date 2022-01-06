@@ -30,13 +30,13 @@ export default {
 	methods: {
 	
 	},
-	props: ['source', 'status', 'service'],
+	props: ['source', 'status', 'service', "variable"],
   mounted(){
   },
   watch: {
         value(newValue, oldValue){
-            console.log(newValue)
-            this.$emit("updateValue", newValue.path)
+            console.log(newValue, this.variable)
+            this.$emit("updateValue", newValue.path )
         }
     }
     

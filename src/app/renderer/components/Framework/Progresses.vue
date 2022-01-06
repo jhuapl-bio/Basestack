@@ -17,11 +17,17 @@
         sticky-header="700px"						        
     >	
         <template  v-slot:cell(status)="row">
+            <span v-if="row.item.type == 'files'" 
+                style="margin:auto; text-align: center"
+            >
+               {{row.value.complete}}
+            </span>	
             <font-awesome-icon :class="[ 'text-success' ]" 
-                v-if="row.item.status == 1" 
+                v-else-if="row.value.total <= row.value.complete" 
                 icon="check" 
             />
-            <span v-else-if="running" 
+            
+            <span v-else-if="row.value.total > row.value.complete && running" 
                 style="margin:auto; text-align: center"
             >
                 <half-circle-spinner
@@ -42,6 +48,11 @@
                 v-else
                 icon="stop-circle" 
             />
+        </template>
+        <template  v-slot:cell(path)="cell">
+            {{cell.value}}
+            <font-awesome-icon class="configure"  @click="open(cell.value, $event)" icon="archive" size="sm"  />
+
         </template>
         
     </b-table>
@@ -66,7 +77,18 @@ export default {
         
     },
 	methods: {
-	
+        open (link) {
+          try{        
+            this.$electron.shell.openPath(link)
+          } catch(err){
+            this.$swal.fire({
+              position: 'center',
+              icon: 'error',
+              showConfirmButton:true,
+                      title:  "Could not open the path: "+link
+            })
+          }
+        },
 	},
 	props: ['progresses', 'running'],
     mounted(){

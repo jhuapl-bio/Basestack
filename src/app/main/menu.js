@@ -47,13 +47,18 @@ export class ClientMenu {
 		{
 			label: 'System',
 			submenu: [
-			// {
-			// 	label: 'Refresh Server',
-			// 	click() {   close_server(); open_server();  }
-			// },
+			{
+				label: 'Refresh Server (current Port)',
+				click() {   
+					if (process.env.NODE_ENV == 'production'){
+						const create_server = require("../../server/index.server.js").create_server
+						create_server(process.env.PORT_SERVER);  
+					}
+				}
+			},
 			{
 				label: 'Print ENV',
-				click() {  $this.logger.info(JSON.stringify(process.env, null, 4))  }
+				click() {  console.log(JSON.stringify(process.env, null, 4))  }
 			},
 			{
 				label: 'Docker Site',
@@ -136,7 +141,7 @@ export class ClientMenu {
 						click() { 
 						let batDownload = exec("curl.exe https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi -o wsl_update_x64.msi", { cwd: $this.app.getPath('desktop') }); 
 						batDownload.stderr.on('data', (data) => {
-							$this.logger.error(`${data.toString()} err`);
+							console.log(`${data.toString()} err`);
 							$this.mainWindow.webContents.send('mainNotification', {
 							icon: '',
 							loading: false,
@@ -145,11 +150,11 @@ export class ClientMenu {
 							})
 						});
 						batDownload.stdout.on('data', (data) => {
-							$this.logger.info(`${data.toString()} info`)
+							console.log(`${data.toString()} info`)
 						});
 						batDownload.on('exit', (code) => {
 						const text = `<p>WSL2 MSI Download Process complete with code: ${code}.<hr> 0: Success, 1 or more is failure <hr> Next, select 2. Install WSL2</p>`
-							$this.logger.info(text);
+							console.log(text);
 							$this.mainWindow.webContents.send('mainNotification', {
 							icon: '',
 							loading: false,
@@ -271,12 +276,12 @@ export class ClientMenu {
 			submenu: [
 			{
 				label: 'Open Logs',
-				click() { shell.openPath($this.store.system.logPath )  }
+				click() {  shell.openPath($this.store.system.logPath )  }
 			},
 			{
 				label: 'View Release Notes',
 				click() {  
-				$this.logger.info("Getting release notes")
+				console.log("Getting release notes")
 				$this.mainWindow.webContents.send('mainNotification', {
 					icon: 'info',
 					message: `${$this.updater.releaseNotes.releaseNotes}`,

@@ -15,7 +15,7 @@ let mainConfig = {
   
   entry: {
     main: path.join(__dirname, '../src/app/main/index.js'),
-    config: path.join(__dirname, '../src/app/config/meta.yaml')
+    logger: path.join(__dirname, "../src/shared/logger.js"),
   },
   externals: [
     ...Object.keys(dependencies || {})
@@ -77,8 +77,9 @@ if (process.env.NODE_ENV !== 'production') {
  * Adjust mainConfig for production settings
  */
 if (process.env.NODE_ENV === 'production') {
-  // mainConfig.entry.main = [path.join(__dirname, '../src/modules/index.server.js')].concat(mainConfig.entry.main)
+  // mainConfig.entry.main = [path.join(__dirname, '../src/server/index.server.js')].concat(mainConfig.entry.main)
   mainConfig.mode = 'production'
+  console.log("PRODUCTION")
   // mainConfig.devTool = 'source-map'
   mainConfig.plugins.push(
     new webpack.DefinePlugin({

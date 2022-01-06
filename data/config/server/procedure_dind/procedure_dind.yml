@@ -1,6 +1,6 @@
 dind:
   title: "Dind"
-  icon: "home"
+  icon: "anchor"
   init: false
   tooltip: "Docker in Docker Orchestrator"
   force_restart: true

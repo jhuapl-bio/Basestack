@@ -1,7 +1,7 @@
 bamstats:
   init: false
   hideStatus: true
-  label: "Test Bamstats"
+  label: "Bamstats"
   force_restart: false
   config: null
   orchestrated: true
@@ -23,6 +23,7 @@ bamstats:
       element: "file"
       bind_parent_dir: true
       isolated: true
+      label: "BamFile"
       copy: 
         basename: true
         from: "%{variables.bamfile.source}"
@@ -33,8 +34,9 @@ bamstats:
       source: null
       # source: "/Users/merribb1/Desktop/bamstats/rna.SRR948778.bam"
     file:
-      element: "configuration-file"
+      element: "file"
       bind_parent_dir: true
+      label: "Dockstore Configuration File"
       copy: 
         from: "%{variables.file.source}"
         to: "${writePath}/custom/data/bamstats/Dockstore.json"

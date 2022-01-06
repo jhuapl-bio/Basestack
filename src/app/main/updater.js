@@ -10,31 +10,34 @@ export class Updater {
         this.autoUpdater = autoUpdater
         this.autoUpdater.autoDownload = false;
         this.mainWindow = mainWindow
-        this.releaseNotes = "No Release Notes"
+        this.releaseNotes = {
+            version: "No Release Notes",
+            releaseNotes: "No Release Notes"
+        } 
         this.quitAndInstall = false
     }
     checkUpdates(){
         if(process.env.NODE_ENV == 'production'){
             this.releaseNotes.version = 0
             this.releaseNotes.releaseNotes = "Fetching..."
-            this.logger.info("Check for Basestack updates and notify")
+            console.log("Check for Basestack updates and notify")
             this.autoUpdater.checkForUpdatesAndNotify()   
         } else {
-            this.logger.info(`Development mode enabled, skipping check for updates`)
+            console.log(`Development mode enabled, skipping check for updates`)
             this.autoUpdater.checkForUpdatesAndNotify()   
         }
     }
     defineUpdater(){
         const $this = this
         this.autoUpdater.on('error', (err) => {
-            $this.logger.error(`Error in auto-updater. ${err}`)
+            console.log(`Error in auto-updater. ${err}`)
             $this.releaseNotes.version = -1
             $this.releaseNotes.releaseNotes = "Not Available"
             // sendStatusToWindow('Error in auto-updater. ' + err);
         })
         this.autoUpdater.on('update-available', (info) => {
-            $this.logger.info(info)
-            $this.logger.info("update available")
+            console.log(info)
+            console.log("update available")
             let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
             const options = {
                 type: 'question',
@@ -48,12 +51,12 @@ export class Updater {
             };
             $this.releaseNotes  = info
             $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
-            $this.logger.info($this.dialog)
+            console.log($this.dialog)
             $this.dialog.showMessageBox(null, options).then((response) => { 
-              this.logger.info("%s update choice -> %s", response)
+              console.log("%s update choice -> %s", response)
               if (response.response == 0){
                  $this.autoUpdater.downloadUpdate()
-                 $this.logger.info("downloading Update")
+                 console.log("downloading Update")
                  $this.mainWindow.webContents.send('mainNotification', {
                    icon: '',
                    loading: true,
@@ -64,14 +67,14 @@ export class Updater {
                    $this.quitUpdateInstall = true;
                  }
               } else {
-                  $this.logger.info("Skipping update")
+                  console.log("Skipping update")
               }
             });
         })
         this.autoUpdater.on('update-downloaded', (info, err) => {
-            $this.logger.info("Update Downloaded")
+            console.log("Update Downloaded")
             if (err){
-                $this.logger.error(err)
+                console.log(err)
             }
             try{
                 $this.mainWindow.webContents.send('mainNotification', {
@@ -83,27 +86,27 @@ export class Updater {
                 $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
                 $this.quitUpdateInstall ? $this.autoUpdater.quitAndInstall() : '';
             } catch(err) {
-                this.logger.error(`Download update failed to finish. ${err}`)
+                console.log(`Download update failed to finish. ${err}`)
                 // throw new Error("Could not download update, check error logs")
             }
         });
         $this.autoUpdater.on('checking-for-update', () => {
-            $this.logger.info('Checking for Basestack update...');
+            console.log('Checking for Basestack update...');
         })
         $this.autoUpdater.on('update-not-available', (info, err) => {
             if (err){
-                $this.logger.error(`${err} err in update not available messaging`)
+                console.log(`${err} err in update not available messaging`)
             }
-            $this.logger.info('Basestack update not available.');
+            console.log('Basestack update not available.');
             $this.releaseNotes=info
-            $this.logger.info(`${JSON.stringify(info)}`)
+            console.log(`${JSON.stringify(info)}`)
             $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
         })     
         $this.autoUpdater.on('download-progress', (progressObj) => {
             let log_message = "Download speed: " + progressObj.bytesPerSecond;
             log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
             log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-            $this.logger.info("%s <-- Update Download progress", log_message)
+            console.log("%s <-- Update Download progress", log_message)
             // sendStatusToWindow(log_message);
             $this.mainWindow.webContents.send('mainNotification', {
                type: 'info',

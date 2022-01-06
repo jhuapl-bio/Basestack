@@ -15,10 +15,13 @@
 		</b-col>
 
 		<b-col sm="5">
-			<a href="#" @click="emitChange( {target: 'tab', value: 6})   ">All System Details</a>
-			<Sys class="sidebox"
-			/>
-			<About class="sidebox"></About>
+			<!-- <b-row><a href="#" @click="emitChange( {target: 'tab', value: -1})   ">All System Details</a>
+			</b-row> -->
+			<b-row>
+				<Sys class="sidebox"
+				/>
+				<About class="sidebox"></About>
+			</b-row>
 			
 				
 		

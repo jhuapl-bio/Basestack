@@ -8,14 +8,25 @@
   -->
 <template>
   <div id="dir" class="wb-50 p-1">
-    <div class="entry">
-        <a
+    <div >
+        <!-- <b-button
             @click="electronOpenDir('data')"
             src=""
+            variant="secondary"
             style="cursor:pointer"
             >Select Folder
-        </a>
-        <p class="entry-label" v-if="value" >{{value}} </p>
+        </b-button> -->
+        <b-form-file 
+          v-model="directory"
+          src=""
+          :file-name-formatter="formatNames"
+          directory
+          label="select folder"
+          variant="secondary"
+          style="cursor:pointer"
+        >
+        </b-form-file>
+        <p  style="word-wrap: anywhere;" class="entry-label" v-if="value" >{{value}} </p>
     </div>
   </div>
 </template>
@@ -27,6 +38,7 @@ export default {
         return {
             value: null,
             valueDir: null,
+            directory: null,
             test: "placeholder"
         }
     },
@@ -34,24 +46,29 @@ export default {
         
     },
 	methods: {
-        formatNames(files) {
-        	return files.length === 1 ? `${files[0].name} selected` : `${files.length} files selected`
-      	},
-        electronOpenDir(key){
-            const $this = this
-            this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
-                $this.value = message
-            })
-            this.$electron.ipcRenderer.send("openDirSelect", "")
+    formatNames(files) {
+      console.log(files)
+      return files.length === 1 ? `Selected` : `${files.length} files selected`
+    },
+    electronOpenDir(key){
+        const $this = this
+        this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
+            $this.value = message
+        })
+        this.$electron.ipcRenderer.send("openDirSelect", "")
 		},
 	},
-	props: ['source', 'status', 'service'],
+	props: ['source', 'status', 'service', 'variable'],
   mounted(){
   },
   watch: {
         value(newValue, oldValue){
-            console.log(newValue)
-            this.$emit("updateValue", newValue)
+            this.$emit("updateValue", newValue )
+        },
+        directory(newValue, oldValue){
+            if (newValue){
+              this.value  = newValue.path.replace(newValue.name, "")
+            }
         },
         valueDir(newValue, oldValue){
             console.log(newValue)

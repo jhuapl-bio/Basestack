@@ -19,46 +19,50 @@ const {copyFile, readFile, copyFolder, writeFolder, ammendJSON, writeFile,  } = 
 let docker = store.docker
 
 export async function createNetworks(names){ 
-	try {  
-		logger.info(`${names}, creating network`)  
-		let networks = await store.docker.listNetworks() 
-		// logger.info(`${JSON.stringify(networks, null, 4)}, networks`) 
-		let promises = []
-		names.forEach((name)=>{
-			promises.push(store.docker.createNetwork({Name: name, CheckDuplicate: true }))
-		})  
-		Promise.allSettled(promises).then((response)=>{    
-			return response
-		}).catch((err)=>{
-			// throw err
-			logger.error("%o %s", err, `error in creating network(s)`)
-			return 
-		})
-	} catch(err){  
-		logger.error("%o %s", err, `error in creating network(s)`) 
-		throw err 
-	}  
+	return new Promise(function(resolve,reject){
+		try {  
+			logger.info(`${names}, creating network`)  
+			// let networks = await store.docker.listNetworks() 
+			// logger.info(`${JSON.stringify(networks, null, 4)}, networks`) 
+			let promises = []
+			names.forEach((name)=>{
+				promises.push(store.docker.createNetwork({Name: name, CheckDuplicate: true }))
+			})  
+			Promise.allSettled(promises).then((response)=>{    
+				resolve(response)
+			}).catch((err)=>{
+				// throw err
+				logger.error("%o %s", err, `error in creating network(s)`)
+				reject(err)
+			})
+		} catch(err){  
+			logger.error("%o %s", err, `error in creating network(s)`) 
+			reject(err)
+		}  
+	})
 }
 export async function createVolumes(names){
-	try { 
-		logger.info(`${names}, creating volumes`)
-		let networks = await store.docker.listVolumes()
-		// logger.info(`${JSON.stringify(networks, null, 4)}, networks`)
-		let promises = []
-		names.forEach((name)=>{ 
-			promises.push(store.docker.createVolume({Name: name, CheckDuplicate: true }))
-		})
-		Promise.allSettled(promises).then((response)=>{
-			return response
-		}).catch((err)=>{ 
-			// throw err
-			logger.error("Error in creating volume, %o", err)
-			return 
-		}) 
-	} catch(err){
-		logger.error(`${err}, error in creating volume(s)`)
-		throw err
-	}
+	return new Promise(function(resolve,reject){
+		try { 
+			logger.info(`${names}, creating volumes`)
+			// let networks = await store.docker.listVolumes()
+			// logger.info(`${JSON.stringify(networks, null, 4)}, networks`)
+			let promises = []
+			names.forEach((name)=>{ 
+				promises.push(store.docker.createVolume({Name: name, CheckDuplicate: true }))
+			})
+			Promise.allSettled(promises).then((response)=>{
+				resolve(response)
+			}).catch((err)=>{ 
+				// throw err
+				logger.error("Error in creating volume, %o", err)
+				reject(err)
+			}) 
+		} catch(err){
+			logger.error(`${err}, error in creating volume(s)`)
+			reject(err)
+		}
+	})
 }
 
 
@@ -67,7 +71,7 @@ export async function createVolumes(names){
 export var prune_images = async function(){ 
 	try{
 		let responseContainers = await store.docker.pruneContainers()
-    console.log(responseContainers   )
+    	console.log(responseContainers   )
 		let responseawait = await store.docker.pruneImages( { 'filters' : { 'dangling' : { 'true' : true } } } )
 		return responseawait 
 	}

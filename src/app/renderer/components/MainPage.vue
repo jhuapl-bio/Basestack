@@ -7,14 +7,16 @@
   - # **********************************************************************
   -->
 <template>
-	<div class="mainContent">
+	<div class="mainContent" style="overflow:auto">
 		<b-tabs 
 	        v-model="tab" 
 	        nav-wrapper-class="w-3 sideWrapper" 
 	        left align="center"  
+			sticky
         	active-nav-item-class="activeTabButton"
-        	style="height: 100vh; padding:0px !important" 
+        	style="  overflow-y: auto" 
         	vertical
+			lazy
         >
 		  <b-tab  
 		  	class="mainTabContent"
@@ -33,10 +35,10 @@
 							targetClasses: ['it-has-a-tooltip'],
 						}"
 						>
-							<font-awesome-icon class="" icon="home"/>
+							<font-awesome-icon class="fa-2x" icon="home"/>
 						</span>
 					</div>
-					<div class="tabSideItem">
+					<div class="tabSideItemText">
 						<span  v-if="!collapsed">
 							Dashboard
 						</span>
@@ -58,25 +60,26 @@
           <b-tab  
           	v-for="(entry, key) in procedures"
           	v-bind:key="entry.name"
-		  	class="mainTabContent"
-			vertical end
+		  	class="mainTabContent "
+			vertical end 
             > 
-            <template v-slot:title  class="ModuleTabTitle" >
-				<div  @mouseover="isHovered = entry.name" @mouseleave="isHovered = null">
-					<div :class="[ 'tabSide',  isHovered == entry.name ? 'tabhovered' : ''  ]" :style="{ 'justify-content': 'center', 'background': getColor(key, 0.2) }" >
-						<div :class="[ 'tabSideItem' ]" style="text-align:center"
-						>
-							<span class="tabIcon"
-								:style="{ 'justify-content': 'center', 'color': getColor(key, 0.8) }"
-								v-tooltip="{
-								content: entry.tooltip,
+            <template v-slot:title  class="ModuleTabTitle tabSide" >
+				<div  @mouseover="isHovered = entry.name" @mouseleave="isHovered = null" v-tooltip="{
+								content: ( collapsed ? entry.title : entry.tooltip),
 								placement: 'top',
 								classes: ['info'],
 								trigger: 'hover',
 								targetClasses: ['it-has-a-tooltip'],
-							}"
+							}">
+					<div :class="[ 'tabSide', isHovered == entry.name ? 'tabhovered' : ''  ]" :style="{ 'justify-content': 'center', 'background': getColor(key, 0.2) }" >
+						<div :class="[  'tabSideItem' ]" style="text-align:center" 
+						>
+							<span class="tabIcon"
+							
+								:style="{ 'justify-content': 'center', 'color': getColor(key, 0.8) }"
+								
 							>
-								<font-awesome-icon class="" :icon="(entry.icon ? entry.icon : 'cog')"/>
+								<font-awesome-icon class="fa-2x" :icon="(entry.icon ? entry.icon : 'cog')"/>
 							</span>
 						</div>
 						<div class="tabSideItem" style="text-align:center"
@@ -94,23 +97,21 @@
 								<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
 							</span>
 						</div>
-						<div class="tabSideItem">
-							<span style="text-align:center; " v-if="!collapsed">
-								{{ entry.title }}
-							</span>
+						<div class="tabSideItemText" v-if="!collapsed" >
+							{{ ( entry  ? entry.title : key  ) }}
 						</div>
 					</div>
 				</div>
   			</template>
   			<div  class="tabContent">
-  				<h3 class="header header-minor" >{{entry.title}}
+  				<h3 class="header header-minor" >
+					  {{ ( entry  ? entry.title : key  ) }}
 			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
-			        :title="entry.tooltip"
+					:title = "( collapsed ? entry.title : entry.tooltip)"
 			        style="" >
 			        <font-awesome-icon class="help" icon="question-circle"  />
 			      </span>
 			    </h3>
-
             	<component 
             		:is="'Framework'"
 					:moduleIdx="key"
@@ -127,22 +128,23 @@
           	v-bind:key="key"
 		  >
 		  	<template v-slot:title >
-            	<div  :class="[ 'tabSide', 'tabSideDefault', isHovered == entry.name ? 'tabhovered' : ''  ]" @mouseover="isHovered = entry.name" @mouseleave="isHovered = null" class="tabSide" style="justify-content:center" >
-					<div class="tabSideItem" style="text-align:center"
-					>
-						<span style=""
-		            	v-tooltip="{
-			            content: entry.tooltip,
+            	<div  v-tooltip="{
+			            content: ( collapsed ? entry.title : entry.tooltip),
+
 			            placement: 'top',
 			            classes: ['info'],
 			            trigger: 'hover',
 			            targetClasses: ['it-has-a-tooltip'],
-			            }"
+			            }" :class="[ 'tabSide', 'tabSideDefault', isHovered == entry.name ? 'tabhovered' : ''  ]" @mouseover="isHovered = entry.name" @mouseleave="isHovered = null" class="tabSide" style="justify-content:center" >
+					<div class="tabSideItem" style="text-align:center" 
+					>
+						<span style=""
+		            	
 		            	>
-		            		<font-awesome-icon class="configure" :icon="(entry.icon ? entry.icon : 'cog')"/>
+		            		<font-awesome-icon class="configure fa-2x" :icon="(entry.icon ? entry.icon : 'cog')"/>
 		            	</span>
 		            </div>
-					<div class="tabSideItem" style="text-align:center">
+					<div class="tabSideItemText" style="text-align:center">
 						<span  v-if="!collapsed">
 							{{ entry.title }}
 						</span>
@@ -150,10 +152,14 @@
 	        	</div>
   			</template>
 		  	<div >
+				<h3 class="header header-minor" >
+					{{ ( entry  ? entry.title : key  ) }}
+				</h3>
   				<component 
             		:is="entry.component"
 					:modules="modules"
 					:defaults="defaults"
+					:services="services"
 					:moduleIdx="key+1 + modules.length"
 					:defaultModule="entry"
             	>            	
@@ -181,6 +187,7 @@
 import Framework from '@/components/Framework/Framework'
 import Dashboard from "@/components/Dashboard/Dashboard"
 import LogDashboard from "@/components/Dashboard/DashboardDefaults/LogDashboard"
+import CustomGenerator from "@/components/Dashboard/DashboardDefaults/CustomGenerator"
 import PlayDashboard from "@/components/Dashboard/DashboardDefaults/PlayDashboard"
 import Sys from "@/components/Dashboard/System/Sys"
 import Library from '@/components/Dashboard/DashboardDefaults/Library'
@@ -192,6 +199,7 @@ export default {
 		Dashboard,
 		Library,
 		LogDashboard,
+		CustomGenerator,
 		PlayDashboard,
 		Sys
 	},
@@ -199,7 +207,7 @@ export default {
 	props: ['modules', 'defaults', 'procedures', 'services'],
 	data(){
 		return{
-			tab:5,
+			tab:0,
 			colorList: [
 				"rgb(70, 240,240",
 				"rgb(128,0,0",
@@ -217,7 +225,7 @@ export default {
 				"rgb(0,0,128",
 			],
 			modulesInner: [],
-			collapsed: false,
+			collapsed: true,
 			isHovered: -1,
 			index: 0,
 			status: {},
@@ -252,7 +260,6 @@ export default {
 		},
 		getColor(key, opacity){
 			const $this = this;
-			// `${colorList.length - colorList[colorList.length % key]}, 0.8)`
 			if (!(this.colorList.length % key+1)){
 				return `${ this.colorList[0] }, ${opacity})`
 			} else {

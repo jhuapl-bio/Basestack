@@ -1,0 +1,69 @@
+logs:
+  path: "${writePath}/logs"
+  error: "${writePath}/logs/serverError.log"
+  info:  "${writePath}/logs/server.log"
+  docker: "${writePath}/logs/docker.log"
+shared: 
+  path: "${writePath}/data" 
+  services: ${writePath}/custom/services/
+  modules: ${writePath}/custom/modules/
+  procedures: ${writePath}/custom/procedures
+default:
+  path: ${configPath}/default
+  items:
+    - default:
+      path: "${configPath}/default/index.yml"
+      format: "single"
+      type: "yml"
+modules: 
+  - path: "${configPath}/modules/workflows/"
+    filename: "index.yml"
+    format: "dir"
+    type: "yml"
+  - path: "${writePath}/custom/modules/"
+    format: "files"
+    custom: true
+    type: "yml"
+procedures: 
+  - path: "${configPath}/procedures"
+    format: "files" 
+    type: "yml"
+  - path: "${writePath}/custom/procedures/"
+    format: "files" 
+    custom: true
+    type: "yml"
+services: 
+  - path: "${configPath}/services"
+    format: "files" 
+    type: "yml"
+  - path: "${writePath}/custom/services/"
+    format: "files"
+    custom: true
+    type: "yml"
+orchestrators:
+  default:
+    format: "single"
+    type: "json" 
+    path: ${configPath}/default/dockerConfig.json #used by the Docker API, refere to the url for more information
+  subclient:
+    format: "single"
+    type: "json" 
+    path: ${configPath}/procedure_dind/dockerConfigSubclient.json #used by the Docker API, refere to the url for more information
+  dind:
+    service:
+      path: "${configPath}/service_dind/dind.yml"
+      format: "single" 
+      type: "yml"
+      config:
+        file: ${configPath}/service_dind/dockerConfig.json #used by the Docker API, refere to the url for more information
+    procedure:
+      path: "${configPath}/procedure_dind/procedure_dind.yml"
+      format: "single" 
+      type: "yml"
+    module:
+      path: ${configPath}/modules/dind/index.yml
+      format: "single"
+      type: "yml"
+      build: 
+        file: "${configPath}/modules/dind/Dockerfile"
+      

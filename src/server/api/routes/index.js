@@ -14,7 +14,10 @@ var { store } = require("../../config/store/index.js")
 var { error_alert } = require("../controllers/logger.js")
 const logger = store.logger
 import { Procedure } from "../orchestrators/procedure.js";
+const { Service } = require('../orchestrators//service.js');
+
 import upload from "../controllers/upload.js"
+import { mapTargetConfiguration } from "../controllers/mapper.js";
 const path = require("path")
 //Import Validation Scripting
 const { validate_run_dir } = require("../controllers/validate.js")
@@ -43,16 +46,21 @@ const {
 	getMeta,
 	getDockerStatus,
 	getServerStatus,
-	fetch_external_dockers
+	fetch_external_dockers,
+	getExternalSource,
+	getRemoteConfigurations
 	} = require("../controllers/fetch.js")
-	
+const cloneDeep = require("lodash.clonedeep");
+
 
 const { 
 	readFile, 
 	decompress_file,
 	copyFile,
 	writeFile,
-	removeFile
+	readTableFile,
+	removeFile,
+	downloadSource
 } = require("../controllers/IO.js")
 
 const { 
@@ -104,6 +112,18 @@ router.get("/meta/fetch", (req,res,next)=>{
 		res.status(419).send({status: 419, message: error_alert(err) });
 	}
 })
+router.get("/server/ping", (req,res,next)=>{
+	try {
+		res.status(200).send({status: 200, message: `Server is running at port: ${process.env.PORT_SERVER}` });
+	} catch(err){
+		logger.error(`Error in server status ping ${err}`)
+		res.status(419).send({status: 419, message: error_alert(err) });
+	}
+})
+
+
+
+
 router.get("/server/status/fetch", (req,res,next)=>{
 	try {
 		getMeta().then((response)=>{
@@ -628,16 +648,21 @@ router.get("/modules/get", (req,res,next)=>{ // build workflow according to name
 				let name = module[0]
 				
 				let value = module[1]
-				let dependencies = value.dependencies.map((d)=>{
+				let dependencies_list = value.dependencies.map((d)=>{
 					let { streamObj, ...newObj } = d //Remove the stream obj on return 
 					return newObj
 				})
-				
-				data.push({ 
+				let returnable = { 
 					name: name,
 					custom: value.custom,
-					dependencies: dependencies
-				})
+					dependencies: dependencies_list,
+					status:value.status
+				}
+				let  {dependencies, ...config_list } = value.config
+				for (let [key,value] of Object.entries(config_list)){
+					returnable[key]  = value
+				}
+				data.push(returnable)
 			} catch (err){
 				store.logger.error("Could not get module loaded for... %o", module)
 			}
@@ -791,17 +816,21 @@ router.get("/procedures/get", (req,res,next)=>{ // build workflow according to n
 
 			let status = procedure.status 
 			
+			let returnable = { 
+				name: name
+			}
+			for (let [key, entry] of Object.entries(procedure.params)){
+				returnable[key] = entry
+			}
+
 			let services = {};
 			for (let [key, service] of Object.entries(procedure.services)){
 				services[key] = service.config
 			}
-			data.push({ 
-				name: name,
-				title: procedure.params.title,
-				config: procedure.params,
-				status: status,
-				services: services
-			})
+			returnable.status = status
+			returnable.services = services
+			
+			data.push(returnable)
 		
 
 		})
@@ -928,7 +957,130 @@ router.get("/services/status", (req,res,next)=>{ // build workflow according to 
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
+router.post("/modules/status/select", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let modules= req.body.items
+		let data = []
+		modules.forEach((module)=>{
+			let value = store.modules[module]
+			let dependencies_list = value.dependencies.map((d)=>{
+				let { streamObj, ...newObj } = d //Remove the stream obj on return 
+				return newObj
+			})
+			let returnable = { 
+				name: module,
+				custom: value.custom,
+				dependencies: dependencies_list,
+				status:value.status
+			}
+			let  {dependencies, ...config_list } = value.config
+			for (let [key,value] of Object.entries(config_list)){
+				returnable[key]  = value
+			}
+			data.push(returnable)
+			// data.push(
+			// 	{
+			// 		installed: serv.status.fully_installed,
+			// 		status: serv.status.exists, 
+			// 		logs: serv.status.stream,
+			// 		name: serv.name,
+			// 		dependencies: serv.dependencies
+			// 	}
+			// ) 
+		})
+		
+		res.status(200).json({status: 200, message: "retrieved status(es) for modules", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting module status(es)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+router.post("/services/status/select", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let services= req.body.items
+		let data = []
+		services.forEach((service)=>{
+			let serv = store.services[service]
+			data.push(
+				{
+					installed: serv.status.fully_installed,
+					status: serv.status.exists, 
+					logs: serv.status.stream,
+					name: serv.name,
+					dependencies: serv.dependencies
+				}
+			) 
+		})
+		
+		res.status(200).json({status: 200, message: "retrieved status(es) for services", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting service status(es)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
 
+router.post("/procedures/status/select", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let procedures_names = req.body.items
+		let data = []
+		procedures_names.forEach((p)=>{ 
+			let procedure = store.procedures[p]
+			let returnable = {name: procedure.name, services: []}
+			let staged_services = [] 
+			if (procedure.services){
+				for (let [key, service] of Object.entries(procedure.services)){
+						staged_services.push(
+							{
+								installed: service.status.fully_installed,
+								exists: service.status.exists,
+								log: service.status.stream,
+								name: service.name,
+								dependencies: service.dependencies
+							}
+						) 
+				}
+				returnable.services = staged_services
+				data.push(returnable)
+			}
+		})
+		
+		
+		res.status(200).json({status: 200, message: "retrieved status(es) for procedures", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting procedure status(es)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+router.get("/procedures/names", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let data = []	
+		let names = Object.keys(store.procedures)
+		res.status(200).json({status: 200, message: "retrieved names for procedures", data: names });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting procedure name(s)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+router.get("/modules/names", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let data = []	
+		let names = Object.keys(store.modules)
+		res.status(200).json({status: 200, message: "retrieved names for modules", data: names });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting module name(s)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
+router.get("/services/names", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let data = []	
+		let names = Object.keys(store.services)
+		res.status(200).json({status: 200, message: "retrieved names for services", data: names });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting service name(s)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
 
 
 router.get("/service/status/", (req,res,next)=>{ // build workflow according to name and index
@@ -1003,8 +1155,17 @@ router.post("/module/save/file", (req,res,next)=>{ // build workflow according t
 router.post("/module/save/text", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
-			let response = req.body
-			let parsed  = YAML.parse(response)
+			let response = req.body.source
+			let parsed;
+			let type = req.body.type
+			if (type == 'YAML'){
+				parsed = YAML.parse(response)
+			} else if (type == 'JSON'){ 
+				parsed = JSON.parse(response)
+			} else {
+				parsed = req.body.source
+				response = YAML.stringify(response)
+			}
 			let keys = Object.keys(parsed)
 			let basename = keys[0] 
 			await writeFile(path.join(store.system.shared.modules, basename+".yml"), response)
@@ -1024,12 +1185,56 @@ router.post("/module/save/text", (req,res,next)=>{ // build workflow according t
 		res.status(419).send({status: 419, message: error_alert(err2)}); 
 	})
 })
+router.post("/procedure/save/text", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let response = req.body.source
+			let parsed;
+			let type = req.body.type
+			if (type == 'YAML'){
+				parsed = YAML.parse(response)
+			} else if (type == 'JSON'){
+				parsed = JSON.parse(response) 
+			} else {
+				parsed = req.body.source
+				response = YAML.stringify(response)
+			}
+			let keys = Object.keys(parsed)
+			let basename = keys[0] 
+			console.log(keys, parsed, response)
+			await writeFile(path.join(store.system.shared.procedures, basename+".yml"), response)
+			for (let [ key, value ] of Object.entries(parsed)){
+				value.custom = true
+				let re = await define_procedure(key, value)
+				store.procedures[key] = re
+			} 
+			logger.info("%o \n procedure copied", YAML.stringify(response))
+			res.status(200).json({status: 200, message: `Completed run save text to YAML`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in copying procedure", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in copying procedure", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)}); 
+	})
+})
 
 router.post("/service/save/text", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
-			let response = req.body
-			let parsed  = YAML.parse(response)
+			let response = req.body.source
+			let parsed;
+			let type = req.body.type
+			if (type == 'YAML'){
+				parsed = YAML.parse(response)
+			} else if (type == 'JSON'){
+				parsed = JSON.parse(response)
+			} else {
+				parsed = req.body.source
+				response = YAML.stringify(response)
+			}
+			console.log(parsed, response)
 			let keys = Object.keys(parsed)
 			let basename = keys[0] 
 			await writeFile(path.join(store.system.shared.services, basename+".yml"), response)
@@ -1049,6 +1254,57 @@ router.post("/service/save/text", (req,res,next)=>{ // build workflow according 
 		res.status(419).send({status: 419, message: error_alert(err2)}); 
 	})
 })
+
+ 
+router.get("/procedures/external/fetch", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			downloadSource(
+				"http://github.com/jhuapl-bio/Basestack/tarball/systems",  
+				"/Users/merribb1/Desktop/tmp/systems.tgz"
+			).then((response)=>{
+				response.on("close", ()=>{
+					console.log("close")
+					decompress_file(
+						"/Users/merribb1/Desktop/tmp/systems.tgz", 
+						"/Users/merribb1/Desktop/tmp"
+					).catch((err)=>{
+						store.logger.error(err)
+						res.status(419).send({status: 419, message: error_alert(err)});
+					}).then((response)=>{
+						res.status(200).json({status: 200, message: `Completed procedure fetch from external GH`, data: response });
+					})
+				}) 
+					
+			}).catch((err)=>{
+				store.logger.error(err)
+				res.status(419).send({status: 419, message: error_alert(err)});
+			})
+			// let service = new Service( 
+            //     "getExternalProcedures",
+            //     cloneDeep(store.config.services.orchestrated_download)
+            // )
+			// service.setOptions()
+            // service.check_then_start({}, null).catch((err)=>{
+            //     logger.error(err)
+            // }).then((response)=>{
+            //     res.status(200).json({status: 200, message: `Completed procedure fetch from external GH`, data: response });
+			
+            // })
+			// const simpleGit = require('simple-git');
+			// const git = simpleGit();
+			// let response = await git.clone("http://github.com/jhuapl-bio/Basestack.git", "/Users/merribb1/Desktop/tmp/Basestack")
+		} catch(err2){
+			logger.error("%s %s", "Error in grabbing procedures", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in grabbing procedures", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)}); 
+	})
+})
+
+
 
 router.post("/procedure/save/file", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
@@ -1075,6 +1331,37 @@ router.post("/procedure/save/file", (req,res,next)=>{ // build workflow accordin
 		res.status(419).send({status: 419, message: error_alert(err2)}); 
 	})
 })
+router.post("/variable/read", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let response;
+			let value = req.body.value
+			let variable = req.body.variable
+			let variables = req.body.variables
+			let sep = variable.sep
+			let header = variable.header
+			variable.source = value 
+			value = mapTargetConfiguration( { value: value }   , { variables: variables } )
+			let content
+			try{
+				 content = await readTableFile(value.value, (!sep  ? "tab" : sep), header)	
+			} catch(err){
+				logger.error("end", err) 
+				res.status(419).send({status: 419, data: [], message: error_alert(err)});
+			}
+			logger.info("%o variable found %s", content, variable)
+			res.status(200).json({status: 200, message: `Completed search for variable values`, data: content });
+		} catch(err2){
+			logger.error("end", err2) 
+			logger.error( "failed search for variable values")
+			res.status(419).send({status: 419, data: [], message: error_alert(err2)});
+		}	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Completed search for variable values", err2)
+		res.status(419).send({status: 419, data: [], message: error_alert(err2)});
+	})
+})
+
 
 router.post("/service/run", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
@@ -1082,9 +1369,9 @@ router.post("/service/run", (req,res,next)=>{ // build workflow according to nam
 			let response;
 			let service = store.services[req.body.service]
 			let params = req.body
-			response = await service.check_then_start(params, false)
-			logger.info("%o service sent for running", response)
-			res.status(200).json({status: 200, message: `Completed run service submission: ${service.name}`, data: response });
+			await service.check_then_start(params, false)
+			logger.info("%o service sent for running", req.body.service)
+			res.status(200).json({status: 200, message: `Completed run service submission: ${service.name}`, data: req.body.service });
 		} catch(err2){
 			logger.error("%s %s", "Error in runnin service", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
@@ -1359,12 +1646,12 @@ router.post("/service/status", (req,res,next)=>{
 				}
 			});
 		})().catch((err3)=>{
-			logger.error(err3)
+			logger.error("%o error in getting progress", err3)
 			res.status(419).send({status: 419, message: error_alert(err3) });	
 		})
 			
 	} catch(err3){
-		logger.error(err3)
+		logger.error("%o error in getting progress", err3)
 		res.status(419).send({status: 419, message: error_alert(err3) });
 	}	
 })

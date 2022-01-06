@@ -1,6 +1,6 @@
 
-const { store, parseConfigVariables  } = require("../../config/store/index.js")
-
+const { store  } = require("../../config/store/index.js")
+const { parseConfigVariables } = require("../../../shared/definitions.js")
 const { getFolders, readFile, getFiles} = require("./IO.js")
 import path from "path"
 const YAML = require("yaml") 
@@ -41,7 +41,8 @@ async function import_cfgs(module, type){
             if (result.status == 'fulfilled'){
                 let config = [];
                 try{
-                    config = parseConfigVariables(result.value, module.type, files_marked[i])
+                    config = parseConfigVariables(result.value, store.system)
+                    // config = parseConfigVariables(result.value, module.type, files_marked[i])
                     // config.path = files_marked[i]
                 } catch (err_2){ 
                     store.logger.error(`______Init YAML/JSON ERROR for ${result.value}___________`)
@@ -74,7 +75,6 @@ async function import_cfgs(module, type){
 export const  define_base = async function(){
     try{
        
-
         const { Module } = require("../orchestrators/module.js") 
         const { Procedure } = require("../orchestrators/procedure.js")
         const { Service } = require("../orchestrators/service.js")

@@ -10,12 +10,14 @@ if (!process.env.PWD) {
 	globalPath = process.env.PWD
 	OS = "UNIX"
 }
+
 let writePath;
 let resourcePath;
 let dataPath; 
-if (process.env.NODE_ENV != "development" ){
+if (process.env.NODE_ENV != "development"){
 	dataPath = path.join(process.env.APPDATA, "Basestack", "data")
 	writePath = path.join(dataPath, 'userdata')
+	globalPath = (process.env.resourcesPath)
 	resourcePath = path.join(process.env.resourcesPath, 'data')
 } 
 
@@ -35,14 +37,15 @@ if(process.getgid){
 	gid = process.getgid()
 }
 const dockerStagePath = path.join(resourcePath, 'installation');
+
 export var store = {
 	system: {
 		appVersion: null,
 		writePath: writePath, 
 		resourcePath: resourcePath,
-		configFile: path.join(resourcePath, "config", "server",  "meta.yaml"),
+		configPath: path.join(resourcePath,  "config", "server"),
+		configFile: path.join(resourcePath,  "config", "server", "meta.yaml"),
 		logPath: path.join(writePath, "logs"),
-		configPath: path.join(resourcePath, "config" ,'server' ), 
 		logs: {
 			docker: path.resolve(path.join(writePath, "logs", "docker.log")),
 			error: path.resolve(path.join(writePath, "logs", "serverError.log")),

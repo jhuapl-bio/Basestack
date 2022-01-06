@@ -8,31 +8,36 @@
   -->
 <template>
 	<div class="mainContent">
-		<div id="topLogs" style="text-align:right; float: right">
-			<!-- <span
-			class="text-info"
-			@click="showModules"
-			>
-				Add Logs
-				<font-awesome-icon  class=" configure" icon="plus"/>
-			</span> -->
-			<!-- <multiselect 
-				v-model="selected"
-				select-label="" deselect-label="" 
-				track-by="name" 
-				label="name"
-				placeholder="Select Service to Log" 
-				:options="services" 
-				:searchable="true" 
-				:allow-empty="true" :preselect-first="false">
-				<template slot="option" slot-scope="{ option }">
-					<div>
-						<font-awesome-icon icon="cog" size="sm"/>
-						<span >{{option.name}}</span>
-					</div>
-				</template>
-			</multiselect> -->
-		</div>
+		<b-row id="topLogs" style="text-align:right; ">
+			<b-col sm="4">
+
+				
+				<b-form-select
+					v-model="selectedTarget" 
+					:options="['modules', 'services', 'procedures']" 
+					
+				>
+					
+				</b-form-select>
+				<span
+					class="text-secondary"
+				>
+					<!-- Add Logs -->
+					<!-- <font-awesome-icon  class=" configure" icon="plus"/> -->
+					Logging type
+				</span>
+			</b-col>
+			<b-col sm="8">
+				<b-form-select
+					v-model="selected" 
+					:options="names[selectedTarget]" 
+					:select-size="4"
+					multiple
+				>
+					
+				</b-form-select>
+			</b-col>
+		</b-row>
 		<b-tabs 
 			v-if="serviceStatuses"
 	        v-model="tab" 
@@ -49,7 +54,7 @@
 					<div >
 						<span style=" font-size: 0.9em" class="text-sm-center">{{entry.name}}
 							<span style="">
-							<font-awesome-icon @click="jumpModule(key)" class="text-info configure" icon="external-link-alt"/>
+							<!-- <font-awesome-icon @click="jumpModule(key)" class="text-info configure" icon="external-link-alt"/> -->
 							<font-awesome-icon @click="removeLog(key)" class="text-error configure" icon="times"/>
 							</span>
 						</span>
@@ -57,8 +62,14 @@
 						
 					</div>
 				</template>
-				<div v-for="(entry2, key2) in entry.services" :key="key2">
-					<LogWindow :info="entry2.log.info"></LogWindow>
+				<div v-if="selectedTarget !== 'procedures'">
+					<LogWindow v-if="entry.logs" :info="entry.logs.info"></LogWindow>
+				</div>			
+				<div v-else> 
+					<div v-for="(entry2, key) in entry.services"
+						v-bind:key="key">{{entry2}}
+						<LogWindow v-if="entry2.log" :info="entry2.log.info"></LogWindow>
+					</div>
 				</div>
 			</b-tab>
 		</b-tabs>
@@ -93,7 +104,13 @@ export default {
 			checking: false,
 			installed: [],
 			services: [],
-			selected: null,
+			selectedTarget: 'services',
+			names: {
+				services: [],
+				modules: [],
+				procedures: []
+			},
+			selected: [],
 			tab: 0,
 		}
 	},
@@ -101,33 +118,77 @@ export default {
 		
 	},
 	watch:{
-		
+		selected: function(newValue, oldValue){
+			const $this = this
+			if (this.interval){
+				clearInterval(this.interval)
+			}
+			if (newValue.length >=1){
+				this.interval = setInterval(()=>{
+					console.log('interval', $this.selectedTarget)
+					if ($this.selectedTarget == 'services'){
+						FileService.getSelectServicesStatuses({
+							items: newValue
+						}).then((response)=>{
+							$this.checking = false
+							$this.serviceStatuses = response.data.data
+						}).catch((err)=>{
+							// $this.$logger.error(err)
+							$this.checking = false
+						})
+					} else if ($this.selectedTarget == 'modules'){
+						FileService.getSelectModulesStatuses({
+							items: newValue
+						}).then((response)=>{
+							$this.checking = false
+							$this.serviceStatuses = response.data.data
+						}).catch((err)=>{
+							// $this.$logger.error(err)
+							$this.checking = false
+						})
+					} else {
+						FileService.getSelectProceduresStatuses({
+							items: newValue
+						}).then((response)=>{
+							$this.checking = false
+							console.log($this.serviceStatuses)
+							$this.serviceStatuses = response.data.data
+						}).catch((err)=>{
+							// $this.$logger.error(err)
+							$this.checking = false
+						})
+					}
+						
+				}, 2500)
+			} else {
+				this.serviceStatuses = []
+			}
+		}
 	},
 	computed: {
 	},
 	async mounted(){
 		const $this = this	
-		// let services = await FileService.getAllProcedureStatus()
-		// this.services = services.data.data
-		// setInterval(()=>{
-			$this.checking = true
-			// let services = [[0,0,0]]
-			FileService.getProceduresStatusSelect(this.selectedProcedures).then((response)=>{
-				$this.checking = false
-				$this.serviceStatuses = response.data.data
-			}).catch((err)=>{
-				$this.$logger.error(err)
-				$this.checking = false
-			})
-		// }, 2000)
+	
+		$this.checking = true
+			
+		FileService.getAllServiceNames().then((response)=>{
+			this.names.services = response.data.data
+		})
+		FileService.getAllProcedureNames().then((response)=>{
+			this.names.procedures = response.data.data
+		})
+		FileService.getAllModuleNames().then((response)=>{
+			this.names.modules = response.data.data
+		})
 
 
 	},
 
 	methods: {
       removeLog(key){
-		  this.selectedProcedures.splice(key, 1)
-		  this.moduleStatuses.splice(key, 1)
+		  this.selected.splice(key, 1)
+		//   this.moduleStatuses.splice(key, 1)
 	  },
 	  async showModules(){
 		const $this = this

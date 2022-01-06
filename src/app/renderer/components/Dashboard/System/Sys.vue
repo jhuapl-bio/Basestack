@@ -6,14 +6,34 @@
       <span class="no-border-entry" style=""
       > <font-awesome-icon class="" icon="cog" size="sm"  />
         System Summary
-      </span> <hr>
+      </span> 
+      
       <div v-for="entry  in  components " :key="entry" class="entry">
         <!-- <Docker v-if="resources" v-bind:resources="resources" v-bind:docker="resources.docker"></Docker> -->
         <component :is="entry" v-if="resources" v-bind:resources="resources"></component><hr>
       </div>
- 
+      <hr>
       <span  class="text-danger align-center" v-if="!docker || !docker.running">Docker is not connected or installed</span>
       <span v-else>Docker is installed and running</span>
+    </div>
+    <div  class="box">
+      <span class="no-border-entry" style=""
+        >
+          Update Server Port
+        </span> 
+        <b-form-input
+          min="1000"
+          max="9999"
+          number
+          v-model="port"
+        
+        >
+        </b-form-input>
+        <b-button 
+          class="sideButton btn"
+          @click="changePort(port)"
+        >Update
+        </b-button>
     </div>
   </b-row>
 </template>
@@ -45,6 +65,7 @@
         server: null,
         docker: null,
         resources: null,
+        port: process.env.PORT_SERVER,
         components: [
           'Basestack',
           'CPU',
@@ -72,6 +93,13 @@
         
     },
     methods: {
+      changePort(val){
+        this.$electron.ipcRenderer.send("changePort", val)
+        // this.$electron.ipcRenderer.on('changePort', (evt, port)=>{
+        //   console.log("change port")
+        //   process.env.PORT_SERVER = port
+        // })
+      },
       async getResources(){
         const $this = this
         FileService.getResources().then((status)=>{
@@ -80,7 +108,7 @@
           $this.checkingResources = false
           return 
         }).catch((err)=>{
-          $this.$logger.error(err)
+          // $this.$logger.error(err)
           $this.checkingResources = false
 
         })

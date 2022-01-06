@@ -10,8 +10,9 @@ const { store }  = require("../../config/store/index.js")
 var  logger  = store.logger
 const {readTableFile, getFolders } = require("./IO.js")
 import glob from "glob"
+const { mapVariables } = require("./mapper.js")
 
-const fs  = require("fs")
+const fs  = require("fs") 
 import  path  from "path"
 export async function validatePrimerVersions(primerDir,primerNameDir, fullpathVersion){
 	// console.log('validate primer version ',primerNameDir, fullpathVersion)
@@ -103,44 +104,7 @@ export function validateFramework(framework, variables){
 		return framework
 	}
 }
-export function mapVariables(target, variables){  
-	try{ 
-		if (Array.isArray(target)){
-			let y = target.reduce()  
-			return target
-		} else if (target) { 
-			let inner_variables = target.match(/(\${.+?\}){1}/g)  
-			// Replace variables ${variable} entries in the target section
-			if (inner_variables && Array.isArray(inner_variables)){     
-				inner_variables.forEach((vari)=>{
-					let id = vari.replace(/[\$\{\}]/g, "")
-					// let source = ( selected_option.options ? selected_option.options[selected_option.source] : selected_option.source )
-					if (variables){ 
-						if (id in variables){
-							if (typeof variables[id] === 'object'){
-								target = target.replaceAll(vari, variables[id].source) 
 
-							} else {
-								target = target.replaceAll(vari, variables[id]) 
-							}
-						} else {
-							target = target.replaceAll(vari, "") 
-						}    
-					} else { 
-						target = target.replaceAll(vari, "") 
-					}
-				})
-			} 
-			return target
-			
-		} else {
-			return target
-		} 
-	} catch(err){
-		store.logger.error(err)
-		return target
-	}
-}
 export async function checkFileExist(dir, extension, silent, recursive){
 	return new Promise((resolve, reject)=>{
 		if(dir){

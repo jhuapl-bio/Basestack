@@ -153,32 +153,41 @@ export async function readFile(filepath, split){
 		  fs.readFile(filepath, (err, data) => {
 			  if (err){
 			  	store.logger.error("%s %s %s", "Error in reading the file: ", filepath, err)
-			  	reject(err)
-			  } else {
+			  	reject(err)  
+			  } else {   
 				resolve(split ? data.toString().split("\n") : data.toString())
-			  }
+			  } 
 		  });		
-	})
-}
+	}) 
+}  
 //Sync method of getting data
-export async function readTableFile(filepath, delimeter){
-	return new Promise((resolve, reject)=>{
-		let dataFull = []
-		fs.createReadStream(filepath)
-		.pipe(parse({separator: "\t", headers:false, skip_empty_lines: true }))
-		.on('data', function(data){
-		    try {
-		    	dataFull.push(data)
-		        //perform the operation
-		    }
-		    catch(err) {
-		    	reject(err)
-		        //error handler
-		    }
+export async function readTableFile(filepath, delimeter, header){
+	return new Promise((resolve, reject)=>{ 
+		let dataFull = [] 
+		fs.exists(filepath, function(exists){
+			if (exists){
+				fs.createReadStream(filepath)
+				.pipe(parse({separator: (delimeter == 'tab' ? "\t" : delimeter), headers:( header ? header: false), skip_empty_lines: true }))
+				.on('data', function(data){
+					try {
+						dataFull.push(data)
+						//perform the operation
+					}
+					catch(err) {
+						reject(err)
+						//error handler
+					}
+				})
+				.on('end',function(){
+					resolve(dataFull)
+				})
+				.on("error", function(err){
+					store.logger.error(err)
+				});  
+			} else {
+				resolve(dataFull)
+			}
 		})
-		.on('end',function(){
-			resolve(dataFull)
-		});  
 	})
 }
 export async function checkExists(path){
@@ -255,7 +264,7 @@ export async function downloadSource(url, target, params)  {
 				};
 			};
 			var downloaded = 0
-			console.log("write folder....")
+			console.log("write folder....", dirpath)
 			writeFolder(dirpath).then(()=>{ 
 				writer = fs.createWriteStream(p)
 				console.log("folder made if not existing, or continuing...") 
@@ -334,7 +343,6 @@ export async function downloadSource(url, target, params)  {
 					}
 					console.log(url, "to", dirpath)
 					let request = http.get(url).on("response", (response)=>{
-						console.log(response)
 						var len = parseInt(response.headers['content-length'], 10);
 						response.on('data', function(chunk) {
 							downloaded += chunk.length;
@@ -372,7 +380,6 @@ export async function downloadSource(url, target, params)  {
 						// set initial timeout
 						var timeoutId = setTimeout( fn, timeout );
 						writer.on("close", ()=>{
-							console.log("closed")
 							if (typeof request.end === "function") { 
 								request.end()
 							}

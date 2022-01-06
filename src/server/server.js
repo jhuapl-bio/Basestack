@@ -21,12 +21,9 @@ app.use(bodyParser.text({ type: 'text/*' }))
 app.use(express.static('public')) 
 
 
-const { define_base, define_configuration } = require("./api/controllers/configurations.js")
 // import router  from "./api/routes/index.js"
 // import upload from "./api/controllers/upload.js"
-
 const  { store }  = require("./config/store/index.js")
-
 // Reset all on reload 
 
 

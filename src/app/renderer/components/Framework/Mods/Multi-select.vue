@@ -15,6 +15,11 @@
 <script>
 export default {
 	name: 'multi-select',
+  data() {
+    return {
+      
+    }
+  },
 	methods: {
 		
 	},

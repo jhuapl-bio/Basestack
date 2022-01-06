@@ -1,6 +1,4 @@
-import e from 'express';
-import { resolve } from 'path';
-import { Configuration } from './configuration.js';
+import { mapConfigurations, mapVariables } from '../controllers/mapper.js';
 const cloneDeep = require("lodash.clonedeep");
 
 /*  
@@ -14,12 +12,12 @@ const cloneDeep = require("lodash.clonedeep");
 var Docker = require('dockerode'); 
 const path = require("path") 
 var  { store }  = require("../../config/store/index.js")
-const { mapVariables, validateFramework } = require("../controllers/validate.js")
+const {  validateFramework } = require("../controllers/validate.js")
 const { readFile, writeFile, copyFile } = require("../controllers/IO.js")
 const { module_status }  = require("../controllers/watcher.js")
 const { check_container,  } = require("../controllers/fetch.js")
-const { spawnLog, createLoggingObject } = require("../controllers/logger.js")
-var logger = store.logger
+const { spawnLog } = require("../controllers/logger.js")
+var logger = store.logger 
 // var docker = new Docker();
 const fs = require("file-system")
 let dockerObj;
@@ -36,6 +34,7 @@ export class Service {
         this.status = {
             exists: false,
             fully_installed: false,
+            partial_install: false,
             error: null,
             stream: null,
         };
@@ -50,7 +49,7 @@ export class Service {
             if (!checking){
                 checking = true
                 $this.dependencyCheck().then((d)=>{
-                    if ($this.status.fully_installed){
+                    if ($this.status.partial_install){
                         $this.watch().then((e)=>{
                             checking = false
                         }).catch((err)=>{
@@ -84,14 +83,16 @@ export class Service {
         const $this = this;
         return new Promise(function(resolve,reject){
             try{
-                let service = $this.config
+                let service = cloneDeep($this.config)
+                
                 if (!outputs){
                     outputs = {}
                 }
+                let watchable = {}
                 if (service.outputs){
-                    let watchable = {}
+                    
                     let promises = [] 
-                    for (let [ key, value] of Object.entries(service.outputs)){
+                    for (let [ key, value] of Object.entries(cloneDeep(service.outputs))){
                         if(value.watch){
                             watchable[key] = value
                             promises.push(module_status(value, key, variables, ( outputs[key] ? outputs[key] : {}   )))
@@ -106,11 +107,11 @@ export class Service {
                             } else {
                                 store.logger.error("Error in getting status for watched location: %o", resp.reason )
                             }
-                        })
+                        }) 
                         resolve(watchable)
                     })                
                 } else {
-                    reject()
+                    resolve(watchable)
                 }
             } catch (err){
                 store.logger.error("%o error in get progress %s", err, $this.name)
@@ -119,10 +120,11 @@ export class Service {
         })
     } 
     async watch(){
-		let container_name = this.container_name;
+		let container_name = this.name
 		const $this  = this;
 		return new Promise(function(resolve,reject){
             const response = check_container($this.name).then((response)=>{
+                
                 $this.status.exists = response 
     			resolve()
             }).catch((err)=>{
@@ -132,8 +134,8 @@ export class Service {
 	} 
     async defineDependencies(){
         const $this = this;
-        this.dependencies = []
-      
+        this.dependencies = [] 
+       
         if (this.config.depends){
             this.config.depends.forEach((dependency)=>{
                 if (dependency.type == 'module' && dependency.id in store.modules){
@@ -174,9 +176,9 @@ export class Service {
                     logger.info("Force restarting")
                     await $this.stop() 
                 } 
-                await $this.start(params, wait) 
+                let stream = await $this.start(params, wait) 
                 logger.info(`started run...${name}`)
-                resolve(name)
+                resolve(stream)
             })().catch((err)=>{
                 logger.error(err)
                 reject(err)
@@ -200,6 +202,11 @@ export class Service {
                     let fully_installed = returned.every((d)=>{
                         return d.status.exists
                     })
+                    let any_installed = returned.some((d)=>{
+                        return d.status.exists
+                    })
+                    $this.status.partial_install = any_installed
+
                     $this.status.fully_installed = fully_installed
                 }
                 resolve(returned) 
@@ -336,12 +343,24 @@ export class Service {
         return options
                
     }
-    createContentOutput(item, sep){
+    createContentOutput(item, sep, header){
         if (!sep){
-            sep = ","
+            sep = "," 
         }
         let tsv_file_content = item.map((d)=>{
-            return d.join( ( sep == 'tab' ? "\t" : sep )  )
+            let full = []
+            if (header && !Array.isArray(d) && typeof d == 'object'){
+                header.forEach((head)=>{
+                    full.push(d[head])
+                    // full.push()
+                })
+                // full = d
+                
+            }  else {
+                full = d
+            }
+            return full.join( ( sep == 'tab' ? "\t" : sep )  )
+            
         }).join('\n')
         return tsv_file_content + "\n"
     }
@@ -431,16 +450,16 @@ export class Service {
             let clonedConfig = cloneDeep($this.config)  
             clonedConfig.variables = defaultVariables 
             let configuration_string = JSON.stringify(clonedConfig) 
-            let configuration = new Configuration(configuration_string, defaultVariables)
-            configuration.mapConfigurations()
-            defaultVariables = configuration.config.variables 
+            // let configuration = new Configuration(configuration_string, defaultVariables)
+            defaultVariables = mapConfigurations(configuration_string, defaultVariables)
+            defaultVariables = defaultVariables.variables
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 // let targetBinding = (selected_option.create ? selected_option.create : selected_option)
                 let targetBinding = selected_option
                 if (selected_option.framework){
                     let validated_framework = validateFramework(selected_option.framework, defaultVariables)
                     selected_option.source = validated_framework 
-                }
+                } 
                 // if (selected_option.option){
                 //     selected_option = selected_option.options[selected_option.option]
                 // }
@@ -452,17 +471,18 @@ export class Service {
                     promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
                         logger.error(err)
                     }))
-                }
+                } 
                 if (selected_option.create){
-                    let output = $this.createContentOutput(selected_option.source, selected_option.create.sep)
+                    let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header)
                     promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                         logger.error(err)
-                    }))
+                    })) 
                 } 
-                if (selected_option.bind){
+                if (selected_option.bind){ 
                     let from = selected_option.bind.from 
                     let to = selected_option.bind.to
                     try{
+ 
                         if (selected_option.bind_parent_dir){
                             env.push(`${name}=${path.join(to, path.basename(from))}`) 
                             binds.push(`${path.dirname(from)}:${to}`) 
@@ -487,9 +507,8 @@ export class Service {
                     }
                 }
             }   
-            console.log($this.options, $this.config)
-            if (! options.Image ){
-                throw new Error("No Image available")
+            if (! options.Image ){ 
+                throw new Error("No Image available") 
             }  
             options.Env = [...options.Env, ...env]   
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...binds]
@@ -500,7 +519,7 @@ export class Service {
                 reject(err)
             })
             logger.info("%o ______", options)
-            logger.info(`starting the container ${options.name} `)
+            logger.info(`starting the container ${options.name} `) 
             // resolve() 
             store.docker.createContainer(options,  function (err, container) { 
                 $this.container = container
@@ -511,21 +530,21 @@ export class Service {
                     container.attach({stream: true, stdout: true, stderr: true}, function (err, stream){
                         $this.log = spawnLog(stream, $this.logger) 
                         $this.status.stream =  $this.log
-                        if (wait){
-                            stream.on("end",()=>{
-                                resolve(options)
-                            })
-                        }
+                        container.start(function (err, data) {
+                            if (err){
+                                logger.error("%o  error in container name: %s", err, $this.name)
+                                reject(err)
+                            } 
+                            if (!wait){ 
+                                resolve( stream ) 
+                            } else {
+                                stream.on("end",()=>{
+                                    resolve(stream)
+                                })
+                            }
+                        })
                     });
-                    container.start(function (err, data) {
-                        if (err){
-                            logger.error("%o  error in container name: %s", err, $this.name)
-                            reject(err)
-                        } 
-                        if (!wait){ 
-                            resolve( options ) 
-                        }
-                    })
+                    
                         
                 }   
             });	

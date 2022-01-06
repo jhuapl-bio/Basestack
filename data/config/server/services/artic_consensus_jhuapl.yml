@@ -10,7 +10,7 @@ artic_consensus_jhuapl:
   force_restart: false
   force_init: false
   # command: ["bash","-c", "echo Starting consensus pipeline... "]
-  command: ["bash","-c", "echo Starting consensus pipeline...  && 
+  command: ["bash","-c", "echo Starting consensus pipeline...   && 
     bash artic-module1-barcode-demux.sh  -i ${dir}"]
   outputs:
     demuxes:
@@ -21,18 +21,24 @@ artic_consensus_jhuapl:
       watch: True
       type: files
       pattern: ".complete"
-      total: ${manifest}.length
+      total: 
+        target: "%{variables.manifest.source}"
+        call: "length"
       path: ${dir}/artic-pipeline/2-length-filter
     normalizations:
       watch: True
       type: files
       pattern: ".complete"
-      total: ${manifest}.length
+      total: 
+        target: "%{variables.manifest.source}"
+        call: "length"
       path: ${dir}/artic-pipeline/3-normalization
     consensuses:
       watch: True
       type: files
-      total: ${manifest}.length
+      total: 
+        target: "%{variables.manifest.source}"
+        call: "length"
       pattern: ".complete"
       path: ${dir}/artic-pipeline/4-draft-consensus
     report:
@@ -40,26 +46,11 @@ artic_consensus_jhuapl:
       type: file
       path: ${dir}/artic-pipeline/report.pdf 
   variables:
-    run_config: 
-      label: "Run Configuration File"
-      element: "file"
-      bind_parent_dir: true
-      bind: 
-        to: "%{variables.dir.bind.to}/run_config.txt"
-        from: "%{variables.dir.source}/run_config.txt"
+    name:
+      label: "Run Name"
+      element: "string"
       class: "wb-50  p-3 mb-1"
-      hidden: true
-      create:
-        target: "%{variables.dir.source}/run_config.txt"
-        sep: "tab"
-      framework:
-        - ["primers", "%{variables.primer.target}"]
-        - ["basecalling", "%{variables.basecalling.target}"]
-        - ["barcoding", "%{variables.barcoding.target}"]
-      depends: 
-        - ${primer}
-        - ${basecalling}
-        - ${barcoding}
+      source: "test"
     dir:
       label: "Input Long-Reads Full Run Directory"
       element: "dir"
@@ -73,19 +64,50 @@ artic_consensus_jhuapl:
       label: "Input Long-Reads FASTQ Directory"
       element: "dir"
       bind_parent_dir: false
-      bind: 
-        to: "%{variables.dir.bind.to}/fastq_pass"
-        from: "%{variables.fastq_pass.source}"
       class: "wb-50  p-3 mb-1"
-      source: null
-    name:
-      label: "Run Name"
-      element: "string"
+      options:
+        - element: "dir"
+          hidden: true
+          name: "fastq_pass"
+          source: "%{variables.dir.source}/fastq_pass" 
+          bind: 
+            from: "%{variables.fastq_pass.source}"
+            to: "%{variables.dir.bind.to}/fastq_pass" 
+        - element: "dir"
+          name: "Custom Fastq Pass Directory"
+          source: null
+          target: null
+          bind: 
+            from: "%{variables.fastq_pass.source}"
+            to: "%{variables.dir.bind.to}/fastq_pass" 
+    run_config: 
+      label: "Run Configuration File"
+      column: 6
+      read: "%{variables.dir.source}/run_config.txt"
+      element: "file"
+      header: ["configuration", "target" ]
+      bind_parent_dir: true
+      # bind: 
+      #   to: "%{variables.dir.bind.to}/run_config.txt"
+      #   from: "%{variables.dir.source}/run_config.txt"
       class: "wb-50  p-3 mb-1"
-      source: "test"
-    primer:
+      hidden: true
+      create:
+        target: "%{variables.dir.source}/run_config.txt"
+        sep: "tab"
+      framework:
+        - ["primers", "%{variables.primers.target}"]
+        - ["basecalling", "%{variables.basecalling.target}"]
+        - ["barcoding", "%{variables.barcoding.target}"]
+      depends_key: "target"
+      depends: 
+        - primers
+        - basecalling
+        - barcoding
+    primers:
       label: "Primer Configuration"
       element: null
+      column: 4
       link: run_config
       class: "wb-50 p-3 mb-1"
       options:
@@ -98,16 +120,17 @@ artic_consensus_jhuapl:
       element: null
       link: run_config
       class: "wb-50 p-3 mb-1"
+      column: 4
       options:
+        - "dna_r9.4.1_450bps_hac.cfg"
+        - "dna_r9.4.1_450bps_fast.cfg"
+        - "dna_r10.3_450bps_hac.cfg"
         - "dna_r10.3_450bps_fast.cfg"
         - "dna_r10.3_450bps_fast_prom.cfg"
-        - "dna_r10.3_450bps_hac.cfg"
         - "dna_r10.3_450bps_hac_prom.cfg"
         - "dna_r10_450bps_fast.cfg"
         - "dna_r10_450bps_hac.cfg"
-        - "dna_r9.4.1_450bps_fast.cfg"
         - "dna_r9.4.1_450bps_fast_prom.cfg"
-        - "dna_r9.4.1_450bps_hac.cfg"
         - "dna_r9.4.1_450bps_hac_prom.cfg"
         - "dna_r9.4.1_450bps_hac_prom_fw205.cfg"
         - "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg"
@@ -122,14 +145,15 @@ artic_consensus_jhuapl:
       label: "Barcode Configuration"
       element: null
       link: run_config
+      column: 4
       class: "wb-50 p-3 mb-1"
       options:
+        - "barcode_arrs_nb96.cfg"
         - "barcode_arrs_16s.cfg"
         - "barcode_arrs_dual_nb24_pcr96.cfg"
         - "barcode_arrs_lwb.cfg"
         - "barcode_arrs_nb12.cfg"
         - "barcode_arrs_nb24.cfg"
-        - "barcode_arrs_nb96.cfg"
         - "barcode_arrs_pcr12.cfg"
         - "barcode_arrs_pcr96.cfg"
         - "barcode_arrs_rab.cfg"
@@ -141,17 +165,23 @@ artic_consensus_jhuapl:
         - "barcode_arrs_vmk.cfg"
         - "configuration.cfg"
         - "configuration_dual.cfg"
+    
     manifest:
       label: "Input Manifest"
       element: "list"
       columns: 2
-      bind:
-        from: "%{variables.dir.source}/manifest.txt"
-        to: "%{variables.dir.bind.to}/manifest.txt"
+      column: 12
+      sep: "tab"
+      # bind:
+      #   from: "%{variables.dir.source}/manifest.txt"
+      #   to: "%{variables.dir.bind.to}/manifest.txt"
       bind_parent_dir: true
+      tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
       create:
         target: "%{variables.dir.source}/manifest.txt"
         sep: "tab"
       class: "wb-50  p-3 mb-1"
-      source: null
+      read: "%{variables.dir.source}/manifest.txt"
+      source: []
+      header: ['id', 'barcode']
       

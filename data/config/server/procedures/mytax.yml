@@ -1,6 +1,6 @@
 mytax_kraken2_report:
   title: "Kraken2 Mytax"
-  icon: "dna"
+  icon: "binoculars"
   init: false
   tooltip: "Run Kraken 2 classification and receive report file then json for visualization"
   force_restart: true
@@ -19,7 +19,7 @@ mytax_kraken2_report:
     - mytax_create_json
 mytax_visualization:
   title: "Kraken2 Mytax Visualization"
-  icon: "dna"
+  icon: "chart-pie"
   init: false
   tooltip: "View Sunburt from JSON report of Kraken/Centrifuge run"
   force_restart: false

@@ -28,20 +28,11 @@ export async function init(){
 	store.docker = await docker_init();  
 	// //Initiating the Status Class of Modules 
 	let response_orchestrator = await init_dind()
-	// store.dind = await docker_init({
-	// 	host: '172.18.0.3',
-	// 	port: "2376"
-	// })
-	// let images = await listImages(true)
-	// console.log("_____________")
-	// console.log(images,"<<<<") 
-	
 	
 	
 	let response_init = await init_base_modules()
 	let response_init_services = await init_base_services()
 	let response_init_procedures= await init_base_procedures()
- 
 	// let response = await fetch_modules()
 	console.log("finished initializing")
 }

@@ -22,6 +22,6 @@ orchestrated_download:
       type: "module"
   force_restart: false
   force_init: false
-  config: "${resourcePath}/server/config/procedure_dind/dockerConfigOrchestrator.json"
+  config: "${configPath}/procedure_dind/dockerConfigOrchestrator.json"
   orchestrated: true
 

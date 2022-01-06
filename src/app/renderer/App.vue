@@ -21,7 +21,9 @@
       <h3>Initiating....</h3>
   </div>
   <div v-else>
+
       <h3>Backend Server is not available</h3>
+      <Sys></Sys>
   </div>
   
   </div>
@@ -33,7 +35,7 @@ import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import MainPage from '@/components/MainPage'
 import FileService from '@/services/File-service.js'
-
+import Sys from "@/components/Dashboard/System/Sys.vue"
 
 
 const moment = require('moment');
@@ -42,26 +44,79 @@ export default {
 	name: 'client',
 	components: { 
     MainPage, 
+    Sys,
   },
   data(){
     return {
       ready:false,
+      interval: null,
       modules: false,
       services: false,
       procedures: false,
       defaults: false,
+      runningServer: false,
       running: false
     }
   },
 	async mounted(){
-    await this.init()
-    this.$electron.ipcRenderer.send('mainN')
-    await this.$store.dispatch("UPDATEDEFAULTS", this.defaults)
-    await this.$store.dispatch("UPDATEDEMODULES", this.modules)
+    const $this = this;
+    this.$electron.ipcRenderer.on('changePort', (evt, port)=>{
+      console.log("changed port", port)
+      process.env.PORT_SERVER = port
+      $this.runningServer = false
+      $this.createPingInterval()
+    })
+
+    this.createPingInterval()
+
+
+    
+
+    // this.$electron.ipcRenderer.send('maiN')
+    // await this.$store.dispatch("UPDATEDEFAULTS", this.defaults)
+    // await this.$store.dispatch("UPDATEDEMODULES", this.modules)
     this.ready = true
     
 	},
   methods: {
+    clearAll(){
+      this.modules = []
+      this.services = []
+      this.defaults = []
+      this.procedures = []
+      this.running =false
+
+    },
+    async createPingInterval(){
+      console.log("create interval for ping", process.env.PORT_SERVER)
+      const $this = this;
+      if (this.interval){
+        clearInterval(this.interval)
+      }
+      this.clearAll()
+      this.runningServer = false
+      this.interval = setInterval(async ()=>{
+        if (this.runningServer){
+          clearInterval($this.interval)
+        } else {
+          try{
+            let f = await $this.pingServerPort()
+            console.log(f)
+            if (f)
+            {
+              this.runningServer = true
+              await this.init()
+            }
+          } catch(err){
+            console.error("Could not get server status, check if it is running on port: ", process.env.PORT_SERVER)
+          }
+        }
+        
+      }, 2000)
+    },
+    async pingServerPort(){
+      return FileService.pingServerPort()
+    },
     async init(){
       try{
         const $this = this
@@ -79,7 +134,7 @@ export default {
         return 
       } catch(err){
         console.error(err, "Backend server is not running")
-        this.running = false
+        this.running = false 
         this.ready = true
         this.$swal.fire({
                   position: 'center',

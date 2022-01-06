@@ -11,23 +11,23 @@ const { store }  = require("../../config/store/index.js")
 const chokidar = require("chokidar")
 const { getFiles} = require("./IO.js")
 const {checkFolderExists } = require("./validate.js")
-const { mapVariables } = require("./validate.js")
-var  logger  = store.logger
-const fs = require("fs")
-const glob = require("glob")
-var readFile = function(filename){
-    return new Promise(function(resolve,reject){
-	    fs.readFile(filename, function(err,data){
-	    	if (err){
+const { mapVariables } = require("./mapper.js")
+var  logger  = store.logger 
+const fs = require("fs")  
+const glob = require("glob")  
+var readFile = function(filename){ 
+    return new Promise(function(resolve,reject){ 
+	    fs.readFile(filename, function(err,data){  
+	    	if (err){  
 	    		reject()
 	    	} else {
 	    		resolve(JSON.parse(data))
 	    	}
 	    })
 
-    })
+    }) 
 
-
+ 
 }
 
 export var watch_consensus = async function (params){
@@ -101,17 +101,23 @@ export  var module_status = async function(params, key, variables, outputs){
 				else{
 					mod.status.complete = 1
 					mod.status.source = params.path
-		    	}
+		    	} 
 				resolve(mod)
 		    	
 			})	
-		} else { // we need to look to see if all of the BC have been completed since it is async
-			mod.status.total = (outputs.length ? outputs.length : 0);
+		} else { // we need to look to see if all files are found
+			
+			if (typeof outputs.total == 'object'){
+				mod.status.total = (outputs.total.target ? outputs.total.target : 0);
+			} else {
+				mod.status.total = (outputs.total ? outputs.total : 0);
+			}
 			(async ()=>{
 				const exists = await checkFolderExists(params.path)
 				let files_complete = [];
 				if (exists){
 					let files = await getFiles(params.path)
+					
 					let count = 0;
 					for (let j = 0; j < files.length; j++){
 						if(files[j].includes(params.pattern)){
@@ -119,9 +125,11 @@ export  var module_status = async function(params, key, variables, outputs){
 							files_complete.push(files[j])
 						}
 					}
+					
 					// mod.status = [count, (outputs.length ? outputs.length : 0), files_complete]
 					mod.status.complete = count
 					mod.status.source = files_complete
+					
 					
 				} else {
 					// mod.status = [0, (outputs.length ? outputs.length : 0), files_complete]
@@ -130,14 +138,15 @@ export  var module_status = async function(params, key, variables, outputs){
 				}
 				resolve(mod)
 			})().catch((err)=>{
-				mod.status = [0, 0, []]
+				mod.status.complete = 0
+				mod.status.total = 0
 				resolve(mod)
 			})
 		}  
 	})  	
 }
 
-
+ 
 
 export  var init_watch_consensus = async function(params){
 	const reportDir = params
@@ -145,7 +154,7 @@ export  var init_watch_consensus = async function(params){
 	const articConsensusReport = reportDir.reportFiles.finalReport.md.path
 
 	if (store.consensus.watcher){
-		store.consensus.watcher.close()
+		store.consensus.watcher.close() 
 		store.consensus.data = []
 	}
 	store.consensus.change=true

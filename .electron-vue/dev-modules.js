@@ -134,12 +134,14 @@ function startRenderer (devClient) {
 }
 function startServer (devClient){
   return new Promise((resolve, reject) => {
-    console.log("Starting server  dev-runner")
+    console.log("Starting server  dev-server")
     // serverConfig.entry.server = path.join(__dirname, '../src/modules/index.server.js')
-    serverConfig.mode = 'development'
+    if (!process.env.NODE_ENV){
+      serverConfig.mode = 'development'
+    }
     const compiler = webpack(serverConfig)
     
-    
+    console.log("starting server")
     compiler.hooks.done.tap('done', stats => {
       logStats('Server', stats)
       console.log("done....................")

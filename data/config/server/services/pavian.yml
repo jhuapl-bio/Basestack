@@ -12,6 +12,7 @@ pavian_default:
     - 8087:80
   variables:
     port:
+      column: 12
       element: "render"
       from: "80"
       to: "8087"
@@ -33,8 +34,9 @@ pavian_orchestrated:
       element: null
       bind: /opt/app
       bind_parent_dir: true
-      source: "${resourcePath}/server/config/modules/workflows/pavian/docker-compose.yml"
+      source: "${configPath}/modules/workflows/pavian/docker-compose.yml"
     port:
+      column: 12
       element: "render"
       from: "80"      
       to: "8097"

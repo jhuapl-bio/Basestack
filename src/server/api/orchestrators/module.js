@@ -1,6 +1,5 @@
 const { Service } = require('./service.js');
 const { store } = require('../../config/store/index.js')
-const {logger }  = require('../controllers/logger.js')
 const path = require("path")
 const cloneDeep = require("lodash.clonedeep");
 const { check_image, fetch_external_dockers } = require("../controllers/fetch.js")
@@ -53,7 +52,7 @@ export  class Module {
                 })
                 resolve()  
             }).catch((err)=>{
-                logger.error("%s %o %o","Error in pulling docker image for: ", dependency , err)
+                store.logger.error("%s %o %o","Error in pulling docker image for: ", dependency , err)
                 reject(err)
             }) 
         })
@@ -62,7 +61,7 @@ export  class Module {
 		const $this = this  
         return new Promise(function(resolve,reject){ 
             if (dependency.streamObj){
-                logger.info("Closing since it already exists as a stream obj %o", dependency.target)
+                store.logger.info("Closing since it already exists as a stream obj %o", dependency.target)
                 dependency.streamObj.close()
                 dependency.streamObj.end() 
                 dependency.streamObj.destroy()
@@ -72,12 +71,13 @@ export  class Module {
                 dependency.streamObj = stream 
                 $this.buildlog = spawnLog(stream, $this.logger)
                 stream.on("close", (err, data)=>{
+                    console.log("closed....")
                     dependency.status.downloading = false
                     dependency.status.building = false
                 })
                 resolve()  
             }).catch((err)=>{ 
-                logger.error("%s %s %o","Error in pulling docker image for: ", dependency.target , err)
+                store.logger.error("%s %s %o","Error in pulling docker image for: ", dependency.target , err)
                 reject(err)
             }) 
         })
@@ -86,10 +86,14 @@ export  class Module {
 		const $this = this  
         return new Promise(function(resolve,reject){ 
             if (dependency.streamObj){
-                logger.info("Closing since it already exists as a stream obj %o", dependency.target)
-                dependency.streamObj.close()
-                dependency.streamObj.end() 
-                dependency.streamObj.destroy()
+                store.logger.info("Closing since it already exists as a stream obj %o", dependency.target)
+                try{
+                    dependency.streamObj.close()
+                    dependency.streamObj.end() 
+                    dependency.streamObj.destroy()
+                } catch(err){
+                    store.logger.error(err)
+                }
             }
             let service = new Service( 
                 $this.name,
@@ -115,9 +119,17 @@ export  class Module {
             
             service.setOptions()
             service.check_then_start({}, null).catch((err)=>{
-                logger.error(err)
-            }).then(()=>{
-                dependency.streamObj = service.container
+                store.logger.error(err)
+                dependency.status.building = false
+                dependency.status.downloading= false
+                dependency.status.error = err
+            }).then((stream)=>{
+                dependency.streamObj = stream
+                dependency.streamObj.on("close", (response)=>{
+                    dependency.status.building = false
+                    dependency.status.downloading= false
+                    dependency.status.error = null
+                })
             })
             resolve()
            
@@ -140,22 +152,22 @@ export  class Module {
                         }
                         $this.buildlog = spawnLog(stream, $this.logger)
                         stream.on("close", ()=>{ 
-                            logger.info("Completed download of %o", dependency.source)
+                            store.logger.info("Completed download of %o", dependency.source)
                             
                             dependency.status.building = false
                             dependency.status.downloading= false
                             resolve()
                         }).on("error", ()=>{
-                            logger.error("Error in stream")
+                            store.logger.error("Error in stream")
                         })
                     }).catch((err)=>{
-                        logger.error("%o %o","Error in downloading source: ", dependency.source , err)
+                        store.logger.error("%o %o","Error in downloading source: ", dependency.source , err)
                         dependency.status.building = false
                         dependency.status.downloading= false
                         reject(err)
                     }) 
                 } else{
-                    logger.info(`Skipping dependency install: ${dependency.source.target} due to it existing`) 
+                    store.logger.info(`Skipping dependency install: ${dependency.source.target} due to it existing`) 
                     resolve()
                 }
             }) 
@@ -187,10 +199,10 @@ export  class Module {
                     dependency.status.building = false
                 })
 
-                $this.buildlog = spawnLog(stream,logger)   
+                $this.buildlog = spawnLog(stream,store.logger)   
                 resolve() 
             }).catch((err)=>{ 
-                logger.error("%s %s %o","Error in building docker image for: ", dependency.target , err)
+                store.logger.error("%s %s %o","Error in building docker image for: ", dependency.target , err)
                 reject(err)
             }) 
         })
@@ -241,7 +253,7 @@ export  class Module {
                         }
                     } else { 
                         // promises.push(new Promise((resolve, reject)=>{ resolve(`Skipping removal due to it not running`) }))
-                        logger.info("Skipping removal due to it not running")
+                        store.logger.info("Skipping removal due to it not running")
                     }
                     // Promise.allSettled(promises).then((resp)=>{
                     //     resolve(resp)
@@ -249,7 +261,7 @@ export  class Module {
                     resolve()
                 })
             } catch(err){
-                logger.error("%s error in cancelling build",  err)
+                store.logger.error("%s error in cancelling build",  err)
                 reject(err)
             }
         });
@@ -281,14 +293,14 @@ export  class Module {
                     promises.push($this.loadImage(dependency_obj))
                 } else if (dependency_obj.type == 'orchestration'  ){
                     promises.push($this.orchestrateDownload(dependency_obj).catch((err)=>{
-                        logger.error("Error in downloading source url: %o", err);
+                        store.logger.error("Error in downloading source url: %o", err);
                         dependency_obj.status.downloading = false
 
                     }))
                 } else {
                     promises.push($this.downloadSource(dependency_obj, overwrite).then((response)=>{
                         dependency_obj.status.downloading = false  
-                        logger.info(`______Item download: ${dependency_obj.source.target}`)
+                        store.logger.info(`______Item download: ${dependency_obj.source.target}`)
                         checkExists(dependency_obj.source.target).then((exists)=>{
                             if (dependency_obj.decompress){ 
                                 store.logger.info("Decompressing required, doing so now for final target... %s", dependency_obj.target)
@@ -298,11 +310,11 @@ export  class Module {
                                         decompress_file(dependency_obj.decompress.source, path.dirname(dependency_obj.target)).then(()=>{
                                             dependency_obj.status.building = false
                                         }).catch((err) =>{
-                                            logger.error("Error in decompressing file: %o", dependency_obj.source)
+                                            store.logger.error("Error in decompressing file: %o", dependency_obj.source)
                                             dependency_obj.status.building = false
                                         } )                                       
                                     } else {
-                                        logger.info(`Skipping dependency decompression: ${dependency_obj.target} due to it existing`)
+                                        store.logger.info(`Skipping dependency decompression: ${dependency_obj.target} due to it existing`)
                                          dependency_obj.status.building = false
                                          
                                     }
@@ -310,15 +322,15 @@ export  class Module {
                             } 
                         })
                     }).catch((err)=>{
-                        logger.error("Error in downloading source url: %o", err);
+                        store.logger.error("Error in downloading source url: %o", err);
                         dependency_obj.status.downloading = false
 
                     }) ) 
                 }
                 Promise.allSettled(promises).then((res)=>{
-                    logger.info("Finished building module")
+                    store.logger.info("Finished building module")
                 }).catch((err)=>{
-                    logger.error("error in building process: %o", err)
+                    store.logger.error("error in building process: %o", err)
                 })
             })
             
@@ -334,15 +346,15 @@ export  class Module {
         return `Building dependencies for module:  ${$this.name} ${dependencies}`
 	} 
     async remove( ){
-		const $this = this;
+		const $this = this; 
         let promises = []
-        let objs = []
+        let objs = [] 
         let dependencies = this.dependencies
         dependencies.forEach((dependency_obj, i)=>{            
-            dependency_obj.status.downloading = true
-            objs.push(dependency_obj)
+            // dependency_obj.status.downloading = true
+            objs.push(dependency_obj) 
             if (dependency_obj.type == 'docker' || dependency_obj.type == 'docker-image'  ){
-                promises.push(remove_images(dependency_obj.target))
+                promises.push(remove_images(dependency_obj.target)) 
             }
             else{
                 promises.push(removeFile(dependency_obj.target, dependency_obj.type, false) )
@@ -379,7 +391,7 @@ export  class Module {
                             $this.dependencies[index].status.latest  = null
                         }
                     }).catch((err)=>{
-                        logger.error(err)
+                        store.logger.error(err)
                     })
 				} else if (dependency.type == "docker-local"){
 					promises.push(check_image(dependency.target))
@@ -393,6 +405,7 @@ export  class Module {
                 }
 			})
 			Promise.allSettled(promises).then((response, err)=>{
+                let v = []
 				response.forEach((dependency, index)=>{
 					if (dependency.status == 'fulfilled'){
 						dependencies[index].status.exists = dependency.value
@@ -402,15 +415,15 @@ export  class Module {
 						dependencies[index].status.exists = false
 						dependencies[index].status.version = null
 					}
+                    v.push(dependency.value)
 				})
-
-                let fully_installed = $this.dependencies.every((dependency)=>{
-                    return dependency.status.exists
+                let fully_installed = v.every((dependency)=>{
+                    return dependency
                 })
                 $this.status.fully_installed = fully_installed
 				resolve()
 			}).catch((err)=>{
-				logger.error(`${err} Error in checking target dependencies`)
+				store.logger.error(`${err} Error in checking target dependencies`)
 				reject(`${err} ${$this.name} Error in checking target dependencies`)
 			})
 			

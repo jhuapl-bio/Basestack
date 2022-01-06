@@ -34,3 +34,4 @@ src/system/server/dist
 client/*
 *.zip
 cromwell*
+!data/config

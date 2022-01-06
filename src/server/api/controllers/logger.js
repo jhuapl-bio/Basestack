@@ -9,7 +9,7 @@
 const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, label, printf } = format;
 import path  from "path"
-const { store }  = require("../../config/store/index.js")
+var  { store }  = require("../../config/store/index.js")
 const myFormat = printf(({ level, message, label, timestamp }) => {
   try{
     if (message.constructor === Object || message.constructor === Array    ) {
@@ -30,7 +30,7 @@ export const logger = createLogger({
     format.json(),
     format.splat(),
     format.prettyPrint(),
-    myFormat
+    myFormat 
   ),
   exitOnError: false,
   prettyPrint: true, 
@@ -41,7 +41,7 @@ export const logger = createLogger({
     // - Write all logs error (and below) to `error.log`.
     //
     new transports.File({ filename: store.system.logs.error, maxsize: 2000000,  maxFiles: 1, level: 'error', tailable:true, options: { flags: 'a' } }),
-    new transports.File({ filename: store.system.logs.logfile, maxsize: 2000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
+    new transports.File({ filename: store.system.logs.info, maxsize: 2000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
   ]
 });
 
@@ -59,7 +59,7 @@ export const dockerlogger = createLogger({
     // - Write to all logs with level `info` and below to `combined.log` 
     // - Write all logs error (and below) to `error.log`.
     //
-    new transports.File({ filename: store.system.logs.dockerLogFile, maxsize: 1000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
+    new transports.File({ filename: store.system.logs.docker, maxsize: 1000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
   ]
 });
 export const createLoggingObject = function( name ){
@@ -129,17 +129,20 @@ export const spawnLog =  function( stream, loggingObject ){
     logger.info(msg);
     if (loggingObject){
       loggingObject.info(msg)
-    }
+    } 
   });
   return logCapture
 }
-
+ 
 
 
 
 
 export var error_alert = function(err){
   let text = err;
+  if (!err){
+    return "Error"
+  }
   if (typeof(err) == 'string'){
     text = err
   }
@@ -155,10 +158,10 @@ export var error_alert = function(err){
         }
         text = JSON.stringify(err.json, null, 4)
       } catch(error){
-        logger.info(`Could not stringify json error message ${err}`)
+        logger.info(`Could not stringify json error message ${error}`)
         text = err.json
       }
-    }
+    } 
   } 
   else if (err.message){
     text = err.message    

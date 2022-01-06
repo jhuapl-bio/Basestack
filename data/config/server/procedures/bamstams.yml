@@ -1,6 +1,6 @@
 bamstats: #Top level is the left-hand selection of the menu and the major module to install 
   title: "Bamstats"
-  icon: "tree"
+  icon: "highlighter"
   component: "Bamstats"
   module: True
   init: false 

@@ -12,6 +12,13 @@
   module: False
   tooltip: "Install or Modify Modules as Docker Images"
   image: null
+- name: "customgenerator"
+  icon: "cog"
+  title: "Create"
+  component: "CustomGenerator"
+  module: False
+  tooltip: "Create your own custom services, modules, or procedures"
+  image: null
 - name: "playdashboard"
   icon: "globe"
   component: "PlayDashboard"

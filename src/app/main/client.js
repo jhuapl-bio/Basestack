@@ -29,13 +29,13 @@ export class  Client {
         const $this = this
         this.spawned_logs = function spawned_logs(bat, config){
             bat.stderr.on('data', (data) => {
-              $this.logger.error(data.toString());
+              console.log(data.toString());
               if (config.throwError){
                 throw new Error(data.toString())
               }
             });
             bat.stdout.on('data', (data) => {
-              $this.logger.info(`${data.toString()}`)
+              console.log(`${data.toString()}`)
             });
             bat.on('exit', (code) => {
               let message = `${config.process} exited with code: ${code}`
@@ -46,13 +46,18 @@ export class  Client {
                     disable_popup: true
                 })
               } 
-              $this.logger.info(message);
+              console.log(message);
             });
         }
 	}
+    updatePort(port){
+      console.log(`updating port to ${port}`)
+      process.env.PORT_SERVER = port
+      this.mainWindow.webContents.send("changePort", port)
+    }
     createMenu(){
         // let menu = makeMenu(this.this.logger)
-        this.logger.info("creating menu")
+        console.log("creating menu")
         let menu = new ClientMenu(this.logger, this.mainWindow, dialog, this.app, this.system, this.spawned_logs, this.updater)
         menu.store = this.store
         let m = menu.makeMenu()
@@ -89,26 +94,29 @@ export class  Client {
         ? `http://localhost:9080`
         : `file://${__dirname}/index.html`);
     
-        this.logger.info("winurl defined")
+        console.log("winurl defined")
         this.mainWindow.webContents.session.clearCache(function(){
         //some callback.
         });
         try{
           this.mainWindow.loadURL(winURL)
         } catch(err){
-          this.logger.info(err)
+          console.log(err)
         }
-
+        ipcMain.on("changePort", (event, arg) => {
+          process.env.PORT_SERVER = arg
+          event.reply('changePort', process.env.PORT_SERVER)
+        })
         ipcMain.on("queryRelease", (event, arg) => {
           event.reply('releaseNotes', $this.updater.releaseNotes)
         })
         ipcMain.on("checkUpdates", (event, arg) => {
-          $this.logger.info("Checking updates")
+          console.log("Checking updates")
           $this.updater.checkUpdates() 
         })
         ipcMain.on("mainN", (event, arg) => {
-          // $this.logger.info(event)
-          $this.logger.info("event")
+          // console.log(event)
+          console.log("event")
         })
         ipcMain.on("openDirSelect", (event, arg) => {
           dialog.showOpenDialog({
@@ -129,7 +137,7 @@ export class  Client {
       
         this.mainWindow.webContents.on('did-finish-load', function () {
           let quitUpdateInstall = false;
-          $this.logger.info("Basestack is finished loading")
+          console.log("Basestack is finished loading")
           function sendStatusToWindow(text) {
             dialog.showMessageBox($this.mainWindow, {
               type: 'info',
@@ -219,7 +227,7 @@ export class  Client {
         })  
       }
     checkUpdates(){
-        this.logger.info("checking updates")
+        console.log("checking updates")
         this.updater.checkUpdates()    
     }
 }

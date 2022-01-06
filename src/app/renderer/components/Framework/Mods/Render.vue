@@ -8,8 +8,8 @@
   -->
 <template>
   <div class="render" >
-	<b-row>
-		<object type="text/html" class="renderObj" :data="`http://localhost:${source.source}`">
+	<b-row v-if="status.exists && status.exists.running">
+		<object type="text/html" class="renderObj" :data="`http://localhost:${source.to}`">
 		</object>
 	</b-row>
   </div> 
@@ -39,7 +39,7 @@ export default {
 	},
 
 	beforeDestroy(){
-		this.cancel_module()
+		// this.cancel_module()
     },
 	methods: {
 		open_link (link,e) {

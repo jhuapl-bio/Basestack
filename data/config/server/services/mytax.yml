@@ -15,6 +15,7 @@ mytax_visualization:
   variables:
     port:
       element: "render"
+      column: 12
       from: "8086"
       to: "8086"
 mytax_create_json:
@@ -46,11 +47,11 @@ mytax_create_json:
       bind: 
         from: "%{variables.file.source}"
         to: "/opt/data"
-      class: "wb-50  p-3 mb-1"
+      class: "wb-100  p-3 mb-1"
       source: ""
     nodes:
       label: "Nodes.dmp file, gathered from ncbi taxonomy"
-      class: "wb-50 p-3 mb-1"
+      # class: "wb-100 p-3 mb-1"
       options:
         - element: null
           name: "default"
@@ -64,7 +65,7 @@ mytax_create_json:
           bind: 
             from: "%{variables.nodes.source}"
             to: "/taxonomy"
-          class: "wb-50  p-3 mb-1"
+          # class: "wb-100  p-3 mb-1"
           source: null
 mytax_kraken2_report:
   label: "Kraken2 Report"
@@ -94,11 +95,11 @@ mytax_kraken2_report:
       bind: 
         from: "%{variables.file.source}"
         to: "/opt/data"
-      class: "wb-50  p-3 mb-1"
+      class: "wb-100  p-3 mb-1"
       source: null
     db:
       label: "Input classifier database"
-      class: "wb-50 p-3 mb-1"
+      class: "wb-100 p-3 mb-1"
       options:
         - element: "dir"
           name: "Minikraken2"
@@ -108,11 +109,18 @@ mytax_kraken2_report:
             to: "/opt/databases" #This ${} is converted into the variable attribute of selected option only!
         - element: null
           name: "Flukraken2-2021"
-          target: "/opt/databases/${name}"
+          target: "/opt/databases/${name}" 
           variables: 
             name: "flukraken2"
           # cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken2"
-          # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index. 
+          # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index.
+        - element: null
+          name: "Marine Mitogenome"
+          target: "/opt/databases/ONRMitoGenome/${name}"
+          variables: 
+            name: "marine_mammal_mitochondrion-refseq-20210629"
+          # cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken2"
+          # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index.  
         - element: "dir"
           name: "Custom DB"
           source: null

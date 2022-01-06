@@ -22,7 +22,9 @@ let whiteListedModules = ['vue', 'vue-sweetalert2', 'epic-spinners', 'vuex', 'sw
 let rendererConfig = {
   devtool: 'source-map',
   entry: {
-    renderer: path.join(__dirname, '../src/app/renderer/main.js')
+    renderer: path.join(__dirname, '../src/app/renderer/main.js'),
+    logger: path.join(__dirname, "../src/shared/logger.js"),
+
   },
   externals: [
     ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))
