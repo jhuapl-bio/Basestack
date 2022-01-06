@@ -6,5 +6,5 @@ dind: #Top level is the left-hand selection of the menu and the major module to 
         type: "docker-local"
         build:
           file: "Dockerfile"
-          path: "${resourcePath}/server/config/modules/dind/Dockerfile" 
+          path: "${configPath}/modules/dind/Dockerfile" 
 

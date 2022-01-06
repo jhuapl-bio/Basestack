@@ -40,7 +40,7 @@ app.use((req,res,next)=>{
     "Access-Control-Allow-Methods",
     "GET, POST, PATCH,PUT, DELETE, OPTIONS"
   );
-  next();
+  next(); 
 })
 
 app.use(cors())

@@ -39,19 +39,19 @@
 			</b-col>
 		</b-row>
 		<b-tabs 
-			v-if="serviceStatuses"
 	        v-model="tab" 
 	        nav-wrapper-class="w-3" 
 	        left 
+			v-if="serviceStatuses"
         	style="" 
         >
 			<b-tab  
-				v-for="(entry, key) in serviceStatuses"
-				v-bind:key="key"
+				v-for="(entry,key) in serviceStatuses"
+				v-bind:key="entry.name"
 				class=""
 				>
 				<template v-slot:title style="">
-					<div >
+					<div >            
 						<span style=" font-size: 0.9em" class="text-sm-center">{{entry.name}}
 							<span style="">
 							<!-- <font-awesome-icon @click="jumpModule(key)" class="text-info configure" icon="external-link-alt"/> -->
@@ -62,13 +62,21 @@
 						
 					</div>
 				</template>
-				<div v-if="selectedTarget !== 'procedures'">
+				<div v-if="selectedTarget == 'services'">
 					<LogWindow v-if="entry.logs" :info="entry.logs.info"></LogWindow>
 				</div>			
-				<div v-else> 
+				<div v-else-if="selectedTarget == 'procedures'"> 
 					<div v-for="(entry2, key) in entry.services"
-						v-bind:key="key">{{entry2}}
+						v-bind:key="key">
 						<LogWindow v-if="entry2.log" :info="entry2.log.info"></LogWindow>
+						<hr>
+					</div>
+				</div>
+				<div v-else> 
+					<div v-for="(entry2, key) in entry.dependencies"
+						v-bind:key="key">
+						<LogWindow v-if="entry2.status && entry2.status.stream" :info="entry2.status.stream.info"></LogWindow>
+						<hr>
 					</div>
 				</div>
 			</b-tab>
@@ -95,7 +103,11 @@ export default {
 		Multiselect,
 		LogWindow,
 	},
-	
+	computed:{
+		statuses(){
+			return this.serviceStatuses
+		}
+	},
 	props: ['modules'],
 	data(){
 		return{
@@ -122,10 +134,11 @@ export default {
 			const $this = this
 			if (this.interval){
 				clearInterval(this.interval)
+				this.interval = null
 			}
+			this.serviceStatuses= []
 			if (newValue.length >=1){
 				this.interval = setInterval(()=>{
-					console.log('interval', $this.selectedTarget)
 					if ($this.selectedTarget == 'services'){
 						FileService.getSelectServicesStatuses({
 							items: newValue
@@ -140,10 +153,14 @@ export default {
 						FileService.getSelectModulesStatuses({
 							items: newValue
 						}).then((response)=>{
-							$this.checking = false
+							$this.checking = false 
 							$this.serviceStatuses = response.data.data
+							// response.data.data.forEach((entry, i)=>{
+							// 	$this.$set($this.serviceStatuses, i, entry)
+							// })
 						}).catch((err)=>{
 							// $this.$logger.error(err)
+							console.error(err)
 							$this.checking = false
 						})
 					} else {
@@ -151,7 +168,6 @@ export default {
 							items: newValue
 						}).then((response)=>{
 							$this.checking = false
-							console.log($this.serviceStatuses)
 							$this.serviceStatuses = response.data.data
 						}).catch((err)=>{
 							// $this.$logger.error(err)
@@ -164,8 +180,6 @@ export default {
 				this.serviceStatuses = []
 			}
 		}
-	},
-	computed: {
 	},
 	async mounted(){
 		const $this = this	

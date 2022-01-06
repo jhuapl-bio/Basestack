@@ -14,8 +14,8 @@ let { Server } = require("./serverClass.js")
 // const { define_configuration } = require("./api/controllers/configurations.js")
 
 
-export async function create_server(port){
-    return new Promise((resolve, reject)=>{
+export async function create_server(port){ 
+    return new Promise((resolve, reject)=>{ 
         console.log("creating server........")
         
         let server = new Server((port ? port : process.env.PORT_SERVER))
@@ -33,7 +33,7 @@ export async function create_server(port){
 console.log(process.env.NODE_ENV, "Node Environment")
 if (process.env.NODE_ENV == 'development' || process.env.serveProduction == 'true'){
     console.log(store.system.configPath)
-    
+     
     create_server().catch((err)=>{
         console.error(err) 
     }).then((e)=>{

@@ -967,6 +967,9 @@ router.post("/modules/status/select", (req,res,next)=>{ // build workflow accord
 				let { streamObj, ...newObj } = d //Remove the stream obj on return 
 				return newObj
 			})
+			// let fullStatus = dependencies_list.map((dependency)=>{
+			// 	return dependency.status.stream
+			// })
 			let returnable = { 
 				name: module,
 				custom: value.custom,
@@ -978,15 +981,7 @@ router.post("/modules/status/select", (req,res,next)=>{ // build workflow accord
 				returnable[key]  = value
 			}
 			data.push(returnable)
-			// data.push(
-			// 	{
-			// 		installed: serv.status.fully_installed,
-			// 		status: serv.status.exists, 
-			// 		logs: serv.status.stream,
-			// 		name: serv.name,
-			// 		dependencies: serv.dependencies
-			// 	}
-			// ) 
+			
 		})
 		
 		res.status(200).json({status: 200, message: "retrieved status(es) for modules", data: data });

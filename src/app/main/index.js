@@ -115,8 +115,8 @@ client.app.on('ready', () => {
       client.createUpdater()
       client.logger.info("Checking for updates...")
       client.checkUpdates()
-      client.logger.info("Creating menu")
-      client.createMenu();
+      client.logger.info("Creating menu ")
+      client.createMenu(); 
       try{
         (async () => {
           try{

@@ -47,7 +47,7 @@ export class ClientMenu {
 		{
 			label: 'System',
 			submenu: [
-			{
+			{ 
 				label: 'Refresh Server (current Port)',
 				click() {   
 					if (process.env.NODE_ENV == 'production'){
