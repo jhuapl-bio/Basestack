@@ -8,10 +8,10 @@
   -->
 <template>
   <div id="string" >
-  	<b-form-input
+  	<v-text-field
         v-model="value"
     >
-    </b-form-input>
+    </v-text-field>
   </div>
 </template>
 

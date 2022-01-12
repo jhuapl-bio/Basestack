@@ -8,10 +8,9 @@
   -->
 <template>
   <div class="render" >
-	<b-row v-if="status.exists && status.exists.running">
-		<object type="text/html" class="renderObj" :data="`http://localhost:${source.to}`">
-		</object>
-	</b-row>
+	<v-row v-if="status.exists && status.exists.running">
+		<object type="text/html" class="renderObj" :data="getUrl()"></object>
+	</v-row>
   </div> 
   
 </template>
@@ -46,6 +45,13 @@ export default {
 			e.stopPropagation()
 			this.$emit("open", link)
       	},
+		  getUrl(){
+			  let url  = `http://localhost:${this.source.to}`
+			  if (this.source.suburl){
+				  url = url + this.source.suburl
+			  }
+			  return url
+		  }
 	}
 };
 </script>

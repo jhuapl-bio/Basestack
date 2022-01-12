@@ -1,15 +1,17 @@
 <template>
-  <b-row>
-    <div class="label-entry" ><strong class="text-center">System</strong><br></div>
-    <div 
-      v-for="entry in fields_docker"
-      :key="entry.key"
-      class="entry"
-    >
-        <p class="entry-label" v-if="resources.os[entry.key]">{{ entry.label }}</p>
-        <p class="entry-description"> {{ resources.os[entry.key] }}</p>
-    </div>
-  </b-row>
+  <v-list dense>
+    <v-subheader>System</v-subheader>
+      <v-list-item
+        v-for="entry in fields_docker"
+        :key="entry.key"
+        class="entry"
+      >
+          <v-list-item-content>
+            <v-list-item-title v-text="entry.label "></v-list-item-title>
+            <v-list-item-subtitle v-text=" resources.os[entry.key]  "></v-list-item-subtitle>
+          </v-list-item-content>
+      </v-list-item>
+    </v-list>
 </template>
 
 <script>

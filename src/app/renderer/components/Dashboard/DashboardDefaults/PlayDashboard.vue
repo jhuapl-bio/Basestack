@@ -7,22 +7,23 @@
   - # **********************************************************************
   -->
 <template>
-	<div class="mainContent">
-		<b-tabs 
-	        v-model="tab" 
-			v-if="defaultModule.options"
-			content-class="mt-3"
-        >
-			<b-tab   v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
-          		<component
-					:is="option.component"
-				>
-				</component>
-        	</b-tab>
-		</b-tabs>
-          
-        
-	</div>
+	
+		<div  class="box">
+			<v-tabs 
+				v-model="tab" 
+				v-if="defaultModule.options"
+				content-class="mt-3"
+			>
+				<v-tab   v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
+					
+						<component
+							:is="option.component"
+						>
+						</component>
+					
+				</v-tab>
+			</v-tabs>    
+		</div>     
 </template>
 
 <script>

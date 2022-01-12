@@ -10,69 +10,48 @@
   <div id="customgenerator" style="text-align:center" >
 	
   	<div style="text-align:center; margin:auto; width:100%" >
-        <b-form-group
-            label="Type of Customizable Entry (Service, Module, Procedure)"            
-            label-align-sm="center"
-            label-size="sm"
-            id="manifest_label"
-            label-for="filterInput"
-            class="mb-0 formGroup"						           
-        > 
-            <b-form-select
-                :options="options" 
-                v-model="selected_option"
-                
-            >
-            </b-form-select>
-        </b-form-group>
-        <b-form-group
-            label="Type of Custom Generator (Text, File.yml)"
-            label-align-sm="center"
-            label-size="sm"
-            id="manifest_label"
-            label-for="filterInput"
-        > 
-            <b-form-select
-                :options="types"
-                v-model="selected_type"
-                
-            >
-            </b-form-select>
-        </b-form-group>
-        <b-form-group
-            :label="`Create Custom ${selected_option} from ${selected_type}`"
-            label-align-sm="center"
-            label-size="sm"
-            id="manifest_label"
-            label-for="filterInput"
-            class="mb-0 formGroup"						           
+        <v-select
+            :items="options" 
+            label="Type of Customizable Entry (Service, Module, Procedure)" 
+            v-model="selected_option"
+            
         >
-            <b-form-select
-                v-if="selected_type == 'text'"
-                :options="textTypes"
-                v-model="textType"
-                
-            >
-            </b-form-select>
-            <b-form-textarea
-                v-model="text"
-                rows="8"
-                v-if="selected_type == 'text'"
+        </v-select>
+
+        <v-select
+            :items="types"
+            v-model="selected_type"
+            label="Type of Custom Generator (Text, File.yml)"
+        >
+        </v-select>
+
+        <v-select
+            v-if="selected_type == 'text'"
+            :items="textTypes"
+            v-model="textType"
+            :label="`Create Custom ${selected_option} from ${selected_type}`"
             
-            >
-            </b-form-textarea>
-            
-            <b-form-file
-                v-model="file"
-                v-else
-            >
-            </b-form-file>
-            <b-button
-                class="btn sideButton"
-                @click="save()"
-            > Save Input
-            </b-button>
-        </b-form-group>
+        >
+        </v-select>
+        <v-input-textarea
+            v-model="text"
+            rows="8"
+            v-if="selected_type == 'text'"
+        
+        >
+        </v-input-textarea>
+        
+        <v-file-input
+            v-model="file"
+            label="Input Custom YAML or JSON file"
+            v-else
+        >
+        </v-file-input>
+        <v-btn
+            class="btn sideButton"
+            @click="save()"
+        > Save Input
+        </v-btn>
   	</div>
   </div >
 </template>

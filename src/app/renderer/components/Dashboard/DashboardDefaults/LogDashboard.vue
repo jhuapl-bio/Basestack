@@ -7,18 +7,21 @@
   - # **********************************************************************
   -->
 <template>
-	<div class="mainContent">
-		<b-row id="topLogs" style="text-align:right; ">
-			<b-col sm="4">
+	<v-card class="" style="margin-top: 5%; margin-right: 5%;">
+		<v-row id="topLogs" >
+			<v-col sm="4">
 
 				
-				<b-form-select
+				<v-select
 					v-model="selectedTarget" 
-					:options="['modules', 'services', 'procedures']" 
-					
+					:items="['modules', 'services', 'procedures']" 
+					:select-size="4"
+					:menu-props="{ maxHeight: '400' }"
+					label=  "Select Target"
+					:hint="`Choose 1 or more ${selectedTarget}`"
 				>
 					
-				</b-form-select>
+				</v-select>
 				<span
 					class="text-secondary"
 				>
@@ -26,66 +29,105 @@
 					<!-- <font-awesome-icon  class=" configure" icon="plus"/> -->
 					Logging type
 				</span>
-			</b-col>
-			<b-col sm="8">
-				<b-form-select
+			</v-col>
+			<v-col sm="8">
+				<v-select
 					v-model="selected" 
-					:options="names[selectedTarget]" 
+					:items="names[selectedTarget]" 
 					:select-size="4"
+					prepend-icon="$comment"
+					:label=  "`Select ${selectedTarget}`"
+					:hint="`Choose 1 or more ${selectedTarget}`"
 					multiple
+          			persistent-hint
 				>
-					
-				</b-form-select>
-			</b-col>
-		</b-row>
-		<b-tabs 
-	        v-model="tab" 
-	        nav-wrapper-class="w-3" 
-	        left 
-			v-if="serviceStatuses"
-        	style="" 
-        >
-			<b-tab  
-				v-for="(entry,key) in serviceStatuses"
-				v-bind:key="entry.name"
-				class=""
-				>
-				<template v-slot:title style="">
-					<div >            
-						<span style=" font-size: 0.9em" class="text-sm-center">{{entry.name}}
-							<span style="">
-							<!-- <font-awesome-icon @click="jumpModule(key)" class="text-info configure" icon="external-link-alt"/> -->
-							<font-awesome-icon @click="removeLog(key)" class="text-error configure" icon="times"/>
-							</span>
+					<template v-slot:prepend-item>
+						<v-list-item
+							ripple
+							@mousedown.prevent
+							@click="toggle"
+						>
+						<v-list-item-action>
+							<v-icon :color="selected.length > 0 ? 'white darken-4' : ''">
+								{{ icon }}
+							</v-icon>
+						</v-list-item-action>
+						<v-list-item-content>
+							<v-list-item-title>
+							Select All
+							</v-list-item-title>
+						</v-list-item-content>
+						</v-list-item>
+						<v-divider class="mt-2"></v-divider>
+					</template>
+					<template v-slot:selection="{ item, index }">
+						<v-chip v-if="index <= 2">
+						<span>{{ item }}</span>
+						</v-chip>
+						<span
+							v-if="index === 3"
+							class="grey--text text-caption"
+						>
+						(+{{ selected.length - 3 }} others)
 						</span>
-						
-						
-					</div>
-				</template>
-				<div v-if="selectedTarget == 'services'">
-					<LogWindow v-if="entry.logs" :info="entry.logs.info"></LogWindow>
-				</div>			
-				<div v-else-if="selectedTarget == 'procedures'"> 
-					<div v-for="(entry2, key) in entry.services"
-						v-bind:key="key">
-						<LogWindow v-if="entry2.log" :info="entry2.log.info"></LogWindow>
-						<hr>
-					</div>
-				</div>
-				<div v-else> 
-					<div v-for="(entry2, key) in entry.dependencies"
-						v-bind:key="key">
-						<LogWindow v-if="entry2.status && entry2.status.stream" :info="entry2.status.stream.info"></LogWindow>
-						<hr>
-					</div>
-				</div>
-			</b-tab>
-		</b-tabs>
-		
+					</template>
+				</v-select>
+			</v-col>
+		</v-row>
+		<v-tabs 
+	        v-model="tab" 
+			show-arrows
+			next-icon="$arrow-alt-circle-right"
+      		prev-icon="$arrow-alt-circle-left"
+			v-if="serviceStatuses"
+			icons-and-text class="p-0 m-0"
+        >
+			<v-tabs-slider color="teal lighten-3"></v-tabs-slider>
 
-          
-        
-	</div>
+			<v-tab  
+				v-for="(entry,key) in serviceStatuses"
+				v-bind:key="entry.name" class=""
+				>
+				<span >{{entry.name}}</span>
+				
+				<v-tooltip bottom>
+					<template v-slot:activator="{ on }">
+						<!-- <v-btn right v-on="on" class="text-right"> -->
+							<v-icon   v-on="on"   x-small @click="removeLog(key)">$times</v-icon>
+						<!-- </v-btn> -->
+					</template>
+					Close Log 
+				</v-tooltip>
+				<!-- <v-icon x-small @click="jumpModule(key)">$book</v-icon> -->
+				
+			</v-tab>
+		</v-tabs>
+		<v-tabs-items v-model="tab">
+			<v-tab-item v-for="(entry,key) in serviceStatuses"
+				v-bind:key="entry.name"   >
+					<v-card >            
+						<div v-if="selectedTarget == 'services'">
+							<LogWindow v-if="entry.logs" :info="entry.logs.info"></LogWindow>
+						</div>			
+						<div v-else-if="selectedTarget == 'procedures'"> 
+							<div v-for="(entry2, key) in entry.services"
+								v-bind:key="key">
+								<LogWindow v-if="entry2.log" :info="entry2.log.info"></LogWindow>
+								<hr>
+							</div>
+						</div>
+						<div v-else> 
+							<div v-for="(entry2, key) in entry.dependencies"
+								v-bind:key="key">
+								<LogWindow v-if="entry2.status && entry2.status.stream" :info="entry2.status.stream.info"></LogWindow>
+								<hr>
+							</div>
+						</div>
+						
+					</v-card>
+			</v-tab-item >
+		</v-tabs-items>
+	</v-card>
 </template>
 
 <script>
@@ -106,7 +148,18 @@ export default {
 	computed:{
 		statuses(){
 			return this.serviceStatuses
-		}
+		},
+		selectedAll () {
+        return this.selected.length === this.selected.length
+		},
+		selectedSome () {
+			return this.selected.length > 0 && !this.selectedAll
+		},
+		icon () {
+			if (this.selectedAll) return '$square-full'
+			if (this.selectedSome) return '$square-full'
+			return '$square-full'
+      	},
 	},
 	props: ['modules'],
 	data(){
@@ -130,6 +183,9 @@ export default {
 		
 	},
 	watch:{
+		selectedTarget(){
+			this.selected = []
+		},
 		selected: function(newValue, oldValue){
 			const $this = this
 			if (this.interval){
@@ -188,6 +244,7 @@ export default {
 			
 		FileService.getAllServiceNames().then((response)=>{
 			this.names.services = response.data.data
+			this.selected = [response.data.data[0]]
 		})
 		FileService.getAllProcedureNames().then((response)=>{
 			this.names.procedures = response.data.data
@@ -200,6 +257,18 @@ export default {
 	},
 
 	methods: {
+	  jumpModule(key){
+		  console.log(key,"<<<<")
+	  },
+	  toggle () {
+        this.$nextTick(() => {
+          if (this.selected) {
+            this.selected = []
+          } else {
+            this.selected = this.names[this.selectedTarget].slice()
+          }
+        })
+      },
       removeLog(key){
 		  this.selected.splice(key, 1)
 		//   this.moduleStatuses.splice(key, 1)

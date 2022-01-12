@@ -1,6 +1,7 @@
 dind:
   command: []
   init: false
+  label: "Orchestrator"
   depends:
     - id: "dind"
       type: "module"

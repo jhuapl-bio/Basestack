@@ -21,13 +21,14 @@ const { spawnLog, createLoggingObject } = require("../controllers/logger.js")
 var logger = store.logger
 // var docker = new Docker();
 const fs = require("file-system")
-let dockerObj;
+let dockerObj;  
 
 export class Procedure {
 	constructor(name, params){
-		this.name = name
+		this.name = name 
         this.params = params
         this.services_config = params.services
+        this.service_steps = {}
 		this.container = null;
 		this.cmd = null;
 		this.options = {};
@@ -42,8 +43,12 @@ export class Procedure {
             checking: false,
             interval: this.create_interval()
         }
-	}
+        this.services_config.forEach((service)=>{
+            this.service_steps[service] = false
+        })
 
+	}
+    
 
 
 
@@ -51,16 +56,16 @@ export class Procedure {
     async create_interval (){
         const $this = this
         let interval = setInterval(()=>{
-            // if (!$this.interval.checking){
-            //     $this.interval.checking = true
-            //     $this.statusCheck().then((state)=>{
-            //         $this.interval.checking = false
-            //     }).catch((err)=>{
-            //         logger.error("%s err in status check interval for %s",err, $this.name)
-            //         $this.interval.checking = false
-            //     })
-            // }
-        }, 2000)
+            if (!$this.interval.checking){
+                $this.interval.checking = true
+                $this.statusCheck().then((state)=>{
+                    $this.interval.checking = false
+                }).catch((err)=>{
+                    logger.error("%s err in status check interval for %s",err, $this.name)
+                    $this.interval.checking = false
+                })
+            }
+        }, 4000)
 
 
         return interval
@@ -80,7 +85,7 @@ export class Procedure {
         for( let [key, service] of Object.entries(this.services)){
             services[key] = {
                 variables: service.config.variables
-            }
+            } 
 
         }
         if ($this.params.init){
@@ -146,14 +151,34 @@ export class Procedure {
     async statusCheck(){
 		const $this = this;
 		return new Promise(function(resolve,reject){
-            let dependencies = $this.dependencyCheck()
-            resolve(dependencies)
-        })
+            let promises = []
+                let running = false
+                for (let [key, service] of Object.entries($this.services)){
+                    let index = $this.services_config.indexOf(key)
+                    let step = null;
+                    if (index > -1){
+                        if(service.status.exists.running){
+                            $this.service_steps[key] = true
+                            running = true
+                        } else {
+                            $this.service_steps[key] = false
+                        }
+
+                    }
+                } 
+                $this.status.running = running
+                resolve()
+            $this.dependencyCheck().then((dependencies)=>{
+                resolve()
+            }).catch((err)=>{
+                store.logger.error("%o error in dependency check for procedure %s", err, $this.name)
+            })
+        }) 
 	}
 
 	// async statusCheck(){
 	// 	const $this = this;
-	// 	return new Promise(function(resolve,reject){
+	// 	return new Promise(function(resolve,reject){ 
     //         (async ()=>{
     //             let status = await check_container($this.service.name)
     //             $this.service.status.running = status.running
@@ -243,9 +268,6 @@ export class Procedure {
                             })
                         }
                         services[link.input.service] = { variables: serviceInput }
-                    } else {
-                        console.log(serviceInput.variables)
-
                     }
                 })
             }

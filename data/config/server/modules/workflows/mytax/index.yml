@@ -6,18 +6,6 @@ mytax:
   dependencies:
     - target: "jhuaplbio/basestack_mytax"
       type: "docker"
-    # - source: 
-    #     url: "http://www.google.com"
-    #     type: "file"
-    #     user: anonymous
-    #     target: "${writePath}/workflows/mytax/googlefile.tar.gz"
-    #   label: "Minikraken2"
-    #   type: "download" 
-    #   decompress: 
-    #     format: "tgz"
-    #     source: "${writePath}/workflows/mytax/googlefile.tar.gz"
-    #   target: "${writePath}/workflows/mytax/googlefile.txt"
-    #   overwrite: true
     - source: 
         url: "ftp.ccb.jhu.edu"
         type: "file"
@@ -43,9 +31,9 @@ mytax:
       decompress: 
         format: "tgz"
         overwrite: true
-        target: "${writePath}/workflows/mytax/centrifuge/p_compressed+h+v.2.cf"
+        target: "${writePath}/workflows/mytax/centrifuge/p_compressed+h+v.3.cf"
         source: "${writePath}/workflows/mytax/centrifuge/centrifuge.tgz"
-      target: "${writePath}/workflows/mytax/centrifuge/centrifuge"
+      target: "${writePath}/workflows/mytax/centrifuge"
       overwrite: false 
       label: "Minicentrifuge"
     - source: 

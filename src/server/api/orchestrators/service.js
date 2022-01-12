@@ -13,13 +13,13 @@ var Docker = require('dockerode');
 const path = require("path") 
 var  { store }  = require("../../config/store/index.js")
 const {  validateFramework } = require("../controllers/validate.js")
-const { readFile, writeFile, copyFile } = require("../controllers/IO.js")
+const { readFile, writeFile, copyFile } = require("../controllers/IO.js") 
 const { module_status }  = require("../controllers/watcher.js")
 const { check_container,  } = require("../controllers/fetch.js")
 const { spawnLog } = require("../controllers/logger.js")
 var logger = store.logger 
 // var docker = new Docker();
-const fs = require("file-system")
+const fs = require("file-system") 
 let dockerObj;
 
 export class Service {
@@ -44,7 +44,7 @@ export class Service {
     async create_interval (){
         const $this = this
 		let checking = false
-
+        
         let interval = setInterval(()=>{
             if (!checking){
                 checking = true
@@ -151,15 +151,15 @@ export class Service {
         this.options = data
         return "Success in getting options" 
     }
-    async stop() {
+    async stop() { 
 		let container_name = this.name;
-		return new Promise(function(resolve,reject){ 
+		return new Promise(function(resolve,reject){  
 			// delete store.modules[container_name]
 			var container = store.docker.getContainer(container_name).remove({force:true}, function(err,data){
-				if (err){
+				if (err){   
 					logger.error("%s %s %o", "Error in stopping docker container: ",container_name, err)
 					reject(`Module does not exist: ${container_name}`)
-				} else {
+				} else { 
 					logger.info("%s %s", "Success in removing container: ", container_name)
 					resolve(`Success in stop module: ${container_name}`)
 				}
@@ -172,7 +172,7 @@ export class Service {
             ( async ()=>{
                 let name = $this.name;
                 let exists = await check_container($this.name)
-                if ( (exists.running || exists.exists && $this.config.force_restart) || (!$this.config.force_restart && exists.exists)){
+                if ( ( exists.exists && $this.config.force_restart) ||  exists.exists ){
                     logger.info("Force restarting")
                     await $this.stop() 
                 } 
@@ -467,7 +467,7 @@ export class Service {
                     let filepath = ( selected_option.copy.basename ?   
                         path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
                         selected_option.copy.to
-                    )
+                    ) 
                     promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
                         logger.error(err)
                     }))
@@ -488,10 +488,10 @@ export class Service {
                             binds.push(`${path.dirname(from)}:${to}`) 
                         } else {  
                             if (!selected_option.port ){ 
-                                binds.push(`${from}:${to}`) 
-                                env.push(`${name}=${to}`) 
+                                binds.push(`${to}:${from}`) 
+                                env.push(`${name}=${from}`) 
                             } else if (selected_option.port ){
-                                options = $this.updatePorts([`${selected_option.from}:${selected_option.to}`], options)
+                                options = $this.updatePorts([`${selected_option.to}:${selected_option.from}`], options)
                             } 
                         }
                     } catch(err){
@@ -504,7 +504,7 @@ export class Service {
                 if (cmd){ 
                     if (selected_option.placement){
                         options.Cmd[selected_option.placement] =  selected_option.cmd + " && " + options.Cmd[selected_option.placement]
-                    }
+                    } 
                 }
             }   
             if (! options.Image ){ 
@@ -513,7 +513,7 @@ export class Service {
             options.Env = [...options.Env, ...env]   
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...binds]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
-            Promise.all(promises).then((response)=>{
+            Promise.all(promises).then((response)=>{ 
                 logger.info("Finished all promises")
             }).catch((err)=>{
                 reject(err)

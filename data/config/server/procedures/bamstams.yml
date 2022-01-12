@@ -6,5 +6,5 @@ bamstats: #Top level is the left-hand selection of the menu and the major module
   init: false 
   tooltip: "Run Bamstats report with Dockstore"
   services:
-    - orchestrator
+    - dind
     - bamstats

@@ -48,7 +48,8 @@ const {
 	getServerStatus,
 	fetch_external_dockers,
 	getExternalSource,
-	getRemoteConfigurations
+	getRemoteConfigurations,
+	fetch_docker_stats
 	} = require("../controllers/fetch.js")
 const cloneDeep = require("lodash.clonedeep");
 
@@ -138,15 +139,13 @@ router.get("/server/status/fetch", (req,res,next)=>{
 		res.status(419).send({status: 419, message: error_alert(err) });
 	}
 })
-router.get("/docker/status/fetch", (req,res,next)=>{
+router.get("/docker/status/get", (req,res,next)=>{
 	try {
 		logger.info("docker status")
-		getMeta().then((response)=>{
-			logger.info(`getting docker status... ${response}`)
+		fetch_docker_stats().then((response)=>{
 			res.status(200).json({status: 200, data: response, message: "Docker is running" });
-		}).catch((err)=>{
-			logger.error(`Error in Docker Status Fetch ${err}`)
-			res.status(419).send({status: 419, message: error_alert(err) });
+		}).catch((Err)=>{
+			res.status(419).send({status: 419, message: error_alert(Err) });
 		})
 	} catch(err){
 		logger.error(`Error in docker status fetch ${err}`)
@@ -807,7 +806,7 @@ router.get("/services/custom/get", (req,res,next)=>{ // build workflow according
 router.get("/procedures/get", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		let procedures = Object.entries(store.procedures)
-		let data = []
+		let data = {}
 		procedures.forEach((val)=>{ 
 			let returnables = []
  
@@ -830,7 +829,7 @@ router.get("/procedures/get", (req,res,next)=>{ // build workflow according to n
 			returnable.status = status
 			returnable.services = services
 			
-			data.push(returnable)
+			data[name] = returnable
 		
 
 		})
@@ -869,34 +868,58 @@ router.get("/procedures/custom/get", (req,res,next)=>{ // build workflow accordi
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
+router.get("/service/get/:service", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let service = store.services[req.params.service]
+		let data = service.config
+		res.status(200).json({status: 200, message: "retrieved procedure specifics information", data: data });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting procedure status(es)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
 
 
 router.get("/procedure/status/:procedure", (req,res,next)=>{ // build workflow according to name and index
 	try {
-		let procedures = []
-		for (let [key, value] of Object.entries(store.procedures)){
-			if (key == req.params.procedure){
-				procedures.push(value)
-			}
-		}
+		let procedure = store.procedures[req.params.procedure]
+	
+		// for (let [key, value] of Object.entries(store.procedures)){
+		// 	if (key == req.params.procedure){
+		// 		procedures.push(value)
+		// 	}
+		// }
+		let procedure_steps = procedure.service_steps;
+		let services = Object.keys(procedure_steps).map((step)=>{
+			let service = store.services[step].config
+			let serviceStatus = store.services[step].status
+			service.name = step
+			service.status = serviceStatus.exists
+			return service
 			
-		let data = {}
-		procedures.forEach((procedure)=>{ 
-			let returnable = {name: procedure.name, services: []}
-			let staged_services = {}
-			if (procedure.services){
-				for (let [key, service] of Object.entries(procedure.services)){
-					data[key] =
-						{ 
-							installed: service.status.fully_installed,
-							exists: service.status.exists,
-							log: service.status.stream,
-							dependencies: service.dependencies
-						}
-					
-				}
-			}
 		})
+		let data = {
+			services: services,
+			fully_installed: procedure.status.fully_installed,
+			running: procedure.status.running
+		}
+		// procedures.forEach((procedure)=>{ 
+		// let returnable = {name: procedure.name, services: []}
+		let staged_services = {}
+		// console.log(data,"<<<<")
+		// if (procedure.services){
+		// 	for (let [key, service] of Object.entries(procedure.services)){
+		// 		data[key] =
+		// 			{ 
+		// 				installed: service.status.fully_installed,
+		// 				exists: service.status.exists,
+		// 				log: service.status.stream,
+		// 				dependencies: service.dependencies
+		// 			}
+				
+		// 	}
+		// }
+		// })
 		res.status(200).json({status: 200, message: "retrieved procedure specifics information", data: data });
 	} catch(err2){
 		logger.error("%s %s", "Error in getting procedure status(es)", err2)
@@ -1013,7 +1036,35 @@ router.post("/services/status/select", (req,res,next)=>{ // build workflow accor
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
-
+router.get("/procedure/status/:procedure", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let p = req.params.procedure
+		let data = []
+		console.log("yes")
+		let procedure = store.procedures[p]
+		console.log(procedure)
+		let returnable = {name: procedure.name, services: []}
+		let staged_services = [] 
+		if (procedure.services){
+			for (let [key, service] of Object.entries(procedure.services)){
+					staged_services.push(
+						{
+							installed: service.status.fully_installed,
+							exists: service.status.exists,
+							log: service.status.stream,
+							name: service.name,
+							dependencies: service.dependencies
+						}
+					) 
+			}
+			returnable.services = staged_services
+		}
+		res.status(200).json({status: 200, message: "retrieved status(es) for procedure", data: returnable });
+	} catch(err2){
+		logger.error("%s %s", "Error in getting procedure status(es)", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
 router.post("/procedures/status/select", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		let procedures_names = req.body.items

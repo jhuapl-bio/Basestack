@@ -432,7 +432,6 @@ export async function fetch_docker_stats(){
 		let docker = {
 			KernelVersion: docker_info.KernelVersion,  
 			Driver: docker_info.Driver,
-			images: docker_info.images,
 			ContainersRunning: docker_info.ContainersRunning,
 			ServerVersion: docker_info.ServerVersion,
 			DockerRootDir: docker_info.DockerRootDir,
@@ -500,20 +499,7 @@ export async function fetch_status(){
 		// response.docker.installed = true
 		errors.push(err)
 	}
-	try{
-		let docker_status = await getDockerStatus()
-		response.docker.running = true
-		try{  
-			let docker_stats = await fetch_docker_stats()
-			response.docker.stats = docker_stats
-		} catch(err2){   
-			response.docker.stats = null
-			errors.push(err2)
-		}
-	} catch(err){
-		response.docker.running = false
-		errors.push(err)
-	}
+	
 	response.ready = store.system.ready
 	// logger.info("%j %j", response.docker.running, response.docker.installed)
 	return response

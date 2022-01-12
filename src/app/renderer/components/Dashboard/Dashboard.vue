@@ -7,29 +7,51 @@
   - # **********************************************************************
   -->
 <template>
-	<b-row class="mainContent">
-		<b-col sm="7" style="background: white; overflow-y:auto">
-			<div style="width:100%; ">
-				<b-img style="" :src="require('@/assets/Basestack_multiple_landing.png')" fluid alt="JUHAPL"></b-img>
-			</div>
-		</b-col>
+	<v-container  fluid grid-list-xl>
+    	<v-layout row justify-space-between>
+			<v-flex xs6>
+				<v-card>
+					<v-img 
+						contain
+						width="100%"
+						height="100%"
+						:src="require('@/assets/Basestack_multiple_landing.png')" fluid alt="JUHAPL">
+					</v-img>
+					<v-divider></v-divider>
 
-		<b-col sm="5">
-			<!-- <b-row><a href="#" @click="emitChange( {target: 'tab', value: -1})   ">All System Details</a>
-			</b-row> -->
-			<b-row>
-				<Sys class="sidebox"
-				/>
-				<About class="sidebox"></About>
-			</b-row>
-			
+					<About class=""></About>
+					<v-divider></v-divider>
+					<v-card>
+					<br> 
+					<v-input
+						disabled
+						label="Backend Port"
+					>
+					</v-input>
+						<v-text-field
+							hint="Only change if the default port (5003) is in use"
+							label="Change the backend server port to use"
+							v-model="port" type="number"
+							min="1000" max="9999"
+							append-icon="$download"
+							@click:append="changePort(port)"
+							clearable
+						>
+						</v-text-field>
+					</v-card>
+				</v-card>
 				
+				
+			</v-flex>
+			
+			<v-flex xs6>
+				<Sys class=""
+				/>
+				
+			</v-flex>
+		</v-layout>
 		
-		
-		</b-col>
-          
-        
-	</b-row>
+	</v-container>
 </template>
 
 <script>
@@ -40,12 +62,14 @@ import Sys from '@/components/Dashboard/System/Sys'
 import About from '@/components/Dashboard/DashboardDefaults/About'
 import Library from '@/components/Dashboard/DashboardDefaults/Library'
 
+import Docker from "@/components/Dashboard/System/Docker";
  
 
 export default {
 	name: 'mainpage',
 	components:{
 		Sys,
+		Docker, 
 		Library,
 		About
 	},
@@ -55,6 +79,7 @@ export default {
 		return{
 			status: {},
 			system: {},
+			port: process.env.PORT_SERVER,
 		}
 	},
 	created(){
@@ -78,7 +103,10 @@ export default {
 	methods: {
       emitChange( data){
 		   this.$emit("emitChange", data)
-	  }
+	  },
+	  changePort(val){
+        this.$electron.ipcRenderer.send("changePort", val)
+      },
       
 	}
 };

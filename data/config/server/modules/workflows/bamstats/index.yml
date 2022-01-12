@@ -6,6 +6,7 @@ bamstats:
   dependencies:
     - target: "jhuaplbio/basestack_orchestrator"
       type: "docker-local"
+      label: "jhuaplbio/basestack_orchestrator"
       build:
         file: "Dockerfile"
         path: "${resourcePath}/server/config/modules/dind/Dockerfile" 
@@ -15,6 +16,7 @@ bamstats:
         remove: false
         target: "${writePath}/workflows/bamstats/Dockstore.json"
       type: "dockstore-configuration" 
+      label: "Dockstore JSON"
       target: "${writePath}/workflows/bamstats/Dockstore.json"
       bind: "${writePath}/workflows/bamstats/:/tmp"
       workingdir: "/tmp"

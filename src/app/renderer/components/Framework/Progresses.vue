@@ -8,15 +8,31 @@
   -->
 <template>
   <div id="progresses" >
-  	<b-table
+  	<v-data-table
         v-if="progresses"
         small
-        id="statuses_table"
-        class="formGroup-input"
+        :headers="headers"
         :items="progresses"
-        sticky-header="700px"						        
+        :items-per-page="5"
+        class="elevation-1"					        
     >	
-        <template  v-slot:cell(status)="row">
+        <template v-slot:item.status="{ item }">
+            <v-icon 
+                v-if="item.type == 'files'"
+                small> {{item.status.complete}} / {{item.status.total}}
+            </v-icon>
+            <v-icon 
+                v-else-if="item.status.total <= item.status.complete" 
+                small>
+                $times-circle
+            </v-icon>
+            <v-icon 
+                v-else
+                small>
+                {{item.status.complete}} / {{item.status.total}}
+            </v-icon>
+        </template>
+        <!-- <template  v-slot:cell(status)="row">
             <span v-if="row.item.type == 'files'" 
                 style="margin:auto; text-align: center"
             >
@@ -53,9 +69,9 @@
             {{cell.value}}
             <font-awesome-icon class="configure"  @click="open(cell.value, $event)" icon="archive" size="sm"  />
 
-        </template>
+        </template> -->
         
-    </b-table>
+    </v-data-table>
   </div>
 </template>
 
@@ -70,7 +86,19 @@ export default {
     data() {
         return {
             value: null,
-            test: "placeholder"
+            test: "placeholder",
+            
+            headers: [
+               {
+                    text: 'Path',
+                    align: 'start',
+                    sortable: false,
+                    value: 'path',
+                },
+                { text: 'Type', value: 'type' },
+                { text: 'Status', value: 'status' },
+
+            ]
         }
     },
     computed: {

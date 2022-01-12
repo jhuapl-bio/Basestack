@@ -7,25 +7,17 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="dir" class="wb-50 p-1">
+  <div id="dir" class="wv-50 p-1" @drop.prevent="addDropFiles" @dragover.prevent >
     <div >
-        <!-- <b-button
-            @click="electronOpenDir('data')"
-            src=""
-            variant="secondary"
-            style="cursor:pointer"
-            >Select Folder
-        </b-button> -->
-        <b-form-file 
+        <v-file-input 
+          label="Directory input"
           v-model="directory"
           src=""
-          :file-name-formatter="formatNames"
           directory
-          label="select folder"
           variant="secondary"
           style="cursor:pointer"
         >
-        </b-form-file>
+        </v-file-input>
         <p  style="word-wrap: anywhere;" class="entry-label" v-if="value" >{{value}} </p>
     </div>
   </div>
@@ -46,6 +38,10 @@ export default {
         
     },
 	methods: {
+    addDropFiles(e) {
+      this.value = Array.from(e.dataTransfer.files);
+      console.log(this.value)
+    },
     formatNames(files) {
       console.log(files)
       return files.length === 1 ? `Selected` : `${files.length} files selected`

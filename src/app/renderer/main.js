@@ -13,7 +13,7 @@ import axios from 'axios'
 import App from './App'
 // import router from './router'
 import store from './store'
-import { BootstrapVue } from 'bootstrap-vue'
+// import { BootstrapVue } from 'bootstrap-vue'
 import VueSweetalert2 from 'vue-sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css';
 import Vuex from 'vuex'
@@ -24,27 +24,18 @@ import Multiselect from 'vue-multiselect'
 import VTooltip from 'v-tooltip'
 import  VueScrollTo from 'vue-scrollto'
 import {Slide, Carousel } from 'vue-carousel';
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
 const  { HalfCircleSpinner, AtomSpinner } = require('epic-spinners');
 import path from "path"
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import ToggleButton from 'vue-js-toggle-button'
 import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
-import { BootstrapVueIcons } from 'bootstrap-vue'
-import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
-
-import Vuetify from 'vuetify'
-import 'vuetify/dist/vuetify.min.css'
+// import { BootstrapVueIcons } from 'bootstrap-vue'
+// import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
  
-Vue.use(Vuetify)
 
-library.add( faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench,faAngleUp, faCheck, faTimesCircle, faAngleDown, faPlus, faMinus, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree,faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
 let config = process.env.logfile
 let configError = process.env.errorfile
 // let logger = require("../../shared/logger.js").logger(configError, config)
 
-Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.prototype.$eventHub = new Vue(); // Global event bus
 // window.localStorage.clear()
 
@@ -53,7 +44,7 @@ Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 // Install BootstrapVue
-Vue.use(BootstrapVue)
+// Vue.use(BootstrapVue)
 Vue.use(VueSweetalert2)
 Vue.use(Vuelidate)
 Vue.use(ToggleButton)
@@ -64,7 +55,7 @@ Vue.component('Slide', Slide)
 Vue.use(require('vue-moment'));
 Vue.use(Multiselect)
 Vue.use(Vuex)
-Vue.use(BootstrapVueIcons)
+// Vue.use(BootstrapVueIcons)
 Vue.use(VTooltip, {
 	defaultBoundariesElement: document.body
 });
@@ -127,10 +118,11 @@ Vue.directive('pin', {
 
 })
 
-
+import vuetify from '@/plugins/vuetify' // path to vuetify export
 /* eslint-disable no-new */
 new Vue({
-  components: { App },
+  vuetify,
+  components: { App,},
   // router,
   store,
   template: '<App/>'

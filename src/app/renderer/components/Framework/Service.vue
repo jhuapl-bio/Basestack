@@ -10,7 +10,7 @@
 <template>
 
   <div id="service">
-    <b-row>
+    <!-- <v-row>
       <div  v-if="status" class=" p-3 outer-entry-right">
         <span 
             class="center-align-icon configure"
@@ -18,12 +18,13 @@
             @click="start_service(service)"> Start Service
           <font-awesome-icon  icon="sync" style="margin-left: 10px; margin-right: 10px"/>
         </span>
-        <span v-b-tooltip.hover.top
+        <span v-v-tooltip.hover.top
             v-else-if="status && status.exists && status.exists.running" 
             class="center-align-icon configure"
             style="width: 100%"
             @click="cancel_service(name)" > Cancel Service
-        <font-awesome-icon  icon="times" style="margin-left: 10px; margin-right: 10px"/>
+          <font-awesome-icon  icon="times" style="margin-left: 10px; margin-right: 10px"/>
+        </span>
         <span class="center-align-icon" style="float:middle; display:flex" v-tooltip="{
               content: 'Running',
               placement: 'top',
@@ -32,18 +33,11 @@
               targetClasses: ['it-has-a-tooltip'],
               }">
         </span>        
-        <looping-rhombuses-spinner
-              :animation-duration="4000"
-              :size="10"
-              v-if="!service.hideStatus"
-              style="float:right; left:100%"
-              :color="'#2b57b9'"
-          />
         </span>
       </div>
-    </b-row>
-    <b-row v-if="service.variables"  style="" class=" ">
-        <b-col :sm="(variable.column ? variable.column : 6)" v-for="[key, variable] of Object.entries(service.variables)" :key="key"  :class="getClass(variable.class, variable.element)" >
+    </v-row> -->
+    <v-row v-if="service.variables"  style="" class=" ">
+        <v-col :cols="(variable.column ? variable.column : 6)" v-for="[key, variable] of Object.entries(service.variables)" :key="key"  :class="getClass(variable.class, variable.element)" >
             <label class="entry-label" v-if="!variable.hidden">{{variable.label}}</label>
             <div v-if="!variable.options"  class="entry from-group">
               <component
@@ -57,7 +51,6 @@
                   @updateValue="updateValue($event, false, variable, key)"
                   >
               </component>
-              <!-- <div class="error" v-if="!variable.source">Field is required</div> -->
 
             </div>
             <div v-else  class="entry from-group">
@@ -90,20 +83,18 @@
                     @updateValue="updateValue($event, true, variable, key)"
                 >
                 </component> 
-                <!-- <div class="error" v-if="variable.option && !variable.options[variable.option].source">Field is required</div> -->
-
             </div>
-        </b-col> 
-    </b-row>
+        </v-col>  
+    </v-row>
     
-    <div class="w-100 p-3 mb-1">
+    <div class="w-100 p-3 mv-1">
         <Progresses
             v-if="progresses"
             :progresses="progresses"
             :running="( status.exists ? status.exists.running : false )"
         ></Progresses>
     </div>
-    <div v-if="status && status.stream" class="w-100 p-3 mb-1">
+     <div v-if="status && status.stream" class="w-100 p-3 mv-1">
         <p class="entry-label" style="font-size: 120%">Logs</p>
         <LogWindow :info="status.stream.info"></LogWindow>
     </div>    
@@ -126,7 +117,22 @@ import Multiselect from 'vue-multiselect'
 
 export default {
 	name: 'framework',
-
+  beforeDestroy: function(){
+    if (this.interval){
+      try{
+        clearInterval(this.interval)
+      } catch(err){
+        console.error(err)
+      }
+    }
+    if (this.intervalProgress){
+      try{
+        clearInterval(this.intervalProgress)
+      } catch(err){
+        console.error(err)
+      }
+    }
+  },
   components:{
     File,
     Render,
@@ -255,6 +261,21 @@ export default {
           }
       }
     },
+    async getService(){
+      const $this = this
+      try{
+        let response = await FileService.getService($this.name)
+        this.service  = response.data.data
+      } catch(error){
+        console.error(error,"error in init config for service", $this.name)
+        this.$swal.fire({
+          position: 'center',
+          icon: 'error',
+          showConfirmButton:true,
+          title:  error.response.data.message
+        })
+      }
+    },
     async getStatus(){
       const $this = this
       try{
@@ -264,7 +285,7 @@ export default {
           })
           this.status = response.data.data.status
           this.progresses = Object.keys(response.data.data.watches).map((key) =>  response.data.data.watches[key]);
-          this.$emit("sendStatus", { status: this.status, service: $this.serviceIdx, procedure: $this.procedureIdx } )			
+          this.$emit("sendStatus", { status: this.status, service: $this.serviceIdx } )			
       } catch(err){
         this.initial=false
         console.error(`${err} error in getting status`)
@@ -272,10 +293,10 @@ export default {
         this.intervalChecking = false
       }
     },
-    async cancel_service(name){
+    async cancel_service(){
       // console.log(this.service.variables, workflowIdx, serviceIdx, this.moduleIdx)
       await FileService.cancelService({
-        service: name
+        service: this.name,
       }).then((response)=>{
         this.$swal.fire({
           position: 'center',
@@ -307,7 +328,7 @@ export default {
     //     })
     //   }
     // },
-    async start_service( service){
+    async start_service( ){
       // this.checkError()
       await FileService.startService({
         service: this.name, 
@@ -346,27 +367,32 @@ export default {
       intervalProgress: false,
       progressChecking: false,
       count:0,
+      variables: {},
       intervalChecking:false,
       tab:0,
       status: {},
       progresses: [],
+      service: {},
       tabService: 2,
     }
   },
-  props: [ 'moduleIdx', 'serviceIdx', 'service', 'procedureIdx', "name" ],
+  props: [  'name', 'procedure', 'serviceIdx' ],
   computed: {
    
   },
   mounted(){
     const $this = this
-    this.getStatus().then(()=>{
+    this.getService($this.name).then(()=>{
+      this.getStatus().then(()=>{
         this.started = true
-        this.interval = setInterval(()=>{
-            if (!this.intervalChecking){
-                $this.getStatus()
-            }
-        }, 5500)
+          this.interval = setInterval(()=>{
+              if (!this.intervalChecking){
+                  $this.getStatus()
+              }
+          }, 1500)
+      })
     })
+    
 
   },
   
@@ -375,4 +401,8 @@ export default {
 </script>
 
 <style>
+#service{
+  overflow-y: auto;
+  width: 100%;
+}
 </style>

@@ -8,34 +8,38 @@
   -->
 
 <template>
-  <div id="app">
-  <div v-if="ready && running" >
-      <MainPage 
-        v-bind:defaults="defaults"
-        v-bind:modules="modules"
-        v-bind:procedures="procedures"
-        v-bind:services="services"
-      ></MainPage>
-  </div>
-  <div v-else-if="!ready">
-      <h3>Initiating....</h3>
-  </div>
-  <div v-else>
-
-      <h3>Backend Server is not available</h3>
-      <Sys></Sys>
-  </div>
+  <v-app id="app">
   
-  </div>
+
+
+    <v-main v-if="ready && runningServer" >
+        <MainPage 
+          v-bind:defaults="defaults"
+          v-bind:modules="modules"
+          v-bind:procedures="procedures"
+          v-bind:services="services"
+        ></MainPage> 
+    </v-main>
+    
+    <v-main  v-else-if="!ready || !runningServer">
+        <h3>Backend Server is not available</h3>
+        <Dashboard></Dashboard>
+    </v-main> 
+    <v-main  v-else>
+        <h3>Initiating Backend Connection....</h3>
+        <Dashboard></Dashboard>
+    </v-main>
+  
+  </v-app>
 
 </template>
 
 <script>
-import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
+// import 'bootstrap/dist/css/bootstrap.css'
+// import 'bootstrap-vue/dist/bootstrap-vue.css'
 import MainPage from '@/components/MainPage'
 import FileService from '@/services/File-service.js'
-import Sys from "@/components/Dashboard/System/Sys.vue"
+import Dashboard from "@/components/Dashboard/Dashboard.vue"
 
 
 const moment = require('moment');
@@ -44,7 +48,7 @@ export default {
 	name: 'client',
 	components: { 
     MainPage, 
-    Sys,
+    Dashboard,
   },
   data(){
     return {
@@ -61,13 +65,22 @@ export default {
 	async mounted(){
     const $this = this;
     this.$electron.ipcRenderer.on('changePort', (evt, port)=>{
-      console.log("changed port", port)
       process.env.PORT_SERVER = port
       $this.runningServer = false
       $this.createPingInterval()
     })
+    this.$vuetify.icons.dropdown = 'fas fa-square'
 
-    this.createPingInterval()
+    
+    let f = await $this.pingServerPort()
+    if (f)
+    {
+      this.runningServer = true
+      await this.init()
+    } else {
+      this.createPingInterval()
+      this.ready = false
+    }
 
 
     
@@ -95,20 +108,23 @@ export default {
       }
       this.clearAll()
       this.runningServer = false
+      this.ready  = false
       this.interval = setInterval(async ()=>{
         if (this.runningServer){
           clearInterval($this.interval)
         } else {
           try{
             let f = await $this.pingServerPort()
-            console.log(f)
             if (f)
             {
               this.runningServer = true
               await this.init()
             }
           } catch(err){
-            console.error("Could not get server status, check if it is running on port: ", process.env.PORT_SERVER)
+              console.error("Could not get server status, check if it is running on port: ", process.env.PORT_SERVER)
+              this.ready = false
+              this.runningServer = false
+
           }
         }
         
@@ -137,12 +153,12 @@ export default {
         this.running = false 
         this.ready = true
         this.$swal.fire({
-                  position: 'center',
-                  icon: 'error',
-                  showConfirmButton:true,
-                  title:  "Error in starting initialization",
-                  text:  err.response.data.message
-              }) 
+            position: 'center',
+            icon: 'error',
+            showConfirmButton:true,
+            title:  "Error in starting initialization",
+            text:  err.response.data.message
+        }) 
         throw err
       } finally{
         this.ready = true

@@ -8,82 +8,194 @@
   -->
 <template>
   <div id="framework"  >
-    <!-- <b-col sm="3" >
-      <b-row no-gutters class="text-center"  style="align-items: center;
-    justify-content: center;" v-for="[serviceIdx, service] of Object.entries(services)" :title="service.label" :key="serviceIdx">
-        <b-col xs="6" class="text-center" style="align-items: center;
-            justify-content: center;">
-            <hr>
-            <span style="font-size: 0.7vw !important;  align-items: center;
-              justify-content: center;">{{service.label}}
+    <v-row>
+    <v-col align-self="start" >
+      <h5 class="header header-minor" >
+        {{ ( procedure  ? procedure.title : procedureKey  ) }}
+        <span v-if="procedure.tooltip" 
+          style="" >
+          <font-awesome-icon class="help" icon="question-circle"  />
+        </span>
+      </h5>
+    </v-col>
+    <v-col  align-self="end" >
+      <v-btn class="btn sideButton"   v-if="status"
+        style=""
+        @click="start_procedure(procedure.name)">Start Procedure 
+      </v-btn>
+    </v-col>
+    <v-col   align-self="end">
+      <v-btn class="btn warnButton "  v-if="status"
+        style=""
+        @click="cancel_procedure(procedure.name)">Cancel Procedure 
+      </v-btn>
+    </v-col>
+    <v-col align-self="end" v-if="procedure.custom">
+      <v-btn class="btn " variant="warn" 
+        style=""
+        @click="rm_procedure(procedure.name)">Remove Custom Procedure
+      </v-btn>
+    </v-col>
+    </v-row>
+    <v-row>
+    <v-col cols="3" >
+      <v-list >
+          <v-list-item
+            class="entry"
+          >
+            
+            <v-list-item-content>
+              <v-list-item-title v-text="'Total Services'"></v-list-item-title>
+              <v-list-item-subtitle v-text="Object.keys(services).length"></v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item
+            class="entry"
+          >
+              <v-list-item-content>
+                <v-list-item-title v-text="'Status'"></v-list-item-title>
+                
+              </v-list-item-content>
+              <v-list-item-icon v-if="procedure.status.running ">
+                <v-tooltip right>
+                  <template v-slot:activator="{ on }">
+                  <div v-on="on">
+                      <fulfilling-bouncing-circle-spinner 
+                        :animation-duration="3500"
+                        :size="10"
+                        :color="'#2b57b9'"
+                      />
+                  </div>
+                  </template>
+                  Running
+                </v-tooltip>
+              </v-list-item-icon>
+              <v-list-item-icon v-else> 
+                <v-tooltip right>
+                  <template v-slot:activator="{ on }">
+                    <v-icon v-on="on" x-small color="orange darken-2">$times-circle</v-icon>
+                  </template>
+                  Not Running
+                </v-tooltip>
+              </v-list-item-icon>
+              
+          </v-list-item>
+          <v-list-item
+            class="entry"
+            style="font-size: 0.8em" 
+            v-for="(service, serviceKey) of status.services"  :key="serviceKey"
+          >
+            
+            <v-list-item-content>
+              <v-list-item-title v-text="service.label">
+              </v-list-item-title>
+              <v-card  :title="`Running: ${service.status.running}`" align-self="start" style="display:flex">
+                <v-icon x-small :class="[ 'fa-1x', 'configure']" 
+                      @click="runServiceIndividually(service.name)"
+                      :title = "'Run Service Individually'"
+                      icon="play-circle" 
+                >$play-circle</v-icon>  
+                <v-icon  x-small
+                  @click="cancelServiceIndividually(service.name)"
+                  :title = "'Cancel Running Service'"
+                  :class="[ 'fa-1x', 'configure', ]"  
+                  icon="times" >$times</v-icon>        
+              </v-card>
+            </v-list-item-content>
+            <v-list-item-icon v-if="procedure.status.running ">
+                <v-tooltip right>
+                  <template v-slot:activator="{ on }">
+                  <div v-on="on">
+                      <fulfilling-bouncing-circle-spinner
+                      :animation-duration="4000"
+                      :size="10"
+                      style="margin-left:2%;"
+                      v-if="service.status.running "
+                      :color="'#2b57b9'"
+                    />
+                  </div>
+                  </template>
+                  Running
+                </v-tooltip>
+              </v-list-item-icon>
+          </v-list-item>
+      </v-list>
+      <!-- <v-card class="m-0 p-0">
+          <p>
+            Total Services: {{ Object.keys(services).length }}
+          </p>
+          <span style="display:flex;"  >Running
+            <fulfilling-bouncing-circle-spinner
+              :animation-duration="4000"
+              :size="10"
+              style="margin-left:1%;"
+              v-if="status.running "
+              :color="'#2b57b9'"
+            />
+            <font-awesome-icon style="margin-left:1%; font-size: 70%" :class="[ 'fa-1x', 'text-warning' ]" 
+                v-else
+                icon="times-circle" 
+            />
             </span>
-            <hr>
-        </b-col>
-        <b-col xs="6" class="text-center" >
-          <div style="float:right !important">
-            <b-spinner v-if="status && status[serviceIdx] && status[serviceIdx].exists.running" type="grow"  variant="info"  ></b-spinner>
-            <b-icon v-else-if="status  && status[serviceIdx] && status[serviceIdx].exists.exists && !status[serviceIdx].exists.running" variant="info" icon="circle-fill"></b-icon>
-            <b-icon v-else variant="info" icon="circle"></b-icon>
-            <br>
-            <b-icon  variant="info" icon="caret-down-fill"></b-icon>
-          </div>
-        </b-col>
+          
+          <hr>
+          <v-row  style="font-size: 0.8em" v-for="(service, serviceKey) of status.services"  :key="serviceKey">
+          <v-col  :title="`Running: ${service.status.running}`" align-self="start">
+            <span style="display:flex" >{{service.label ? service.label : serviceKey }}
+              <fulfilling-bouncing-circle-spinner
+                  :animation-duration="4000"
+                  :size="10"
+                  style="margin-left:2%;"
+                  v-if="service.status.running "
+                  :color="'#2b57b9'"
+                />
+            </span>         
+          </v-col> 
+          <v-col class="m-0" align-h="stretch" align-self="start">
+              <font-awesome-icon style="" :class="[ 'fa-1x', 'configure']" 
+                  @click="runServiceIndividually(service.name)"
+                  :title = "'Run Service Individually'"
+                  icon="play-circle" 
+              />
 
+          </v-col>
+          <v-col class="m-0" align-h="stretch" align-self="start" v-if="service.status.running || service.status.exists" >
+              <font-awesome-icon  
+                @click="cancelServiceIndividually(service.name)"
+                  :title = "'Cancel Running Service'"
+                :class="[ 'fa-1x', 'configure', ]"  
+                icon="times" />
+          </v-col>
+        </v-row>
 
-      </b-row>
-      <b-button class="btn"  variant="info"
-          style="bottom: 0; position:absolute;"
-          @click="start_procedure(procedureIdx)">Start Procedure 
-       
-      </b-button>
-
-    </b-col>
-    <b-col sm="9" style="max-height: 100vh !important; overflow:auto">
-      <div v-for="[serviceIdx, service] of Object.entries(services)" :title="service.label" :key="serviceIdx">
+      </v-card> -->
+    </v-col>
+     <v-col  cols="9" class="" style="">
+     <div class="box" v-for="(service, serviceKey) of status.services" :title="serviceKey" :key="serviceKey">
         <Service  
+          :ref="service.name"
           @sendStatus="sendStatus" 
           @updateValue="updateValue" 
-          :serviceIdx="serviceIdx" 
-          :procedureIdx="procedureIdx" 
-          :name="serviceIdx"
-          :service="service" 
-          :moduleIdx="moduleIdx">
+          :name="service.name" 
+          :serviceIdx="serviceKey"
+          :procedure="procedureKey" >
         </Service>
-        <hr>
       </div>
-    </b-col> -->
-    <b-tabs
-      v-model="tab" 
-      nav-wrapper-class="w-3 " 
-      left 
-    >
-      <b-tab  v-for="[serviceIdx, service] of Object.entries(services)" :title="service.label" :key="serviceIdx">
-          <template #title   style="4.5s linear infinite spinner-grow !important">
-            <b-spinner v-if="status && status[serviceIdx] && status[serviceIdx].exists.running" type="grow"  variant="info"  small ></b-spinner>
+      <!-- <div class="box" v-for="[serviceIdx, service] of Object.entries(services)" :title="service.label" :key="serviceIdx"> -->
+      <!-- <v-tab  v-for="[serviceIdx, service] of Object.entries(services)" :title="service.label" :key="serviceIdx"> -->
+          <!-- <template #title   style="4.5s linear infinite spinner-grow !important">
+            <v-spinner v-if="status && status[serviceIdx] && status[serviceIdx].exists.running" type="grow"  variant="info"  small ></v-spinner>
             <span class="">{{service.label}}</span>
-        </template>
-        <Service  
-          @sendStatus="sendStatus" 
-          @updateValue="updateValue" 
-          :serviceIdx="serviceIdx" 
-          :procedureIdx="procedureIdx" 
-          :name="serviceIdx"
-          :service="service" 
-          :moduleIdx="moduleIdx">
-        </Service>
+        </template> -->
+        
 
-      </b-tab>
-      <template v-slot:tabs-end >
-         <b-button class="btn sideButton"  v-if="status"
-          style="right:0;"
-          @click="start_procedure(procedure.name)">Start Procedure 
-        </b-button>
-        <b-button class="btn " variant="warn" v-if="procedure.custom"
-          style="right:0;"
-          @click="rm_procedure(procedure.name)">Remove Custom Procedure
-        </b-button>
-      </template>
-    </b-tabs>
+      <!-- </v-tab> -->
+      <!-- <template v-slot:tabs-end > -->
+      <!-- </div> -->
+      </v-col>
+      </v-row>
+      <!-- </template> -->
+    <!-- </v-tabs> -->
     
      
 
@@ -95,13 +207,37 @@
 import Service from '@/components/Framework/Service.vue';
 
 import FileService from '@/services/File-service.js'
-
+import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
 export default {
 	name: 'framework',
   components:{
     Service,
+    LoopingRhombusesSpinner,
+    FulfillingBouncingCircleSpinner,
+  },
+  beforeDestroy: function(){
+    if (this.interval){
+      try{
+        clearInterval(this.interval)
+      } catch(err){
+        console.error(err)
+      }
+    }
   },
   methods: {
+    runServiceIndividually(key){
+      // console.log(key)
+      let ref  = this.$refs[key]
+      ref[0].start_service()
+
+
+    },
+    cancelServiceIndividually(key){
+      console.log(key)
+      let ref  = this.$refs[key]
+      ref[0].cancel_service()
+
+    },
     updateValue(event){
       // console.log(event)
       // let filtered = this.services.filter((service)=>{
@@ -128,11 +264,12 @@ export default {
       return this.statuses[serviceIdx] && this.statuses[serviceIdx].running
     },
 		sendStatus(event){
-      // this.statuses[event.service] = event.status.exists
+      // this.status[event.service] = event.status.exists
+      
     },
-    async rm_procedure(procedureIdx){
+    async rm_procedure(procedureKey){
       await FileService.rmProcedure({
-        procedure: procedureIdx
+        procedure: procedureKey
       }).then((response)=>{
         this.$swal.fire({
           position: 'center',
@@ -152,9 +289,9 @@ export default {
         })
       })
     },
-    async cancel_procedure(procedureIdx){
+    async cancel_procedure(procedureKey){
       await FileService.cancelProcedure({
-        procedure: procedureIdx
+        procedure: procedureKey
       }).then((response)=>{
         this.$swal.fire({
           position: 'center',
@@ -177,9 +314,7 @@ export default {
     async getStatus(){
       const $this = this
       try{
-        let response = await FileService.getProceduresStatusSelect({
-              procedure: $this.procedureIdx
-          })
+        let response = await FileService.getStatusProcedure(this.procedureKey)
           this.status = response.data.data
       } catch(err){
         this.initial=false
@@ -229,6 +364,7 @@ export default {
         "render": "Render"
 
       },
+      interval: null,
       count:0,
       tab:0,
       shared: [],
@@ -236,15 +372,16 @@ export default {
       tabService: 2,
     }
   },
-  props: [ 'services', 'moduleIdx', "procedureIdx" , "procedure" ],
+  props: [ 'services', 'moduleIdx', "procedureKey" , "procedure" ],
   computed: {
     
   },
   mounted(){
     const $this = this;
-    // setInterval(()=>{
-    //   $this.getStatus()
-    // }, 2000)
+    $this.getStatus()
+    this.interval = setInterval(()=>{
+      $this.getStatus()
+    }, 2000)
   },
   
     

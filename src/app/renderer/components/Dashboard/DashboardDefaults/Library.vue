@@ -1,10 +1,12 @@
 <template>
   <div>
-    <b-row id="library"  style="" >
-        <b-col   sm="4" @click="isHovered = module" v-for="module in modules_new" :key="module.name " style="cursor:pointer; outline: none" >
-            <div class="libraryModule" :id="module.name" v-b-toggle="['collapse']"   >
-                <hr>
-                <div v-tooltip="{
+    <v-row id="library"  style="" >
+        <v-col   sm="4" @click="isHovered = module" v-for="module in modules_new" :key="module.name " style="cursor:pointer; outline: none" >
+            <div class="libraryModule" :id="module.name"    >
+                <v-divider></v-divider>
+                {{ module ? module.title : module }}
+                <v-icon  x-small  v-if="module.status && module.status.fully_installed" color="green" >$check</v-icon>
+                <!-- <div v-tooltip="{
                         content: module.tooltip,
                         placement: 'top',
                         classes: ['info'],
@@ -17,9 +19,10 @@
                     >
                         <font-awesome-icon class="configure success-icon" icon="check"/>
                     </span>
-                </div>
-                    
-                <div class="tabSideItem" style="text-align:center; float: right" v-else v-tooltip="{
+                </div> -->
+                
+                <v-icon color="orange darken-2" x-small style="text-align:center; float: right" v-else >$exclamation</v-icon>   
+                <!-- <div class="tabSideItem" style="text-align:center; float: right" v-else v-tooltip="{
                     content: 'Not installed or metadata not retrievable',
                     placement: 'top',
                     classes: ['info'],
@@ -32,14 +35,16 @@
                     >
                         <font-awesome-icon class="configure warn-icon" icon="exclamation"/>
                     </span>
-                </div>
-                {{ module ? module.title : module }}
+                </div> -->
+                
             </div>
-        </b-col>
-        <b-col sm="12">
-        <!-- <b-collapse :visible="true" style="width: 100%; margin:auto" :id="'collapse'"> -->
-            <b-card>
-                <div :style="{ 'justify-content': 'center' }" v-if="isHovered">
+        </v-col>
+        <v-col sm="12">
+        <!-- <v-collapse :visible="true" style="width: 100%; margin:auto" :id="'collapse'"> -->
+            <v-card>
+                <v-icon class="configure" @click="buildModule(isHovered.name)">$download</v-icon>
+                <v-icon v-on:click="deleteModule(isHovered.name)" style="text-align:right" class="configure">$trash-alt</v-icon>
+                <!-- <div :style="{ 'justify-content': 'center' }" v-if="isHovered">
                     <span>
                         <span 
                             style="margin:auto; text-align:center" v-if="isHovered"
@@ -64,7 +69,7 @@
                             >
                             <font-awesome-icon class="configure" icon="trash-alt" size="sm" />
                         </span>
-                    </span>
+                    </span> -->
                     
                     <!-- <div class="tabSideItem" style="text-align:center; float: right" 
                         v-if="status[isHovered.name] && status[isHovered.name].status.fully_installed && status[isHovered.name].status.version !== status[isHovered.name].status.latest"
@@ -80,91 +85,118 @@
                             <span ><font-awesome-icon icon="exclamation" size="sm"/></span>
                         </span>
                     </div> -->
-                </div>
-                <b-col sm="12" class="tabSideItem">
+                <!-- </div> -->
+                <v-col sm="12" class="tabSideItem">
                     <div v-if="isHovered" style="text-align:center; "
                         target="dind"
                         >
-                        <b-table
+                        <v-data-table
                             style="max-width: 100%"
                             :items="isHovered.dependencies"
-                            :fields="fields"
+                            :headers="fields"
+                            :items-per-page="5"
+                            centered
+                            class="elevation-1"			
                             small
                             responsive
                         >
-                            <template  v-slot:cell(status.exists)="cell">
-                                <font-awesome-icon :class="[cell.value ? 'center-align-icon success-icon' : 'center-align-icon warn-icon']" 
-                                style="margin:auto; text-align:center" v-tooltip="{
-                                    content: [cell.value ? cell.value.version : '' ],
-                                    placement: 'top',
-                                    classes: ['info'],
-                                    trigger: 'hover',
-                                    targetClasses: ['it-has-a-tooltip'],
-                                    }"  :icon="(cell.value ? 'check' : 'times-circle'  )" size="sm" 
-                                />
+                            <template v-slot:item.status.exists="{ item }">
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on }">
+                                    <v-icon v-on="on" :color="(item.status.exists ? 'green ' : 'orange darken-1')" 
+                                        x-small> {{ (item.status.exists  ? '$check' : '$times-circle'  )}}
+                                    </v-icon>
+                                    </template>
+                                    Running Status 
+                                </v-tooltip>
                             </template>
-                            <template  v-slot:cell(status.building)="cell">
-                                <b-spinner variant="info" v-if="cell.value" label="Downloading and/or decompressing" 
-                                ></b-spinner>
+                            <template v-slot:item.status.building="{ item }">
+                                <v-tooltip bottom>
+                                   <template v-slot:activator="{ on }">
+                                   <v-progress-circular x-small
+                                        indeterminate v-if="item.status.building"
+                                        v-on="on"
+                                        :size="20"
+                                        color="blue-grey"
+                                    ></v-progress-circular>
+                                    
+                                    </template>
+                                    Build Progress
+                                </v-tooltip>
                             </template>
-                            <template  v-slot:cell(status.downloading)="cell">
-                                <div v-if="cell.value"
-                                    style="display:flex; " 
-                                    >
-                                    <b-spinner variant="info" label="Downloading..." 
-                                    ></b-spinner>
-                                    <p class="table-text" >{{cell.item.status.progress}} %</p>
-                                </div>
+                            <template v-slot:item.status.downloading="{ item }">
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on }">
+                                        <v-progress-circular v-on="on" x-small 
+                                            v-if="item.status.downloading"
+                                            color="blue-grey"
+                                            :size="10"
+                                            indeterminate
+                                        ></v-progress-circular>
+                                    </template>
+                                    Download Progress {{item.status.progress}} %
+                                </v-tooltip> 
                             </template>
-                            <template  v-slot:cell(status.latest)="cell">
-                                <span 
-                                :class="[cell.item.status.latest == cell.item.status.version ? 'center-align-icon success-icon' : 'center-align-icon warn-icon']" 
-                                style="margin:auto; text-align:center" v-tooltip="{
-                                        content: [cell.item.status.latest == cell.item.status.version ? cell.item.status.version : 'Not latest version' ],
-                                        placement: 'top',
-                                        classes: ['info'],
-                                        trigger: 'hover',
-                                        targetClasses: ['it-has-a-tooltip'],
-                                        }"  >
-                                        <font-awesome-icon :icon="(cell.item.status.latest == cell.item.status.version ? 'check' : 'times-circle'  )" size="sm" />
-                                </span> 
+                            
+                            <template v-slot:item.status.latest="{ item }">
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon x-small v-on="on"
+                                            color="green "
+                                            v-if="item.status.latest && item.status.version && item.status.latest == item.status.version "
+                                        >
+                                            $check
+                                        </v-icon>
+                                        <v-icon v-on="on" x-small v-else-if="item.status.latest !== item.status.version && item.status.version" color="red darken-2">
+                                            $times-circle
+                                        </v-icon>
+                                        <v-icon v-on="on" x-small v-else color="teal darken-2">
+                                            $exclamation-triangle
+                                        </v-icon>
+                                    </template>
+                                    <div v-if="item.type == 'docker' ">
+                                        {{ ( !item.status.version ? 'Could not get version' : '' ) }}
+                                        <v-divider></v-divider>
+                                        Latest:  {{ item.status.latest }}
+                                        <v-divider></v-divider>
+                                        Current: {{item.status.version }}
+                                    </div>
+                                    <p v-else> Version not available</p>
+                                </v-tooltip> 
                             </template>
-                            <template  v-slot:cell(status.error)="cell">
-                                <span v-if="cell.value" 
-                                :class="[ 'center-align-icon warn-icon']" 
-                                style="margin:auto; text-align:center" v-tooltip="{
-                                        content: [cell.value ? cell.value : ''],
-                                        placement: 'top',
-                                        classes: ['info'],
-                                        trigger: 'hover',
-                                        targetClasses: ['it-has-a-tooltip'],
-                                        }"  >
-                                        <font-awesome-icon :icon="'times-circle'" size="sm" /> 
-                                </span>
-                                <p v-else></p>
-
+                            
+                            <template v-slot:item.status.error="{ item }">
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon x-small v-on="on"
+                                            color="green "
+                                            v-if="!item.status.error"
+                                        >
+                                        </v-icon>
+                                        <v-icon v-on="on" x-small v-else color="red darken-2">
+                                            $times-circle
+                                        </v-icon>
+                                    </template>
+                                    {{ ( item.status.error ? item.status.error : 'No Errors' ) }}
+                                </v-tooltip> 
+                               
                             </template>
-                            <template  v-slot:cell(target)="cell">
-                                <p class="table-text" v-if="cell.item.label"  >
-                                    {{cell.item.label}}
-                                </p>
-                                <p class="table-text" v-else  >
-                                    {{cell.value}}
-                                </p>
+                            <template v-slot:item.label="{ item }">
+                                <p>{{ ( item.label ? item.label : item.target   )}}</p>
                             </template>
-                            <template  v-slot:cell(build)="cell">
-                                <b-button class="btn"  variant="info" 
+                            <template v-slot:item.build="{ item }">
+                                <v-btn class="btn"  color="teal darken-1" 
                                     style=""
-                                    @click="buildModuleDependency(isHovered.name, cell.index)">Build
-                                </b-button>
+                                    @click="buildModuleDependency(isHovered.name, item.index)">Build
+                                </v-btn>
                             </template>
-                        </b-table>
+                        </v-data-table>
                     </div>
-                </b-col>
-            </b-card>
-        <!-- </b-collapse> -->
-        </b-col>
-    </b-row>
+                </v-col>
+            </v-card>
+        <!-- </v-collapse> -->
+        </v-col>
+    </v-row>
   </div>
 </template>
 
@@ -180,40 +212,40 @@
                 modules_new: [],
                 fields: [
                     {
-                        key: 'target',
-                        label: 'Target',
+                        value: 'label',
+                        text: 'Name',
                         class: "table-text"
                     },
                     {
-                        key: 'type',
-                        label: "Type",
+                        value: 'type',
+                        text: "Type",
                         sortable: false,
                         class: "table-text"
                     },
                     {
-                        key: 'status.downloading',
-                        label: 'Downloading'
+                        value: 'status.downloading',
+                        text: 'Downloading'
                     },
                     {
-                        key: 'status.exists',
-                        label: 'Exists',
+                        value: 'status.exists',
+                        text: 'Exists',
                         class:"table-text"
                     },
                     {
-                        key: 'build',
-                        label: 'Install'
+                        value: 'build',
+                        text: 'Install'
                     },
                     {
-                        key: 'status.latest',
-                        label: 'Latest'
+                        value: 'status.latest',
+                        text: 'Latest'
                     },
                     {
-                        key: 'status.building',
-                        label: 'Building'
+                        value: 'status.building',
+                        text: 'Building'
                     },
                     {
-                        key: 'status.error',
-                        label: 'Errors'
+                        value: 'status.error',
+                        text: 'Errors'
                     }
                 ],
 			}
@@ -224,6 +256,7 @@
 		},
 		
 	    mounted(){
+            this.getStatus()
             setInterval(()=>{
                 this.getStatus()
             },4000)    
@@ -234,32 +267,44 @@
 	    methods: {
             async deleteModule(name){
                 this.$swal({
-                    title: "Module Deletion Initiated",
-                    text: "Please wait.. this may take some time",
-                    icon: 'info',
-                    showConfirmButton: true,
-                    allowOutsideClick: true
+                    title: 'Are you sure you want to remove this module?',
+                    text: "You won't be able to revert this!",
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2b57b9',
+                    cancelButtonColor: '#a60139',
+                    confirmButtonText: 'Yes, remove it!'
+                }).then((res) => {
+                    if (res.value) {
+                        this.$swal({
+                            title: "Module Deletion Initiated",
+                            text: "Please wait.. this may take some time",
+                            icon: 'info',
+                            showConfirmButton: true,
+                            allowOutsideClick: true
+                        });
+                        FileService.deleteModule({
+                            module: name
+                        }).then((response)=>{
+                            this.$swal({
+                                title: "Module deletion completed!",
+                                icon: 'success',
+                                showConfirmButton: true,
+                                allowOutsideClick: true
+                            });
+                        }).catch((err)=>{
+                            this.$swal.fire({
+                                position: 'center',
+                                icon: 'error',
+                                showConfirmButton:true,
+                                title: err.response.data.message
+                            })
+                            
+                        }) 
+                    }
                 });
-                FileService.deleteModule({
-                    module: name
-                })
-               .then((response)=>{
-                    this.$swal({
-                        title: "Module deletion completed!",
-                        icon: 'success',
-                        showConfirmButton: true,
-                        allowOutsideClick: true
-                    });
-                })
-                .catch((err)=>{
-                    this.$swal.fire({
-                        position: 'center',
-                        icon: 'error',
-                        showConfirmButton:true,
-                        title: err.response.data.message
-                    })
-                    
-                }) 
+                
+                
             },
             async buildModule(name){
                 FileService.buildModule({
@@ -337,11 +382,9 @@
                     //     })
                     // })
                     if (!this.isHovered){
-                        this.isHovered = this.modules_new[1]
+                        this.isHovered = this.modules_new[0]
                     }
-                    // console.log(this.modules.map((d)=>{
-                    //     return d.dependencies
-                    // }))
+                   
                 } catch(err){
                     this.initial=false
                     console.error(`${err} error in getting status`)

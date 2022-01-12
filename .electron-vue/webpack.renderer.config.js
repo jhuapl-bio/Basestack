@@ -17,7 +17,7 @@ const ESLintPlugin = require('eslint-webpack-plugin')
  * that provide pure *.vue files that need compiling
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/webpack-configurations.html#white-listing-externals
  */
-let whiteListedModules = ['vue', 'vue-sweetalert2', 'epic-spinners', 'vuex', 'sweetalert2', 'bootstrap-vue']
+let whiteListedModules = ['vue', 'vuetify', 'vuetify-loader', 'vue-sweetalert2', 'epic-spinners', 'vuex', 'sweetalert2', 'bootstrap-vue']
 
 let rendererConfig = {
   devtool: 'source-map',
@@ -32,6 +32,28 @@ let rendererConfig = {
   stats: 'normal',
   module: {
     rules: [
+      {
+        test: /\.s(c|a)ss$/,
+        use: [
+          'vue-style-loader',
+          'css-loader',
+          {
+            loader: 'sass-loader',
+            // Requires sass-loader@^7.0.0
+            options: {
+              implementation: require('sass'),
+              indentedSyntax: true // optional
+            },
+            // Requires >= sass-loader@^8.0.0
+            options: {
+              implementation: require('sass'),
+              sassOptions: {
+                indentedSyntax: true // optional
+              },
+            },
+          },
+        ],
+      },
       {
         test: /\.css$/,
         use: [

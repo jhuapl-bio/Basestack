@@ -1,5 +1,24 @@
 <template>
-  <div style="display:flex">
+  <v-list dense>
+    <v-subheader>Basestack</v-subheader>
+      <v-list-item
+        v-for="entry in fields_system"
+        :key="entry.key"
+        class="entry"
+      >
+          
+          <v-list-item-content>
+            <v-list-item-title v-text="entry.label "></v-list-item-title>
+            <v-list-item-subtitle v-text="info_table[entry.key] ">
+            </v-list-item-subtitle>
+            
+          </v-list-item-content>
+          <v-list-item-icon>
+            <span style="" class="success-icon"><font-awesome-icon class="success-icon" icon="check"/></span>
+          </v-list-item-icon>
+      </v-list-item>
+  </v-list>
+  <!-- <div style="display:flex">
      
     <div 
     v-for="entry in fields_system"
@@ -13,7 +32,7 @@
       <span style="" class="success-icon">System Up to Date<font-awesome-icon class="success-icon" icon="check"/></span>
       
     </div>
-  </div>
+  </div> -->
 </template>
 
 <script>

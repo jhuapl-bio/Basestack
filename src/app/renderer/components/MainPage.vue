@@ -7,177 +7,105 @@
   - # **********************************************************************
   -->
 <template>
-	<div class="mainContent" style="overflow:auto">
-		<b-tabs 
-	        v-model="tab" 
-	        nav-wrapper-class="w-3 sideWrapper" 
-	        left align="center"  
-			sticky
-        	active-nav-item-class="activeTabButton"
-        	style="  overflow-y: auto" 
-        	vertical
-			lazy
-        >
-		  <b-tab  
-		  	class="mainTabContent"
-			
-		  >
-		  	<template v-slot:title style="" class="ModuleTabTitle">
-				<div class="tabSide" style="justify-content:center;">
-					<div class="tabSideItem" style="text-align:center"
-					>	
-						<span style=""
-							v-tooltip="{
-							content: 'Dashboard Home',
-							placement: 'top',
-							classes: ['info'],
-							trigger: 'hover',
-							targetClasses: ['it-has-a-tooltip'],
-						}"
-						>
-							<font-awesome-icon class="fa-2x" icon="home"/>
-						</span>
-					</div>
-					<div class="tabSideItemText">
-						<span  v-if="!collapsed">
-							Dashboard
-						</span>
-					</div>
-				</div>
-  			</template>
-		  	<div class="tabContent">
-  				<h2 class="header header-major" style="">Dashboard</h2>
-            	<Dashboard
-					:tab="0"
-					@emitChange="emitChange"
-				></Dashboard>
+	<v-row  class="m-0 "  >
+		<v-col cols="2" class=" elevation-4">
+			<v-tabs 
+				v-model="tab" 
+				show-arrows
+				vertical 
+				icons-and-text 
+				class=""
+			>
+			<v-tab 
+					:class="[ 'tabSide', 'tabSideDefault',   ]"  
+				>
 				
-            </div>
-			
-			  
-		  </b-tab>
-		  
-          <b-tab  
-          	v-for="(entry, key) in procedures"
-          	v-bind:key="entry.name"
-		  	class="mainTabContent "
-			vertical end 
-            > 
-            <template v-slot:title  class="ModuleTabTitle tabSide" >
-				<div  @mouseover="isHovered = entry.name" @mouseleave="isHovered = null" v-tooltip="{
-								content: ( collapsed ? entry.title : entry.tooltip),
-								placement: 'top',
-								classes: ['info'],
-								trigger: 'hover',
-								targetClasses: ['it-has-a-tooltip'],
-							}">
-					<div :class="[ 'tabSide', isHovered == entry.name ? 'tabhovered' : ''  ]" :style="{ 'justify-content': 'center', 'background': getColor(key, 0.2) }" >
-						<div :class="[  'tabSideItem' ]" style="text-align:center" 
-						>
-							<span class="tabIcon"
-							
-								:style="{ 'justify-content': 'center', 'color': getColor(key, 0.8) }"
-								
-							>
-								<font-awesome-icon class="fa-2x" :icon="(entry.icon ? entry.icon : 'cog')"/>
-							</span>
+				<v-tooltip right>
+					<template v-slot:activator="{ on }">
+						<div v-on="on" class=" tabSide" style="" v-if="!collapsed" >
+						
+							<span class="tabSideItemText">Dashboard</span>
 						</div>
-						<div class="tabSideItem" style="text-align:center"
-						>
-							<span style=""
-							v-if="1!==1"
-							v-tooltip="{
-							content: 'An Update is available',
-							placement: 'top',
-							classes: ['info'],
-							trigger: 'hover',
-							targetClasses: ['it-has-a-tooltip'],
-							}"
-							>
-								<font-awesome-icon class="configure warn-icon" icon="exclamation"/>
-							</span>
-						</div>
-						<div class="tabSideItemText" v-if="!collapsed" >
-							{{ ( entry  ? entry.title : key  ) }}
-						</div>
-					</div>
-				</div>
-  			</template>
-  			<div  class="tabContent">
-  				<h3 class="header header-minor" >
-					  {{ ( entry  ? entry.title : key  ) }}
-			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
-					:title = "( collapsed ? entry.title : entry.tooltip)"
-			        style="" >
-			        <font-awesome-icon class="help" icon="question-circle"  />
-			      </span>
-			    </h3>
-            	<component 
-            		:is="'Framework'"
-					:moduleIdx="key"
-            		:services="entry.services"
-					:procedure="entry"
-					:procedureIdx="key"
-            	>            	
-            	</component>
-            </div>
-          </b-tab>
-		  <b-tab  
-		  	class="mainTabContent"
-			v-for="(entry, key) in defaults"
-          	v-bind:key="key"
-		  >
-		  	<template v-slot:title >
-            	<div  v-tooltip="{
-			            content: ( collapsed ? entry.title : entry.tooltip),
-
-			            placement: 'top',
-			            classes: ['info'],
-			            trigger: 'hover',
-			            targetClasses: ['it-has-a-tooltip'],
-			            }" :class="[ 'tabSide', 'tabSideDefault', isHovered == entry.name ? 'tabhovered' : ''  ]" @mouseover="isHovered = entry.name" @mouseleave="isHovered = null" class="tabSide" style="justify-content:center" >
-					<div class="tabSideItem" style="text-align:center" 
-					>
-						<span style=""
-		            	
-		            	>
-		            		<font-awesome-icon class="configure fa-2x" :icon="(entry.icon ? entry.icon : 'cog')"/>
-		            	</span>
-		            </div>
-					<div class="tabSideItemText" style="text-align:center">
-						<span  v-if="!collapsed">
-							{{ entry.title }}
-						</span>
-					</div>
-	        	</div>
-  			</template>
-		  	<div >
-				<h3 class="header header-minor" >
-					{{ ( entry  ? entry.title : key  ) }}
-				</h3>
-  				<component 
-            		:is="entry.component"
-					:modules="modules"
-					:defaults="defaults"
-					:services="services"
-					:moduleIdx="key+1 + modules.length"
-					:defaultModule="entry"
-            	>            	
-            	</component>
-            </div>
-			  
-		  </b-tab>
-      	  	<template v-slot:tabs-start  style="padding:0px !important; ">
-		          <b-nav-item role="presentation"  href="#">
-		          	<button class="btn collapseButton"  @click="toggleCollapse()"><div :id="'collapseSidebar'" class="in-line-Button" ><span><font-awesome-icon  style="margin:auto; justify-content: center;text-align:center " icon="bars"/></span></div></button>
-		          </b-nav-item>	      	  		
-      	  	</template>
-      	  	<template v-slot:tabs-end >
-	          	<div id="emblem"><img v-bind:class="[collapsed ? 'shrunkButtonImg' : 'ButtonImg']" src="../../static/img/apl_sheild_blue_only.png" /></div>
-	        </template>
-        </b-tabs>
-        
-	</div>
+					</template>
+					<span>Dashboard Home Page</span>
+				</v-tooltip>
+				<v-icon >$home</v-icon>
+			</v-tab>
+			<v-tab 
+					centered
+					v-for="[key, entry] in Object.entries(procedures)"
+					v-bind:key="entry.name"
+					:class="[ 'tabSide', 'tabSideDefault', isHovered == entry.name ? 'tabhovered' : ''  ]" 
+					@mouseover="isHovered = entry.name" 
+					@mouseleave="isHovered = null"
+				>
+				
+					<v-tooltip right>
+						<template v-slot:activator="{ on }">
+							<div v-on="on" class=" tabSide" style="" v-if="!collapsed" >
+								<span class="tabSideItemText">{{ ( entry.title  ? entry.title : key  ) }}</span>
+							</div>
+						</template>
+						<span>{{ ( collapsed ? entry.title : entry.tooltip)}}</span>
+					</v-tooltip>
+					<v-icon :color="getColor(key, 0.8)" >{{ ( entry.icon  ? '$' + entry.icon : 'cog' ) }}</v-icon>
+				</v-tab>
+				
+				<v-tab class="" style="justify-content:center"
+					v-for="[key, entry] in Object.entries(defaults)"
+					centered
+					v-bind:key="entry.name"
+					:class="[ 'tabSide', 'tabSideDefault', isHovered == entry.name ? 'tabhovered' : ''  ]" 
+					@mouseover="isHovered = entry.name" 
+					@mouseleave="isHovered = null"
+				>
+					<v-tooltip bottom>
+						<template v-slot:activator="{ on }">
+							<div v-on="on" class=" tabSide" style="" v-if="!collapsed" >
+								<span class="tabSideItemText">{{ ( entry.title  ? entry.title : key  ) }}</span>
+							</div>
+						</template>
+						<span>{{ ( collapsed ? entry.title : entry.tooltip)}}</span>
+					</v-tooltip>
+					<v-icon :color="getColor(key, 0.8)">{{ ( entry.icon  ? '$' + entry.icon : 'cog' ) }}</v-icon>
+				</v-tab>
+			</v-tabs>
+		</v-col>
+		<v-col cols="10" class="p-0 m-0">
+			<v-tabs-items v-model="tab">
+				<v-tab-item >
+					<Dashboard
+						:tab="0"
+						@emitChange="emitChange"
+					></Dashboard>
+				</v-tab-item>
+				<v-tab-item class="tabContent" v-for="[key, entry] in Object.entries(procedures)"
+					v-bind:key="key">
+					
+					<component 
+						:is="'Framework'"
+						:moduleIdx="key"
+						:services="entry.services"
+						:procedure="entry"
+						:procedureKey="key"
+					>            	
+					</component>
+				</v-tab-item>
+				<v-tab-item  v-for="[key, entry] in Object.entries(defaults)"
+					v-bind:key="key">
+					<component 
+							:is="entry.component"
+							:modules="modules"
+							:defaults="defaults"
+							:services="services"
+							:moduleIdx="key+1 + modules.length"
+							:defaultModule="entry"
+						>            	
+					</component>
+				</v-tab-item>
+			</v-tabs-items>
+		</v-col>
+	</v-row>
 </template>
 
 <script>
@@ -207,7 +135,7 @@ export default {
 	props: ['modules', 'defaults', 'procedures', 'services'],
 	data(){
 		return{
-			tab:0,
+			tab:8,
 			colorList: [
 				"rgb(70, 240,240",
 				"rgb(128,0,0",
@@ -225,7 +153,7 @@ export default {
 				"rgb(0,0,128",
 			],
 			modulesInner: [],
-			collapsed: true,
+			collapsed: false,
 			isHovered: -1,
 			index: 0,
 			status: {},
@@ -250,7 +178,9 @@ export default {
 	},
 
 	methods: {
-		
+		renderIcon(entry){
+			return this.$vuetify.icons.home
+		},
 		emitChange(value){
 			this[value.target] = value.value
 	    },
@@ -260,6 +190,10 @@ export default {
 		},
 		getColor(key, opacity){
 			const $this = this;
+			// var randomElement = this.colorList[Math.floor(Math.random()*this.colorList.length)];
+
+			// console.log(randomElement)
+			// return `${ randomElement}, ${opacity})`
 			if (!(this.colorList.length % key+1)){
 				return `${ this.colorList[0] }, ${opacity})`
 			} else {

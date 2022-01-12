@@ -7,11 +7,14 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="file" >
-  	<b-form-file 
+  <div id="file" @drop.prevent="addDropFile" @dragover.prevent >
+  	<v-file-input 
         v-model="value"
-    >
-    </b-form-file>
+        :hint="(source.hint ? source.hint : '')" 
+    > 
+    </v-file-input >
+    
+    
   </div>
 </template>
 
@@ -28,14 +31,17 @@ export default {
         
     },
 	methods: {
-	
+    addDropFile(e) { 
+      this.value = e.dataTransfer.files[0]; 
+      console.log(this.value)
+    }
+
 	},
 	props: ['source', 'status', 'service', "variable"],
   mounted(){
   },
   watch: {
         value(newValue, oldValue){
-            console.log(newValue, this.variable)
             this.$emit("updateValue", newValue.path )
         }
     }

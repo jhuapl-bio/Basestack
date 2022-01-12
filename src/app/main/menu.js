@@ -41,7 +41,7 @@ export class ClientMenu {
 				{ role: 'delete' },
 				{ type: 'separator' },
 				{ role: 'selectAll' }
-			])
+			]) 
 			]
 		},
 		{

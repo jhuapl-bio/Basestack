@@ -8,15 +8,15 @@
   -->
 <template>
   <div id="installhelp">
-    <b-row>
-      <b-col sm="12">
+    <v-row>
+      <v-col sm="12">
         <div class="col-sm mt-12 mt-sm-0" >
           <carousel :perPage="perPage" :navigationEnabled="false" direction="down">
             <slide>
               <div class="text-center">
                 <h2 >Welcome to Basestack!</h2>
                 <div style="width:100%; background:#1d3a7b;">
-                  <b-img style="" :src="require('../../../../assets/icon_256x256.png')" fluid alt="JUHAPL"></b-img>
+                  <v-img style="" :src="require('../../../../assets/icon_256x256.png')" fluid alt="JUHAPL"></v-img>
                 </div>
                 <span class="center-align-icon; " >
                   <p style="color: black">Need Help installing Basestack? Please swipe right for more information <font-awesome-icon    icon="question-circle" size="sm"  /></p>
@@ -24,7 +24,7 @@
                   <p style="color: black">See our <a target="_blank" href="https://jhuapl-bio.github.io/Basestack/" @click="open_link('https://jhuapl-bio.github.io/Basestack/', $event)">Website</a> for more info</p>
                 </span>
                 
-                <b-table
+                <v-table
                   class="text-center"
                   :fields="releaseNotificationFields"
                   :items="[releaseNotes]"
@@ -89,7 +89,7 @@
                             <font-awesome-icon class="configure"  @click="open_link('https://github.com/jhuapl-bio/Basestack/issues', $event)" icon="archive" size="sm"  />
                       </span> 
                   </template>
-                </b-table>
+                </v-table>
                 <div style="width:100%; padding-top: 20px" class="logDiv">
                   <h3>Release Notes</h3>
                   <hr>
@@ -128,15 +128,15 @@
                   <h3>
                     Available Modules
                   </h3>
-                  <b-list-group v-for="[key, entry] of Object.entries(modules)" :key="key">
-                    <b-list-group-item>{{entry.title}}</b-list-group-item>
-                  </b-list-group>
+                  <v-list-group v-for="[key, entry] of Object.entries(modules)" :key="key">
+                    <v-list-group-item>{{entry.title}}</v-list-group-item>
+                  </v-list-group>
                 </div>
             </slide> -->
           </carousel>
         </div>
-      </b-col>
-    </b-row>
+      </v-col>
+    </v-row>
   </div>
 </template>
 

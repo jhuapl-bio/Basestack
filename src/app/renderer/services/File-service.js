@@ -72,11 +72,17 @@ class FileService {
   getAllModuleNames(){
     return Api().get(`${baseEndpoint.get()}/modules/names`)    
   }
+  getService(name){
+    return Api().get(`${baseEndpoint.get()}/service/get/${name}` )    
+  }
   getProceduresStatus(params){
     return Api().get(`${baseEndpoint.get()}/procedures/status`, params)    
   }
   getStatusProceduresSelect(params){
     return Api().post(`${baseEndpoint.get()}/procedures/status/select`, params)    
+  }
+  getStatusProcedure(name){
+    return Api().get(`${baseEndpoint.get()}/procedure/status/${name}` )    
   }
   getSelectProceduresStatuses(params){
     return Api().post(`${baseEndpoint.get()}/procedures/status/select`, params)    
@@ -113,6 +119,9 @@ class FileService {
   }
   getResources(){
     return Api().get(`${baseEndpoint.get()}/status/fetch`)    
+  }
+  getDockerStats(){
+    return Api().get(`${baseEndpoint.get()}/docker/status/get`)    
   }
   getServerStatus(){
     return Api().get(`${baseEndpoint.get()}/server/status/fetch`)    

@@ -25,17 +25,17 @@
             	</span> 
 	    	</h4>
 	    </div>
-	    <b-row v-if="meta.images && status.images">
-	    	<b-col sm="12" >
+	    <v-row v-if="meta.images && status.images">
+	    	<v-col sm="12" >
 	    	  <h4 style="text-align:center">Modules</h4>
 	          	<div v-for="[key, element] of Object.entries(meta.images)" :key="key" >
 			          <li class="list-group-item"  
 					  	@mouseover="hoverElement = element" 
 						@mouseout="hoverElement = null">
-		        		<b-row >
-		        			<b-col sm="6" >
-								<b-row>
-									<b-col sm="12" style="overflow-wrap: anywhere; text-align:center ">
+		        		<v-row >
+		        			<v-col sm="6" >
+								<v-row>
+									<v-col sm="12" style="overflow-wrap: anywhere; text-align:center ">
 										<span style="text-align:center">{{element.title}}</span>
 										<span v-if="status.images[element.name].errors" class="center-align-icon warn-icon" style="float:right" v-tooltip="{
 										content: 'Error in installation, check logs',
@@ -65,10 +65,10 @@
 												<font-awesome-icon :icon="(scroll ? 'comment' : 'comment-slash')" size="sm"/>
 										</span>
 										
-									</b-col>
-								</b-row>
-								<b-row>
-									<b-col sm="12" style="text-align:center; padding: 0px"> 
+									</v-col>
+								</v-row>
+								<v-row>
+									<v-col sm="12" style="text-align:center; padding: 0px"> 
 										<div style="display:flex; ">
 											<div  class="logDiv" style="max-height: 200px; overflow-y:auto; ">
 												<code >
@@ -76,15 +76,15 @@
 												</code>
 											</div>	
 										</div>
-									</b-col>
-								</b-row>
+									</v-col>
+								</v-row>
 								
-		        			</b-col>
-							<b-col
+		        			</v-col>
+							<v-col
 								sm="6"
 								>
-								<b-row v-if="!status.images[element.name].installed">
-									<b-col sm="6"  v-if="status.images[element.name].running">
+								<v-row v-if="!status.images[element.name].installed">
+									<v-col sm="6"  v-if="status.images[element.name].running">
 										<div v-tooltip="{
 											content: 'This module is currently installing',
 											placement: 'top',
@@ -101,8 +101,8 @@
 											:color="'#2b57b9'"
 											/>
 										</div>
-									</b-col>
-									<b-col sm="12" style="text-align:center" v-else> 
+									</v-col>
+									<v-col sm="12" style="text-align:center" v-else> 
 										<span class="center-align-icon"  v-if="system.docker.running" 
 											v-tooltip="{
 											content: 'Install Method: ' + stagedInstallation[key].installation.type,
@@ -115,8 +115,8 @@
 											stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)">
 											<font-awesome-icon class="configure" icon="download" size="sm" />
 										</span>
-									</b-col>
-									<b-col sm="6" v-if="status.images[element.name].running"  style="text-align:center"> 
+									</v-col>
+									<v-col sm="6" v-if="status.images[element.name].running"  style="text-align:center"> 
 										<span class="center-align-icon"  v-tooltip="{
 											content: 'Cancel Install for: '+element.title,
 											placement: 'top',
@@ -126,10 +126,10 @@
 											}" v-on:click=" stagedInstallation[key].installation.type == 'online' ? cancelDockerInstall(element) : restartApp(element.name)">
 											<font-awesome-icon class="configure" icon="stop-circle" size="sm" />
 										</span>
-									</b-col>
-								</b-row>
-								<b-row v-else >
-									<b-col sm="4" style="text-align:center" > 
+									</v-col>
+								</v-row>
+								<v-row v-else >
+									<v-col sm="4" style="text-align:center" > 
 										<span class="center-align-icon configure"  v-tooltip="{
 											content: 'Uninstall Module. RECOMMENDED Clean Images after selecting this',
 											placement: 'top',
@@ -141,8 +141,8 @@
 												<font-awesome-icon class="configure" icon="trash-alt" style="text-align:center"/>
 											</span>
 										</span>
-									</b-col>
-									<b-col sm="4" style="text-align:center" v-if="!status.images[element.name].running"> 
+									</v-col>
+									<v-col sm="4" style="text-align:center" v-if="!status.images[element.name].running"> 
 										<span class="center-align-icon configure" v-if="system.docker.running"
 										v-on:click="selectedElement ={}; selectedElement = stagedInstallation[key]; stagedInstallation[key].installation.type == 'online' ? install_online_dockers(element) : install_offline_dockers(element)"
 										v-tooltip="{
@@ -155,9 +155,9 @@
 										>	
 											<font-awesome-icon  class="configure" icon="level-up-alt" size="sm" />
 										</span>
-									</b-col> 
+									</v-col> 
 
-									<b-col sm="4" style="text-align:center" v-else> 
+									<v-col sm="4" style="text-align:center" v-else> 
 										<span class="center-align-icon success-icon" style="float:right" 
 											v-tooltip="{
 												content: 'This module is currently updating',
@@ -176,8 +176,8 @@
 											:color="'#2b57b9'"
 											/>
 										</span>
-									</b-col>
-									<b-col sm="4" v-if="!element.config.private">
+									</v-col>
+									<v-col sm="4" v-if="!element.config.private">
 										<span v-if="!status.images[element.name].fetching_available_images.status" class="center-align-icon info-icon" style="float:middle">
 											<font-awesome-icon 
 											@click="fetch_docker_tags(element.name)" 
@@ -207,10 +207,10 @@
 												:color="'#2b57b9'"
 											/>
 										</span>
-									</b-col>
-								</b-row>
+									</v-col>
+								</v-row>
 								
-								<b-table
+								<v-table
 									stacked
 									style="overflow-wrap: anywhere; overflow-y: auto; max-height: 120px"
 									class="text-center"
@@ -283,23 +283,23 @@
 												<font-awesome-icon :icon="cell.value ? 'check' : 'times-circle' " size="sm" />
 										</span> 
 									</template>
-								</b-table>
+								</v-table>
 								<ModuleConfig 
 									v-if="staged.images[key]"
 									:imageName="key" 
 									@updateSrc="updateSrc"
 									>
 								</ModuleConfig>
-							</b-col>
+							</v-col>
 						
-						</b-row>
+						</v-row>
 							
 			        </li>
 				</div>
-	    	</b-col>
-	    </b-row>
-	    <b-row style="padding-top: 10px; padding-bottom:10px; " >
-	    	<b-col sm="6" class="text-center">
+	    	</v-col>
+	    </v-row>
+	    <v-row style="padding-top: 10px; padding-bottom:10px; " >
+	    	<v-col sm="6" class="text-center">
 			    <button class="btn tabButton tabButton-stop" style="border-radius: 10px; " v-on:click="pruneImages()"  >
 			        <div  >
 		        		<font-awesome-icon  icon="trash-alt" style="text-align:center"/>
@@ -315,9 +315,9 @@
 					    />
 			        </div>
 			    </button>
-			</b-col>
+			</v-col>
 			
-		</b-row>
+		</v-row>
       	<Docker @toast="toast" v-if="system.resources " v-bind:resources="system.resources" v-bind:docker="system.docker"></Docker>
 	    <hr>
     	<Memory v-if="system.resources" v-bind:resources="system.resources"></Memory>

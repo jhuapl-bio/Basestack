@@ -1,0 +1,19 @@
+agave: #Top level is the left-hand selection of the menu and the major module to install 
+  title: "AGAVE"
+  icon: "dna"
+  component: "AGAVE"
+  module: True
+  init: false 
+  tooltip: "View Variant Exploration of vcf calls"
+  linking:
+    - output:  #From where to where as input to next procedure
+        service: agave_create_report
+        target: outputs
+        variable: json
+      input: 
+        service: agave_visualization
+        target: variables
+        variable: file
+  services:
+    - agave_create_report
+    - agave_visualization 

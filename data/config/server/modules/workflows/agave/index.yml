@@ -1,0 +1,10 @@
+agave:
+  title: "AGAVE"
+  icon: "dna"
+  module: True
+  tooltip: "Run AGAVE"
+  dependencies:
+    - target: "jhuaplbio/agave"
+      label: "jhuaplbio/agave"
+      type: "docker"
+  
