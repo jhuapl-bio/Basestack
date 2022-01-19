@@ -1,0 +1,29 @@
+module name,licenses,repository,licenseUrl,parents
+@fortawesome/fontawesome-svg-core@1.2.28,MIT,https://github.com/FortAwesome/Font-Awesome,https://github.com/FortAwesome/Font-Awesome/raw/master/LICENSE.txt,client
+@fortawesome/free-solid-svg-icons@5.13.0,(CC-BY-4.0 AND MIT),https://github.com/FortAwesome/Font-Awesome,https://github.com/FortAwesome/Font-Awesome/raw/master/LICENSE.txt,client
+@fortawesome/vue-fontawesome@0.1.9,MIT,https://github.com/FortAwesome/vue-fontawesome,https://github.com/FortAwesome/vue-fontawesome/raw/master/LICENSE.txt,client
+axios@0.18.1,MIT,https://github.com/axios/axios,https://github.com/axios/axios/raw/master/LICENSE,client
+bootstrap-vue@2.12.0,MIT,https://github.com/bootstrap-vue/bootstrap-vue,https://github.com/bootstrap-vue/bootstrap-vue/raw/master/LICENSE,client
+bootstrap@4.4.1,MIT,https://github.com/twbs/bootstrap,https://github.com/twbs/bootstrap/raw/master/LICENSE,client
+cors@2.8.5,MIT,https://github.com/expressjs/cors,https://github.com/expressjs/cors/raw/master/LICENSE,client
+dockerode@3.2.0,Apache-2.0,https://github.com/apocas/dockerode,https://github.com/apocas/dockerode/raw/master/LICENSE,client
+electron-promise-ipc@2.1.0,MIT,https://github.com/sibnerian/electron-promise-ipc,https://github.com/sibnerian/electron-promise-ipc/raw/master/LICENSE,client
+epic-spinners@1.1.0,MIT,https://github.com/epicmaxco/epic-spinners,https://github.com/epicmaxco/epic-spinners/raw/master/LICENSE,client
+eslint-plugin-vue@6.2.2,MIT,https://github.com/vuejs/eslint-plugin-vue,https://github.com/vuejs/eslint-plugin-vue/raw/master/LICENSE,client
+jquery@3.5.0,MIT,https://github.com/jquery/jquery,https://github.com/jquery/jquery/raw/master/LICENSE.txt,client
+js-cookie@2.2.1,MIT,https://github.com/js-cookie/js-cookie,https://github.com/js-cookie/js-cookie/raw/master/LICENSE,client
+mkdirp@1.0.4,MIT,https://github.com/isaacs/node-mkdirp,https://github.com/isaacs/node-mkdirp/raw/master/LICENSE,client
+moment@2.25.3,MIT,https://github.com/moment/moment,https://github.com/moment/moment/raw/master/LICENSE,client
+rimraf@3.0.2,ISC,https://github.com/isaacs/rimraf,https://github.com/isaacs/rimraf/raw/master/LICENSE,client
+sweetalert2@9.10.12,MIT,https://github.com/sweetalert2/sweetalert2,https://github.com/sweetalert2/sweetalert2/raw/master/LICENSE,client
+v-tooltip@2.0.3,ISC,https://github.com/Akryum/vue-tooltip,https://github.com/Akryum/vue-tooltip/raw/master/LICENSE,client
+vue-electron@1.0.6,ISC,https://github.com/SimulatedGREG/vue-electron,https://github.com/SimulatedGREG/vue-electron/raw/master/LICENSE.md,client
+vue-js-toggle-button@1.3.3,None,https://github.com/euvl/vue-js-toggle-button,https://github.com/euvl/vue-js-toggle-button/raw/master/LICENSE,client
+vue-multiselect@2.1.6,MIT,https://github.com/shentao/vue-multiselect,https://github.com/shentao/vue-multiselect/raw/master/LICENSE,client
+vue-router@3.1.6,MIT,https://github.com/vuejs/vue-router,https://github.com/vuejs/vue-router/raw/master/LICENSE,client
+vue-sweetalert2@3.0.3,MIT,https://github.com/avil13/vue-sweetalert2,https://github.com/avil13/vue-sweetalert2/raw/master/LICENSE,client
+vue@2.6.11,MIT,https://github.com/vuejs/vue,https://github.com/vuejs/vue/raw/master/LICENSE,client
+vuelidate@0.7.5,MIT,https://github.com/monterail/vuelidate,https://github.com/monterail/vuelidate/raw/master/LICENSE,client
+vuex-electron@1.0.3,MIT,https://github.com/vue-electron/vuex-electron,https://github.com/vue-electron/vuex-electron/raw/master/LICENSE,client
+vuex@3.2.0,MIT,https://github.com/vuejs/vuex,https://github.com/vuejs/vuex/raw/master/LICENSE,client
+winston@3.2.1,MIT,https://github.com/winstonjs/winston,https://github.com/winstonjs/winston/raw/master/LICENSE,client
