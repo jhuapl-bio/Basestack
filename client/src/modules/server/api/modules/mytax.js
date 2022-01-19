@@ -4,7 +4,7 @@ const path = require("path")
 export  class BasestackMytax {
 // export class docker {
 	constructor(){
-        this.title = "basestack_mytax"
+        this.title = "basestack_mytax" 
 		this.docker_module = store.config.images["jhuaplbio/basestack_mytax"] 
 		this.basePath = path.join(store.meta.resourcePath, "mytax")
 	}

@@ -97,18 +97,6 @@
                 </div>
               </div>
             </slide>
-            <slide class="text-center">
-              <h3 >Install Docker</h3>
-              <video preload="auto" ref="videoRef" type="video/mp4" :src="docker_install" id="video-container" style="width: 100% !important; max-height:40vh; vertical-align: top" controls ></video>
-              <p>Watch a brief overview of how to install Docker</p>
-              <p>
-                More information can be found on proper installation procedures at:
-                <a class="center-y-img" href="" v-on:click="open_link('https://github.com/jhuapl-bio/Basestack#basestack',$event)">GitHub</a>
-              </p>
-              <p>
-                Next, install modules by selecting that option in the left-hand tab or by continuing to the right
-              </p>
-            </slide>
             <slide>
                 <p>
                   Here you can view all of your installed modules within Docker
@@ -203,9 +191,7 @@
       this.$electron.ipcRenderer.send("queryRelease", "")
     },
     computed: {
-      docker_install(){
-        return require('../../../assets/tutorials/mp4/7.1-docker-install.mp4')
-      }
+      
     }
   };
 </script> 

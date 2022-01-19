@@ -64,13 +64,13 @@
 		            		<font-awesome-icon class="configure" :icon="entry.icon"/>
 		            	</span>
 		            	<span style="  text-anchor: end; text-align:right; vertical-align:middle; white-space: nowrap; padding-left: 10px; font-size: 0.8em" v-if="!collapsed">
-		            		{{ entry.title }}
+		            		{{  ( entry.shorttitle  ? entry.shorttitle : entry.title )       }}
 		            	</span>
 		            </div>
 	        	</div>
   			</template>
   			<div v-if="(!entry.module || entry.installed )  && initial">
-  				<h2 class="header" style="text-align:center">{{entry.title}}
+  				<h2 class="header" style="text-align:center">{{  entry.title     }}
 			      <span v-if="entry.tooltip" v-b-tooltip.hover.top 
 			        :title="entry.tooltip"
 			        style="" >
@@ -136,6 +136,8 @@ import Pavian from "@/components/NavbarModules/Pavian/Pavian"
 import Logs from "@/components/NavbarModules/Logs/Logs"
 import About from "@/components/NavbarModules/About/About"
 import Tutorial from "@/components/NavbarModules/Tutorial/Tutorial"
+import Oxford_Demo from "@/components/NavbarModules/Demos/Oxford_Demo"
+
 import {HalfCircleSpinner} from 'epic-spinners'
 import FileService from '@/services/File-service.js'
 import path from "path"
@@ -156,6 +158,7 @@ export default {
 		Tutorial,
 		MyTaxReport,
 		Pavian,
+		Oxford_Demo,
 		HalfCircleSpinner
 	},
 	data(){
@@ -249,7 +252,7 @@ export default {
 	methods: {
       open (link) {
           try{        
-                this.$electron.shell.openPath(link)
+            this.$electron.shell.openPath(link)
           } catch(err){
             this.$swal.fire({
               position: 'center',

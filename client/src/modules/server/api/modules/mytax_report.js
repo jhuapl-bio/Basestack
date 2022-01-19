@@ -11,11 +11,11 @@ export  class BasestackMytaxReport {
 		this.modules = {}
 	}
 	async watch(req){
-		const $this = this
+		const $this = this 
 		return new Promise(function(resolve,reject){
 			const data = req.data
 			let filename = data.filename
-			let modules = []
+			let modules = {items: []}
 	
 			
 			if (req.pipeline.key == 'basestack_mytax_report'){
@@ -23,17 +23,9 @@ export  class BasestackMytaxReport {
 					{
 						items: [
 							{
-								key: "out",
-								title: "Outfile",
-								step: 1,
-								status: null,
-								statusType: 'file',
-								filepath: `${data.filepath}.out`
-							},
-							{
 								key: "report",
 								title: "Report",
-								step: 2,
+								step: 1,
 								status: null,
 								statusType: 'file',
 								filepath: `${data.filepath}.report`
@@ -41,7 +33,7 @@ export  class BasestackMytaxReport {
 							{
 								key: "fullstring",
 								title: "String File",
-								step: 3,
+								step: 2,
 								status: null,
 								statusType: 'file',
 								filepath: `${data.filepath}.fullstring`
@@ -49,7 +41,7 @@ export  class BasestackMytaxReport {
 							{
 								key: "json",
 								title: "Final JSON",
-								step: 4,
+								step: 3,
 								status: null,
 								statusType: 'file',
 								filepath: `${data.filepath}.json`
@@ -109,52 +101,8 @@ export  class BasestackMytaxReport {
 					header: [
 						
 					]
-				}
-			} else {
-				modules =  
-					{
-						items: [
-							{
-								key: "references",
-								title: "References",
-								step: 1,
-								status: null,
-								statusType: 'file',
-								filepath: `${data.dirpath}/raw/influenza.fna`
-							},
-							{
-								key: "tax",
-								title: "Taxonomy",
-								step: 2,
-								status: null,
-								statusType: 'file',
-								filepath: `${data.dirpath}/taxonomy/names.dmp`
-							},
-							{
-								key: "metadata_table",
-								title: "Metadata",
-								step: 3,
-								status: null,
-								statusType: 'file',
-								filepath: `${data.dirpath}/raw/annotation_IVR.dat`
-							},
-							{
-								key: "final",
-								title: "Final",
-								step: 4,
-								status: null,
-								statusType: 'file',
-								filepath: `${data.dirpath}/database.kdb`
-							}
-						],
-						header: [
-							{key: 'tax', label: 'Taxonomy', sortable: false, class: 'text-center'},
-							{key: 'references', label: 'References', sortable: false, class: 'text-center'},
-							{key: 'metadata_table', label: 'Metadata', sortable: false, class: 'text-center'},
-							{key: 'final', label: 'Final', sortable: false, class: 'text-center'}
-						]
-				}	
-			}		
+				} 
+			} 	
 			$this.modules = modules
 			let promises = []
 			list_module_statuses(modules.items).then((returned_data)=>{
@@ -167,40 +115,62 @@ export  class BasestackMytaxReport {
 
 
 	async build(data) {
-		return new Promise(function(resolve,reject){			
+		return new Promise(function(resolve,reject){		 	
             let binds = []
 			let command = ""
 			let cmd_option = data.cmd
 			if (cmd_option.key == 'basestack_mytax_build_flukraken'){
 				command = [ 'bash', '-c', `source /opt/conda/etc/profile.d/conda.sh &&\
-					conda activate mytax && bash build_flukraken.sh -k /opt/databases/`
+					conda activate mytax && bash build_flukraken.sh -k /opt/databases/flukraken2` 
 				]
 				binds.push(data.data.dirpath + ":/opt/databases"  )
 
-			} else if (cmd_option.key == 'basestack_mytax_process_db'){
+			}  else if (cmd_option.key == 'basestack_mytax_build_flucentrifuge'){
 				command = [ 'bash', '-c', `source /opt/conda/etc/profile.d/conda.sh &&\
-					conda activate mytax && bash process_krakendb.sh -k /opt/databases`
+					conda activate mytax && bash build_flukraken.sh -k /opt/databases/flucentrifuge -c centrifuge` 
 				]
+				binds.push(data.data.dirpath + ":/opt/databases"  )
+
+			} else if (cmd_option.key == 'basestack_decompress_mytax_db'){
+				let db = path.basename(data.data.filepath)
+				command = [ 'bash', '-c', `tar -xvzf /opt/databases/${db} -C /opt/databases/`
+				]
+
 				binds.push(data.data.dirpath + ":/opt/databases"  )
 
 			} else{
-				binds.push(data.data.dirpath + ":/opt/data")
-				command = ['bash', '-c']
-				let db = data.db.name
-				let e = ""
+				binds.push(data.data.dirpath + ":/opt/data") 
+				let db = ( data.db.name == 'custom' ? data.db.info.dirname : data.db.name )
+				console.log(data)
+				let e = `source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && `
+				// let e = "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && "
 				if (data.db.compressed){
-					e = `tar -xvzf /opt/databases/${db}.tar.gz -C /opt/databases/ && `
+					e = `tar -xvzf /opt/databases/${data.db.fullname} -C /opt/databases/ && `
 				}
-				if (data.db.name == 'custom'){
-					binds.push(`${data.db.info.dirpath}:/opt/databases/${db}`)
+				if (data.db.name == 'custom'){  
+						binds.push(`${data.db.info.dirpath}:/opt/databases/${db}`)
 				}
-				
+				if (data.classifier_name == 'centrifuge'){ 
+					e = `${e} $CONDA_PREFIX/lib/centrifuge/centrifuge -f -x /opt/databases/${db}/${path.basename(db)}  --report /opt/data/${data.data.filename}.centrifuge.report -q /opt/data/${data.data.filename} >  /opt/data/${data.data.filename}.out   &&\
+							$CONDA_PREFIX/lib/centrifuge/centrifuge-kreport  -x /opt/databases/${db}/${path.basename(db)} /opt/data/${data.data.filename}.centrifuge.report > /opt/data/${data.data.filename}.report && `
+					// e = `${e} $CONDA_PREFIX/lib/centrifuge/centrifuge-kreport  -x /opt/databases/${db}/${path.basename(db)} --output /opt/data/${data.data.filename}.out /opt/data/${data.data.filename}.centrifuge.report > /opt/data/${data.data.filename}.report && `
+				} else if (data.classifier_name == 'kraken2'){
+					e = `${e}  export KRAKEN2_DEFAULT_DB="/opt/databases/${db}" && \
+					kraken2  --output /opt/data/${data.data.filename}.out  --report /opt/data/${data.data.filename}.report  /opt/data/${data.data.filename} && `
+					// e = `${e} `
+				} else {
+						e = `${e} echo "Running DEPRECATED kraken1" && \
+						kraken --db /opt/databases//${db} --output /opt/data/${data.data.filename}.out /opt/data/${data.data.filename} &&\
+						kraken-report --db /opt/databases/${db} /opt/data/${data.data.filename}.out | tee  /opt/data/${data.data.filename}.report && `
+				}
+				command = ['bash', '-c']
 				
 				const filename = data.data.filename
-				command.push(`${e} source /opt/conda/etc/profile.d/conda.sh &&\
-				conda activate mytax && kraken --db /opt/databases/${db} --output /opt/data/${data.data.filename}.out /opt/data/${data.data.filename} &&\
-				kraken-report --db /opt/databases/${db}  /opt/data/${data.data.filename}.out | tee  /opt/data/${data.data.filename}.report &&\
-				bash krakenreport_fullstring.sh -i /opt/data/${data.data.filename}.report -k /opt/databases/${db} -o /opt/data/${data.data.filename}.fullstring
+				command.push(`${e} \
+				python3  /opt/software/mytax/generate_hierarchy.py \
+					-o /opt/data/${data.data.filename}.fullstring \
+					--report /opt/data/${data.data.filename}.report  \
+					-taxdump ${( data.db.taxonomy ? data.db.taxonomy : '/taxdump'  ) }/nodes.dmp
 				bash krakenreport2json.sh -i /opt/data/${data.data.filename}.fullstring -o /opt/data/${data.data.filename}.json` )
 			}
 
@@ -217,7 +187,8 @@ export  class BasestackMytaxReport {
 		        "Volumes": {
 		        }
 
-			};					
+			};		
+			console.log(command)
 			resolve({options: options, command: command })
 		})
 	}

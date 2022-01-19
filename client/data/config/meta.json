@@ -15,6 +15,7 @@
                     "Dockerfile"
                 ],
                 "type": "online",
+                "types": ["online", "offline"],
                 "file": null,
                 "active": false,
                 "resources": null,
@@ -33,6 +34,7 @@
                     "Dockerfile",
                     "express.js"
                 ],
+                "types": ["online", "offline"],
                 "type": "online",
                 "file": null,
                 "active": false,
@@ -61,6 +63,7 @@
             "tags": [],
             "installation": {
                 "type": "online",
+                "types": ["online", "offline"],
                 "file": null,
                 "active": false,
                 "resources": null,
@@ -77,11 +80,31 @@
             "installation": {
                 "srcFiles": [
                 ],
+                "types": ["online", "offline"],
                 "type": "online",
                 "file": null,
                 "active": false,
                 "resources": null,
                 "path": "florianbw/pavian"
+            }
+        },
+        "jhuaplbio/oxford-demo": {
+            "status": null,
+            "title": "Real-Time Sequencing Report",
+            "name": "jhuaplbio/oxford-demo",
+            "estimated_size": 6.7,
+            "private": true,
+            "tags": [],
+            "installation": {
+                "srcFiles": [
+                ],
+                "types": ["offline"],
+                "online_disabled": true,
+                "type": "offline",
+                "file": null,
+                "active": false,
+                "resources": null,
+                "path": "jhuaplbio/oxford-demo"
             }
         }
     },
@@ -255,13 +278,81 @@
             "resources": {
                    "classifiers": [
                         { 
-                            "name": "kraken", 
+                            "name": "kraken2", 
+                            "tooltip": "Select a kraken 2 database directory",
+                            "externals": [
+                                {
+                                    "name": "manual",
+                                    "label": "Manual",
+                                    "url": "https://github.com/DerrickWood/kraken2/wiki/Manual",
+                                    "type": "link"
+                                },
+                                {
+                                    "name": "dbs",
+                                    "label": "Minikraken2 database",
+                                    "url": "ftp://ftp.ccb.jhu.edu/pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz",
+                                    "type": "download"
+                                },
+                                {
+                                    "name": "mitogenome",
+                                    "label": "Marine Mitogenome database",
+                                    "url": "https://github.com/jhuapl-bio/ONRMitoGenome/tree/main/marine_mammal_mitochondrion-refseq-20210629",
+                                    "type": "download"
+                                }
+                                
+                            ], 
                             "dbs": [
-                                { "name":"minikraken", "compressed":false},
-                                { "name":"flukraken", "compressed":true},
+                                { "name":"minikraken2_v2_8GB_201904_UPDATE", "compressed": false, "fullname": "minikraken2", "taxonomy": "/taxdump"},
+                                { "name":"ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629", "compressed": false, "fullname": "MarineMitogenome", "taxonomy": "/taxdump"},
+                                { "name":"flukraken2", "compressed": false, "fullname": "flukraken2", "taxonomy": "taxonomy"},
                                 { "name":"custom"}
                             ] 
-                        }                        
+                        },
+                        { 
+                            "name": "centrifuge",
+                            "basenameFile": true,
+                            "tooltip": "Select a centrifuge INDEX value to use as database. This is designated with the .cf extension in your database directory",
+                            "externals": [
+                                {
+                                    "name": "manual",
+                                    "label": "Manual",
+                                    "url": "https://ccb.jhu.edu/software/centrifuge/manual.shtml",
+                                    "type": "link"
+                                },
+                                {
+                                    "name": "dbs",
+                                    "label": "Standard Archaea, Viral, Bacterial, and Human centrifuge database",
+                                    "url": "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed%2Bh%2Bv.tar.gz",
+                                    "type": "download"
+                                }
+                            ], 
+                            "dbs": [
+                                { "name":"custom"}
+                            ] 
+                        },
+                        { 
+                            "name": "kraken1", 
+                            "tooltip": "Select a kraken 1 database directory",
+                            "externals": [
+                                {
+                                    "name": "manual",
+                                    "label": "Manual",
+                                    "url": "https://ccb.jhu.edu/software/kraken/MANUAL.html",
+                                    "type": "link"
+                                },
+                                {
+                                    "name": "dbs",
+                                    "label": "Minikraken1 database",
+                                    "url": "http://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz",
+                                    "type": "download"
+                                }
+                                
+                            ], 
+                            "dbs": [
+                                { "name":"minikraken_20171013_4GB", "compressed": false, "fullname": "minikraken_20171019_4GB.tgz", "taxonomy": "/taxdump"},
+                                { "name":"custom"}
+                            ] 
+                        }
                     ]
             },
             "pipelines": [
@@ -273,12 +364,17 @@
                 {
                     "key": "basestack_mytax_build_flukraken",
                     "status": null,
-                    "title": "Build Standard Flukraken"
+                    "title": "Build Standard Flu-kraken2 database"
                 },
                 {
-                    "key": "basestack_mytax_process_db",
+                    "key": "basestack_mytax_build_flucentrifuge",
                     "status": null,
-                    "title": "Pre-Process Kraken Database"
+                    "title": "Build Standard Flu-centrifuge database"
+                },
+                {
+                    "key": "basestack_decompress_mytax_db",
+                    "status": null,
+                    "title": "Decompress Database"
                 }
             ]
         },
@@ -295,6 +391,24 @@
                 "base": "http://localhost",
                 "material": "material",
                 "port": 8087,
+                "force": true,
+                "initial": true
+            }
+        },
+        "oxford_demo": {
+            "name": "oxford_demo",
+            "title": "Real-Time Sequencing Report",
+            "shorttitle": "Real-Time Report",
+            "icon": "dna",
+            "component": "Oxford_Demo",
+            "module": true,
+            "status": null,
+            "image": "jhuaplbio/oxford-demo",
+            "meta": "${writePath}/oxford_demo/meta.json",
+            "config": {
+                "base": "http://localhost",
+                "material": "material",
+                "port": 8089,
                 "force": true,
                 "initial": true
             }

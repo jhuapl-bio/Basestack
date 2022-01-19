@@ -12,7 +12,7 @@ const chokidar = require("chokidar")
 const { getFiles} = require("./IO.js")
 const {checkFolderExists } = require("./validate.js")
 var { logger } = require("../controllers/logger.js")
-const fs = require("fs")
+const fs = require("fs") 
 var readFile = function(filename){
     return new Promise(function(resolve,reject){
 	    fs.readFile(filename, function(err,data){

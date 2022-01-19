@@ -2,7 +2,7 @@
   <div id="moduleconfig"  style="">
    <label style="text-align:center" class="typo__label">Installation Type</label>
    	<div style="display:flex">
-		<b-form-select v-model="selectedElement.installation.type"  :options="['offline', 'online']" >
+		<b-form-select v-model="selectedElement.installation.type"  :options="selectedElement.installation.types" >
 		</b-form-select>
 		
 	</div>
