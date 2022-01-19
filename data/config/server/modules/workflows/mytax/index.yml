@@ -6,6 +6,7 @@ mytax:
   dependencies:
     - target: "jhuaplbio/basestack_mytax"
       type: "docker"
+      format: "docker"
     - source: 
         url: "ftp.ccb.jhu.edu"
         type: "file"
@@ -17,6 +18,7 @@ mytax:
         target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
       label: "Minikraken2"
       type: "download" 
+      format: "dir"
       decompress: 
         format: "tgz"
         source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
@@ -28,6 +30,7 @@ mytax:
         remove: false
         target: "${writePath}/workflows/mytax/centrifuge/centrifuge.tgz"
       type: "download" 
+      format: "dir"
       decompress: 
         format: "tgz"
         overwrite: true
@@ -42,6 +45,7 @@ mytax:
         remove: false
         target: "${writePath}/workflows/mytax/minikraken_20171019_4GB.tgz"
       type: "download" 
+      format: "dir"
       label: "Minikraken"
       decompress: 
         format: "tgz"

@@ -9,9 +9,10 @@ agave_visualization:
       id: "agave"
   image: "jhuaplbio/agave"
   workingdir: "/AGAVE"
+  continuous: true
   ports: 
     - 8083:80
-  command: ["bash", "-c", "/etc/init.d/nginx restart && cp ${file} /AGAVE/data/default.json &&  python3 -m http.server"]
+  command: ["bash", "-c", "/etc/init.d/nginx restart; cp ${file} /AGAVE/data/default.json;  python3 -m http.server"]
   variables:
     file: 
       element: "file"
@@ -55,6 +56,8 @@ agave_create_report:
   outputs:
     json:
       watch: True
+      label: "JSON file"
+      hint: ".json file to be uploaded to the AGAVE visualization Service. "
       type: "file"
       path: ${variant}.json
   variables:

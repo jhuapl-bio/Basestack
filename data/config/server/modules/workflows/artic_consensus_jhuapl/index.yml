@@ -7,4 +7,5 @@ artic_consensus_jhuapl:
     - target: "jhuaplbio/basestack_consensus"
       label: "jhuaplbio/basestack_consensus"
       type: "docker"
+      format: "docker"
     

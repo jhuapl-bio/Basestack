@@ -5,6 +5,10 @@ mytax_kraken2_report:
   tooltip: "Run Kraken 2 classification and receive report file then json for visualization"
   force_restart: true
   config: null  
+  tags: 
+    - "kraken2"
+    - "metagenomic"
+    - metagenome
   linking:
     - output:  #From where to where as input to next procedure
         service: mytax_kraken2_report
@@ -21,6 +25,11 @@ mytax_visualization:
   title: "Kraken2 Mytax Visualization"
   icon: "chart-pie"
   init: false
+  continuous: true
+  tags: 
+    - "kraken2"
+    - "metagenomic"
+    - "sunburst"
   tooltip: "View Sunburt from JSON report of Kraken/Centrifuge run"
   force_restart: false
   config: null  

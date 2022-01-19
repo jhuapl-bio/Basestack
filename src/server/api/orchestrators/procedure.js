@@ -5,32 +5,33 @@ const cloneDeep = require("lodash.clonedeep");
 /*
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
-   - #
-   - # All Rights Reserved.
+   - # 
+   - # All Rights Reserved. 
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
   */
-var Docker = require('dockerode');
-const path = require("path")
+var Docker = require('dockerode');   
+const path = require("path")    
 var  { store }  = require("../../config/store/index.js")
 const { readFile } = require("../controllers/IO.js")
 const { list_module_statuses }  = require("../controllers/watcher.js")
 const { check_container, getExternalSource } = require("../controllers/fetch.js")
-const { Service }  = require("./service.js")
+const { Service }  = require("./service.js") 
 const { spawnLog, createLoggingObject } = require("../controllers/logger.js")
 var logger = store.logger
-// var docker = new Docker();
-const fs = require("file-system")
-let dockerObj;  
-
-export class Procedure {
+// var docker = new Docker();   
+const fs = require("file-system")    
+let dockerObj;   
+  
+export class Procedure { 
 	constructor(name, params){
-		this.name = name 
-        this.params = params
+		this.name = name  
+        this.type = 'procedure'
+        this.params = params  
         this.services_config = params.services
         this.service_steps = {}
-		this.container = null;
-		this.cmd = null;
+		this.container = null; 
+		this.cmd = null; 
 		this.options = {};
         this.services = {};
 		this.streamObj = null;
@@ -153,10 +154,14 @@ export class Procedure {
 		return new Promise(function(resolve,reject){
             let promises = []
                 let running = false
+                let error = null
                 for (let [key, service] of Object.entries($this.services)){
                     let index = $this.services_config.indexOf(key)
                     let step = null;
                     if (index > -1){
+                        if (service.status.error){
+                            error = `Service: ${key}, Error: ${service.status.error}\n`
+                        }
                         if(service.status.exists.running){
                             $this.service_steps[key] = true
                             running = true
@@ -167,6 +172,7 @@ export class Procedure {
                     }
                 } 
                 $this.status.running = running
+                $this.status.error = error
                 resolve()
             $this.dependencyCheck().then((dependencies)=>{
                 resolve()
@@ -230,11 +236,22 @@ export class Procedure {
                 services[d] = { }
             })
         }
+        $this.status.error = null
+        $this.status.running = true
         // return new Promise(function(resolve,reject){
             let promises = [];
             for (let [key, service ] of Object.entries(services)){
                 let service_obj = $this.services[key]
-                await service_obj.check_then_start(service, true)
+                if (service_obj.config.orchestrator){
+                    logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", key)
+                } else{
+                    try{
+                        await service_obj.check_then_start(service, true)
+                    } catch(err){
+                        logger.error("%o Error in procedure: %s, key: %s", err, $this.name, key)
+                        $this.status.error = err
+                    }
+                }
                 // promises.push(service_obj.check_then_start(service.variables, true))
             }
             // const serial = funcs =>

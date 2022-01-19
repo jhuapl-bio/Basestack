@@ -1,14 +1,14 @@
 import { mapConfigurations, mapVariables } from '../controllers/mapper.js';
 const cloneDeep = require("lodash.clonedeep");
 
-/*  
+/*   
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
    - #
    - # All Rights Reserved.
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
-  */ 
+  */  
 var Docker = require('dockerode'); 
 const path = require("path") 
 var  { store }  = require("../../config/store/index.js")
@@ -22,9 +22,10 @@ var logger = store.logger
 const fs = require("file-system") 
 let dockerObj;
 
-export class Service {
+export class Service { 
 	constructor(name, params){
 		this.name = name
+        this.type = "service"
         this.config = params
         this.dependencies = [],
         this.interval = {
@@ -33,14 +34,20 @@ export class Service {
         }
         this.status = {
             exists: false,
+            runnable: true,
+            exit_code: -1,
             fully_installed: false,
             partial_install: false,
             error: null,
+            success: null,
+            running: false,
             stream: null,
         };
         let depends = this.config.depends
         this.defineDependencies() 
+
 	}
+
     async create_interval (){
         const $this = this
 		let checking = false
@@ -71,7 +78,7 @@ export class Service {
         let service = this.config
         let optionsFile
         if (service.config ){ 
-            optionsFile = service.config
+            optionsFile = service.config 
         } else if (service.orchestrated && !service.config ){
             optionsFile = store.system.orchestrators.subclient.path
         } else {
@@ -98,18 +105,23 @@ export class Service {
                             promises.push(module_status(value, key, variables, ( outputs[key] ? outputs[key] : {}   )))
                         }
                     }
+                    
                     Promise.allSettled(promises).then((response)=>{ 
                         response.forEach((resp)=>{
                             if (resp.status == 'fulfilled'){
                                 if (watchable[resp.value.key]){
                                     watchable[resp.value.key].status = resp.value.status
                                 }
+                                
                             } else {
                                 store.logger.error("Error in getting status for watched location: %o", resp.reason )
                             }
                         }) 
+                        // if ($this.name == 'staphb_gamma'){
+                        //     console.log("yes", watchable)
+                        // }
                         resolve(watchable)
-                    })                
+                    })                 
                 } else {
                     resolve(watchable)
                 }
@@ -126,6 +138,9 @@ export class Service {
             const response = check_container($this.name).then((response)=>{
                 
                 $this.status.exists = response 
+                if (response && typeof response === 'object' ){
+                    $this.status.running = response.running
+                }
     			resolve()
             }).catch((err)=>{
                 reject(err)
@@ -139,7 +154,10 @@ export class Service {
         if (this.config.depends){
             this.config.depends.forEach((dependency)=>{
                 if (dependency.type == 'module' && dependency.id in store.modules){
-                    $this.dependencies[dependency.id] = store.modules[dependency.id]
+                    $this.dependencies.push(store.modules[dependency.id])
+                }
+                if (dependency.type == 'service' && dependency.id in store.modules){
+                    $this.dependencies.push(store.services[dependency.id])
                 }
             })
         }
@@ -193,11 +211,16 @@ export class Service {
         let fully_installed = false
         return new Promise(function(resolve,reject){
             try{
+                
                 if (dependencies){
                     for (const [key, dependency] of Object.entries(dependencies)){
-                        dependency.dependencies.forEach((dep1)=>{
-                            returned.push(dep1)
-                        })
+                        if (dependency.type == 'module'){
+                            dependency.dependencies.forEach((dep1)=>{
+                                returned.push(dep1)
+                            })
+                        } else if (dependency.type == 'service'){
+                            returned.push(dependency)
+                        }
                     }
                     let fully_installed = returned.every((d)=>{
                         return d.status.exists
@@ -205,8 +228,19 @@ export class Service {
                     let any_installed = returned.some((d)=>{
                         return d.status.exists
                     })
+                    let runnable = returned.every((d)=>{
+                        if (d.type == 'service'){
+                            if (d.status && d.status.exists){
+                                return d.status.exists.running
+                            } else {
+                                return false
+                            }
+                        } else {
+                            return true
+                        }
+                    })
                     $this.status.partial_install = any_installed
-
+                    $this.status.runnable =runnable
                     $this.status.fully_installed = fully_installed
                 }
                 resolve(returned) 
@@ -405,11 +439,12 @@ export class Service {
             }
             let promises = []
             let values = []
+                
             for (let [key, custom_variable] of Object.entries(custom_variables)){
                 let selected_option  = defaultVariables[key]
                 let name = key;
                 if (custom_variable){
-                    if (selected_option.options){
+                    if (selected_option.options){ 
                         if (! custom_variable.option){
                             custom_variable.option = 0
                         }
@@ -426,19 +461,20 @@ export class Service {
                                 true_value = {
                                     source: g, 
                                     target: g
-                                }  
+                                }   
                             }
                             custom_variable = {
                                 ...true_value,
                                 ...custom_variable   
                              }
                         } 
-                    } 
+                    }  
                 }
+
                 (custom_variable.source ? selected_option.source = custom_variable.source : '' ) ;
                 (custom_variable.target ? selected_option.target = custom_variable.target : '' ) ;
                 defaultVariables[key] = { 
-                    ...selected_option,  
+                    ...selected_option,   
                     ...custom_variable    
                 } 
             }
@@ -449,9 +485,9 @@ export class Service {
             } 
             let clonedConfig = cloneDeep($this.config)  
             clonedConfig.variables = defaultVariables 
-            let configuration_string = JSON.stringify(clonedConfig) 
+            // let configuration_string = JSON.stringify(clonedConfig) 
             // let configuration = new Configuration(configuration_string, defaultVariables)
-            defaultVariables = mapConfigurations(configuration_string, defaultVariables)
+            defaultVariables = mapConfigurations(clonedConfig, cloneDeep(clonedConfig))
             defaultVariables = defaultVariables.variables
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 // let targetBinding = (selected_option.create ? selected_option.create : selected_option)
@@ -482,14 +518,21 @@ export class Service {
                     let from = selected_option.bind.from 
                     let to = selected_option.bind.to
                     try{
- 
+                        
                         if (selected_option.bind_parent_dir){
+                            
                             env.push(`${name}=${to}/${path.basename(from)}`) 
-                            binds.push(`${path.dirname(from)}:${to}`) 
+                            if (from && to){
+                                binds.push(`${path.dirname(from)}:${to}`) 
+                            }
                         } else {  
                             if (!selected_option.port ){ 
-                                binds.push(`${to}:${from}`) 
-                                env.push(`${name}=${from}`) 
+                                env.push(`${name}=${to}`) 
+                                
+                                if (from && to){
+                                    
+                                    binds.push(`${from}:${to}`) 
+                                }
                             } else if (selected_option.port ){
                                 options = $this.updatePorts([`${selected_option.to}:${selected_option.from}`], options)
                             } 
@@ -523,6 +566,8 @@ export class Service {
             // resolve() 
             store.docker.createContainer(options,  function (err, container) { 
                 $this.container = container
+                $this.status.success = false
+                $this.status.error = false
                 if (err){    
                     logger.error("%s %s %o","Error in creating the docker container for: ", options.name , err)
                     reject(err)
@@ -533,15 +578,39 @@ export class Service {
                         container.start(function (err, data) {
                             if (err){
                                 logger.error("%o  error in container name: %s", err, $this.name)
+                                $this.status.error  = err
                                 reject(err)
                             } 
-                            if (!wait){ 
+                            if (!wait || $this.config.continuous){
                                 resolve( stream ) 
                             } else {
                                 stream.on("end",()=>{
                                     resolve(stream)
                                 })
                             }
+                            stream.on("end",()=>{
+                                container.inspect((err, inspection)=>{
+                                    try{
+                                        if (err){
+                                            logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
+                                            $this.status.error  = err
+                                        } else { 
+                                            logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode}`)
+                                            if (inspection.State.ExitCode > 0){
+                                                $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}`
+                                                $this.status.success = false
+                                            } else {
+                                                console.log("exited successfully")
+                                                $this.status.success = true
+                                            }
+                                            $this.status.exit_code = inspection.State.ExitCode
+                                        }
+                                    } catch(err2){
+                                        logger.error(err2)
+                                    }
+                                       
+                                })
+                            })
                         })
                     });
                     

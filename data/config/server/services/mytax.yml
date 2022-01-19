@@ -38,6 +38,8 @@ mytax_create_json:
     json:
       watch: True
       type: "file"
+      label: "JSON Visualization File"
+      hint: ".json file, to be uploaded to the Mytax Visualization Service"
       path: ${file}.json
   variables:
     file: 
@@ -84,6 +86,8 @@ mytax_kraken2_report:
   ]
   outputs:
     report:
+      label: "Report File"
+      hint: ".report format. Used for/in visualizations like Mytax Visualization and Pavian"
       watch: True
       type: "file"
       path: ${file}.report 
@@ -101,7 +105,7 @@ mytax_kraken2_report:
       label: "Input classifier database"
       class: "wb-100 p-3 mb-1"
       options:
-        - element: "dir"
+        - element: null
           name: "Minikraken2"
           source: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
           bind: 

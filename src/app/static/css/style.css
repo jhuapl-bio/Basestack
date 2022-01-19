@@ -19,7 +19,8 @@ body {
   font-family: Myriad Pro Light SemiExtended !important;
   font-size: 1.0em;
   /*font-family:  Baskerville !important;*/
-  /*overflow-y:hidden*/
+  overflow-y:hidden;
+  overflow-x:hidden;
 }
 
 #body-container{
@@ -576,12 +577,13 @@ body {
 .sideProcedure{
   padding: 0%; 
   width: 100%;
-  border-top:1px solid #D3D3D3; 
+  /* border-top:1px solid #D3D3D3;  */
   background: #FFFFFF;
   border-radius: 0px;
   height: 100%;
   margin-bottom: 5%;
-  /* overflow:auto; */
+  overflow-y:auto;
+  overflow-x:auto;
 }
 .no-border-entry{
   padding:0;
@@ -595,26 +597,25 @@ body {
 .mainContent{
 	-webkit-background-clip: padding-box; /* for Safari */
   background-clip: padding-box; /* for IE9+, Firefox 4+, Opera, Chrome */
-	height:100vh !important;
+	height:90vh !important;
 	/* overflow-y:hidden ;
-  overflow-x: hidden; */
+  overflow-x: hidden;  */
   overflow:auto
 }  
 .mainTabContent{
-  background: #d0e8f388	;
-  max-height: 98vh;
+  /* background: #d0e8f388	; */
+  /* max-height: 98vh; */
 	/* padding: 3%;  */
-  margin-top: 2%;
+  /* margin-top: 2%;
   margin-bottom: 1%;
   margin-right: 4%;
-  margin-left: 1%;
-  /* overflow: hidden; */
+  margin-left: 1%; */
+  overflow: auto;
+  max-height: 80vh;
 }
 .tabContent{
   background: #FFFFFF	;
   /* overflow-y: hidden; */
-  margin: 2%;
-  padding: 2%
 }
 .entry-label{
   font-size: 90%; color:#353839; margin: 0px
@@ -634,7 +635,8 @@ body {
 .tabSide{
   max-width: 100px;
   color: rgb(75, 73, 83);
-  border-radius: 10px;
+  /* border-radius: 10px; */
+  /* color: white; */
   /* margin: 5px; */
   /* padding: 0%;
   margin: 0%; */
@@ -642,6 +644,7 @@ body {
 }
 .tabSideDefault{
   color: #2b57b9 !important;
+  border: 1px solid rgba(238, 238, 238);
   /* margin-top: 100%; */
 }
 .tabIcon{
@@ -654,9 +657,10 @@ body {
   /* overflow-y: hidden; */
   /* overflow-x: auto; */
   /* max-width: 00px; */
-  word-wrap: anywhere;
+  height: 100%;
   border-radius: 0;
   font-size: 0.65em; 
+  overflow-x:auto;
 }
 
 .sideWrapper .nav-link{

@@ -8,6 +8,8 @@ bamstats:
   depends: 
     - type: "module"
       id: "dind"
+    - type: "service"
+      id: "dind"
   image: "jhuaplbio/basestack_orchestrator"
   workingdir: "/shared/custom/data/bamstats" #/shared must be identical to that of the Docker in Docker setup. 
   # command: ["bash", "-c", "ls -lht  && pwd"]
@@ -15,13 +17,15 @@ bamstats:
   command: ["bash", "-c", "dockstore tool launch --entry quay.io/collaboratory/dockstore-tool-bamstats:1.25-6_1.0 --json ./Dockstore.json"]
   outputs:
     report:
+      label: "Report File"
+      hint: "Statically named bamstats_report.zip output file"
       watch: True
       type: "file"
       path: "${writePath}/custom/data/bamstats/bamstats_report.zip"
   variables:
     bamfile:
       element: "file"
-      bind_parent_dir: true
+      bind_parent_dir: true 
       isolated: true
       label: "BamFile"
       copy: 

@@ -36,6 +36,9 @@
         </span>
       </div>
     </v-row> -->
+    <v-card-title centered class="text-center">
+      Service {{serviceIdx+1}}: {{service.label}}
+    </v-card-title>
     <v-row v-if="service.variables"  style="" class=" ">
         <v-col :cols="(variable.column ? variable.column : 6)" v-for="[key, variable] of Object.entries(service.variables)" :key="key"  :class="getClass(variable.class, variable.element)" >
             <label class="entry-label" v-if="!variable.hidden">{{variable.label}}</label>
@@ -156,6 +159,7 @@ export default {
         }).then((response)=>{
             $this.progresses =  response.data.data
             $this.progressChecking = false
+
         }).catch((err)=>{
             console.error(err)
             $this.progressChecking = false
@@ -180,6 +184,17 @@ export default {
         variable.source  = src
       }
       const $this = this
+      try{
+        FileService.updateCacheServiceVariable({
+          service: this.name,
+          token: (process.env.NODE_ENV == 'development' ? 'development' : this.$store.token),
+          value: value, 
+          target: (option  ? "option" : "source"),
+          variable: name,
+        })
+      } catch(err){
+        console.error(err,"<<<<< error in caching update")
+      }
       try{
         let promises = []
         if (this.service.variables){
@@ -275,6 +290,7 @@ export default {
           title:  error.response.data.message
         })
       }
+      
     },
     async getStatus(){
       const $this = this

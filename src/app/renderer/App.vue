@@ -8,11 +8,8 @@
   -->
 
 <template>
-  <v-app id="app">
-  
-
-
-    <v-main v-if="ready && runningServer" >
+  <v-app id="app" >
+    <v-main  v-if="ready && runningServer" >
         <MainPage 
           v-bind:defaults="defaults"
           v-bind:modules="modules"
@@ -141,6 +138,13 @@ export default {
         let defaults= await FileService.getDefaults()
         let procedures = await FileService.getProcedures()
         let services = await FileService.getServices()
+        if (process.env.NODE_ENV == 'development'){
+          // let token = await FileService.createSession()
+          this.$store.token = 'development'
+        } else {
+          let token = await FileService.createSession()
+          this.$store.token = token.data.data
+        }
         // // let serverStatus = await FileService.getServerStatus()
         // let dockerStatus = await FileService.getDockerStatus()
         this.defaults = defaults.data.data
@@ -175,7 +179,7 @@ export default {
 }
 .mainPage{
   margin:auto;
-  /*overflow-y:hidden;*/
+  overflow-y:hidden;
 }
 
 

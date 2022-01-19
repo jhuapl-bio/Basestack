@@ -7,4 +7,5 @@ agave:
     - target: "jhuaplbio/agave"
       label: "jhuaplbio/agave"
       type: "docker"
+      format: "docker"
   

@@ -8,194 +8,329 @@
   -->
 <template>
   <div id="framework"  >
-    <v-row>
-    <v-col align-self="start" >
-      <h5 class="header header-minor" >
-        {{ ( procedure  ? procedure.title : procedureKey  ) }}
-        <span v-if="procedure.tooltip" 
-          style="" >
-          <font-awesome-icon class="help" icon="question-circle"  />
-        </span>
-      </h5>
-    </v-col>
-    <v-col  align-self="end" >
-      <v-btn class="btn sideButton"   v-if="status"
-        style=""
-        @click="start_procedure(procedure.name)">Start Procedure 
+    <v-card
+      color="grey lighten-4"
+      flat
+      class="pb-2"
+      tile
+    >
+    <v-toolbar  collapsed dense right>
+      <v-toolbar-title class="header header-minor"  color="primary">{{ ( procedure  ? procedure.title : procedureKey  ) }}</v-toolbar-title>
+      <!-- <v-spacer></v-spacer> -->
+      <v-tooltip bottom v-if="procedure.hint">
+        <template v-slot:activator="{ on }">
+          <v-app-bar-nav-icon v-on="on"> <v-icon v-on="on" small color="orange darken-2">$question-circle</v-icon>
+          </v-app-bar-nav-icon>
+        </template>
+        {{procedure.hint}}
+      </v-tooltip>
+      <v-spacer vertical></v-spacer>
+      <v-btn   small color="primary"  v-if="status"
+        class="mr-2"
+        @click="start_procedure(procedure.name)"><v-icon class="mr-2" x-small >$play-circle</v-icon> Start 
       </v-btn>
-    </v-col>
-    <v-col   align-self="end">
-      <v-btn class="btn warnButton "  v-if="status"
-        style=""
-        @click="cancel_procedure(procedure.name)">Cancel Procedure 
+      <v-btn  color="light" small v-if="status.running"
+        class="mr-2"
+        @click="cancel_procedure(procedure.name)"><v-icon class="mr-2" x-small>$times</v-icon> Cancel
       </v-btn>
-    </v-col>
-    <v-col align-self="end" v-if="procedure.custom">
-      <v-btn class="btn " variant="warn" 
-        style=""
-        @click="rm_procedure(procedure.name)">Remove Custom Procedure
+       <v-btn csmall v-if="procedure.custom" x-small color="orange darken-2"
+        class="mr-2"
+        @click="rm_procedure(procedure.name)"><v-icon class="mr-2" x-small>$times-circle</v-icon> Remove
       </v-btn>
-    </v-col>
-    </v-row>
-    <v-row>
-    <v-col cols="3" >
-      <v-list >
-          <v-list-item
-            class="entry"
-          >
-            
-            <v-list-item-content>
-              <v-list-item-title v-text="'Total Services'"></v-list-item-title>
-              <v-list-item-subtitle v-text="Object.keys(services).length"></v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item
-            class="entry"
-          >
-              <v-list-item-content>
-                <v-list-item-title v-text="'Status'"></v-list-item-title>
-                
-              </v-list-item-content>
-              <v-list-item-icon v-if="procedure.status.running ">
-                <v-tooltip right>
-                  <template v-slot:activator="{ on }">
-                  <div v-on="on">
-                      <fulfilling-bouncing-circle-spinner 
-                        :animation-duration="3500"
-                        :size="10"
-                        :color="'#2b57b9'"
-                      />
-                  </div>
-                  </template>
-                  Running
-                </v-tooltip>
-              </v-list-item-icon>
-              <v-list-item-icon v-else> 
-                <v-tooltip right>
-                  <template v-slot:activator="{ on }">
-                    <v-icon v-on="on" x-small color="orange darken-2">$times-circle</v-icon>
-                  </template>
-                  Not Running
-                </v-tooltip>
-              </v-list-item-icon>
+      <!-- <v-btn class="ml-20 pl-20" x-small icon color="primary">
+        <v-icon >$bars</v-icon>
+      </v-btn> -->
+    </v-toolbar>
+    </v-card>
+   
+    <v-row >
+    <v-col cols="3" class="sideProcedure mt-5" >
+      <!-- <v-card dense>
+        <v-text-field class="ml-2 mr-5" disabled  label="Procedure" persistent-hint hint="View Services Individually"></v-text-field>
+            <v-list-item
+              class="entry"
               
-          </v-list-item>
-          <v-list-item
-            class="entry"
-            style="font-size: 0.8em" 
-            v-for="(service, serviceKey) of status.services"  :key="serviceKey"
-          >
-            
-            <v-list-item-content>
-              <v-list-item-title v-text="service.label">
-              </v-list-item-title>
-              <v-card  :title="`Running: ${service.status.running}`" align-self="start" style="display:flex">
-                <v-icon x-small :class="[ 'fa-1x', 'configure']" 
-                      @click="runServiceIndividually(service.name)"
-                      :title = "'Run Service Individually'"
-                      icon="play-circle" 
-                >$play-circle</v-icon>  
-                <v-icon  x-small
+            >
+              <v-list-item-content>
+                <v-list-item-title v-text="'Total Services'"></v-list-item-title>
+                <v-list-item-subtitle v-text="Object.keys(services).length"></v-list-item-subtitle>
+              </v-list-item-content>
+        </v-list-item>
+      </v-card> -->
+      <!-- <v-stepper
+        non-linear 
+        vertical
+        v-model="tabService"
+      
+      >
+        <template v-for="(service, serviceKey) of status.services"  > 
+        <v-stepper-step
+          :key="serviceKey" v-for="(service, serviceKey) of status.services"
+          :step="serviceKey"
+          editable
+          @click="tabService = serviceKey"
+         
+        >
+          
+          <small>{{service.label }}</small>
+          <div  style="justify-content: space-between; display:flex" class=""   >
+            <v-tooltip  v-if="!'runnable' in service || 'runnable' in service && service.runnable" right >
+                <template  v-slot:activator="{ on }">
+                  <v-icon  v-on="on" x-small :class="[  'configure']"  color="primary"
+                        @click="runServiceIndividually(service.name)"
+                        :title = "'Run Service Individually'"
+                        icon="play-circle" 
+                  >$play-circle</v-icon> 
+                </template>
+                Run the service individually
+              </v-tooltip>
+              <v-tooltip v-else right >
+                <template  v-slot:activator="{ on }">
+                  <v-icon  v-on="on" x-small :class="[  ]"  color="error"
+                    icon="play-circle" 
+                  >$exclamation-triangle</v-icon>
+                </template>
+                Not runnable due to one or more dependencies not installed or running
+              </v-tooltip>  
+            <v-tooltip  right >
+              <template  v-slot:activator="{ on }">
+                <v-icon v-on="on" x-small
                   @click="cancelServiceIndividually(service.name)"
-                  :title = "'Cancel Running Service'"
-                  :class="[ 'fa-1x', 'configure', ]"  
-                  icon="times" >$times</v-icon>        
-              </v-card>
-            </v-list-item-content>
-            <v-list-item-icon v-if="procedure.status.running ">
-                <v-tooltip right>
-                  <template v-slot:activator="{ on }">
-                  <div v-on="on">
-                      <fulfilling-bouncing-circle-spinner
-                      :animation-duration="4000"
+                  color="error "
+                  :class="[  'configure',  ]" 
+                  align-self="end" 
+                  icon="times" >$times</v-icon>  
+              </template>
+              Cancel the service
+            </v-tooltip>      
+          </div>
+          <v-tooltip right>
+            <template v-slot:activator="{ on }">
+            <div v-on="on">
+                <fulfilling-bouncing-circle-spinner
+                :animation-duration="4000"
+                :size="10"
+                style="margin-left:2%;"
+                v-if="service.status.running "
+                :color="'#2b57b9'"
+              />
+            </div>
+            </template>
+            Running
+          </v-tooltip>
+        </v-stepper-step>
+
+           
+
+      </v-stepper> -->
+
+
+
+      <v-card tile class="mx-auto">
+        <v-list small >
+        <v-text-field class="ml-2 mr-5" disabled  label="Procedure" persistent-hint hint="View Services Individually"></v-text-field>
+        <v-list-item
+          class="entry"
+          
+        >
+          
+          <v-list-item-content>
+            <v-list-item-title v-text="'Total Services'"></v-list-item-title>
+            <v-list-item-subtitle v-text="Object.keys(services).length"></v-list-item-subtitle>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item
+          centered
+        >
+            <v-list-item-icon  class="mr-0 pr-0" centered  v-if="procedure.status.running ">
+              <v-tooltip right>
+                <template v-slot:activator="{ on }">
+                <div v-on="on"  >
+                    <fulfilling-bouncing-circle-spinner 
+                      :animation-duration="3000"
                       :size="10"
-                      style="margin-left:2%;"
-                      v-if="service.status.running "
                       :color="'#2b57b9'"
                     />
-                  </div>
+                </div>
+                </template>
+                Running
+              </v-tooltip>
+            </v-list-item-icon>
+            <v-list-item-icon class="mr-0 pr-0"  v-else> 
+              <v-tooltip right>
+                <template v-slot:activator="{ on }">
+                  <v-icon v-on="on" x-small color="orange darken-2">$times-circle</v-icon>
+                </template>
+                Not Running
+              </v-tooltip>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title v-text="'Status'"></v-list-item-title>
+              
+            </v-list-item-content>
+            
+        </v-list-item>
+        <v-spacer></v-spacer>
+        <v-divider></v-divider>
+        <v-spacer></v-spacer>
+        <v-list-item-group
+          v-model="tabService"
+          color="primary"
+        >
+          <v-list-item
+            
+            v-for="(service, serviceKey) of status.services"  :key="serviceKey"
+          >
+            <v-list-item-icon class="mr-0 pr-0" >
+              <v-tooltip right v-if="service.status.running ">
+                <template v-slot:activator="{ on }">
+                <div v-on="on">
+                    <fulfilling-bouncing-circle-spinner
+                    :animation-duration="3000"
+                    :size="10"
+                    style="margin-left:0%;"
+                    :color="'#2b57b9'"
+                  />
+                </div>
+                </template>
+                Running
+              </v-tooltip>
+              <v-tooltip right v-else-if="service.status.error ">
+                <template v-slot:activator="{ on }">
+                  <v-icon v-on="on" x-small color="orange darken-2">$exclamation-triangle</v-icon>
+                </template>
+                {{service.status.error}}
+              </v-tooltip>
+              <small v-else>{{serviceKey+1}}.</small>
+            </v-list-item-icon>
+            <v-list-item-content >
+              <v-list-item-title >
+                {{ service.label }}
+              </v-list-item-title>
+              <div  style="justify-content: space-between; display:flex" class=""   >
+                  <v-tooltip  v-if="!'runnable' in service || 'runnable' in service && service.runnable" right >
+                    <template  v-slot:activator="{ on }">
+                      <v-icon  v-on="on" x-small :class="[  'configure']"  color="primary"
+                            @click="runServiceIndividually(service.name)"
+                            :title = "'Run Service Individually'"
+                            icon="play-circle" 
+                      >$play-circle</v-icon> 
+                    </template>
+                    Run the service individually
+                  </v-tooltip>
+                  <v-tooltip v-else right >
+                    <template  v-slot:activator="{ on }">
+                      <v-icon  v-on="on" x-small :class="[  ]"  color="error"
+                        icon="play-circle" 
+                      >$exclamation-triangle</v-icon>
+                    </template>
+                    Not runnable due to one or more dependencies not installed or running
+                  </v-tooltip>  
+                <v-tooltip  right >
+                  <template  v-slot:activator="{ on }">
+                    <v-icon v-on="on" x-small
+                      @click="cancelServiceIndividually(service.name)"
+                      color="error "
+                      :class="[  'configure',  ]" 
+                      align-self="end" 
+                      icon="times" >$times</v-icon>  
                   </template>
-                  Running
+                  Cancel the service
+                </v-tooltip>      
+              </div>
+            </v-list-item-content>
+            
+            <v-list-item-icon>
+              <v-tooltip right>
+                <template v-slot:activator="{ on }">
+                  <v-icon v-on="on" small v-if="service.orchestrator">
+                      $chess
+                    </v-icon>
+                    <v-icon v-on="on" small v-else-if="service.orchestrated">
+                      $chess-pawn
+                  </v-icon>
+                  <v-icon v-on="on"  small v-else>
+                      $chess-rook
+                  </v-icon>
+                  </template>
+                  {{  (  service.orchestrator ? 'Orchestrator for one or more services' : ( service.orchestrator ? "Orchestrated by an orchestrator container" : 'Standalone Service, can be run without an orchestrator present ')      )   }}
                 </v-tooltip>
               </v-list-item-icon>
-          </v-list-item>
-      </v-list>
-      <!-- <v-card class="m-0 p-0">
-          <p>
-            Total Services: {{ Object.keys(services).length }}
-          </p>
-          <span style="display:flex;"  >Running
-            <fulfilling-bouncing-circle-spinner
-              :animation-duration="4000"
-              :size="10"
-              style="margin-left:1%;"
-              v-if="status.running "
-              :color="'#2b57b9'"
-            />
-            <font-awesome-icon style="margin-left:1%; font-size: 70%" :class="[ 'fa-1x', 'text-warning' ]" 
-                v-else
-                icon="times-circle" 
-            />
-            </span>
-          
-          <hr>
-          <v-row  style="font-size: 0.8em" v-for="(service, serviceKey) of status.services"  :key="serviceKey">
-          <v-col  :title="`Running: ${service.status.running}`" align-self="start">
-            <span style="display:flex" >{{service.label ? service.label : serviceKey }}
-              <fulfilling-bouncing-circle-spinner
-                  :animation-duration="4000"
-                  :size="10"
-                  style="margin-left:2%;"
-                  v-if="service.status.running "
-                  :color="'#2b57b9'"
-                />
-            </span>         
-          </v-col> 
-          <v-col class="m-0" align-h="stretch" align-self="start">
-              <font-awesome-icon style="" :class="[ 'fa-1x', 'configure']" 
-                  @click="runServiceIndividually(service.name)"
-                  :title = "'Run Service Individually'"
-                  icon="play-circle" 
-              />
+              <!-- <v-divider vertical></v-divider>  -->
 
-          </v-col>
-          <v-col class="m-0" align-h="stretch" align-self="start" v-if="service.status.running || service.status.exists" >
-              <font-awesome-icon  
-                @click="cancelServiceIndividually(service.name)"
-                  :title = "'Cancel Running Service'"
-                :class="[ 'fa-1x', 'configure', ]"  
-                icon="times" />
-          </v-col>
-        </v-row>
+            </v-list-item>
+          </v-list-item-group>
+        </v-list>
+      </v-card>  
+      <v-card centered dense>
+        <v-subheader centered v-text="'Tags'">
 
-      </v-card> -->
-    </v-col>
-     <v-col  cols="9" class="" style="">
-     <div class="box" v-for="(service, serviceKey) of status.services" :title="serviceKey" :key="serviceKey">
-        <Service  
-          :ref="service.name"
-          @sendStatus="sendStatus" 
-          @updateValue="updateValue" 
-          :name="service.name" 
-          :serviceIdx="serviceKey"
-          :procedure="procedureKey" >
-        </Service>
-      </div>
-      <!-- <div class="box" v-for="[serviceIdx, service] of Object.entries(services)" :title="service.label" :key="serviceIdx"> -->
-      <!-- <v-tab  v-for="[serviceIdx, service] of Object.entries(services)" :title="service.label" :key="serviceIdx"> -->
-          <!-- <template #title   style="4.5s linear infinite spinner-grow !important">
-            <v-spinner v-if="status && status[serviceIdx] && status[serviceIdx].exists.running" type="grow"  variant="info"  small ></v-spinner>
-            <span class="">{{service.label}}</span>
-        </template> -->
-        
+        </v-subheader>
+        <v-spacer></v-spacer>
+          <v-chip  class="ml-1 mr-1 mb-2" v-for="(tag, tagKey) of procedure.tags"  :key="tagKey" x-small dense>
+            {{tag}}
+          </v-chip>
 
-      <!-- </v-tab> -->
-      <!-- <template v-slot:tabs-end > -->
-      <!-- </div> -->
+      </v-card>
+      <v-card centered dense>
+        <v-subheader centered v-text="'Logs'"></v-subheader>
+        <div v-if="status && status.stream" class="w-100 p-3 mv-1">
+            <p class="entry-label" style="font-size: 120%">Logs</p>
+            <LogWindow :info="status.stream.info"></LogWindow>
+        </div>  
+      </v-card>   
+     </v-col>
+      <v-divider
+      vertical
+      ></v-divider>
+     <v-col  cols="9" class="" >
+      <v-carousel
+          height="80vh" 
+          v-model="tabService"
+          v-if="status.services"
+          :show-arrows="false"
+          hide-delimiters
+          vertical 
+          delimiter-icon="$circle"
+        >
+          <template v-slot:prev="{ on,  }"  >
+              <v-icon  small v-on="on">
+                $arrow-alt-circle-left
+              </v-icon>
+          </template>
+          <template v-slot:next="{ on,  }">
+            <v-icon small v-on="on">
+                $arrow-alt-circle-right
+            </v-icon>
+          </template>
+          <v-carousel-item
+            v-for="(service, serviceKey) of status.services"  
+            :key="serviceKey" class="elevation-6 " 
+            :hidden="service.orchestrator"
+          >
+            <v-sheet
+              height="100%"
+              width="100%"
+
+              
+              
+              class="elevation-6 pl-24 ml-24"
+            >
+                <Service  
+                  :ref="service.name"
+                  @sendStatus="sendStatus" 
+                  @updateValue="updateValue" 
+                  :name="service.name" 
+                  :serviceIdx="serviceKey"
+                  :procedure="procedureKey" style="height: 100%; overflow-y:auto" >
+                </Service>
+              
+            </v-sheet>
+        </v-carousel-item>
+      </v-carousel>
+     
       </v-col>
       </v-row>
-      <!-- </template> -->
-    <!-- </v-tabs> -->
     
      
 
@@ -233,12 +368,11 @@ export default {
 
     },
     cancelServiceIndividually(key){
-      console.log(key)
       let ref  = this.$refs[key]
       ref[0].cancel_service()
 
     },
-    updateValue(event){
+    async updateValue(event){
       // console.log(event)
       // let filtered = this.services.filter((service)=>{
       //   return service.name == event.name
@@ -259,6 +393,7 @@ export default {
       //     }
       //   })
       // }
+      
     },
     getStatus(serviceIdx){
       return this.statuses[serviceIdx] && this.statuses[serviceIdx].running
@@ -315,7 +450,7 @@ export default {
       const $this = this
       try{
         let response = await FileService.getStatusProcedure(this.procedureKey)
-          this.status = response.data.data
+        this.status = response.data.data
       } catch(err){
         this.initial=false
         console.error(`${err} error in getting status`)
@@ -324,7 +459,6 @@ export default {
       }
     },
     async start_procedure(name, services){
-      console.log(services, this.name)
       this.$swal.fire({
           position: 'center',
           icon: 'success',
@@ -352,6 +486,22 @@ export default {
 				})
       })
     },
+    dependsFind(service){
+      let returnVal = true
+      if (service.depends){
+        service.depends.forEach((item)=>{
+          let type = item.type
+          let target = item.id
+          console.log(this.status)
+          if (target in this.status.services){
+            console.log(type, target)
+
+          }
+
+        })
+      }
+      return returnVal
+    }
 	},
   data(){
     return{
@@ -364,9 +514,10 @@ export default {
         "render": "Render"
 
       },
+
       interval: null,
       count:0,
-      tab:0,
+      tab:1,
       shared: [],
       status: {},
       tabService: 2,
@@ -389,4 +540,10 @@ export default {
 </script>
 
 <style>
+#framework{
+}
+.caro-bottom .v-icon {
+  /* left: 10% !important; */
+  background: "blue"
+}
 </style>

@@ -41,7 +41,7 @@
 					multiple
           			persistent-hint
 				>
-					<template v-slot:prepend-item>
+					<!-- <template v-slot:prepend-item>
 						<v-list-item
 							ripple
 							@mousedown.prevent
@@ -59,7 +59,7 @@
 						</v-list-item-content>
 						</v-list-item>
 						<v-divider class="mt-2"></v-divider>
-					</template>
+					</template> -->
 					<template v-slot:selection="{ item, index }">
 						<v-chip v-if="index <= 2">
 						<span>{{ item }}</span>
@@ -179,7 +179,7 @@ export default {
 			tab: 0,
 		}
 	},
-	created(){
+	created(){ 
 		
 	},
 	watch:{

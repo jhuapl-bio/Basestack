@@ -3,6 +3,11 @@ pavian: #Top level is the left-hand selection of the menu and the major module t
   icon: "tree"
   component: "Pavian"
   module: True
+  tags: 
+    - "sankey"
+    - "visualization"
+    - "metagenome"
+    - "pavian"
   init: false 
   tooltip: "View Kraken-style Classification Reports"
   services:

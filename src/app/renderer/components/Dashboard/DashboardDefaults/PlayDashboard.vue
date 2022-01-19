@@ -7,23 +7,28 @@
   - # **********************************************************************
   -->
 <template>
-	
-		<div  class="box">
-			<v-tabs 
-				v-model="tab" 
-				v-if="defaultModule.options"
-				content-class="mt-3"
+	<v-tabs 
+		v-model="tab" 
+		show-arrows centered
+		next-icon="$arrow-alt-circle-right"
+		prev-icon="$arrow-alt-circle-left"
+		icons-and-text 
+		class=""
+		color="blue-grey"
+		slider-color="light"
+	>
+		<v-tab   v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
+				{{option.title}}				
+		</v-tab>
+		<v-tab-item v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
+			<component
+				:is="option.component"
+				style=""
 			>
-				<v-tab   v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
-					
-						<component
-							:is="option.component"
-						>
-						</component>
-					
-				</v-tab>
-			</v-tabs>    
-		</div>     
+			</component>	
+		</v-tab-item>
+	</v-tabs>
+	 
 </template>
 
 <script>

@@ -6,6 +6,7 @@ titan_ONT:
   dependencies:
     - target: "jhuaplbio/basestack_orchestrator"
       type: "docker-local"
+      format: "docker"
       build:
         file: "Dockerfile"
         path: "${resourcePath}/server/config/modules/dind/Dockerfile" 
@@ -15,6 +16,7 @@ titan_ONT:
         remove: false
         target: "${writePath}/workflows/titan_ONT/Dockstore.json"
       type: "orchestration" 
+      format: "file"
       target: "${writePath}/workflows/titan_ONT/Dockstore.json"
       bind: "${writePath}/workflows/titan_ONT:/tmp"
       workingdir: "/tmp"
@@ -28,6 +30,7 @@ titan_ONT:
         remove: false
         target: "${writePath}/workflows/titan_ONT/artic-ncov2019"
       type: "orchestration" 
+      format: "dir"
       target: "${writePath}/workflows/titan_ONT/artic-ncov2019"
       workingdir: "/tmp"
       command: ["bash", "-c", "git clone https://github.com/artic-network/artic-ncov2019.git"]

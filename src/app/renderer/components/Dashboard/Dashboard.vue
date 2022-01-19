@@ -7,11 +7,11 @@
   - # **********************************************************************
   -->
 <template>
-	<v-container  fluid grid-list-xl>
-    	<v-layout row justify-space-between>
-			<v-flex xs6>
-				<v-card>
-					<v-img 
+	<v-container  fluid >
+    	<v-row   >
+			<v-col cols="6">
+				<v-card >
+					<v-img  
 						contain
 						width="100%"
 						height="100%"
@@ -25,31 +25,32 @@
 					<br> 
 					<v-input
 						disabled
-						label="Backend Port"
+						label="Backend Port" class="pr-5 pl-5"
 					>
 					</v-input>
-						<v-text-field
+						<v-text-field class="pr-5 pl-5"
 							hint="Only change if the default port (5003) is in use"
 							label="Change the backend server port to use"
 							v-model="port" type="number"
 							min="1000" max="9999"
-							append-icon="$download"
+							append-icon="$caret-square-up"
+							prepend-icon="$server"
 							@click:append="changePort(port)"
-							clearable
+							clearable shaped centered outlined
 						>
 						</v-text-field>
 					</v-card>
 				</v-card>
 				
 				
-			</v-flex>
+			</v-col>
 			
-			<v-flex xs6>
+			<v-col cols="6" >
 				<Sys class=""
 				/>
 				
-			</v-flex>
-		</v-layout>
+			</v-col>
+		</v-row>
 		
 	</v-container>
 </template>

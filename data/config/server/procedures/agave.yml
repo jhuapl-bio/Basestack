@@ -4,6 +4,11 @@ agave: #Top level is the left-hand selection of the menu and the major module to
   component: "AGAVE"
   module: True
   init: false 
+  tags: 
+    - "virus"
+    - "visualization"
+    - "vcf"
+    - "variant"
   tooltip: "View Variant Exploration of vcf calls"
   linking:
     - output:  #From where to where as input to next procedure

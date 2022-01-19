@@ -7,12 +7,12 @@
    - # **********************************************************************
   */
 const path = require("path")
-const { store }  = require("../../config/store/index.js")
+const { store }  = require("../../config/store/index.js") 
 const chokidar = require("chokidar")
-const { getFiles} = require("./IO.js")
+const { getFiles} = require("./IO.js") 
 const {checkFolderExists } = require("./validate.js")
-const { mapVariables } = require("./mapper.js")
-var  logger  = store.logger 
+const { mapVariables, mapConfigurations } = require("./mapper.js")
+var  logger  = store.logger  
 const fs = require("fs")  
 const glob = require("glob")  
 var readFile = function(filename){ 
@@ -46,7 +46,6 @@ export var watch_consensus = async function (params){
 export var list_module_statuses = async function(paths){
 	return new Promise(function(resolve,reject){ 
 		let promises = [] 
-		console.log(paths,"<<<<")
 		paths.forEach((path)=>{ 
 			promises.push(get_status_complete(path))
 		}) 
@@ -71,26 +70,28 @@ async function get_status_complete (filepath){
 			}
 			else if(files.length){
 				status = 1
-			} else {
-				status = 0
+			} else { 
+				status = 0 
 			}
 			resolve(status)
-		})	
+		})	  
 	})
-}
-
+} 
+ 
 export  var module_status = async function(params, key, variables, outputs){
 	const $this = this;
 	return new Promise(function(resolve,reject){
-		let mod = {
+		let mod = { 
 			status: {
-				total: 0, 
+				total: 0,  
 				complete: 0,
 				source: null
 			},
 			key: key
-		}
-		params.path = mapVariables(params.path, variables)
+		} 
+		params.path = mapConfigurations(params.path, variables)
+		params.path = mapVariables(params.path, variables.variables)
+		
 		if (params.type =="file"){
 			mod.status.total = 1
 			fs.access(params.path, function( error){

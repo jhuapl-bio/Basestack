@@ -7,8 +7,8 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="nextstrain">
-    <button class="btn tabButton" v-on:click="forceRerender()"
+  <v-card id="nextstrain">
+    <v-btn class="btn tabButton" v-on:click="forceRerender()"
         v-tooltip="{
           content: 'If Rampart does not appear given a success message, try to refresh here. If still no update, check Log Streams.',
           placement: 'top',
@@ -16,10 +16,14 @@
           trigger: 'hover',
           targetClasses: ['it-has-a-tooltip'],
           }"
-      ><div class="in-line-Button" ><span><font-awesome-icon  icon="sync"/></span><span> Refresh</span></div></button>
-     <object id ="nextstrainObj" type="text/html" data="https://nextstrain.org/ncov/global">
-    </object>      
-  </div>
+      > Refresh
+        <v-icon class="ml-3" small >$sync</v-icon>
+      </v-btn>
+      <v-row class=" mt-3 ml-2 ">
+        <object v-if="show" type="text/html"  id ="nextstrainObj" class="renderObj p-0 m-0" data="https://nextstrain.org/ncov/global"></object>
+      </v-row>
+        
+  </v-card>
 </template>
 
 <script>
@@ -33,6 +37,7 @@ import FileService from '../../../services/File-service.js'
     data(){
       return {
         fastqDir:null,
+        show:true
       }
     },
     computed: {
@@ -49,7 +54,11 @@ import FileService from '../../../services/File-service.js'
         this.$electron.shell.openExternal(link)
       },
       forceRerender(){
-        this.$forceUpdate();
+        const $this =this
+        $this.show = false
+        setTimeout(()=>{
+          $this.show = true
+        },500)
       },
     },
   };
@@ -61,7 +70,7 @@ import FileService from '../../../services/File-service.js'
   width: 100%;
 }
 #nextstrainObj{
-  min-height: 90vh;
+  min-height: 70vh;
   position: relative; 
   background: none; 
   /*border:1px solid #000;  */

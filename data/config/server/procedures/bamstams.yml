@@ -4,6 +4,11 @@ bamstats: #Top level is the left-hand selection of the menu and the major module
   component: "Bamstats"
   module: True
   init: false 
+  tags: 
+    - "samtools"
+    - "bam"
+    - "stats"
+    - "alignment"
   tooltip: "Run Bamstats report with Dockstore"
   services:
     - dind

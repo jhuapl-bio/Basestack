@@ -7,4 +7,5 @@ pavian:
     - target: "florianbw/pavian"
       label: "florianbw/pavian"
       type: "docker"
+      format: "docker"
   

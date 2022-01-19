@@ -7,9 +7,10 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="string" >
+  <div id="string" > 
   	<v-text-field
         v-model="value"
+        :label="(source.hint ? source.hint : '' )"
     >
     </v-text-field>
   </div>
@@ -32,6 +33,7 @@ export default {
 	},
 	props: ['source', 'status', 'service', 'variable'],
     mounted(){
+        console.log(this.value, "<value", this.source.source, "surc")
         this.value = this.source.source
     },
     watch: {

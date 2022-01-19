@@ -3,6 +3,7 @@ pavian_default:
     - type: "module"
       id: "pavian"
   image: "florianbw/pavian"
+  continuous: true
   orchestrated: false #orchestrated means it r
   init: true
   hideStatus: true
@@ -27,6 +28,7 @@ pavian_orchestrated:
   label: "Pavian Orchestrated"
   force_restart: false
   config: null
+  continuous: true
   workingdir: /opt/app/pavian
   orchestrated: true #orchestrated means it runs from dind rather than natively on host
   variables:

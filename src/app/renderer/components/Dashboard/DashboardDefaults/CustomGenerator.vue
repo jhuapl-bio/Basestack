@@ -33,13 +33,15 @@
             
         >
         </v-select>
-        <v-input-textarea
+        <v-textarea
             v-model="text"
             rows="8"
+            clearable
+            clear-icon="$times-circle"
             v-if="selected_type == 'text'"
         
         >
-        </v-input-textarea>
+        </v-textarea>
         
         <v-file-input
             v-model="file"

@@ -8,6 +8,7 @@
   */
 var ncp = require("ncp").ncp
 const http = require("http")
+const https = require("https")
 ncp.limit = 16;
 const fs  = require("fs")
 import  path  from "path"
@@ -244,10 +245,10 @@ export async function downloadSource(url, target, params)  {
 			
 			var received_bytes = 0;
 			var total_bytes = 0;
-			if (url.startsWith("https")){
-				store.logger.info("https not supported, falling back on http url instead...")
-				url = url.replace("https", "http")
-			}	
+			// if (url.startsWith("https")){
+			// 	store.logger.info("https not supported, falling back on http url instead...")
+			// 	url = url.replace("https", "http")
+			// }	
 			let writer; 
 			// p = url.parse(url),           
 			let timeout = 1000; 
@@ -317,7 +318,7 @@ export async function downloadSource(url, target, params)  {
 									resolve(null);
 								}).once('error', function (err) {
 									store.logger.error(`Got error on ftp get: %o`, err);
-									c.end()
+									c.end() 
 									writer.destroy()
 									// reject(err.message);
 								});
@@ -336,13 +337,17 @@ export async function downloadSource(url, target, params)  {
 						password: params.password
 					})
 				} else { 
-					store.logger.info("http protocol called to get file %s", url)
-					if (!url.startsWith("http://")){
-						store.logger.info("url not beginning with http://, appending now..")
-						url = "http://" + url
-					}
+					store.logger.info("http(s) protocol called to get file %s", url)
+					// if (!url.startsWith("http://")){
+					// 	store.logger.info("url not beginning with http://, appending now..")
+					// 	url = "http://" + url
+					// }
 					console.log(url, "to", dirpath)
-					let request = http.get(url).on("response", (response)=>{
+					let fnct = https
+					if (url.startsWith("http:")){
+						fnct  = http
+					} 
+					let request = fnct.get(url).on("response", (response)=>{
 						var len = parseInt(response.headers['content-length'], 10);
 						response.on('data', function(chunk) {
 							downloaded += chunk.length;

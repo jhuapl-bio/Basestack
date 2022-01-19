@@ -30,11 +30,24 @@ class FileService {
   pingServerPort(){
     return Api().get(`${baseEndpoint.get()}/server/ping`)    
   }
+  
+  createSession(){
+    return Api().post(`${baseEndpoint.get()}/session/cache/create`)    
+  }
+  updateCacheServiceVariable(params) {
+    return Api().post(`${baseEndpoint.get()}/session/cache/service/variable`, params)    
+  }
+  getCachedVariablesService(service, token) {
+    return Api().get(`${baseEndpoint.get()}/service/cache/get/${service}/${token}`)    
+  }
   getDefaults(){
     return Api().get(`${baseEndpoint.get()}/defaults/get`)    
   }
   getModules(){
     return Api().get(`${baseEndpoint.get()}/modules/get`)    
+  }
+  cancelModule(params){
+    return Api().post(`${baseEndpoint.get()}/module/build/cancel`, params)    
   }
   buildModule(params){
     return Api().post(`${baseEndpoint.get()}/module/build`, params)    
@@ -47,6 +60,12 @@ class FileService {
   }
   buildModuleDependency(params){
     return Api().post(`${baseEndpoint.get()}/module/build/dependency`, params)    
+  }
+  removeModuleDependency(params){
+    return Api().post(`${baseEndpoint.get()}/module/build/remove/dependency`, params)    
+  }
+  cancelModuleDependency(params){
+    return Api().post(`${baseEndpoint.get()}/module/build/cancel/dependency`, params)    
   }
   getServices(){
     return Api().get(`${baseEndpoint.get()}/services/get`)    
@@ -65,7 +84,7 @@ class FileService {
   }
   getAllServiceNames(){
     return Api().get(`${baseEndpoint.get()}/services/names`)    
-  }
+  } 
   getAllProcedureNames(){
     return Api().get(`${baseEndpoint.get()}/procedures/names`)    
   }

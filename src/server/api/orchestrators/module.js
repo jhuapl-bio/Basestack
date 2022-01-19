@@ -10,9 +10,10 @@ export  class Module {
 	constructor(name, module){    
         this.name= name
 		this.interval = { 
-            checking: false,
+            checking: false, 
             interval: this.create_interval() 
         }, 
+        this.type = 'module'
         this.config = module
         this.status =  {
             fully_installed: false,
@@ -22,7 +23,7 @@ export  class Module {
         }
 		this.dependencies  = module.dependencies.map((d)=>{ 
             d.streamObj = null
-
+            this.fetchVersion(d)
 			let status = { 
 				downloading: false, 
 				decompressing: false, 
@@ -34,6 +35,25 @@ export  class Module {
 			return d
 		})
 	} 
+    async fetchVersion(dependency){
+        try{
+            if(dependency.type == 'docker'){
+                // fetch_external_dockers(dependency.target).then((response)=>{
+                //     if ( response){ 
+                //         dependency.status.latest = response.latest_digest
+                //     } else {
+                //         dependency.status.latest  = null
+                //     }
+                // }).catch((err)=>{
+                //     store.logger.error(err)
+                // })
+            } else {
+                return 
+            }
+        } catch (err){
+            store.logger.error("error in fetching versioning %o", err)
+        }
+    }
     async loadImage(dependency){
 		const $this = this  
         return new Promise(function(resolve,reject){  
@@ -43,6 +63,8 @@ export  class Module {
 
             loadImage(dependency.source.target).then((stream, error)=>{ 
                 dependency.status.downloading = true 
+                dependency.status.building = true
+                dependency.status.error = null
                 dependency.status.stream = spawnLog(stream, $this.logger)
                 dependency.streamObj = stream 
                 $this.buildlog = spawnLog(stream, $this.logger)
@@ -53,20 +75,33 @@ export  class Module {
                 resolve()  
             }).catch((err)=>{
                 store.logger.error("%s %o %o","Error in pulling docker image for: ", dependency , err)
+                dependency.status.downloading = false
+                dependency.status.building = false
+                dependency.status.error = err
                 reject(err)
             }) 
-        })
+        }) 
     }
 	async pullImage(dependency){
 		const $this = this  
         return new Promise(function(resolve,reject){ 
             if (dependency.streamObj){
-                store.logger.info("Closing since it already exists as a stream obj %o", dependency.target)
-                dependency.streamObj.close()
-                dependency.streamObj.end() 
-                dependency.streamObj.destroy()
+                try{
+                    
+                    store.logger.info("Closing since it already exists as a stream obj %o", dependency.target)
+                    dependency.streamObj.destroy()
+                    // dependency.streamObj.close()
+                    // dependency.streamObj.end() 
+                    dependency.status.downloading = false
+                    dependency.status.building = false
+                } catch(err){
+                    store.logger.error("error in destorying streamobj %o", err)
+                }
             }
             pullImage(dependency.target, dependency).then((stream, error)=>{
+                dependency.status.building = true
+                dependency.status.downloading = true
+                dependency.status.error = null
                 dependency.status.stream = spawnLog(stream, $this.logger)
                 dependency.streamObj = stream 
                 $this.buildlog = spawnLog(stream, $this.logger)
@@ -75,9 +110,17 @@ export  class Module {
                     dependency.status.downloading = false
                     dependency.status.building = false
                 })
-                resolve()  
-            }).catch((err)=>{ 
+                stream.on("end", (err, data)=>{
+                    console.log("ended...")
+                    dependency.status.downloading = false
+                    dependency.status.building = false
+                })
+                resolve()   
+            }).catch((err)=>{  
                 store.logger.error("%s %s %o","Error in pulling docker image for: ", dependency.target , err)
+                dependency.status.downloading = false
+                dependency.status.building = false
+                dependency.status.error = err
                 reject(err)
             }) 
         })
@@ -86,10 +129,10 @@ export  class Module {
 		const $this = this  
         return new Promise(function(resolve,reject){ 
             if (dependency.streamObj){
-                store.logger.info("Closing since it already exists as a stream obj %o", dependency.target)
+                store.logger.info("Closing since it already exists as a stream obj for orchestration %o", dependency.target)
                 try{
-                    dependency.streamObj.close()
-                    dependency.streamObj.end() 
+                    dependency.status.downloading = false
+                    dependency.status.building = false
                     dependency.streamObj.destroy()
                 } catch(err){
                     store.logger.error(err)
@@ -192,17 +235,28 @@ export  class Module {
 			{
 				t: dependency.target
 			}).then((stream, error)=>{
+                dependency.status.downloading = true
+                dependency.status.building = true
+                if (error){
+                    dependency.status.error = error
+                }
                 dependency.status.stream  = spawnLog(stream, $this.logger)
                 dependency.streamObj = stream
                 stream.on("close", (err, data)=>{
                     dependency.status.downloading = false
                     dependency.status.building = false
+                    if (err){
+                        dependency.status.error = err
+                    }
                 })
 
                 $this.buildlog = spawnLog(stream,store.logger)   
                 resolve() 
             }).catch((err)=>{ 
                 store.logger.error("%s %s %o","Error in building docker image for: ", dependency.target , err)
+                dependency.status.downloading = false
+                dependency.status.building = false
+                dependency.status.error = err
                 reject(err)
             }) 
         })
@@ -224,18 +278,24 @@ export  class Module {
 				})
             }
         }, 5000)
-        
+         
         
         return interval
-
+ 
     } 
  
-    async cancel_build(){ 
+    async cancel_build(dependencyIdx){ 
         const $this = this; 
         return new Promise(function(resolve,reject){ 
             try{
                 let promises = []
-                $this.dependencies.map((dependency)=>{
+                let selectedDep = []
+                if (!dependencyIdx){
+                    selectedDep = $this.dependencies
+                } else {
+                    selectedDep  = [ $this.dependencies[dependencyIdx] ]
+                }
+                selectedDep.map((dependency)=>{
                     let status = dependency.status; 
                     if (dependency.streamObj){
                         // promises.push(dependency.streamObj.close())
@@ -326,7 +386,7 @@ export  class Module {
                         dependency_obj.status.downloading = false
 
                     }) ) 
-                }
+                } 
                 Promise.allSettled(promises).then((res)=>{
                     store.logger.info("Finished building module")
                 }).catch((err)=>{
@@ -345,12 +405,17 @@ export  class Module {
         }
         return `Building dependencies for module:  ${$this.name} ${dependencies}`
 	} 
-    async remove( ){
+    async remove ( dependencyIdx ){
 		const $this = this; 
         let promises = []
         let objs = [] 
-        let dependencies = this.dependencies
-        dependencies.forEach((dependency_obj, i)=>{            
+        let selectedDep = []
+        if (!dependencyIdx){
+            selectedDep = $this.dependencies
+        } else {
+            selectedDep  = [ $this.dependencies[dependencyIdx] ]
+        }
+        selectedDep.map((dependency_obj, i)=>{            
             // dependency_obj.status.downloading = true
             objs.push(dependency_obj) 
             if (dependency_obj.type == 'docker' || dependency_obj.type == 'docker-image'  ){
@@ -384,15 +449,7 @@ export  class Module {
 			dependencies.forEach((dependency, index)=>{ 
 				if (dependency.type == "docker"){
 					promises.push(check_image(dependency.target))
-                    fetch_external_dockers(dependency.target).then((response)=>{
-                        if ( response){
-                            $this.dependencies[index].status.latest = response.latest_digest
-                        } else {
-                            $this.dependencies[index].status.latest  = null
-                        }
-                    }).catch((err)=>{
-                        store.logger.error(err)
-                    })
+                    
 				} else if (dependency.type == "docker-local"){
 					promises.push(check_image(dependency.target))
 				}

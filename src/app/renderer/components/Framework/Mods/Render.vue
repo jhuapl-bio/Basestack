@@ -7,10 +7,16 @@
   - # **********************************************************************
   -->
 <template>
-  <div class="render" >
-	<v-row v-if="status.exists && status.exists.running">
-		<object type="text/html" class="renderObj" :data="getUrl()"></object>
+  <div  class="render ">
+	  <v-btn small class="mb-4" v-on:click="forceRerender()"
+		> Refresh
+		<v-icon class="ml-3" small >$sync</v-icon>
+	</v-btn>
+	<v-divider></v-divider>
+	<v-row v-if="show && status.exists && status.exists.running" class="">
+		<object type="text/html"  class="renderObj ml-4 mr-2" :data="getUrl()"></object>
 	</v-row>
+	
   </div> 
   
 </template>
@@ -27,7 +33,7 @@ export default {
 	props: ['source', 'status', 'service'],
 	data(){
 		return {
-				
+			show: true
 		}
 	}, 
 	async mounted(){
@@ -41,11 +47,19 @@ export default {
 		// this.cancel_module()
     },
 	methods: {
+		forceRerender(){
+			const $this =this
+			$this.show = false
+			setTimeout(()=>{
+			$this.show = true
+			},400)
+		},
 		open_link (link,e) {
 			e.stopPropagation()
 			this.$emit("open", link)
       	},
 		  getUrl(){
+			//   let url  = `http://localhost:8080`
 			  let url  = `http://localhost:${this.source.to}`
 			  if (this.source.suburl){
 				  url = url + this.source.suburl
@@ -59,7 +73,8 @@ export default {
 <style>
 .render{
 	height:100%;
-    overflow-y:auto;
+	overflow-y:auto; 
+	overflow-x:auto; 
     width: 100%;
 }
 
@@ -71,6 +86,7 @@ export default {
   width:100%; 
   height: 100%;
   overflow-y:auto; 
+  overflow-x:auto; 
 }
 
 </style>

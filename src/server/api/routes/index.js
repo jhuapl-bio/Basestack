@@ -6,10 +6,10 @@
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
   */
-
 var express = require('express');
 var router = express.Router();
 const YAML = require("yaml") 
+const { Server } = require("../../serverClass.js")
 var { store } = require("../../config/store/index.js")
 var { error_alert } = require("../controllers/logger.js")
 const logger = store.logger
@@ -17,7 +17,8 @@ import { Procedure } from "../orchestrators/procedure.js";
 const { Service } = require('../orchestrators//service.js');
 
 import upload from "../controllers/upload.js"
-import { mapTargetConfiguration } from "../controllers/mapper.js";
+import { mapTargetConfiguration, mapCacheVariables } from "../controllers/mapper.js";
+import nestedProperty from "nested-property"
 const path = require("path")
 //Import Validation Scripting
 const { validate_run_dir } = require("../controllers/validate.js")
@@ -63,6 +64,7 @@ const {
 	removeFile,
 	downloadSource
 } = require("../controllers/IO.js")
+const crypto  = require("crypto")
 
 const { 
 	 start_module,
@@ -141,7 +143,6 @@ router.get("/server/status/fetch", (req,res,next)=>{
 })
 router.get("/docker/status/get", (req,res,next)=>{
 	try {
-		logger.info("docker status")
 		fetch_docker_stats().then((response)=>{
 			res.status(200).json({status: 200, data: response, message: "Docker is running" });
 		}).catch((Err)=>{
@@ -815,7 +816,7 @@ router.get("/procedures/get", (req,res,next)=>{ // build workflow according to n
 
 			let status = procedure.status 
 			
-			let returnable = { 
+			let returnable = {  
 				name: name
 			}
 			for (let [key, entry] of Object.entries(procedure.params)){
@@ -832,7 +833,7 @@ router.get("/procedures/get", (req,res,next)=>{ // build workflow according to n
 			data[name] = returnable
 		
 
-		})
+		}) 
 		res.status(200).json({status: 200, message: "retrieved procedure information", data: data });
 	} catch(err2){
 		logger.error("%s %s", "Error in loading images2", err2)
@@ -872,6 +873,7 @@ router.get("/service/get/:service", (req,res,next)=>{ // build workflow accordin
 	try {
 		let service = store.services[req.params.service]
 		let data = service.config
+		data.variables = mapCacheVariables(data.variables, req.params.service, 'development')
 		res.status(200).json({status: 200, message: "retrieved procedure specifics information", data: data });
 	} catch(err2){
 		logger.error("%s %s", "Error in getting procedure status(es)", err2)
@@ -893,12 +895,15 @@ router.get("/procedure/status/:procedure", (req,res,next)=>{ // build workflow a
 		let services = Object.keys(procedure_steps).map((step)=>{
 			let service = store.services[step].config
 			let serviceStatus = store.services[step].status
+			service.runnable = serviceStatus.runnable
 			service.name = step
-			service.status = serviceStatus.exists
+			service.status = serviceStatus; 
+			// (serviceStatus.exists ? service.status.running  = serviceStatus.exists.running  : service.status.running = false);
+			
 			return service
 			
 		})
-		let data = {
+		let data = { 
 			services: services,
 			fully_installed: procedure.status.fully_installed,
 			running: procedure.status.running
@@ -1036,40 +1041,12 @@ router.post("/services/status/select", (req,res,next)=>{ // build workflow accor
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
-router.get("/procedure/status/:procedure", (req,res,next)=>{ // build workflow according to name and index
-	try {
-		let p = req.params.procedure
-		let data = []
-		console.log("yes")
-		let procedure = store.procedures[p]
-		console.log(procedure)
-		let returnable = {name: procedure.name, services: []}
-		let staged_services = [] 
-		if (procedure.services){
-			for (let [key, service] of Object.entries(procedure.services)){
-					staged_services.push(
-						{
-							installed: service.status.fully_installed,
-							exists: service.status.exists,
-							log: service.status.stream,
-							name: service.name,
-							dependencies: service.dependencies
-						}
-					) 
-			}
-			returnable.services = staged_services
-		}
-		res.status(200).json({status: 200, message: "retrieved status(es) for procedure", data: returnable });
-	} catch(err2){
-		logger.error("%s %s", "Error in getting procedure status(es)", err2)
-		res.status(419).send({status: 419, message: error_alert(err2)});
-	}	
-})
+
 router.post("/procedures/status/select", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		let procedures_names = req.body.items
 		let data = []
-		procedures_names.forEach((p)=>{ 
+ 		procedures_names.forEach((p)=>{ 
 			let procedure = store.procedures[p]
 			let returnable = {name: procedure.name, services: []}
 			let staged_services = [] 
@@ -1326,20 +1303,7 @@ router.get("/procedures/external/fetch", (req,res,next)=>{ // build workflow acc
 				store.logger.error(err)
 				res.status(419).send({status: 419, message: error_alert(err)});
 			})
-			// let service = new Service( 
-            //     "getExternalProcedures",
-            //     cloneDeep(store.config.services.orchestrated_download)
-            // )
-			// service.setOptions()
-            // service.check_then_start({}, null).catch((err)=>{
-            //     logger.error(err)
-            // }).then((response)=>{
-            //     res.status(200).json({status: 200, message: `Completed procedure fetch from external GH`, data: response });
 			
-            // })
-			// const simpleGit = require('simple-git');
-			// const git = simpleGit();
-			// let response = await git.clone("http://github.com/jhuapl-bio/Basestack.git", "/Users/merribb1/Desktop/tmp/Basestack")
 		} catch(err2){
 			logger.error("%s %s", "Error in grabbing procedures", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
@@ -1395,7 +1359,7 @@ router.post("/variable/read", (req,res,next)=>{ // build workflow according to n
 				logger.error("end", err) 
 				res.status(419).send({status: 419, data: [], message: error_alert(err)});
 			}
-			logger.info("%o variable found %s", content, variable)
+			// logger.info("%o variable found %s", content, variable)
 			res.status(200).json({status: 200, message: `Completed search for variable values`, data: content });
 		} catch(err2){
 			logger.error("end", err2) 
@@ -1535,19 +1499,15 @@ router.post("/procedure/stop", (req,res,next)=>{ // build workflow according to 
 		try {
 			let response;
 			let procedure;
-			if (req.body.index){
-				procedure = store.procedures[req.body.index]
+			if (req.body.procedure){
+				procedure = store.procedures[req.body.procedure]
+				response = await procedure.stop()
+				logger.info("%o procedure stopping ", response)
+				res.status(200).json({status: 200, message: `Completed stopping of: ${procedure.params.title}`, data: response });
 			} else {
-				let index = store.procedures.map((d)=>{return d.name}).indexOf(req.body.procedure)
-				if (index > -1){
-					procedure = store.procedures[index]
-				} else {
-					procedure = store.procedures[0]
-				}
+				res.status(419).send({status: 419, message: "Procedure doesn't exists in the system"});
 			}
-			response = await procedure.stop()
-			logger.info("%o procedure stopping ", response)
-			res.status(200).json({status: 200, message: `Completed stopping of: ${procedure.params.title}`, data: response });
+			
 		} catch(err2){
 			logger.error("%s %s", "Error in running procedure", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
@@ -1578,6 +1538,74 @@ router.post("/orchestrator/run", (req,res,next)=>{ // build workflow according t
 })
 
 
+router.post("/session/cache/create", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			crypto.randomBytes(48, function(err, buffer) {
+				if (err){
+					logger.error("%s %s", "Error in caching variables", err)
+					res.status(419).send({status: 419, message: error_alert(err)});
+				}
+				var token = buffer.toString('hex');
+				let response;
+				let cach = store.server.defineCache(token)
+				store.server.cache.set(token, cach)
+				// let response = await server.cache(req.body.variables, req.body.token)
+				res.status(200).json({status: 200, message: "Completed caching of service variables", data: token });
+			});
+			
+		} catch(err2){
+			logger.error("%s %s", "Error in caching variables", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+})
+
+router.post("/session/cache/service/variable", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let tokenVals = store.server.cache.get(req.body.token) 
+			nestedProperty.set(tokenVals, `services.${req.body.service}.variables.${req.body.variable}.${(req.body.target)}`, req.body.value)
+			store.server.cache.set(req.body.token, tokenVals)
+			let response = store.server.cache.get(req.body.token)
+			tokenVals = store.server.cache.get(req.body.token) 
+			let variables = nestedProperty.get(tokenVals, `services.${req.body.service}.variables`)
+			res.status(200).json({status: 200, message: "Completed caching of service variables", data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in caching variables", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+}) 
+router.post("/service/cache", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let tokenVals = store.server.cache.get(req.body.token) 
+			nestedProperty.set(tokenVals, `services.${req.body.service}.variables`, req.body.variables)
+			store.server.cache.set(req.body.token, tokenVals)
+
+			let response = store.server.cache.get(req.body.token)
+			res.status(200).json({status: 200, message: "Completed caching of service variables", data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in caching variables", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+}) 
+router.get("/service/cache/get/:service/:token", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let variables;
+			let tokenVals = store.server.cache.get(req.params.token) 
+			variables = nestedProperty.get(tokenVals, `services.${req.params.service}.variables`)
+			console.log(variables, "get variable token services", req.params.service)
+			res.status(200).json({status: 200, message: "Completed retrieval of cached service variables", data: variables });
+		} catch(err2){
+			logger.error("%s %s", "Error in  getting cached variables", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+})
 router.post("/workflow/stop", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
@@ -1667,6 +1695,7 @@ router.get("/service/status/:service", (req,res,next)=>{
 	try {
 		let service = store.services[req.params.service]
 		let running = service.status
+		
 		res.status(200).json({status: 200, message: "Returning running service status", 
 			data: running
 		});
@@ -1682,13 +1711,23 @@ router.post("/service/status", (req,res,next)=>{
 			let service = store.services[req.body.service]
 			let variables = req.body.variables
 			let outputs = req.body.outputs
-			let watches = await service.getProgress(variables, req.body.outputs)
+			let watches = await service.getProgress(req.body, req.body.outputs)
 			let running = service.status
+			// console.log(service.status)
+			// console.log(
+			// 	{
+			// 		watches: watches,
+			// 		variables: variables,
+			// 		... service.status
+			// 	}
+
+
+			// )
 			res.status(200).json({status: 200, message: "Returning running service status with params sent", 
 				data: {
 					watches: watches,
 					variables: variables,
-					status: running
+					status: service.status
 				}
 			});
 		})().catch((err3)=>{
@@ -1789,6 +1828,37 @@ router.post("/module/build/cancel", (req,res,next)=>{ //this method needs to be 
 		res.status(419).send({status: 419, message: error_alert(err2) });
 	}	
 })
+
+router.post("/module/build/remove/dependency", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	(async function(){
+		try {
+			let module = store.modules[req.body.module]
+			let response = await module.remove( req.body.dependency)
+			logger.info(`Success in removal of module dependency: ${req.body.dependency}`)
+			res.status(200).json({status: 200, message: "Completed module removel of single dependency", data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in removing module dependency", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+
+})
+router.post("/module/build/cancel/dependency", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	
+	(async function(){
+		try {
+			let module = store.modules[req.body.module]
+			let response = await module.cancel_build( req.body.dependency)
+			logger.info(`Success in cancelling dependency build: ${req.body.dependency}`)
+			res.status(200).json({status: 200, message: "Removed process for install dependency for this module", data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in cancelling module dependency build", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+})
+
+
 router.post("/images/prune", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function() {
 		try {

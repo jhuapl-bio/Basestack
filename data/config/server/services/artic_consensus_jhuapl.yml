@@ -15,10 +15,14 @@ artic_consensus_jhuapl:
   outputs:
     demuxes:
       watch: True
+      label: "Demux"
+      hint: "Folder containing demulitplexed files from long-read run"
       type: file
-      path: ${dir}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete
+      path: "%{variables.dir.source}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
     length-filter:
       watch: True
+      label: "Length Filter"
+      hint: "Folder containing all filtered length files (Step 2)"
       type: files
       pattern: ".complete"
       total: 
@@ -27,6 +31,8 @@ artic_consensus_jhuapl:
       path: ${dir}/artic-pipeline/2-length-filter
     normalizations:
       watch: True
+      label: "Normalization"
+      hint: "Files are normalized by depth"
       type: files
       pattern: ".complete"
       total: 
@@ -36,6 +42,8 @@ artic_consensus_jhuapl:
     consensuses:
       watch: True
       type: files
+      label: "Consensus"
+      hint: "Consensus file(s) folder in .complete or .partial (incomplete) FASTA format"
       total: 
         target: "%{variables.manifest.source}"
         call: "length"
@@ -43,6 +51,9 @@ artic_consensus_jhuapl:
       path: ${dir}/artic-pipeline/4-draft-consensus
     report:
       watch: True
+      openSelf: True
+      label: "Report"
+      hint: "Report PDF containing information about your consensus generation output and the overall run"
       type: file
       path: ${dir}/artic-pipeline/report.pdf 
   variables:
@@ -50,16 +61,16 @@ artic_consensus_jhuapl:
       label: "Run Name"
       element: "string"
       class: "wb-50  p-3 mb-1"
-      source: "test"
+      source: null
     dir:
       label: "Input Long-Reads Full Run Directory"
       element: "dir"
       bind_parent_dir: false
+      source: null
       bind: 
         from: "%{variables.dir.source}"
         to: "/opt/data"
       class: "wb-50  p-3 mb-1"
-      source: null
     fastq_pass:
       label: "Input Long-Reads FASTQ Directory"
       element: "dir"
@@ -183,5 +194,5 @@ artic_consensus_jhuapl:
       class: "wb-50  p-3 mb-1"
       read: "%{variables.dir.source}/manifest.txt"
       source: []
-      header: ['id', 'barcode']
+      header: [ 'barcode', 'id']
       
