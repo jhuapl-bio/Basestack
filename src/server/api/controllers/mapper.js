@@ -98,74 +98,34 @@ export function mapCacheVariables(variables, service, token){
     return variables
 }
 
-export function findObjectByLabel(obj, pattern, fullObj) {
-    const $this  = this
-    if (obj && typeof obj == 'object'){
-        Object.keys(obj).forEach(function (key) {
-            if (typeof obj[key] === 'object') {
-                obj[key] = findObjectByLabel(obj[key], pattern, fullObj) 
-                
-                // return null
-            } else {
-                obj[key] = findObjectByLabel(obj[key], pattern, fullObj) 
-            }
-        })
-    } else if (typeof obj == 'string') {
-        var replace = `${pattern}`   
-        var re = new RegExp(replace,"g");
-        let fo = obj.match(re) 
-        let fullstring = obj
-        if (fo && Array.isArray(fo)){  
-            fo.forEach((match)=>{ 
-                try{
-                    let id = match.replace(/[\%\{\}]/g, "")
-                    
-                    obj = {
-                        get: function(){
-                            let found =  nestedProperty.get(fullObj, id)
-                            fullstring  = fullstring.replaceAll(match, found)
-                            // if (id == "variables.dir.source"){
-                            //     console.log(found, fullstring)
-                            // }
-                            if (fullstring == 'undefined'){
-                                return null
-                            } else {
-                                return fullstring
-                            }
-                        }
-                    }
-                } catch(err)  {
-                    store.logger.error(err)
-                }
-            })
-            return obj.get()
-        } 
-        
-    }
-    return obj
-}
-export function mapTargetConfiguration(target, configuration){
-    findObjectByLabel(target, "(\%\{.+?\})", configuration)
-    return target
-}
-export function mapObject(targetString, pattern, variables){
-    let newTarget = findObjectByLabel(targetString, pattern, variables)
-    newTarget = mapFunctions(newTarget)
-    return newTarget
-}
+// export function mapTargetConfiguration(target, configuration){
+//     findObjectByLabel(target, "(\%\{.+?\})", configuration)
+//     return target
+// }
+// export function mapObject(targetString, pattern, variables){
+//     let newTarget = findObjectByLabel(targetString, pattern, variables)
+//     newTarget = mapFunctions(newTarget)
+//     return newTarget
+// }
 
-export function mapConfigurations(configuration_string, variables){
-    for (let [key, value] of Object.entries(variables)){
-        var replace = `\\$\\{${key}\\}`
-        var re = new RegExp(replace,"g");
-        if (typeof configuration_string == 'string'){
-            configuration_string = configuration_string.replace(re, value.target    )
-        }
-    } 
-    // if (typeof configuration_string == 'string'){
-    //     configuration_string = JSON.parse(configuration_string)
-    // }
-    let newString = mapObject(configuration_string, "(\%\{.+?\})", variables)
-    return newString
+// export function mapConfigurations(configuration_string, variables){
+//     for (let [key, value] of Object.entries(variables)){
+//         var replace = `\\$\\{${key}\\}`
+//         var re = new RegExp(replace,"g");
+//         if (typeof configuration_string == 'string'){
+//             configuration_string = configuration_string.replace(re, value.target    )
+//         }
+//     } 
+//     let newString = mapObject(configuration_string, "(\%\{.+?\})", variables)
+//     return newString
 
-}
+// }
+
+// export function defineMapping(target){
+//     // console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< define mapping")
+//     let newTarget = findObjectByLabel(target, "(\%\{.+?\})", target) 
+//     newTarget = target 
+//     // newTarget.variables.file.source = "yes"
+//     // console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+//     return target
+// }

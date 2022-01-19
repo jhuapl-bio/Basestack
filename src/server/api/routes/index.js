@@ -17,6 +17,7 @@ import { Procedure } from "../orchestrators/procedure.js";
 const { Service } = require('../orchestrators//service.js');
 
 import upload from "../controllers/upload.js"
+import { cacheParams }  from "../controllers/cache.js" ;
 import { mapTargetConfiguration, mapCacheVariables } from "../controllers/mapper.js";
 import nestedProperty from "nested-property"
 const path = require("path")
@@ -1376,10 +1377,21 @@ router.post("/variable/read", (req,res,next)=>{ // build workflow according to n
 router.post("/service/run", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
+			let name = req.body.service
 			let response;
-			let service = store.services[req.body.service]
+			let service = store.services[name]
+			let variables = req.body.variables
+			let token = req.body.token
 			let params = req.body
-			await service.check_then_start(params, false)
+			if (!token){
+				token = 'development'
+			}
+			response = cacheParams(token, {
+				src: `services.${name}.variables`,
+				value: variables,
+				config: service.config
+			})
+			await service.check_then_start(response.services[name], false)
 			logger.info("%o service sent for running", req.body.service)
 			res.status(200).json({status: 200, message: `Completed run service submission: ${service.name}`, data: req.body.service });
 		} catch(err2){
@@ -1536,7 +1548,17 @@ router.post("/orchestrator/run", (req,res,next)=>{ // build workflow according t
 		}	
 	})()
 })
-
+router.get("/cache/get/:token", (req,res,next)=>{ // build workflow according to name and index
+	try {
+		let cache = store.server.cache.get(req.params.token)
+		logger.info("%s cache %o", req.params.token, cache)
+		res.status(200).json({status: 200, message: "Completed caching of service variables", data: cache });
+	
+	} catch(err2){
+		logger.error("%s %s", "Error in caching variables", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+})
 
 router.post("/session/cache/create", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
@@ -1570,6 +1592,7 @@ router.post("/session/cache/service/variable", (req,res,next)=>{ // build workfl
 			let response = store.server.cache.get(req.body.token)
 			tokenVals = store.server.cache.get(req.body.token) 
 			let variables = nestedProperty.get(tokenVals, `services.${req.body.service}.variables`)
+			console.log(variables)
 			res.status(200).json({status: 200, message: "Completed caching of service variables", data: response });
 		} catch(err2){
 			logger.error("%s %s", "Error in caching variables", err2)
@@ -1578,19 +1601,23 @@ router.post("/session/cache/service/variable", (req,res,next)=>{ // build workfl
 	})()
 }) 
 router.post("/service/cache", (req,res,next)=>{ // build workflow according to name and index
-	(async function(){
-		try {
-			let tokenVals = store.server.cache.get(req.body.token) 
-			nestedProperty.set(tokenVals, `services.${req.body.service}.variables`, req.body.variables)
-			store.server.cache.set(req.body.token, tokenVals)
-
-			let response = store.server.cache.get(req.body.token)
-			res.status(200).json({status: 200, message: "Completed caching of service variables", data: response });
-		} catch(err2){
-			logger.error("%s %s", "Error in caching variables", err2)
-			res.status(419).send({status: 419, message: error_alert(err2)});
-		}	
-	})()
+	
+	try {
+		let name = req.body.service
+		let variables = req.body.variables
+		let token = req.body.token
+		let service = store.services[name]
+		let response = cacheParams(token, {
+			src: 'services.variables',
+			value: req.body.variables,
+			config: service.config
+		})
+		res.status(200).json({status: 200, message: "Completed caching of service variables", data: response });
+	} catch(err2){
+		logger.error("%s %s", "Error in caching variables", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	}	
+	
 }) 
 router.get("/service/cache/get/:service/:token", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){

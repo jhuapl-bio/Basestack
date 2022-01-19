@@ -1,4 +1,4 @@
-import { mapConfigurations, mapVariables } from '../controllers/mapper.js';
+import {  mapVariables } from '../controllers/mapper.js';
 const cloneDeep = require("lodash.clonedeep");
 
 /*   
@@ -12,11 +12,13 @@ const cloneDeep = require("lodash.clonedeep");
 var Docker = require('dockerode'); 
 const path = require("path") 
 var  { store }  = require("../../config/store/index.js")
+
 const {  validateFramework } = require("../controllers/validate.js")
 const { readFile, writeFile, copyFile } = require("../controllers/IO.js") 
 const { module_status }  = require("../controllers/watcher.js")
 const { check_container,  } = require("../controllers/fetch.js")
 const { spawnLog } = require("../controllers/logger.js")
+const { Configuration }  = require("./configuration.js")
 var logger = store.logger 
 // var docker = new Docker();
 const fs = require("file-system") 
@@ -45,9 +47,20 @@ export class Service {
         };
         let depends = this.config.depends
         this.defineDependencies() 
+        // this.config = this.mapConfigurations()
 
 	}
-
+    // mapConfigurations(){ 
+    //     let token = 'development'
+    //     let mappedConfig;
+    //     if (this.name == 'mytax_kraken2_report'){
+    //         mappedConfig = defineMapping(this.config)
+            
+    //     } else {
+    //         mappedConfig = defineMapping(this.config)
+    //     }
+    //     return mappedConfig
+    // }
     async create_interval (){
         const $this = this
 		let checking = false
@@ -402,13 +415,6 @@ export class Service {
 		const $this = this   
         return new Promise(function(resolve,reject){ 
             let options = JSON.parse(JSON.stringify($this.options)) 
-            let custom_variables = params.variables
-            let defaultVariables = {}
-            if ($this.config.variables){
-                defaultVariables = cloneDeep($this.config.variables)
-            }
-            (! custom_variables ? custom_variables = {}: '');
-            options = $this.updateConfig(options)
             let env = []    
             let binds = [] 
             let complete = Object.values($this.dependencies).every((dependency)=>{
@@ -439,56 +445,27 @@ export class Service {
             }
             let promises = []
             let values = []
-                
-            for (let [key, custom_variable] of Object.entries(custom_variables)){
-                let selected_option  = defaultVariables[key]
-                let name = key;
-                if (custom_variable){
-                    if (selected_option.options){ 
-                        if (! custom_variable.option){
-                            custom_variable.option = 0
-                        }
-                        let true_value = selected_option.options[custom_variable.option]
-                        if (custom_variable.option || custom_variable.option == 0 ){
-                            let val = selected_option.options[custom_variable.option]
-                            if (typeof val === 'object'){
-                                let g = mapVariables(val.target, val.variables)
-                                let source = mapVariables(val.source, val.variables)   
-                                true_value.source = source  
-                                true_value.target = g  
-                            } else {   
-                                let g = mapVariables(val, val.variables)
-                                true_value = {
-                                    source: g, 
-                                    target: g
-                                }   
-                            }
-                            custom_variable = {
-                                ...true_value,
-                                ...custom_variable   
-                             }
-                        } 
-                    }  
-                }
-
-                (custom_variable.source ? selected_option.source = custom_variable.source : '' ) ;
-                (custom_variable.target ? selected_option.target = custom_variable.target : '' ) ;
-                defaultVariables[key] = { 
-                    ...selected_option,   
-                    ...custom_variable    
-                } 
-            }
+            options = $this.updateConfig(options)
+            /////////////////////////////////////////////////
+            let custom_variables = params.variables
+            let defaultVariables = {}
+            let config = $this.config
+            let configuration = new Configuration(config, options)
+            configuration.defineMapping();
+            (! custom_variables ? custom_variables = {}: '');
+            configuration.setVariables(custom_variables)
+            // if ($this.config.variables){
+            //     defaultVariables = $this.mapConfigurations($this.config.variables).variables
+            //     // defaultVariables = cloneDeep($this.config.variables)
+            // }
+            
+            defaultVariables = configuration.config.variables
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 let srcTarget = $this.defineSourceTargetBinding(selected_option, defaultVariables)
                 defaultVariables[name].source = srcTarget[0]
                 defaultVariables[name].target = srcTarget[1] 
             } 
-            let clonedConfig = cloneDeep($this.config)  
-            clonedConfig.variables = defaultVariables 
-            // let configuration_string = JSON.stringify(clonedConfig) 
-            // let configuration = new Configuration(configuration_string, defaultVariables)
-            defaultVariables = mapConfigurations(clonedConfig, cloneDeep(clonedConfig))
-            defaultVariables = defaultVariables.variables
+            
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 // let targetBinding = (selected_option.create ? selected_option.create : selected_option)
                 let targetBinding = selected_option
