@@ -1,5 +1,19 @@
 # Basestack
 
+## 1 Running Basestack Developer Mode
+
+- Window 1: `npm run dev:server`
+- Window 2: `npm run dev:app`
+
+OR 
+
+- Window 1: `npm run dev`
+
+## Building the app
+
+`npm run build`
+
+**note: target extensions will be based on your operating system (.dmg for OSX, .exe NSIS for Win, .AppImage for Linux)
 
 ## Our Official Documentation has moved to https://jhuapl-bio.github.io/Basestack/
 
