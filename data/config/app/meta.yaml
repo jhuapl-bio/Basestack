@@ -1,0 +1,6 @@
+logs:
+  path: "${writePath}/logs"
+  error: "${writePath}/logs/clientError.log"
+  logfile:  "${writePath}/logs/client.log"
+
+

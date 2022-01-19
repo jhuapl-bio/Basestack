@@ -1,0 +1,66 @@
+titan_ont:
+  init: false
+  hideStatus: true
+  label: "Test Bamstats"
+  force_restart: false
+  config: null
+  orchestrated: true
+  depends: 
+    - type: "module"
+      id: "dind"
+  image: "jhuaplbio/basestack_orchestrator"
+  workingdir: "/shared/custom/data/titan_ONT" #/shared must be identical to that of the Docker in Docker setup. 
+  command: ["bash", "-c", "dockstore workflow launch --entry github.com/theiagen/public_health_viral_genomics/Titan_ONT:fja-quasitools-dev --json ./Dockstore.json"]
+  variables:
+    demux_file:
+      element: "file"
+      bind_parent_dir: true
+      isolated: true
+      copy: 
+        basename: true
+        from: "%{variables.demux_file.source}"
+        to: "${writePath}/data/"
+      bind: 
+        from: "%{variables.demux_file.source}"
+        to: "/shared/data"
+      source: null
+    file:
+      element: "configuration-file"
+      bind_parent_dir: true
+      copy: 
+        from: "%{variables.file.source}"
+        to: "${writePath}/custom/data/titan_ONT/Dockstore.json"
+      bind: 
+        from: "${writePath}/custom/data/titan_ONT/Dockstore.json"
+        to: "/shared/custom/data/titan_ONT"
+      source: null
+    primer:
+      element: null
+      options:
+        - element: "string"
+          name: "v4"
+          source: "${writePath}/workflows/titan_ONT/artic-ncov2019"
+          variables:
+            name: "nCoV-2019/V4/nCoV-2019.primer.bed"
+          bind: 
+            from: "%{variables.primer.source}"
+            to: "/shared/workflows/titan_ONT/artic-ncov2019"
+          target: "/shared/workflows/titan_ONT/artic-ncov2019/primer_schemes/${name}" #This ${} is converted into the variable attribute of selected option only!
+        - element: "string"
+          name: "v3"
+          source: "${writePath}/workflows/titan_ONT/artic-ncov2019"
+          variables:
+            name: "nCoV-2019/V3/nCoV-2019.primer.bed"
+          bind: 
+            from: "%{variables.primer.source}"
+            to: "/shared/workflows/titan_ONT/artic-ncov2019"
+          target: "/shared/workflows/titan_ONT/artic-ncov2019/primer_schemes/${name}" #This ${} is converted into the variable attribute of selected option only!
+        - name: "custom_file"
+          label: "Custom Primer File"
+          element: "file"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.primer.source}"
+            to: "/shared/workflows/titan_ONT/artic-ncov2019/primer_schemes/"
+          class: "wb-50  p-3 mb-1"
+          source: null

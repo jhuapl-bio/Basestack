@@ -1,0 +1,10 @@
+dind: #Top level is the left-hand selection of the menu and the major module to install 
+  module: True 
+  title: DinD Orchestrator
+  dependencies: 
+      - target: "jhuaplbio/basestack_orchestrator"
+        type: "docker-local"
+        build:
+          file: "Dockerfile"
+          path: "${configPath}/modules/dind/Dockerfile" 
+

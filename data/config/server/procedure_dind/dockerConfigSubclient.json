@@ -1,0 +1,32 @@
+{ 
+    "name": null,
+    "ExposedPorts": {
+        "80/tcp": {}
+    },
+    "HostConfig": {
+        "AutoRemove": true,
+        "Privileged": false,
+        "Binds": [
+            "basestack-docker-certs-client:/certs/client:ro"
+        ],	 
+        "PortBindings": {
+            "80/tcp": [
+            ]
+        }
+    },
+    "Volumes": {
+
+    },  
+    "Env": [
+        "DOCKER_TLS_CERTDIR=/certs"
+    ], 
+    "NetworkingConfig": {
+        "EndpointsConfig": {
+            "basestack-network": {
+            }
+        }
+    },
+    "Tty": true,
+    "Image": "jhuaplbio/basestack_orchestrator",
+    "Cmd": []
+}

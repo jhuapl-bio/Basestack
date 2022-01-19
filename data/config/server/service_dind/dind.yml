@@ -1,0 +1,19 @@
+dind:
+  command: []
+  init: false
+  label: "Orchestrator"
+  depends:
+    - id: "dind"
+      type: "module"
+  force_restart: false
+  force_init: false
+  continuous: true
+  config: "${configPath}/procedure_dind/dockerConfig.json"
+  orchestrated: true
+  orchestrator: true 
+  binds: 
+    - "${writePath}/custom:/shared/custom" 
+    - "${writePath}/data:/shared/data"
+    - "${writePath}/workflows:/shared/workflows"
+  ports: #These are ports to be usable by the orchestrator. All contianers spawned INSIDE the orchestrator daemon can use these. Any ports outside will not be usable/seeable
+    - [8095, 8099]

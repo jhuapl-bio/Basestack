@@ -1,0 +1,13 @@
+staphb_gamma: #Top level is the left-hand selection of the menu and the major module to install 
+  title: "Gamma"
+  icon: "book" 
+  module: True
+  init: false 
+  tooltip: "Gene Allele Mutation Microbial Assessment"
+  tags: 
+    - "allele"
+    - "gene"
+    - "staphb"
+    - "alignment"
+  services:
+    - staphb_gamma

@@ -1,0 +1,41 @@
+titan_ONT:
+  title: "Titan ONT"
+  icon: "dna"
+  module: True
+  tooltip: "Run Titan ONT on fastq file"
+  dependencies:
+    - target: "jhuaplbio/basestack_orchestrator"
+      type: "docker-local"
+      format: "docker"
+      build:
+        file: "Dockerfile"
+        path: "${resourcePath}/server/config/modules/dind/Dockerfile" 
+    - source: 
+        url: "github.com/theiagen/public_health_viral_genomics/Titan_ONT:fja-quasitools-dev"
+        type: "dockstore-configuration"
+        remove: false
+        target: "${writePath}/workflows/titan_ONT/Dockstore.json"
+      type: "orchestration" 
+      format: "file"
+      target: "${writePath}/workflows/titan_ONT/Dockstore.json"
+      bind: "${writePath}/workflows/titan_ONT:/tmp"
+      workingdir: "/tmp"
+      command: ["bash", "-c", "dockstore workflow convert entry2json --entry github.com/theiagen/public_health_viral_genomics/Titan_ONT:fja-quasitools-dev > /tmp/Dockstore.json"]
+      overwrite: true
+      label: "Titan ONT Configuration File"
+    - source: 
+        url: "https://github.com/artic-network/artic-ncov2019.git"
+        type: "file"
+        protocol: "git"
+        remove: false
+        target: "${writePath}/workflows/titan_ONT/artic-ncov2019"
+      type: "orchestration" 
+      format: "dir"
+      target: "${writePath}/workflows/titan_ONT/artic-ncov2019"
+      workingdir: "/tmp"
+      command: ["bash", "-c", "git clone https://github.com/artic-network/artic-ncov2019.git"]
+      bind: "${writePath}/workflows/titan_ONT:/tmp"
+      overwrite: true
+      label: "Primer Schemes from Artic nCoV-2019"
+      
+              

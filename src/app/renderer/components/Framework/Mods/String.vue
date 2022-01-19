@@ -1,0 +1,50 @@
+<!--
+  - # **********************************************************************
+  - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
+  - #
+  - # All Rights Reserved.
+  - # For any other permission, please contact the Legal Office at JHU/APL.
+  - # **********************************************************************
+  -->
+<template>
+  <div id="string" > 
+  	<v-text-field
+        v-model="value"
+        :label="(source.hint ? source.hint : '' )"
+    >
+    </v-text-field>
+  </div>
+</template>
+
+<script>
+export default {
+	name: 'string',
+    data() {
+        return {
+            value: null,
+            test: "placeholder"
+        }
+    },
+    computed: {
+        
+    },
+	methods: {
+	
+	},
+	props: ['source', 'status', 'service', 'variable'],
+    mounted(){
+        console.log(this.value, "<value", this.source.source, "surc")
+        this.value = this.source.source
+    },
+    watch: {
+        value(newValue, oldValue){
+            console.log(newValue)
+            this.$emit("updateValue", newValue )
+        }
+    }
+    
+};
+</script>
+
+<style>
+</style>

@@ -1,0 +1,17 @@
+version: '2.3'
+
+networks:
+  network:
+services:
+    curl_test:
+        image: curlimages/curl
+        init: false
+        networks:
+            - default
+            - network
+        volumes:
+            - /certs/client:/certs/client:ro
+        environment:
+            DOCKER_TLS_CERTDIR: "/certs"
+        command: "curl www.google.com"
+        container_name: basestack_curl_test

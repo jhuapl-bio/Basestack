@@ -1,0 +1,6 @@
+Software	License	Distributable?	Misc
+gdown	MIT	Y	https://anaconda.org/conda-forge/gdown
+nodejs	MIT	Y	https://anaconda.org/conda-forge/nodejs
+pip	MIT	Y	https://anaconda.org/anaconda/pip
+curl	MIT/X derivate	Y	https://anaconda.org/anaconda/curl
+Docker-compose	ApacheV2.0	Y	https://anaconda.org/conda-forge/docker-compose
