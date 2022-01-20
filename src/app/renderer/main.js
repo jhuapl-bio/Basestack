@@ -36,6 +36,9 @@ import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
 
 import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
+
+import './main.css';
+
  
 Vue.use(Vuetify)
 

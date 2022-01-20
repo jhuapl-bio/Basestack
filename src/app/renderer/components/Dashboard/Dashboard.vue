@@ -10,6 +10,7 @@
 	<b-row class="mainContent">
 		<b-col sm="7" style="background: white; overflow-y:auto">
 			<div style="width:100%; ">
+				<p class="text-white bg-red-500">Whoa!!!</p>
 				<b-img style="" :src="require('@/assets/Basestack_multiple_landing.png')" fluid alt="JUHAPL"></b-img>
 			</div>
 		</b-col>
