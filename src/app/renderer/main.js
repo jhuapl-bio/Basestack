@@ -6,56 +6,78 @@
   // - # For any other permission, please contact the Legal Office at JHU/APL.
   // - # **********************************************************************
 
-
+// Import Vue
 import Vue from 'vue'
+// import router from './router'
+import Vuex from 'vuex'
+import store from './store'
 import axios from 'axios'
 
-import App from './App'
-// import router from './router'
-import store from './store'
+// Bootstrap Vue Wrapper
 import { BootstrapVue } from 'bootstrap-vue'
-import VueSweetalert2 from 'vue-sweetalert2'
-import 'sweetalert2/dist/sweetalert2.min.css';
-import Vuex from 'vuex'
-
-
-import Vuelidate from 'vuelidate'
-import Multiselect from 'vue-multiselect'
-import VTooltip from 'v-tooltip'
-import  VueScrollTo from 'vue-scrollto'
-import {Slide, Carousel } from 'vue-carousel';
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
-const  { HalfCircleSpinner, AtomSpinner } = require('epic-spinners');
-import path from "path"
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import ToggleButton from 'vue-js-toggle-button'
-import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
 import { BootstrapVueIcons } from 'bootstrap-vue'
 import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
 
+// VueSweetAlert - used for modals/dialogs/popups/toasts
+import VueSweetalert2 from 'vue-sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css';
+
+// Forms + Form Validation
+import Vuelidate from 'vuelidate'
+import Multiselect from 'vue-multiselect'
+import ToggleButton from 'vue-js-toggle-button'
+
+// Font Awesome Icons
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
+
+// Vuetify
 import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 
+// Additional Vue Libraries
+import VTooltip from 'v-tooltip'
+import VueScrollTo from 'vue-scrollto'
+import {Slide, Carousel } from 'vue-carousel';
+
+// Promise-flavored IPC calls in Electron [yarn add electron-promise-ipc]
+import promiseIpc from 'electron-promise-ipc' 
+
+// Spinners 
+const  { HalfCircleSpinner, AtomSpinner } = require('epic-spinners');
+
+// Functions
+import path from "path"
+
+// Entry Points
 import './main.css';
+import App from './App'
 
  
 Vue.use(Vuetify)
 
-library.add( faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench,faAngleUp, faCheck, faTimesCircle, faAngleDown, faPlus, faMinus, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree,faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
 let config = process.env.logfile
 let configError = process.env.errorfile
 // let logger = require("../../shared/logger.js").logger(configError, config)
 
+// Install desired font awesome icons + define icon component
+library.add( faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench,faAngleUp, faCheck, faTimesCircle, faAngleDown, faPlus, faMinus, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree,faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
-Vue.prototype.$eventHub = new Vue(); // Global event bus
+
+// Global event bus
+Vue.prototype.$eventHub = new Vue(); 
+
 // window.localStorage.clear()
 
-if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
+if (!process.env.IS_WEB) {
+  Vue.use(require('vue-electron'))
+}
+
+
 Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
-// Install BootstrapVue
 Vue.use(BootstrapVue)
 Vue.use(VueSweetalert2)
 Vue.use(Vuelidate)
@@ -81,22 +103,24 @@ Vue.use(VueScrollTo);
 //   devtools.connect('localhost', process.env.rendererBasePort)
 // }
 
-
 // Vue.prototype.$logger = logger
 import upperFirst from 'lodash/upperFirst'
 import camelCase from 'lodash/camelCase'
 
+
+// Register all vue files in 
+// `/src/app/renderer/components/Framework/Mods` as global vue components
 const requireComponent = require.context(
   // The relative path of the components folder
   './components/Framework/Mods',
+
   // Whether or not to look in subfolders
   false,
+
   // The regular expression used to match base component filenames
   /Base[A-Z]\w+\.(vue)$/
 )
  
-
-
 requireComponent.keys().forEach(fileName => {
   // Get component config
   const componentConfig = requireComponent(fileName)
@@ -127,7 +151,6 @@ Vue.directive('pin', {
         el[d[0]] = d[1]
       })
   }
-
 })
 
 
