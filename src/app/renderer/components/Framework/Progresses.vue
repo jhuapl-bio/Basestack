@@ -8,6 +8,7 @@
   -->
 <template>
   <div id="progresses" >
+    <v-subheader>Progress Outputs</v-subheader>
   	<v-data-table
         v-if="progresses && progresses.length > 0"
         small
@@ -16,6 +17,7 @@
         :items-per-page="5"
         class="elevation-1"					        
     >	
+      
         <template v-slot:item.label="{ item }">
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">

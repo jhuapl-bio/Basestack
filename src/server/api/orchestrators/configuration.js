@@ -1,29 +1,28 @@
 import nestedProperty from "nested-property"
-const cloneDeep = require("lodash.clonedeep");
+const cloneDeep = require("lodash.clonedeep"); 
 import { mapVariables } from '../controllers/mapper.js';
-
+ 
 const { store }  = require("../../config/store/index.js")
-
-
+   
+    
 export  class Configuration { 
-    constructor(config, options){
-        this.config = config
-        this.options = options
-    }
+    constructor(config, options){       
+        this.config = config 
+        this.options = options  
+    }  
     defineMapping(){
-        console.log("yes define mapping", this.config)
         let newTarget = this.findObjectByLabel(this.config, "(\%\{.+?\})")
-    }
-    setVariables(custom_variables){
+    }     
+    setVariables(custom_variables){ 
         let defaultVariables = this.config.variables
         for (let [key, custom_variable] of Object.entries(custom_variables)){
             let selected_option  = defaultVariables[key]
             let name = key;
-            if (custom_variable){
+            if (custom_variable){ 
                 if (selected_option.options){ 
                     if (! custom_variable.option){
                         custom_variable.option = 0
-                    }
+                    }   
                     let true_value = selected_option.options[custom_variable.option]
                     if (custom_variable.option || custom_variable.option == 0 ){
                         let val = selected_option.options[custom_variable.option]
@@ -39,7 +38,7 @@ export  class Configuration {
                                 target: g
                             }   
                         }
-                        custom_variable = {
+                        custom_variable = { 
                             ...true_value,
                             ...custom_variable   
                             }

@@ -22,7 +22,7 @@
   import FileService from '@/services/File-service';
   export default {
     components: {
-      CPU,
+      CPU, 
       Memory,
       Disk,
       Docker,

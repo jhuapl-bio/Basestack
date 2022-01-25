@@ -241,8 +241,8 @@ export default {
 	data(){
 		return{
 			tab:0,
-			tabProcedure: 0,
-			selected: 'dashboard',
+			tabProcedure: 5,
+			selected: 'procedures',
 			colorList: [
 				"rgb(70, 240,240",
 				"rgb(128,0,0",

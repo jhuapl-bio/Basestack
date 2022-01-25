@@ -70,7 +70,7 @@ export function define_service(name, service){
 	)
 	return service_obj
 }
-
+ 
 export function define_module(key, module){
 	let module_obj = new Module(
 		key,  

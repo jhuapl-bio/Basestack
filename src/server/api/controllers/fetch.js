@@ -200,8 +200,8 @@ export async function getExternalSource(url){
 		throw err
 	} 
 }
-
-
+  
+ 
 export async function getRemoteConfigurations(url){
 	var clone = require("git-clone/promise");
 	try{
@@ -215,8 +215,8 @@ export async function getRemoteConfigurations(url){
 		throw err 
 	} 
 }
-
  
+
 
 
 export async function fetch_external_dockers(key){

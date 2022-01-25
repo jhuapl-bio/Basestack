@@ -3,21 +3,21 @@ import nestedProperty from "nested-property"
 
 const {promisify} = require("util");
 // const config = require('./config')
-
+  
 var  { store }  = require("../../config/store/index.js")
- 
+  
 export function cacheParams( token, target){
     if (!token){
         token = 'development' 
     } 
-    let value = target.value
+    let value = target.value 
     let attr = target.src
     let obj = store.server.cache.get(token) 
     for(let [key, val] of Object.entries(value)){
-        if (val && val.source){
+        if (val && val.source || val.source == 0 ){
             nestedProperty.set(obj, `${attr}.${key}.source`,  val.source)
         }
-        if (val && val.option){
+        if (val  &&  val.option || val.option == 0){
             nestedProperty.set(obj, `${attr}.${key}.option`, val.option)
         } 
         

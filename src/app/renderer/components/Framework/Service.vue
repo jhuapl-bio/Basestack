@@ -8,40 +8,20 @@
   - # **********************************************************************
   -->
 <template>
-
   <div id="service">
-    <!-- <v-row>
-      <div  v-if="status" class=" p-3 outer-entry-right">
-        <span 
-            class="center-align-icon configure"
-            v-if="!status || !status.exists|| status.exists && !status.exists.running"
-            @click="start_service(service)"> Start Service
-          <font-awesome-icon  icon="sync" style="margin-left: 10px; margin-right: 10px"/>
-        </span>
-        <span v-v-tooltip.hover.top
-            v-else-if="status && status.exists && status.exists.running" 
-            class="center-align-icon configure"
-            style="width: 100%"
-            @click="cancel_service(name)" > Cancel Service
-          <font-awesome-icon  icon="times" style="margin-left: 10px; margin-right: 10px"/>
-        </span>
-        <span class="center-align-icon" style="float:middle; display:flex" v-tooltip="{
-              content: 'Running',
-              placement: 'top',
-              classes: ['info'],
-              trigger: 'hover',
-              targetClasses: ['it-has-a-tooltip'],
-              }">
-        </span>        
-        </span>
-      </div>
-    </v-row> -->
     <v-card-title centered class="text-center">
       Service {{serviceIdx+1}}: {{service.label}}
     </v-card-title>
-    <v-row v-if="service.variables"  style="" class=" ">
+    <!-- <v-row v-if="service.variables"  style="" class=" ">
         <v-col :cols="(variable.column ? variable.column : 6)" v-for="[key, variable] of Object.entries(service.variables)" :key="key"  :class="getClass(variable.class, variable.element)" >
             <label class="entry-label" v-if="!variable.hidden">{{variable.label}}</label>
+            <v-tooltip bottom v-if="variable.hint ">
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" color="info" x-small>$question-circle
+                </v-icon>
+              </template>
+              {{variable.hint}}
+            </v-tooltip>  
             <div v-if="!variable.options"  class="entry from-group">
               <component
                   :is="factory[variable.element]"
@@ -88,8 +68,15 @@
                 </component> 
             </div>
         </v-col>  
-    </v-row>
-    
+    </v-row> -->
+    <div
+    >
+      <Advanced
+        :variables="service.variables"
+        :service="service"
+      ></Advanced>
+
+    </div>
     <div class="w-100 p-3 mv-1">
         <Progresses
             v-if="progresses"
@@ -97,10 +84,32 @@
             :running="( status.exists ? status.exists.running : false )"
         ></Progresses>
     </div>
+    
+   
+
+
      <div v-if="status && status.stream" class="w-100 p-3 mv-1">
         <p class="entry-label" style="font-size: 120%">Logs</p>
         <LogWindow :info="status.stream.info"></LogWindow>
-    </div>    
+    </div>
+    <v-card>
+      <v-bottom-navigation
+          :value="tabService"
+          color="primary"
+          class="elevation-3"
+        >
+        <v-btn   small 
+          @click="start_service()"><v-icon  x-small >$play-circle</v-icon>Start 
+        </v-btn>
+        <v-btn   small v-if="status.running"
+          @click="cancel_service()"><v-icon  x-small>$times</v-icon>Cancel
+        </v-btn>
+        <v-btn v-if="procedure.custom" x-small 
+          @click="rm_service(procedure.name)"><v-icon x-small>$times-circle</v-icon>Remove
+        </v-btn>
+      </v-bottom-navigation>
+    </v-card>
+            
   </div>
 </template>
 
@@ -110,6 +119,8 @@ import File from '@/components/Framework/Mods/File.vue';
 import Dir from '@/components/Framework/Mods/Dir.vue';
 import List  from '@/components/Framework/Mods/List.vue';
 import Render from '@/components/Framework/Mods/Render.vue';
+import ConfigurationFile from '@/components/Framework/Mods/ConfigurationFile.vue';
+import Advanced from "@/components/Framework/Advanced.vue"
 import FileService from '@/services/File-service.js'
 import Progresses from '@/components/Framework/Progresses.vue'
 import {LoopingRhombusesSpinner} from 'epic-spinners'
@@ -142,10 +153,12 @@ export default {
     Dir,
     String,
     List,
+    ConfigurationFile,
  		LoopingRhombusesSpinner,
     Progresses,
     LogWindow,
-    Multiselect
+    Multiselect,
+    Advanced
   },
   methods: {
     getServiceProgress(){
@@ -159,7 +172,7 @@ export default {
         }).then((response)=>{
             $this.progresses =  response.data.data
             $this.progressChecking = false
-
+            console.log($this.service)
         }).catch((err)=>{
             console.error(err)
             $this.progressChecking = false
@@ -176,6 +189,28 @@ export default {
         }
       }
     },
+    async rm_service(){
+      await FileService.rmService({
+        service: this.name
+      }).then((response)=>{
+        this.$swal.fire({
+          position: 'center',
+          icon: 'success',
+          showConfirmButton:true,
+          title:  response.data.message
+        })
+  			this.count +=1
+
+      }).catch((error)=>{
+        console.error(error)
+        this.$swal.fire({
+          position: 'center',
+          icon: 'error',
+          showConfirmButton:true,
+          title:  error.response.data.message
+        })
+      })
+    },
     updateValue(value, option, variable, name){
       let src = value
       if (option){
@@ -184,17 +219,17 @@ export default {
         variable.source  = src
       }
       const $this = this
-      try{
-        FileService.updateCacheServiceVariable({
-          service: this.name,
-          token: (process.env.NODE_ENV == 'development' ? 'development' : this.$store.token),
-          value: value, 
-          target: (option  ? "option" : "source"),
-          variable: name,
-        })
-      } catch(err){
-        console.error(err,"<<<<< error in caching update")
-      }
+      // try{
+      //   FileService.updateCacheServiceVariable({
+      //     service: this.name,
+      //     token: (process.env.NODE_ENV == 'development' ? 'development' : this.$store.token),
+      //     value: value, 
+      //     target: (option  ? "option" : "source"),
+      //     variable: name,
+      //   })
+      // } catch(err){
+      //   console.error(err,"<<<<< error in caching update")
+      // }
       try{
         let promises = []
         if (this.service.variables){
@@ -245,7 +280,7 @@ export default {
 
       if (!this.intervalProgress){
           try{
-              this.intervalProgress = true
+              this.intervalProgress = true 
               if ($this.service.progress){
                 if ($this.intervalProgress){
                   try{
@@ -346,9 +381,20 @@ export default {
     // },
     async start_service( ){
       // this.checkError()
+      let variables ={}
+      console.log(this.service.variables)
+      if (this.service.variables){
+        for (let [key, value] of Object.entries(this.service.variables)){
+          console.log(key,value)
+          variables[key] = {}
+          variables[key].source = value.source
+          variables[key].option = value.option
+        }
+      }
+      console.log(variables,"<<<<")
       await FileService.startService({
         service: this.name, 
-        variables: this.service.variables
+        variables: variables
       }).then((response)=>{
 			  this.count +=1
         this.$swal.fire({
@@ -370,12 +416,15 @@ export default {
 	},
   data(){
     return{
-      
+      arguments: [
+
+      ],
       factory: {
 
         'string': "String",
         "file": "File",
         "render": "Render",
+        "configuration-file": "ConfigurationFile",
         "dir": "Dir",
         "list": "List"
 
@@ -389,7 +438,7 @@ export default {
       status: {},
       progresses: [],
       service: {},
-      tabService: 2,
+      tabService: 0,
     }
   },
   props: [  'name', 'procedure', 'serviceIdx' ],

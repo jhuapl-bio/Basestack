@@ -62,6 +62,7 @@ const {
 	copyFile,
 	writeFile,
 	readTableFile,
+	archive,
 	removeFile,
 	downloadSource
 } = require("../controllers/IO.js")
@@ -1105,6 +1106,45 @@ router.get("/services/names", (req,res,next)=>{ // build workflow according to n
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
+router.post("/archive/files/", (req,res,next)=>{ 
+	(async function(){
+		try {
+			let files = req.body.files
+			console.log(files)
+			for (let file of files){
+				await await archive(file, req.body.gzip)
+			}
+			res.status(200).json({status: 200, message: "archived file", data: "tar'd 1 or more files to stage for archiving"  });
+		} catch(err2){ 
+			logger.error("%s %s", "Error in archiving file %s", err2, req.body.file)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		} 	
+	})().catch((err2)=>{
+		logger.error("%s %s", "Error in getting archive completed for file %s", err2, req.body.file)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	})
+})
+router.post("/service/archive/files/", (req,res,next)=>{ 
+	(async function(){
+		try {
+			let archives = req.body.archives
+			let destination = req.body.destination
+			let service = store.services[req.body.service]
+			for (let archive of archives){
+				await service.archive(archive, destination)
+			}
+			res.status(200).json({status: 200, message: "archived file to container that is running...", data: "Archived 1 or more files"  });
+		} catch(err2){ 
+			console.log("yes")
+			logger.error("%s %s", "Error in archiving file to service container %s", err2, req.body.archive)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		} 	
+	})().catch((err2)=>{
+		console.log("yes")
+		logger.error("%s %s", "Error in getting archive sent to service container %s", err2, req.body.archive)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	})
+})
 
 
 router.get("/service/status/", (req,res,next)=>{ // build workflow according to name and index
@@ -1379,19 +1419,34 @@ router.post("/service/run", (req,res,next)=>{ // build workflow according to nam
 		try {
 			let name = req.body.service
 			let response;
+			console.log(req.body,"body")
 			let service = store.services[name]
 			let variables = req.body.variables
 			let token = req.body.token
 			let params = req.body
+			if (params.variables){
+				for(let [key, value] of Object.entries(params.variables)){
+					let newObj  = {}
+					if (value.source){
+						newObj.source = value.source
+					}
+					if (value.option){
+						newObj.option = value.option
+					}
+					params.variables[key] = newObj
+				}
+			}
 			if (!token){
 				token = 'development'
 			}
-			response = cacheParams(token, {
-				src: `services.${name}.variables`,
-				value: variables,
-				config: service.config
-			})
-			await service.check_then_start(response.services[name], false)
+			if (req.body.variables){
+				response = cacheParams(token, {
+					src: `services.${name}.variables`,
+					value: variables,
+					config: service.config
+				})
+			}
+			await service.check_then_start(params, false)
 			logger.info("%o service sent for running", req.body.service)
 			res.status(200).json({status: 200, message: `Completed run service submission: ${service.name}`, data: req.body.service });
 		} catch(err2){

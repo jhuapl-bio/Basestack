@@ -8,14 +8,24 @@
   -->
 <template>
   <div  class="render ">
-	  <v-btn small class="mb-4" v-on:click="forceRerender()"
+	
+	<v-divider></v-divider>
+	<v-btn small class="mb-4 mr-2" v-on:click="forceRerender()"
 		> Refresh
 		<v-icon class="ml-3" small >$sync</v-icon>
 	</v-btn>
+	<v-tooltip bottom >
+		<template v-slot:activator="{ on }">
+		<v-icon align="end" v-on="on" class="configure" @click="open_link('', $event)" color="info" x-small>$external-link-alt
+		</v-icon>
+		</template>
+		View in Browser
+	</v-tooltip>  
 	<v-divider></v-divider>
 	<v-row v-if="show && status.exists && status.exists.running" class="">
 		<object type="text/html"  class="renderObj ml-4 mr-2" :data="getUrl()"></object>
 	</v-row>
+	
 	
   </div> 
   
@@ -33,7 +43,14 @@ export default {
 	props: ['source', 'status', 'service'],
 	data(){
 		return {
-			show: true
+			show: true,
+			items: [
+				{
+				text: 'View in Browser',
+					disabled: false,
+					href: null,
+				}
+			],
 		}
 	}, 
 	async mounted(){
@@ -54,13 +71,16 @@ export default {
 			$this.show = true
 			},400)
 		},
-		open_link (link,e) {
+		openUrl(){
+			this.$electron.shell.openExternal(this.getUrl())
+		},
+		open_link (link, e) {
 			e.stopPropagation()
-			this.$emit("open", link)
+			this.openUrl()
       	},
-		  getUrl(){
+		getUrl(){
 			//   let url  = `http://localhost:8080`
-			  let url  = `http://localhost:${this.source.to}`
+			  let url  = `http://localhost:${this.source.bind.to}`
 			  if (this.source.suburl){
 				  url = url + this.source.suburl
 			  }

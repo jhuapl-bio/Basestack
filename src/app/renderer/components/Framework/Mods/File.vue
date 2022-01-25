@@ -38,10 +38,10 @@ export default {
     },
 
 	},
-	props: ['source', 'status', 'service', "variable"],
+	props: ['source', 'variable'],
   mounted(){
-    if (!this.value && typeof(this.source.source) == 'string'){
-        var file = new File([this.source.source], this.source.source, {
+    if (!this.value && typeof(this.source) == 'string'){
+        var file = new File([this.source], this.source, {
           type: "text/plain",
         });
         this.value = file
@@ -55,7 +55,7 @@ export default {
           deep: true,
           handler(newValue, oldValue){
             if (typeof(newValue) == 'string'){
-              var file = new File([source.source], source.source, {
+              var file = new File([source], source, {
                 type: "text/plain",
               });
               this.value = file

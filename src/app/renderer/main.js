@@ -25,7 +25,7 @@ import VTooltip from 'v-tooltip'
 import  VueScrollTo from 'vue-scrollto'
 import {Slide, Carousel } from 'vue-carousel';
 const  { HalfCircleSpinner, AtomSpinner } = require('epic-spinners');
-import path from "path"
+import path from "path" 
 import ToggleButton from 'vue-js-toggle-button'
 import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
 // import { BootstrapVueIcons } from 'bootstrap-vue'
@@ -35,6 +35,9 @@ import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
 let config = process.env.logfile
 let configError = process.env.errorfile
 // let logger = require("../../shared/logger.js").logger(configError, config)
+import TreeView from "vue-json-tree-view"
+Vue.use(TreeView)
+
 
 Vue.prototype.$eventHub = new Vue(); // Global event bus
 // window.localStorage.clear()

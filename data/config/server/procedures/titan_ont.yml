@@ -1,0 +1,15 @@
+bamstats: #Top level is the left-hand selection of the menu and the major module to install 
+  title: "Titan ONT"
+  icon: "dna"
+  module: True
+  init: false 
+  tags: 
+    - "workflow"
+    - "dind"
+    - "pipeline"
+    - "titan"
+    - "covid"
+  tooltip: "Run Titan ONT with Dockstore"
+  services:
+    - dind
+    - titan_ont

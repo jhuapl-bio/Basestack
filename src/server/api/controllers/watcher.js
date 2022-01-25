@@ -72,7 +72,7 @@ async function get_status_complete (filepath){
 				status = 1
 			} else { 
 				status = 0 
-			}
+			} 
 			resolve(status)
 		})	  
 	})
@@ -89,8 +89,8 @@ export  var module_status = async function(params, key, variables, outputs){
 			},
 			key: key
 		} 
-		params.path = mapConfigurations(params.path, variables)
-		params.path = mapVariables(params.path, variables.variables)
+		// params.path = mapConfigurations(params.path, variables)
+		// params.path = mapVariables(params.path, variables.variables)
 		
 		if (params.type =="file"){
 			mod.status.total = 1
