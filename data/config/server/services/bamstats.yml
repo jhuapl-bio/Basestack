@@ -5,23 +5,28 @@ bamstats:
   force_restart: false
   config: null
   orchestrated: true
+  binds:
+    - "${writePath}/custom:/shared/custom" 
+    - "${writePath}/data:/shared/data"
+    - "${writePath}/outputs:/shared/outputs"
+    - "${writePath}/workflows:/shared/workflows"
   depends: 
     - type: "module"
       id: "dind"
     - type: "service"
       id: "dind"
   image: "jhuaplbio/basestack_orchestrator"
-  workingdir: "/shared/custom/data/bamstats" #/shared must be identical to that of the Docker in Docker setup. 
+  workingdir: "/shared/outputs/bamstats" #/shared must be identical to that of the Docker in Docker setup. 
   # command: ["bash", "-c", "ls -lht  && pwd"]
   # command: ["bash", "-c", "docker run -it --rm  -v /shared:/shared  --name test ubuntu:latest ls /shared"]
-  command: ["bash", "-c", "dockstore tool launch --entry quay.io/collaboratory/dockstore-tool-bamstats:1.25-6_1.0 --json ./Dockstore.json"]
+  command: ["bash", "-c", "dockstore tool launch --entry quay.io/collaboratory/dockstore-tool-bamstats:1.25-6_1.0 --json /shared/custom/data/bamstats/Dockstore.json"]
   outputs:
     report:
       label: "Report File"
       hint: "Statically named bamstats_report.zip output file"
       watch: True
       type: "file"
-      path: "${writePath}/custom/data/bamstats/bamstats_report.zip"
+      path: "${writePath}/outputs/bamstats/bamstats_report.zip"
   variables:
     bamfile:
       element: "file"
@@ -31,22 +36,29 @@ bamstats:
       copy: 
         basename: true
         from: "%{variables.bamfile.source}"
-        to: "${writePath}/data/"
-      bind: 
-        from: "%{variables.bamfile.source}"
-        to: "/shared/data"
+        to: "${writePath}/custom/data/bamstats"
+      # bind: 
+      #   from: "%{variables.bamfile.source}"
+      #   to: "/shared/data"
+      # bind: 
+      #   from: "%{variables.bamfile.source}"
+      #   to: "/shared/data"
       source: null
       # source: "/Users/merribb1/Desktop/bamstats/rna.SRR948778.bam"
     file:
-      element: "file"
+      element: "configuration-file"
       bind_parent_dir: true
       label: "Dockstore Configuration File"
-      copy: 
-        from: "%{variables.file.source}"
-        to: "${writePath}/custom/data/bamstats/Dockstore.json"
-      bind: 
-        from: "${writePath}/custom/data/bamstats/Dockstore.json"
-        to: "/shared/custom/data/bamstats"
+      load: "${writePath}/custom/data/bamstats/Dockstore.json"
+      # create: 
+      #   to: "${writePath}/custom/data/bamstats/Dockstore.json"
+      #   type: "object"
+      # copy: 
+      #   from: "%{variables.file.source}"
+      #   to: "${writePath}/custom/data/bamstats/Dockstore.json"
+      # bind: 
+      #   from: "${writePath}/custom/data/bamstats/Dockstore.json"
+      #   to: "/shared/data"
       source: null
       # source: "${writePath}/data/services/bamstats/Dockstore.json"
 

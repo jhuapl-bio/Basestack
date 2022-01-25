@@ -11,12 +11,7 @@ bamstats:
       build:
         file: "Dockerfile"
         path: "${resourcePath}/server/config/modules/dind/Dockerfile" 
-    - source: 
-        url: "github.com/theiagen/public_health_viral_genomics/Titan_ONT:fja-quasitools-dev"
-        type: "dockstore-configuration"
-        remove: false
-        target: "${writePath}/workflows/bamstats/Dockstore.json"
-      type: "dockstore-configuration" 
+    - type: "dockstore-configuration" 
       format: "file"
       label: "Dockstore JSON"
       target: "${writePath}/workflows/bamstats/Dockstore.json"

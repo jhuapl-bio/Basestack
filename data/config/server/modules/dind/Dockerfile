@@ -41,4 +41,6 @@ RUN dockstore --version
 # RUN mkdir -p  /etc/docker/ && echo '{"dns": [ "172.17.0.9"]} ' | tee /etc/docker/daemon.json
 #Install snakemake and docker-compose
 #Remove unneeded files
+RUN mkdir -p /data/ 
+# RUN sed -i 's/--host="\$dockerSocket"/--host="\$dockerSocket" -b basestack-network /g' /usr/local/bin/dockerd-entrypoint.sh
 WORKDIR /opt/app

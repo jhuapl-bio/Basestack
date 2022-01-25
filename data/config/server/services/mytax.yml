@@ -15,9 +15,13 @@ mytax_visualization:
   variables:
     port:
       element: "render"
+      label: "Mytax Sunburst Service"
       column: 12
-      from: "8086"
-      to: "8086"
+      target: "localhost:8086"
+      port: true
+      bind:
+        from: "8086"
+        to: "8086"
 mytax_create_json:
   label: "Create Report JSON"
   depends: 
@@ -50,7 +54,7 @@ mytax_create_json:
         from: "%{variables.file.source}"
         to: "/opt/data"
       class: "wb-100  p-3 mb-1"
-      source: ""
+      source: null
     nodes:
       label: "Nodes.dmp file, gathered from ncbi taxonomy"
       # class: "wb-100 p-3 mb-1"
@@ -101,9 +105,11 @@ mytax_kraken2_report:
         to: "/opt/data"
       class: "wb-100  p-3 mb-1"
       source: null
+      target: "%{variables.file.bind.to}/"
     db:
       label: "Input classifier database"
       class: "wb-100 p-3 mb-1"
+      option: 1
       options:
         - element: null
           name: "Minikraken2"

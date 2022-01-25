@@ -1,4 +1,4 @@
-bamstats: #Top level is the left-hand selection of the menu and the major module to install 
+titan_ont: #Top level is the left-hand selection of the menu and the major module to install 
   title: "Titan ONT"
   icon: "dna"
   module: True
