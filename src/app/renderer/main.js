@@ -9,9 +9,9 @@
 
 import Vue from 'vue'
 import axios from 'axios'
-
+ 
 import App from './App'
-// import router from './router'
+import router from './router'
 import store from './store'
 // import { BootstrapVue } from 'bootstrap-vue'
 import VueSweetalert2 from 'vue-sweetalert2'
@@ -126,7 +126,7 @@ import vuetify from '@/plugins/vuetify' // path to vuetify export
 new Vue({
   vuetify,
   components: { App,},
-  // router,
+  router,
   store,
   template: '<App/>'
 }).$mount('#app')

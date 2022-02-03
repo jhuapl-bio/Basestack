@@ -25,9 +25,13 @@ agave_visualization:
     port:
       element: "render"
       column: 12
+      port: true
+      label: "Rendered Dashboard"
+      hint: "Dashboard to display in a web browser"
       suburl: "/AGAVE/"
-      from: "80"
-      to: "8083"
+      bind:
+        from: "80"
+        to: "8083"
 agave_create_report:
   label: "Create Report JSON for AGAVE Visualization"
   depends: 

@@ -1,17 +1,24 @@
 <template>
   <div id="list-params" >
     <v-data-table
-        small
+        small 
         :headers="headers"
-        :items="items"
-        :items-per-page="6"
-        class="elevation-6"					        
+        :items="items" dense
+        :items-per-page="10"
+        :footer-props="{
+        showFirstLastPage: true,
+            prevIcon: '$arrow-alt-circle-left',
+            nextIcon: '$arrow-alt-circle-right',
+            firstIcon: '$step-backward',
+            lastIcon: '$step-forward',
+        }"
+        class="elevation-6 "					        
     >	
         <template v-slot:top>
             <v-toolbar
                 flat
             >
-                <v-subheader>{{ ( title ? title : 'List Table' )  }}</v-subheader>
+                <v-subheader  >{{ ( title ? title : 'Inputs' )  }}</v-subheader>
                 <v-divider
                     class="mx-4"
                     inset
@@ -22,7 +29,7 @@
                     v-model="dialog"
                     max-width="500px"
                     >
-                    <template v-slot:activator="{ on, attrs }">
+                    <!-- <template v-slot:activator="{ on, attrs }">
                         <v-btn
                         color="primary"
                         dark
@@ -32,7 +39,7 @@
                         >
                         New Item
                         </v-btn>
-                    </template>
+                    </template> -->
                     <v-card>
                         <v-card-title>
                         <span class="text-h5">Row Item Add</span>
@@ -48,7 +55,7 @@
                                     <v-container v-for="head in headers" :key="head.value + head.index">
                                             <v-text-field v-if="head.value !== 'actions'"
                                                 v-model="editedItem[head.value]"
-                                                :label="head.text"
+                                                :label="head.text" 
                                             ></v-text-field>
                                     </v-container>
                                     
@@ -78,28 +85,10 @@
         </template>
         <template v-slot:item.source="{ item, index }">
              <div v-if="item.options"  class="entry from-group">
-                <!-- <multiselect 
-                    v-model="item.option" 
-                    :options="item.options.map((d,i)=>{ return i})" 
-                    :searchable="false" 
-                    @input="updateValue($event, true, item, index)"
-                    :preselect-first="true"
-                    :close-on-select="true" 
-                    :allow-empty="false"
-                    :show-labels="false" 
-                    style="overflow-wrap:anywhere"
-                    placeholder="Pick a db">
-                        <template slot="singleLabel" 
-                            slot-scope="{ option }">{{ item.options[option].name ? item.options[option].name : item.options[option] }}
-                        </template>
-                        <template slot="option" 
-                            slot-scope="{ option }">{{ item.options[option].name ? item.options[option].name : item.options[option] }}
-                        </template>
-                </multiselect> -->
                 <v-select
                     v-model="item.option"
                     :hint="`Select an item`"
-                    @input="updateValue($event, true, item, index)"
+                    @input="updateValue($event, true, item, index, item.name)"
                     :items="item.options.map((d,i)=>{ return i})" 
                     label="Select"
                     persistent-hint
@@ -114,14 +103,14 @@
                     </template>
                 </v-select>
              </div>
-            <div v-else  class="entry from-group">
+            <div v-else >
                 <component
                     :is="factory[item.element]"
                     v-if="item.element !== 'render'"
                     :source="item"
                     :variable="item"
                     :hidden="item.hidden"
-                    @updateValue="updateValue($event, false, item, index)"
+                    @updateValue="updateValue($event, false, item, index, item.name)"
                     >
                 </component>
                 <v-tooltip bottom v-else>
@@ -143,7 +132,7 @@
                     <v-list-item-content>
                         <v-text-field
                             v-model="item.bind.from"
-                            label="From"
+                            label="From" 
                         >
                         </v-text-field>
                     </v-list-item-content>
@@ -252,106 +241,15 @@ export default {
             }
             return url
         },
-        updateValue(value, option, variable, name){
+        updateValue(value, option, variable, name, var_name){
             let src = value
-            console.log(value, option, variable)
             if (option){
                 variable.option = src
             } else {
                 variable.source  = src
             }
-            const $this = this
-            // try{
-            //   FileService.updateCacheServiceVariable({
-            //     service: this.name,
-            //     token: (process.env.NODE_ENV == 'development' ? 'development' : this.$store.token),
-            //     value: value, 
-            //     target: (option  ? "option" : "source"),
-            //     variable: name,
-            //   })
-            // } catch(err){
-            //   console.error(err,"<<<<< error in caching update")
-            // }
-            try{
-            let promises = []
-            if (this.items){
-                let reads = []
-                for (let [key, f] of Object.entries($this.items)){
-                if (f.read){
-                    reads.push(f)
-                }
-                }
-                if (variable && reads.length > 0){
-                reads.forEach((variable)=>{
-                    FileService.readDepVariable({
-                    value: variable.read,
-                    variable: variable, 
-                    variables: $this.items
-                    }).then((response)=>{
-                    let data = response.data.data
-                    if (variable.depends){
-                        let key = variable.depends_key
-                        variable.depends.map((d)=>{
-                        data.forEach((row)=>{
-                            if (row[key] == d){
-                            if ($this.items[row[key]].option || $this.items[row[key]].option  == 0){
-                                let index = $this.items[row[key]].options.map((e)=>{
-                                return e 
-                                }).indexOf(row.configuration)
-                                $this.items[row[key]].option = index
-                            } else {
-                                $this.items[row[key]].source = row.configuration
-                            }
-                            }
-                        })
-                        })
-                    }
-                    variable.source = response.data.data
-                    }).catch((err)=>{
-                    console.log(err)
-                    })
-                    
-                })
-                }
-            }
-            
-            } catch(err){
-            // $this.logger.error(err)
-            console.error(err)
-            }
-
-            if (!this.intervalProgress){
-                try{
-                    this.intervalProgress = true 
-                    if ($this.service.progress){
-                    if ($this.intervalProgress){
-                        try{
-                        clearInterval($this.intervalProgress)
-                        } catch(err){
-                        console.error(err)
-                        }
-                    }
-                    if  ($this.progresses.filter((d)=>{return d != 1}).length > 1 ){
-                        clearInterval($this.intervalProgress)
-                    } 
-                    else {
-                        $this.progressChecking = false
-                        $this.getServiceProgress()
-                        $this.intervalProgress = setInterval(()=>{
-                        if (!$this.progressChecking){
-                            $this.getServiceProgress()
-                        }
-                        }, 3000)
-                    }
-                    }
-                }
-                catch (err){
-                    console.error(err)
-                } finally{
-                    this.intervalProgress = false
-                    this.$emit("updateValue", { src: src, name: $this.name, target: value }   )
-                }
-            }
+            this.intervalProgress = false
+            this.$emit("updateValue", { src: src, option: option, variable: var_name }   )
         },
         save () {
             this.editedItem.index = this.editedIndex

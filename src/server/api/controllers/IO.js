@@ -461,7 +461,6 @@ export async function archive(filepath, gzip){
 				let foldername = path.dirname(filepath)
 				let basefiletar = path.basename(filetar) 
 				// let writer = fs.createWriteStream(filetar)
-				console.log(basefilename, foldername, basefiletar)
 				tar.c( // or tar.create
 				{
 					gzip: gzip,
@@ -489,7 +488,7 @@ export async function archive(filepath, gzip){
 export async function writeFile(filepath, content){
 	return new Promise((resolve, reject)=>{
 			const directory = path.dirname(filepath)
-			console.log("writing file: file", filepath, content)
+			console.log("writing file: file", filepath)
 			mkdirp(directory).then(response=>{
 				fs.writeFile(filepath, content,(errFile)=>{
 					if (errFile){

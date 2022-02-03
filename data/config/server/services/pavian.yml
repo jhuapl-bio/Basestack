@@ -6,6 +6,7 @@ pavian_default:
   continuous: true
   orchestrated: false #orchestrated means it r
   init: true
+  command: [ 'bash', '-c', 'Rscript -e  "host <- \"0.0.0.0\"; pavian::runApp(port=80,host=host,maxUploadSize=900*1024^2)" ' ]
   hideStatus: true
   label: "Pavian Default"
   force_restart: true
@@ -46,3 +47,4 @@ pavian_orchestrated:
       bind:
         from: "80"      
         to: "8097"
+    

@@ -8,7 +8,7 @@
   -->
 <template>
   <div id="progresses" >
-    <v-subheader>Progress Outputs</v-subheader>
+    <v-subheader>Output Locations</v-subheader>
   	<v-data-table
         v-if="progresses && progresses.length > 0"
         small

@@ -97,7 +97,7 @@ mytax_kraken2_report:
       path: ${file}.report 
   variables:
     file:
-      label: "Input FASTA/Q File"
+      label: "FASTA/Q File"
       element: "file"
       bind_parent_dir: true
       bind: 
@@ -107,7 +107,7 @@ mytax_kraken2_report:
       source: null
       target: "%{variables.file.bind.to}/"
     db:
-      label: "Input classifier database"
+      label: "Classifier database"
       class: "wb-100 p-3 mb-1"
       option: 1
       options:

@@ -5,6 +5,7 @@ import yaml
 import pandas as pd
 #brew services start mongodb-community@5.0 to start on MacOS
 import getpass
+from pathlib import Path
 
 import datetime 
 
@@ -103,22 +104,25 @@ def main():
                     formatted = 'yml'
                 if not formatted:
                     formatted = "yml"
-                files = [f for f in os.listdir(specification['path']) if f.endswith(formatted)]
+                if 'recursive' in specification and specification['recursive']:
+                    files = list(Path(specification['path']).rglob("*."+formatted))
+                else:
+                    files = [os.path.join(specification['path'], f) for f in os.listdir(specification['path']) if f.endswith(formatted)]
                 if "ignores" in specification:
-                    files = [f for f in files if f not in specification['ignores']]
+                    files = [f for f in files if os.path.basename(f) not in specification['ignores']]
                 for f in files:
-                    with open(os.path.join(specification['path'], f), "r") as stream:
+                    with open(f, "r") as stream:
                         try:
                             target_config = yaml.safe_load(stream)
-                            for name, entry in target_config.items():
-                                entry['name'] = name
-                                full_config[key].append(entry)
+                            for entry in target_config:
+                                if ('name' in entry):
+                                    full_config[key].append(entry)
                         except yaml.YAMLError as exc:
                             print(exc)
     # print(yaml.dump(full_config, allow_unicode=True, default_flow_style=False))
     current_time  =  datetime.datetime.now()
     for key, item in full_config.items():
-        collection = mydb['test'+key]
+        collection = mydb[key]
         for entry in item:
             cursor = collection.find({"name": {"$eq": entry['name']} })
             lent = list(cursor)
@@ -126,48 +130,49 @@ def main():
             version = 1.00
             latest_version = version
             latest_version_entry = None
-            
+            if (entry['version'] == 'local' or  ( 'custom' in entry and  entry['custom'] ) ):
+                del entry['version']
             if len(lent) == 0:
                 entry['version'] = version
                 entry['date_added'] = current_time
                 collection.insert_one(entry)
             else:
                 # latestVersion = max(lent, key=lambda x:x['version'])
-                if (entry['name'] == 'dind'):
-                    for doc in lent:
-                        del doc['_id']
-                        if doc == entry:
-                            print(doc,"_____same_____")
-                            same = True
-                            # break
-                        else:
-                            if "version" in doc and doc['version'] >= latest_version:
-                                latest_version = doc['version']
-                                latest_version_entry  = doc
-                    if same:
-                        print("same found...")
-                    latest_version = round(latest_version, 2)
-                    # print(latest_version_entry,"\n",entry)
-                    if latest_version_entry and "version" in latest_version_entry:
-                        del latest_version_entry['version']
-                    if latest_version_entry and "date_added" in latest_version_entry:
-                        del latest_version_entry['date_added']
-                    if latest_version_entry   == entry:
-                        print("same found")
+                
+                for doc in lent:
+                    del doc['_id']
+                    if doc == entry:
+                        print(doc,"_____same_____")
+                        same = True
+                        # break
                     else:
-                        entry['date_added'] = current_time                     
-                        print("else")
-                        if args['overwrite_version']:
-                            collection.delete_many({
-                                "name": {"$eq": entry['name']},
-                                "version": {"$eq": latest_version }
-                            })
-                            entry['version'] = latest_version 
-                        else:
-                            entry['version'] = round(latest_version  + 0.10, 2)
-                        # if "version" not in entry:
-                        #     entry['version'] = version
-                        collection.insert_one(entry)
+                        if "version" in doc and doc['version'] >= latest_version:
+                            latest_version = doc['version']
+                            latest_version_entry  = doc
+                if same:
+                    print("same found...")
+                latest_version = round(latest_version, 2)
+                # print(latest_version_entry,"\n",entry)
+                if latest_version_entry and "version" in latest_version_entry:
+                    del latest_version_entry['version']
+                if latest_version_entry and "date_added" in latest_version_entry:
+                    del latest_version_entry['date_added']
+                if latest_version_entry   == entry:
+                    print("same found")
+                else:
+                    entry['date_added'] = current_time                     
+                    print("else")
+                    if args['overwrite_version']:
+                        collection.delete_many({
+                            "name": {"$eq": entry['name']},
+                            "version": {"$eq": latest_version }
+                        })
+                        entry['version'] = latest_version 
+                    else:
+                        entry['version'] = round(latest_version  + 0.10, 2)
+                    # if "version" not in entry:
+                    #     entry['version'] = version
+                    collection.insert_one(entry)
             cursor = collection.find({"name": {"$eq": entry['name']} })
 if __name__ == "__main__":
     main()    

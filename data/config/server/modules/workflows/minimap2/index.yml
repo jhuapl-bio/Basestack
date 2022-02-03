@@ -1,0 +1,10 @@
+minimap2:
+  title: "Minimap2"
+  icon: "dna"
+  module: True
+  tooltip: "Run Minimap2 Alignment on Fastq Files against database files"
+  dependencies:
+    - target: "staphb/minimap2"
+      type: "docker"
+      format: "docker"
+    

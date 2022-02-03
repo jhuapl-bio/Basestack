@@ -18,21 +18,6 @@
           </v-list-item-icon>
       </v-list-item>
   </v-list>
-  <!-- <div style="display:flex">
-     
-    <div 
-    v-for="entry in fields_system"
-    :key="entry.key"
-    class="entry"
-    >
-        <p style="font-size: 90%; color:grey; margin: 0px" v-if="info_table[entry.key]">{{ entry.label }}</p>
-        <p style="font-size: 90%; color: black"> {{  info_table[entry.key]  }}</p>
-    </div>
-    <div style=" display:flex;  font-size: 50%">
-      <span style="" class="success-icon">System Up to Date<font-awesome-icon class="success-icon" icon="check"/></span>
-      
-    </div>
-  </div> -->
 </template>
 
 <script>

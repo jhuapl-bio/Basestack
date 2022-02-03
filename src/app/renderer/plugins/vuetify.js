@@ -10,10 +10,10 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { fas, far } from '@fortawesome/free-solid-svg-icons'
 
  
-import { faLock,faExclamationTriangle, faTags, faPencilAlt, faQuestion, faEdit, faCircle, faChessRook, faServer, faChessPawn, faChess, faCaretSquareUp, faStepBackward,  faStepForward, faCaretDown, faArrowAltCircleRight, faArrowAltCircleLeft,  faSquare, faSquareFull, faEnvelope, faDownload,   faChevronLeft, faChevronRight, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
+import { faLock, faDesktop, faExclamationTriangle, faFolder, faTags, faPencilAlt, faQuestion, faEdit, faCircle, faChessRook, faServer, faChessPawn, faChess, faCaretSquareUp, faStepBackward,  faStepForward, faCaretDown, faArrowAltCircleRight, faArrowAltCircleLeft,  faSquare, faSquareFull, faEnvelope, faDownload,   faChevronLeft, faChevronRight, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
 let list_icons_fa =  [
     "download", "exclamation-triangle", "server", "edit", "circle", "chess", "chess-pawn", "chess-rook",
-    "envelope", "caret-square-up", "tags",
+    "envelope", "caret-square-up", "tags", "desktop",
     "lock", "question", "external-link-alt",
     "square", "caret-down", "step-forward", "step-backward",
     "chevron-right", 
@@ -31,14 +31,14 @@ let list_icons_fa =  [
     "tree",
     "hourglass-start", "stop-circle", "sync", "address-card", 
     "bars", 
-    "arrow-alt-circle-right", "arrow-alt-circle-left",
+    "arrow-alt-circle-right", "arrow-alt-circle-left", "folder",
     "minus-circle" ]
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 
 library.add(
-    faLock, faEnvelope, faServer, faTags,faCircle, faEdit, faExclamationTriangle, faChessPawn, faChessRook, faChess, faCaretSquareUp, faStepForward,  faStepBackward, faCaretDown, faSquare,  faSquareFull, faArrowAltCircleRight, faArrowAltCircleLeft,
-    faDownload, faChevronLeft, faChevronRight,  
+    faLock, faEnvelope, faServer, faDesktop, faTags,faCircle, faEdit, faExclamationTriangle, faChessPawn, faChessRook, faChess, faCaretSquareUp, faStepForward,  faStepBackward, faCaretDown, faSquare,  faSquareFull, faArrowAltCircleRight, faArrowAltCircleLeft,
+    faDownload, faChevronLeft, faChevronRight,   faFolder, 
     faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, 
     faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, 
     faExclamation, faVideo, faTimes, faQuestionCircle, faQuestion, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, 

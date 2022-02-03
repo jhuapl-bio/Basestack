@@ -1,0 +1,11 @@
+samtools:
+  title: "Samtools"
+  icon: "dna"
+  module: True
+  tooltip: "Download the samtools suite"
+  dependencies:
+    - target: "staphb/samtools"
+      label: "staphb/samtools"
+      type: "docker"
+      format: "docker"
+  

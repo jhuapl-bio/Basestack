@@ -7,52 +7,49 @@
   - # **********************************************************************
   -->
 <template>
-	<v-container  fluid >
-    	<v-row   >
-			<v-col cols="6">
-				<v-card >
-					<v-img  
-						contain
-						width="100%"
-						height="100%"
-						:src="require('@/assets/Basestack_multiple_landing.png')" fluid alt="JUHAPL">
-					</v-img>
-					<v-divider></v-divider>
+	<v-row  class="max-height: 10vh" >
+		<v-col cols="6"  >
+			<v-card >
+				<v-img  
+					contain
+					width="100%" class="configure"
+					height="100%"  @click="open_external('https://basestackwebsite.readthedocs.io/en/latest/index.html')"
+					:src="require('@/assets/Basestack_multiple_landing.png')" fluid alt="JUHAPL">
+				</v-img>
+				<v-divider></v-divider>
 
-					<About class=""></About>
-					<v-divider></v-divider>
-					<v-card>
-					<br> 
-					<v-input
-						disabled
-						label="Backend Port" class="pr-5 pl-5"
+				<About class=""></About>
+				<v-divider></v-divider>
+				<v-card>
+				<br> 
+				<v-input
+					disabled
+					label="Backend Port" class="pr-5 pl-5"
+				>
+				</v-input>
+					<v-text-field class="pr-5 pl-5"
+						hint="Only change if the default port (5003) is in use"
+						label="Change the backend server port to use"
+						v-model="port" type="number"
+						min="1000" max="9999"
+						append-icon="$caret-square-up"
+						prepend-icon="$server"
+						@click:append="changePort(port)"
+						clearable shaped centered outlined
 					>
-					</v-input>
-						<v-text-field class="pr-5 pl-5"
-							hint="Only change if the default port (5003) is in use"
-							label="Change the backend server port to use"
-							v-model="port" type="number"
-							min="1000" max="9999"
-							append-icon="$caret-square-up"
-							prepend-icon="$server"
-							@click:append="changePort(port)"
-							clearable shaped centered outlined
-						>
-						</v-text-field>
-					</v-card>
+					</v-text-field>
 				</v-card>
-				
-				
-			</v-col>
+			</v-card>
 			
-			<v-col cols="6" >
-				<Sys class=""
-				/>
-				
-			</v-col>
-		</v-row>
+			
+		</v-col>
 		
-	</v-container>
+		<v-col cols="6" >
+			<Sys class=""
+			/>
+		</v-col>
+	</v-row>
+	
 </template>
 
 <script>
@@ -108,6 +105,9 @@ export default {
 	  changePort(val){
         this.$electron.ipcRenderer.send("changePort", val)
       },
+	  open_external(url){
+		this.$electron.shell.openExternal(url)
+	  },
       
 	}
 };

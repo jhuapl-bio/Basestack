@@ -8,32 +8,34 @@ const { init_base_modules, init_dind, init_base_procedures, init_base_services }
 const {  writeFile, ammendJSON, readFile, get, set } = require("./IO.js") 
 
 
-const {  listImages  } = require("./fetch.js")
-// const containerNames = ['basestack_consensus', 'basestack_tutorial', 'basestack_mytax']
-// const { BasestackConsensus } = require('../modules/consensus')
-// const { Tutorial } = require("../modules/tutorial")
-// const { RAMPART } = require('../modules/rampart')
-// const { BasestackMytax } = require("../modules/mytax")
-// const { Pavian } = require("../modules/pavian") 
-// const { BasestackMytaxReport } = require("../modules/mytax_report")
+const {  listImages, fetch_external_config, set_stored } = require("./fetch.js")
+
 
 const { docker_init } = require("./init.js")
 const lodash = require("lodash")
 
+ 
 
-
-export async function init(){   
+export async function init(){    
 	store.ready = true
 	// Initiating the Docker Class   
 	store.docker = await docker_init();  
 	// //Initiating the Status Class of Modules 
 	let response_orchestrator = await init_dind()
 	
-	
 	let response_init = await init_base_modules()
-	let response_init_services = await init_base_services()
-	let response_init_procedures= await init_base_procedures()
-	// let response = await fetch_modules()
+	// let response_init_services = await init_base_services()
+	 
+	fetch_external_config('modules').then((modules)=>{
+		if (module){
+			set_stored(module.name, modules)
+		} else {
+			store.logger.info("No modules found at remote location")
+		}
+	}).catch((err)=>{
+		store.logger.error("Could not get modules externally, check connections %o", err)
+	})
+	
 	console.log("finished initializing")
 }
 

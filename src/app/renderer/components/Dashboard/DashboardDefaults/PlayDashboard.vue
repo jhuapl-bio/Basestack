@@ -23,7 +23,7 @@
 		<v-tab-item v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
 			<component
 				:is="option.component"
-				style=""
+				style="" class="ml-4"
 			>
 			</component>	
 		</v-tab-item>

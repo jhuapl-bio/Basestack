@@ -1,15 +1,12 @@
 <template>
+  
   <v-card
-    class="mx-auto"
-    tile
+    class="mx-5"
+    style="min-height: 100vh"
   >
-  <ListParams
-    :items="additionals"
-    :defaultHeaders="headers"
-    :service="service"
-    :title="'Inputs and Variables'"
-  >
-  </ListParams>
+    
+    <v-divider></v-divider>
+    
     
   
   </v-card>
@@ -19,11 +16,12 @@
 <script>
 import ListParams  from '@/components/Framework/Mods/ListParams.vue';
 import FileService from '@/services/File-service.js'
-
+import Render from "@/components/Framework/Mods/Render.vue"
 export default {
-    props: ['variables', 'service'],
+    props: ['variables', 'service', 'status'],
     components:{
       ListParams,
+      Render
     },
     beforeDestroy: function(){
       if (this.interval){
@@ -43,7 +41,8 @@ export default {
     },
     data () {
       return { 
-        
+        mini:false,
+        drawer: true,
         selectedItem: 0,
         additionals: [
 

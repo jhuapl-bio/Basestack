@@ -14,7 +14,7 @@
     >
     </v-textarea> -->
    
-    <v-badge   style="width: 92%" x-small color="orange">
+    <v-badge left style="width: 92%" x-small color="orange">
         <template x-small v-slot:badge>
             <v-tooltip top >
                 <template v-slot:activator="{ on }">
@@ -26,7 +26,7 @@
             </v-tooltip>
         </template>
        
-        <tree-view :data="value"  class=" mt-6 mb-5  elevation-5 treeview " style="" @change-data="onChangeData"
+        <tree-view :data="value"  class=" mt-2 mb-3 pt-0  elevation-5 treeview " style="" @change-data="onChangeData"
                 :options="{
                     maxDepth: 3, 
                     rootObjectKey: 'root',

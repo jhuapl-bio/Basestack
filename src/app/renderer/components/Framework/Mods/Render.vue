@@ -8,7 +8,6 @@
   -->
 <template>
   <div  class="render ">
-	
 	<v-divider></v-divider>
 	<v-btn small class="mb-4 mr-2" v-on:click="forceRerender()"
 		> Refresh
@@ -23,6 +22,7 @@
 	</v-tooltip>  
 	<v-divider></v-divider>
 	<v-row v-if="show && status.exists && status.exists.running" class="">
+		<!-- <object type="text/html"  class="renderObj ml-4 mr-2" :data="getUrl()"></object> -->
 		<object type="text/html"  class="renderObj ml-4 mr-2" :data="getUrl()"></object>
 	</v-row>
 	

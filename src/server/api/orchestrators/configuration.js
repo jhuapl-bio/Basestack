@@ -4,13 +4,13 @@ import { mapVariables } from '../controllers/mapper.js';
  
 const { store }  = require("../../config/store/index.js")
    
-    
+     
 export  class Configuration { 
-    constructor(config, options){       
-        this.config = config 
-        this.options = options  
-    }  
-    defineMapping(){
+    constructor(config, options){         
+        this.config = config  
+        this.options = options   
+    }   
+    defineMapping(){ 
         let newTarget = this.findObjectByLabel(this.config, "(\%\{.+?\})")
     }     
     setVariables(custom_variables){ 
@@ -72,6 +72,7 @@ export  class Configuration {
                                 try{
                                     let id = match.replace(/[\%\{\}]/g, "")
                                     Object.defineProperty(obj, key, {
+                                        enumerable: true,
                                         get: function(){ 
                                             let found =  nestedProperty.get($this.config, id)
                                             fullstring  = fullstring.replaceAll(match, found)

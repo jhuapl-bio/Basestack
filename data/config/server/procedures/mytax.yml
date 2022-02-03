@@ -18,134 +18,209 @@ mytax_kraken2_report:
         service: mytax_create_json
         target: variables
         variable: file
+  dependencies: 
+    - target: "jhuaplbio/basestack_mytax"
+      type: "docker"
+      format: "docker"
+    - source: 
+        url: "ftp.ccb.jhu.edu"
+        type: "file"
+        user: anonymous 
+        path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
+        password: null
+        protocol: "ftp"
+        remove: false
+        target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+      label: "Minikraken2"
+      type: "download" 
+      format: "dir"
+      decompress: 
+        format: "tgz"
+        source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+      target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+      overwrite: false
+    - source: 
+        url: "https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed%2Bh%2Bv.tar.gz"
+        type: "file"
+        remove: false
+        target: "${writePath}/workflows/mytax/centrifuge/centrifuge.tgz"
+      type: "download" 
+      format: "dir"
+      decompress: 
+        format: "tgz"
+        overwrite: true
+        target: "${writePath}/workflows/mytax/centrifuge/p_compressed+h+v.3.cf"
+        source: "${writePath}/workflows/mytax/centrifuge/centrifuge.tgz"
+      target: "${writePath}/workflows/mytax/centrifuge"
+      overwrite: false 
+      label: "Minicentrifuge"
+    - source: 
+        url: "http://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+        type: "file"
+        remove: false
+        target: "${writePath}/workflows/mytax/minikraken_20171019_4GB.tgz"
+      type: "download" 
+      format: "dir"
+      label: "Minikraken"
+      decompress: 
+        format: "tgz"
+        source: "${writePath}/workflows/mytax/minikraken_20171019_4GB.tgz"
+      target: "${writePath}/workflows/mytax/minikraken_20171013_4GB"
+      overwrite: false
   services: 
-    - mytax_kraken2_report
-    - mytax_create_json
+    - name: "mytax_create_json"
+      label: "Create Report JSON"
+      depends: 
+        - type: "module"
+          id: "mytax"
+      image: "jhuaplbio/basestack_mytax"
+      workingdir: "/opt/test-data"
+      orchestrated: false #orchestrated means it r
+      init: false
+      force_restart: false
+      force_init: false
+      command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax &&
+        python3  /opt/software/mytax/generate_hierarchy.py -o ${file}.fullstring  --report ${file}  -taxdump ${nodes} &&
+        bash krakenreport2json.sh -i ${file}.fullstring -o ${file}.json
+        "
+      ]
+      outputs:
+        json:
+          watch: True
+          type: "file"
+          label: "JSON Visualization File"
+          hint: ".json file, to be uploaded to the Mytax Visualization Service"
+          path: ${file}.json
+      variables:
+        file: 
+          label: "Report From classification, in kraken-style"
+          element: "file"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.file.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: null
+        nodes:
+          label: "Nodes.dmp file, gathered from ncbi taxonomy"
+          # class: "wb-100 p-3 mb-1"
+          options:
+            - element: null
+              name: "default"
+              variables:
+                name: "nodes.dmp"
+              target: "/taxdump/${name}" #This ${} is converted into the variable attribute of selected option only!
+            - name: file
+              label: "Report From classification, in kraken-style"
+              element: "file"
+              bind_parent_dir: true
+              bind: 
+                from: "%{variables.nodes.source}"
+                to: "/taxonomy"
+              # class: "wb-100  p-3 mb-1"
+              source: null
+    - name: "mytax_kraken2_report"
+      label: "Kraken2 Report"
+      depends: 
+        - type: "module"
+          id: "mytax"
+      image: "jhuaplbio/basestack_mytax"
+      workingdir: "/opt/test-data"
+      orchestrated: false #orchestrated means it r
+      init: false
+      force_restart: false
+      force_init: false
+      command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && 
+        export KRAKEN2_DEFAULT_DB=${db} && kraken2  --output ${file}.out  --report ${file}.report  ${file}
+        "
+      ]
+      outputs:
+        report:
+          label: "Report File"
+          hint: ".report format. Used for/in visualizations like Mytax Visualization and Pavian"
+          watch: True
+          type: "file"
+          path: ${file}.report 
+      variables:
+        file:
+          label: "FASTA/Q File"
+          element: "file"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.file.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "%{variables.file.bind.to}/"
+        db:
+          label: "Classifier database"
+          class: "wb-100 p-3 mb-1"
+          option: 1
+          options:
+            - element: null
+              name: "Minikraken2"
+              source: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+              bind: 
+                from: "%{variables.db.source}"
+                to: "/opt/databases" #This ${} is converted into the variable attribute of selected option only!
+            - element: null
+              name: "Flukraken2-2021"
+              target: "/opt/databases/${name}" 
+              variables: 
+                name: "flukraken2"
+              # cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken2"
+              # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index.
+            - element: null
+              name: "Marine Mitogenome"
+              target: "/opt/databases/ONRMitoGenome/${name}"
+              variables: 
+                name: "marine_mammal_mitochondrion-refseq-20210629"
+              # cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken2"
+              # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index.  
+            - element: "dir"
+              name: "Custom DB"
+              source: null
+              target: null
+              bind: 
+                from: "%{variables.db.source}"
+                to: "/opt/databases" 
 mytax_visualization:
-  title: "Kraken2 Mytax Visualization"
-  icon: "chart-pie"
-  init: false
-  continuous: true
-  tags: 
-    - "kraken2"
-    - "metagenomic"
-    - "sunburst"
-  tooltip: "View Sunburt from JSON report of Kraken/Centrifuge run"
-  force_restart: false
-  config: null  
-  services: 
-    - mytax_visualization
+  - title: "Kraken2 Mytax Visualization"
+    name: "mytax_visualization"
+    icon: "chart-pie"
+    init: false
+    continuous: true
+    tags: 
+      - "kraken2"
+      - "metagenomic"
+      - "sunburst"
+    tooltip: "View Sunburt from JSON report of Kraken/Centrifuge run"
+    force_restart: false
+    config: null  
+    services: 
+      - name: "mytax_kraken2_report"
+        init: true
+        hideStatus: true
+        label: "Visualization"
+        force_restart: false
+        config: null
+        depends: 
+          - type: "module"
+            id: "mytax"
+        image: "jhuaplbio/basestack_mytax"
+        workingdir: "/opt/software/mytax/sunburst"
+        ports: 
+          - 8086
+        command: ["bash", "-c", "echo 'Running Mytax Visualization' && python3 -m http.server 8086"]
+        variables:
+          port:
+            element: "render"
+            label: "Mytax Sunburst Service"
+            column: 12
+            target: "localhost:8086"
+            port: true
+            bind:
+              from: "8086"
+              to: "8086"
 
-    
-# - name: "mytax_visualization"  
-#   title: "Mytax Visualization"
-#   icon: "dna"
-#   tooltip: "View Mytax Visulization"
-#   services:
-#     - command: ["python3", "-m", "http.server", "8081"]
-#         name: mytax_visualization
-#         image: "jhuaplbio/basestack_mytax"
-#         init: true
-#         hideStatus: true
-#         label: "Visualization"
-#         force_restart: true 
-#         config: null
-#         workingdir: "/opt/software/mytax/sunburst"
-#         ports: 
-#           - 8081
-#         variables:
-#           - name: port
-#             element: "render"
-#             source: "8081"
-#         orchestrated: false #orchestrated means it runs from dind rather than natively
-# - command: ["bash","-c", "echo $name second && sleep 7" ]
-#   name: mytax_test_variables_second
-#   label: "TestSecond" 
-#   image: "jhuaplbio/basestack_mytax"
-#   workingdir: "/opt/test-data"
-#   orchestrated: false #orchestrated means it r
-#   variables:
-#     - name: name
-#       label: "Name"
-#       element: "string"
-#       source: "hello testing"
-#       class: "wb-25"
-# - name: "mytax_report"  
-# title: "Mytax Report Generation"
-# icon: "dna"
-# tooltip: "Run Kraken Classification and View"
-# force_restart: true
-# force_init: false
-# config: null  
-# init: false
-# services: 
-#   - command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && 
-#       kraken --db ${db} --output ${file}.out ${file} && 
-#       kraken-report --db ${db}  ${file}.out | tee  ${file}.report && 
-#       bash krakenreport_fullstring.sh -i ${file}.report -k ${db} -o ${file}.fullstring &&
-#       bash krakenreport2json.sh -i ${file}.fullstring -o ${file}.json" 
-#     ]
-#     label: "Report"
-#     image: "jhuaplbio/basestack_mytax"
-#     workingdir: "/opt/test-data"
-#     orchestrated: false #orchestrated means it r
-#     progress: 
-#       - label: "Out"
-#         element: "file" 
-#         source: "${0.source}.out"   #Source must be a variable reference if referencing an env variable run          
-#       - label: "Report"
-#         element: "file" 
-#         source: "${0.source}.report" 
-#       - label: "Fullstring"
-#         element: "file" 
-#         source: "${0.source}.fullstring" 
-#       - label: "JSON"
-#         element: "file" 
-#         source: "${0.source}.json" 
-#         final_output: true
-#     variables:
-#       - name: file
-#         label: "Input FASTA/Q File"
-#         element: "file"
-#         bind_parent_dir: true
-#         bind: "/opt/data"
-#         class: "wb-50  p-3 mb-1"
-#         source: ""
-#       - name: db
-#         label: "Input classifier database"
-#         class: "wb-50 p-3 mb-1"
-#         options:
-#           - element: null
-#             name: "Minikraken2017"
-#             variables:
-#               value: "minikraken"
-#             source: "/opt/databases/${value}" #This ${} is converted into the variable attribute of selected option only!
-#           - element: null
-#             name: "Flukraken2021"
-#             source: "/opt/databases/${value}" 
-#             variables:
-#               value: "flukraken"
-#             cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken"
-#             placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index. 
-#           - element: "dir"
-#             name: "Custom DB"
-#             source: "" 
-#             bind: "/opt/databases" 
-#   - command: ["bash", "-c", "source /opt/conda/etc/profile.d/conda.sh &&
-#             conda activate mytax && ls ${db} && pwd && bash process_krakendb.sh -k ${db}"
-#     ]
-#     name: mytax_process_db
-#     label: "Process Kraken DB"
-#     image: "jhuaplbio/basestack_mytax"
-#     init: false
-#     force_restart: true
-#     force_init: false
-#     config: null
-#     workingdir: "/opt"
-#     orchestrated: false #Process Database for kraken use in mytax
-#     variables:
-#       - name: db
-#         label: "Input kraken-unprocessed DB"
-#         element: "dir"
-#         source: "" 
-#         bind: "/opt/databases"
+      

@@ -19,7 +19,7 @@
       > Refresh
         <v-icon class="ml-3" small >$sync</v-icon>
       </v-btn>
-      <v-row class=" mt-3 ml-2 ">
+      <v-row class=" mt-3 ml-2 mr-3 ">
         <object v-if="show" type="text/html"  id ="nextstrainObj" class="renderObj p-0 m-0" data="https://nextstrain.org/ncov/global"></object>
       </v-row>
         

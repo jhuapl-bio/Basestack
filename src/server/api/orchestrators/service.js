@@ -1,75 +1,64 @@
 import {  mapVariables } from '../controllers/mapper.js';
 const cloneDeep = require("lodash.clonedeep");
 
-/*   
+/*
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
    - #
-   - # All Rights Reserved.
+   - # All Rights Reserved. 
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
-  */  
+  */
 var Docker = require('dockerode'); 
-const path = require("path") 
+const path = require("path")
 var  { store }  = require("../../config/store/index.js")
 
 const {  validateFramework } = require("../controllers/validate.js")
-const { readFile, writeFile, copyFile } = require("../controllers/IO.js") 
+const { readFile, writeFile, copyFile } = require("../controllers/IO.js")
 const { module_status }  = require("../controllers/watcher.js")
 const { check_container,  } = require("../controllers/fetch.js")
 const { spawnLog } = require("../controllers/logger.js")
 const { Configuration }  = require("./configuration.js")
-var logger = store.logger 
+var logger = store.logger
 // var docker = new Docker();
-const fs = require("file-system") 
-let dockerObj;
+const fs = require("file-system")
+let dockerObj; 
 
-export class Service { 
-	constructor(name, params){
-		this.name = name
+export class Service {
+	constructor(service){
+		this.name = service.name
         this.type = "service"
-        this.config = params
-        this.dependencies = [], 
+        this.config = service 
+        this.dependencies = [],
         this.interval = {
             checking: false,
             interval: this.create_interval()
         }
         this.status = {
             exists: false,
-            runnable: true,
             exit_code: -1,
-            fully_installed: false,
-            partial_install: false,
             error: null,
             success: null,
             running: false,
-            stream: null,
+            stream: {
+                info: [
+                    "Service"
+                ]
+            },
         };
         let depends = this.config.depends
-        this.defineDependencies()  
+        this.defineDependencies()
         this.readVariables()
         // this.config = this.mapConfigurations()
 
 	}
-    // mapConfigurations(){ 
-    //     let token = 'development'
-    //     let mappedConfig;
-    //     if (this.name == 'mytax_kraken2_report'){
-    //         mappedConfig = defineMapping(this.config)
-            
-    //     } else {
-    //         mappedConfig = defineMapping(this.config)
-    //     }
-    //     return mappedConfig
-    // }
     async readVariables(){
         const $this = this;
         if ($this.config.variables){
             for (let [key, value] of Object.entries($this.config.variables))
-            if (value.load){ 
+            if (value.load){
                 readFile(value.load).then((data)=>{
                     value.source = JSON.parse(data)
-                    console.log(value.source)
                 }).catch((err)=>{
                     store.logger.error("%o error in reading file to load for server %s", err, $this.name)
                 })
@@ -85,73 +74,74 @@ export class Service {
         let interval = setInterval(()=>{
             if (!checking){
                 checking = true
-                $this.dependencyCheck().then((d)=>{
-                    if ($this.status.partial_install){
-                        $this.watch().then((e)=>{
-                            checking = false
-                        }).catch((err)=>{
-                            logger.error("error in getting status %o", err)
-                            checking = false
-                        })
-                    } else {
-                        checking = false
-                    }
+                // $this.dependencyCheck().then((d)=>{
+                    // if ($this.status.partial_install){
+                $this.watch().then((e)=>{
+                    checking = false
                 }).catch((err)=>{
-                    logger.error(err)
+                    logger.error("error in getting status %o", err)
                     checking = false
                 })
+                    // } 
+                    // else {
+                    //     checking = false
+                    // }
+                // }).catch((err)=>{
+                //     logger.error(err)
+                //     checking = false
+                // })
             }
-        }, 3000)
+        }, 5000)
         return interval
     }
-	defineConfig(){ 
+	defineConfig(){
         let service = this.config
         let optionsFile
-        if (service.config ){ 
-            optionsFile = service.config 
+        if (service.config ){
+            optionsFile = service.config
         } else if (service.orchestrated && !service.config ){
             optionsFile = store.system.orchestrators.subclient.path
         } else {
-            optionsFile = store.system.orchestrators.default.path 
+            optionsFile = store.system.orchestrators.default.path
         }
-        return optionsFile   
-    } 
-    async getProgress(variables, outputs){ 
+        return optionsFile
+    }
+    async getProgress(variables, outputs){
         const $this = this;
         return new Promise(function(resolve,reject){
             try{
                 let service = cloneDeep($this.config)
-                
+
                 if (!outputs){
                     outputs = {}
                 }
                 let watchable = {}
                 if (service.outputs){
-                    
-                    let promises = [] 
+
+                    let promises = []
                     for (let [ key, value] of Object.entries(cloneDeep(service.outputs))){
                         if(value.watch){
                             watchable[key] = value
                             promises.push(module_status(value, key, variables, ( outputs[key] ? outputs[key] : {}   )))
                         }
                     }
-                    
-                    Promise.allSettled(promises).then((response)=>{ 
+
+                    Promise.allSettled(promises).then((response)=>{
                         response.forEach((resp)=>{
                             if (resp.status == 'fulfilled'){
                                 if (watchable[resp.value.key]){
                                     watchable[resp.value.key].status = resp.value.status
                                 }
-                                
+
                             } else {
                                 store.logger.error("Error in getting status for watched location: %o", resp.reason )
                             }
-                        }) 
+                        })
                         // if ($this.name == 'staphb_gamma'){
                         //     console.log("yes", watchable)
                         // }
                         resolve(watchable)
-                    })                 
+                    })
                 } else {
                     resolve(watchable)
                 }
@@ -160,26 +150,26 @@ export class Service {
                 reject(err)
             }
         })
-    } 
-    async watch(){
+    }
+    async watch(){ 
 		let container_name = this.name
 		const $this  = this;
 		return new Promise(function(resolve,reject){
             // if (!$this.config.orchestrated){
                 const response = check_container($this.name).then((response)=>{
-                    $this.status.exists = response 
+                    $this.status.exists = response
                     if (response && typeof response === 'object' ){
                         $this.status.running = response.running
-                        
+
                     }
                     if (response && response.container && !$this.container){
                         $this.container = response.container
                     }
                     resolve()
                 }).catch((err)=>{
-                    reject(err) 
+                    reject(err)
                 })
-            // } 
+            // }
             // else {
             //     if ($this.pid){
             //         console.log($this.pid,"FFFFFF");
@@ -189,20 +179,20 @@ export class Service {
             //                 console.log(data)
             //                 resolve()
             //             })
-                        
+
             //         })()
-                        
+
             //     } else {
             //         resolve()
             //     }
             // }
-                
+
 		})
-	} 
+	}
     async defineDependencies(){
         const $this = this;
-        this.dependencies = [] 
-       
+        this.dependencies = []
+
         if (this.config.depends){
             this.config.depends.forEach((dependency)=>{
                 if (dependency.type == 'module' && dependency.id in store.modules){
@@ -216,17 +206,16 @@ export class Service {
     }
     async setOptions(){
         const $this = this
-        let file = $this.defineConfig() 
+        let file = $this.defineConfig()
         let data = JSON.parse(await readFile(file))
         this.options = data
-        return "Success in getting options" 
+        return "Success in getting options"
     }
     async archive(source, destination){
         const $this = this;
-        return new Promise(function(resolve,reject){ 
+        return new Promise(function(resolve,reject){
             let promises = []
-            console.log(source, destination)
-            if ($this.container){
+            if ($this.container){  
                 $this.container.putArchive(source, {path: destination}).then((response)=>{
                     resolve()
                 }).catch((err)=>{
@@ -238,47 +227,44 @@ export class Service {
             }
         })
     }
-    async stop() { 
+    async stop() {
 		let container_name = this.name;
         const $this = this;
-		return new Promise(function(resolve,reject){  
+		return new Promise(function(resolve,reject){
 			// delete store.modules[container_name]
             if ($this.config.orchestrated){
                 let process = $this.pid
                 let contr  = $this.orchestratorContainer
-                console.log(process,"<<<")
                 if (contr){
-                    console.log("done")
                     resolve()
                 } else {
                     resolve("Already dead...")
                 }
             } else {
                 var container = store.docker.getContainer(container_name).remove({force:true}, function(err,data){
-                    if (err){   
+                    if (err){
                         logger.error("%s %s %o", "Error in stopping docker container: ",container_name, err)
                         reject(`Module does not exist: ${container_name}`)
-                    } else { 
+                    } else {
                         logger.info("%s %s", "Success in removing container: ", container_name)
                         resolve(`Success in stop module: ${container_name}`)
                     }
                 })
             }
-                
 		})
 	}
-    async check_then_start(params, wait){ 
+    async check_then_start(params, wait){
         const $this = this;
-        return new Promise(function(resolve,reject){ 
+        return new Promise(function(resolve,reject){
             ( async ()=>{
                 let name = $this.name;
                 let exists = await check_container($this.name)
                 if ( ( exists.exists && $this.config.force_restart) ||  exists.exists ){
                     logger.info("Force restarting")
-                    await $this.stop() 
-                } 
+                    await $this.stop()
+                }
                 $this.container = null
-                let stream = await $this.start(params, wait) 
+                let stream = await $this.start(params, wait)
                 logger.info(`started run...${name}`)
                 resolve(stream)
             })().catch((err)=>{
@@ -286,8 +272,8 @@ export class Service {
                 reject(err)
             })
         })
-    }  
-    async dependencyCheck(){ 
+    }
+    async dependencyCheck(){
 		const $this = this;
         let dependencies = this.dependencies
         let returned = []
@@ -295,28 +281,8 @@ export class Service {
         let fully_installed = false
         return new Promise(function(resolve,reject){
             try{
-                
+
                 if (dependencies){
-                    for (const [key, dependency] of Object.entries(dependencies)){
-                        if (dependency.type == 'module'){
-                            dependency.dependencies.forEach((dep1)=>{
-                                returned.push(dep1)
-                            })
-                        } else if (dependency.type == 'service'){
-                            returned.push(dependency)
-                            if ($this.config.orchestrated){
-                                if (dependency.container){
-                                    $this.orchestratorContainer = dependency.container
-                                }
-                            }
-                        }
-                    }
-                    let fully_installed = returned.every((d)=>{
-                        return d.status.exists
-                    })
-                    let any_installed = returned.some((d)=>{
-                        return d.status.exists
-                    })
                     let runnable = returned.every((d)=>{
                         if (d.type == 'service'){
                             if (d.status && d.status.exists){
@@ -328,25 +294,22 @@ export class Service {
                             return true
                         }
                     })
-                    $this.status.partial_install = any_installed
-                    $this.status.runnable =runnable
-                    $this.status.fully_installed = fully_installed
                 }
-                resolve(returned) 
+                resolve(returned)
             } catch(err){
                 reject(err)
             }
 		})
 	}
-    volume_bind(variable){  
+    volume_bind(variable){
         let source = "";
-        if (variable.bind_parent_dir){ 
-            source = path.dirname(variable.source ); 
+        if (variable.bind_parent_dir){
+            source = path.dirname(variable.source );
         } else {
-            source = variable.source; 
+            source = variable.source;
         }
-        
-        
+
+
         let target = "";
         if (variable.bind_parent_dir){
             target = path.join(variable.bind, path.basename(path.dirname(variable.source)) )
@@ -359,26 +322,26 @@ export class Service {
     replaceVariables(variable, variables){
         let inner_variables = variable.match(/(\${.+?\}){1}/g)
         let final = variable
-        
-        const $this = this 
+
+        const $this = this
         inner_variables.forEach((in_vari)=>{
             let topLevelObj = cloneDeep(variables)
             let id = in_vari.replace(/[\$\{\}]/g, "")
             let splitVar = id.split(".")
             splitVar.forEach((v)=>{
-                if (topLevelObj[v].value){ 
+                if (topLevelObj[v].value){
                     topLevelObj[v].source = topLevelObj[v].value
-                } 
+                }
                 topLevelObj = topLevelObj[v]
             })
             final = final.replace(in_vari, topLevelObj)
-        }) 
-        
+        })
+
         return final
     }
-    
+
     defineSourceTargetBinding(selected_option, variables){
-        const $this =this 
+        const $this =this
         if (typeof selected_option === 'string' || selected_option instanceof String){
             selected_option  = {
                 source: selected_option
@@ -387,23 +350,23 @@ export class Service {
         let source = selected_option.source
         // let target = selected_option.target
         let target = selected_option.target
-        try{
-            if ( target && target !== ''){
-                target = mapVariables(target, variables)
-            } 
-            
-            //Define the Bind Mounts Target  and Source 
-            // if (selected_option.bind){  
-            //     let bind = $this.volume_bind(selected_option)
-            //     selected_option.target = bind[1]
-            //     source = bind[0]
-            //     target = bind[1]
-            // }             
-        } catch(err){
-            logger.error(err)
+        // try{
+        //     if ( target && target !== ''){
+        //         target = mapVariables(target, variables)
+        //     }
 
-        }
-        
+        //     //Define the Bind Mounts Target  and Source
+        //     // if (selected_option.bind){
+        //     //     let bind = $this.volume_bind(selected_option)
+        //     //     selected_option.target = bind[1]
+        //     //     source = bind[0]
+        //     //     target = bind[1]
+        //     // }
+        // } catch(err){
+        //     logger.error(err)
+
+        // }
+
         // if (!target){
         //     target = source
         // }
@@ -417,7 +380,7 @@ export class Service {
         ports.forEach((port)=>{
             if (Array.isArray(port)){
                 for (let i  = port[0]; i <= port[1]; i+=1){
-                    options = $this.port_bind(i, options)  
+                    options = $this.port_bind(i, options)
                 }
             } else {
                 options = $this.port_bind(port, options)
@@ -425,7 +388,7 @@ export class Service {
         })
         return options
     }
-    port_bind(portSpec, options){  
+    port_bind(portSpec, options){
         let from; let to;
 
         if (typeof portSpec === 'string' && portSpec.includes(":")){
@@ -436,39 +399,39 @@ export class Service {
             from = portSpec
             to = portSpec
         }
-        let port_bind = `${to}/tcp` 
+        let port_bind = `${to}/tcp`
         const $this = this
         !options.HostConfig.PortBindings[to] ? options.HostConfig.PortBindings[to] = [] : ''
         options.HostConfig.PortBindings[to].push(
-            { 
+            {
                 "HostPort": `${from}` // make the port a string
-            }  
-        )     
+            }
+        )
         options.ExposedPorts[to] = {}
         return options
     }
-    updateConfig(options){         
-      
+    updateConfig(options){
+
         const $this = this
         let service = this.config
         if (service.ports && (Array.isArray(service.ports) )) {
             options  = $this.updatePorts(service.ports, options)
         }
-  
-        if (!options.Image){ 
+
+        if (!options.Image){
             options.Image = service.image
         }
         options.name = this.name
-       
+
         if (service.workingdir){
             options.WorkingDir = service.workingdir
         }
         return options
-               
+
     }
     createContentOutput(item, sep, header){
         if (!sep){
-            sep = "," 
+            sep = ","
         }
         let tsv_file_content = item.map((d)=>{
             let full = []
@@ -478,37 +441,37 @@ export class Service {
                     // full.push()
                 })
                 // full = d
-                
+
             }  else {
                 full = d
             }
             return full.join( ( sep == 'tab' ? "\t" : sep )  )
-            
+
         }).join('\n')
         return tsv_file_content + "\n"
     }
-    
-    start(params, wait){ 
-		const $this = this   
-        return new Promise(function(resolve,reject){ 
-            let options = JSON.parse(JSON.stringify($this.options)) 
-            let env = []   
+
+    start(params, wait){
+		const $this = this
+        return new Promise(function(resolve,reject){
+            let options = JSON.parse(JSON.stringify($this.options))
+            let env = []
             if (!params){
                 params = {}
-            }  
-            let binds = []   
-            let complete = Object.values($this.dependencies).every((dependency)=>{
-                let complete2 = dependency.dependencies.every((dep)=>{ 
-                    return dep.status
-                })   
-                return complete2 
-                
-            })  
+            }
+            let binds = []
+            // let complete = Object.values($this.dependencies).every((dependency)=>{
+            //     let complete2 = dependency.dependencies.every((dep)=>{
+            //         return dep.status
+            //     })
+            //     return complete2
+
+            // })
             //Identity if the service should be started and ONLY IF all dependencies are installed for said module
-            if (!complete){  
-                logger.info(`running a module that has does not have all necessary deps... ${$this.command}`)
-                reject(new Error("All Dependencies aren't installed"))
-            }   
+            // if (!complete){
+            //     logger.info(`running a module that has does not have all necessary deps... ${$this.command}`)
+            //     reject(new Error("All Dependencies aren't installed"))
+            // }
             if ($this.config.binds){
                 $this.config.binds.forEach((bind)=>{
                     binds.push(bind)
@@ -519,126 +482,131 @@ export class Service {
                     binds.push(bind)
                 })
             }
-            let cmd = $this.config.command 
+            let cmd = $this.config.command
             if (cmd){
                 options.Cmd = $this.config.command
             }
             let promises = [];
             let promisesInside = []
-
             let values = []
             options = $this.updateConfig(options)
             /////////////////////////////////////////////////
             let custom_variables = params.variables
-
+ 
             let defaultVariables = {}
-            let config = $this.config 
-            let configuration = new Configuration(config, options)
-            configuration.defineMapping(); 
-            (! custom_variables ? custom_variables = {}: '');
-            configuration.setVariables(custom_variables)
             let seenTargetTos = []
-            defaultVariables = configuration.config.variables
+            if (custom_variables){
+                let config = cloneDeep($this.config) 
+                let configuration = new Configuration(config, options)
+                configuration.setVariables(custom_variables)
+                configuration.defineMapping();
+                (! custom_variables ? custom_variables = {}: '');
+                defaultVariables = configuration.config.variables
+            }
             if (defaultVariables &&  typeof defaultVariables == 'object'){
-                for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                    let srcTarget = $this.defineSourceTargetBinding(selected_option, defaultVariables)
-                    defaultVariables[name].source = srcTarget[0]
-                    defaultVariables[name].target = srcTarget[1] 
-                }  
+                // for (let [name, selected_option ] of Object.entries(defaultVariables)){
+                //    let srcTarget = $this.defineSourceTargetBinding(selected_option, defaultVariables)
+                //    defaultVariables[name].source =  srcTarget[0]
+                //    defaultVariables[name].target =  srcTarget[1]
+                // }
                 for (let [name, selected_option ] of Object.entries(defaultVariables)){
                     // let targetBinding = (selected_option.create ? selected_option.create : selected_option)
                     let targetBinding = selected_option
                     if (selected_option.framework){
                         let validated_framework = validateFramework(selected_option.framework, defaultVariables)
-                        selected_option.source = validated_framework 
-                    } 
+                        selected_option.source = validated_framework
+                    }
                     if (selected_option.copy){
-                        let filepath = ( selected_option.copy.basename ?   
+                        let filepath = ( selected_option.copy.basename ?
                             path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
                             selected_option.copy.to
-                        ) 
+                        )
                         promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
                             logger.error(err)
                         }))
-                        
-                    } 
+
+                    }
                     if (selected_option.create){
                         if (selected_option.create.type !== 'object'){
                             let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header)
                             promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                                 logger.error(err)
-                            })) 
+                            }))
 
                         } else {
                             promises.push(writeFile(selected_option.create.to, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
                                 logger.error(err)
-                            })) 
+                            }))
                         }
-                    } 
-                    if (selected_option.bind){ 
-                        let from = selected_option.bind.from 
+                    }
+                    if (selected_option.bind){
+                        let from = selected_option.bind.from
                         let to = selected_option.bind.to
                         try{
-                             
+
                             if (selected_option.bind_parent_dir){
-                                
-                                    console.log("nddsdsot")
-                                env.push(`${name}=${to}/${path.basename(from)}`) 
+
+                                env.push(`${name}=${to}/${path.basename(from)}`)
                                 if (from && to && seenTargetTos.indexOf(to) == -1){
-                                    binds.push(`${path.dirname(from)}:${to}`) 
+                                    binds.push(`${path.dirname(from)}:${to}`)
                                     seenTargetTos.push(to)
                                 }
-                            } else {  
-                                if (!selected_option.port ){ 
-                                    env.push(`${name}=${to}`) 
-                                    
-                                    if (from && to && seenTargetTos.indexOf(to) == -1){                                    
-                                        binds.push(`${from}:${to}`) 
+                            } else {
+                                if (!selected_option.port ){
+                                    env.push(`${name}=${to}`)
+ 
+                                    if (from && to && seenTargetTos.indexOf(to) == -1){
+                                        binds.push(`${from}:${to}`)
                                         seenTargetTos.push(to)
                                     }
                                 } else if (selected_option.port ){
                                     options = $this.updatePorts([`${selected_option.bind.to}:${selected_option.bind.from}`], options)
-                                } 
+                                }
                             }
                         } catch(err){
                             store.logger.error("%o, with variable %s", err, name)
                         }
                     } else {
-                        env.push(`${name}=${selected_option.target}`) 
+                        env.push(`${name}=${selected_option.target}`)
                     }
                     // Define the command additions if needed
-                    if (cmd){ 
-                        if (selected_option.placement){
-                            options.Cmd[selected_option.placement] =  selected_option.cmd + " && " + options.Cmd[selected_option.placement]
-                        } 
+                    if (selected_option.append && cmd){
+                        if (selected_option.append.placement || selected_option.append.placement == 0){
+                            options.Cmd[selected_option.append.placement] =  options.Cmd[selected_option.append.placement]  +  selected_option.append.command + " "
+                        } else{
+                            options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
+                        }
                     }
-                }   
+                } 
             }
-            if (! options.Image ){ 
-                throw new Error("No Image available") 
-            }  
-            options.Env = [...options.Env, ...env]   
+            if (! options.Image ){
+                throw new Error("No Image available")
+            }
+            if (typeof options.Cmd == "string"){
+                options.Cmd = ['bash', '-c', options.Cmd]
+            }
+            options.Env = [...options.Env, ...env]
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...binds]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
-            Promise.all(promises).then((response)=>{ 
+            Promise.all(promises).then((response)=>{
                 logger.info("Finished all promises")
             }).catch((err)=>{
                 reject(err)
             })
             logger.info("%o ______", options)
-            logger.info(`starting the container ${options.name} `) 
-            $this.status.success = false 
+            logger.info(`starting the container ${options.name} `)
+            $this.status.success = false
             $this.status.error = false
-            // resolve() 
-            store.docker.createContainer(options,  function (err, container) { 
+            // resolve()
+            store.docker.createContainer(options,  function (err, container) {
                 $this.container = container
-                if (err ){    
+                if (err ){
                     logger.error("%s %s %o","Error in creating the docker container for: ", options.name , err)
                     reject(err)
                 }
                 try{
                     container.attach({stream: true, stdout: true, stderr: true}, function (err, stream){
-                        $this.log = spawnLog(stream, $this.logger) 
+                        $this.log = spawnLog(stream, $this.logger)
                         $this.status.stream =  $this.log
                         $this.stream = stream
                         container.start(function (err, data) {
@@ -646,36 +614,36 @@ export class Service {
                                 logger.error("%o  error in container name: %s", err, $this.name)
                                 $this.status.error  = err
                                 reject(err)
-                            }   
+                            }
                             if (!wait || $this.config.continuous){
-                                resolve( stream ) 
-                            } else { 
+                                resolve( stream )
+                            } else {
                                 stream.on("end",()=>{
                                     resolve(stream)
                                 })
-                            }  
+                            }
                             stream.on("end",()=>{
+                                console.log("end")
                                 container.inspect((err, inspection)=>{
-                                    try{ 
+                                    try{
                                         if (err){
                                             logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
                                             $this.status.error  = err
-                                        } else { 
-                                            logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode}`)
-                                            if (inspection.State.ExitCode > 0){
-                                                $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}`
+                                        } else {
+                                            logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
+                                            if (inspection.State.ExitCode > 0 && inspection.State.Error ){
+                                                $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}`
                                                 $this.status.success = false
                                             } else {
-                                                console.log("exited successfully")
                                                 $this.status.success = true
                                             }
                                             $this.status.exit_code = inspection.State.ExitCode
                                         }
                                     } catch(err2){
-                                        logger.error(err2)
+                                        logger.error("%o error in inspecting container on end", err2)
                                     }
-                                    
-                                }) 
+
+                                })
                             })
                         })
                     })
@@ -683,8 +651,8 @@ export class Service {
                     store.logger.error(err)
                     reject()
                 }
-                
-                
+
+
             } )
 
 
@@ -697,20 +665,20 @@ export class Service {
             //         let contnr = $this.orchestratorContainer
             //         contnr.exec({Cmd: options.Cmd, Tty: true, WorkingDir: "/data/", Env: options.Env, AttachStdin: true, AttachStdout: true}, function(err, exec) {
             //             exec.start({hijack: false, stdin: true}, function(err, stream) {
-            //                 $this.log = spawnLog(stream, $this.logger) 
+            //                 $this.log = spawnLog(stream, $this.logger)
             //                 $this.status.stream =  $this.log
-                            
-            //                 exec.inspect((err, inspection)=>{ 
+
+            //                 exec.inspect((err, inspection)=>{
             //                     $this.pid = inspection.ID
             //                     console.log(inspection)
-            //                 }) 
+            //                 })
             //                 stream.on("end",(err, data)=>{
             //                     exec.inspect((err, inspection)=>{
             //                         try{
             //                             if (err){
             //                                 logger.error(`${err}, error in exec finalization of exit code: ${$this.name}`)
             //                                 $this.status.error  = err
-            //                             } else { 
+            //                             } else {
             //                                 logger.info(`${$this.name}, exec finalized with exit code: ${inspection.ExitCode}`)
             //                                 if (inspection.ExitCode > 0){
             //                                     $this.status.error  = `ERROR: exit code: ${inspection.ExitCode}`
@@ -723,7 +691,7 @@ export class Service {
             //                             }
             //                         } catch(err2){
             //                             logger.error(err2)
-            //                         }                                      
+            //                         }
             //                     })
             //                 })
             //                 stream.on("error",(err, data)=>{
@@ -739,11 +707,10 @@ export class Service {
             //     } else {
             //         reject("No orchestrator present, exiting....")
             //     }
-                
+
             // }
-           
+
         });
-		   
-	} 
-} 
- 
+
+	}
+}
