@@ -141,7 +141,7 @@
 			<v-container fluid >
         <component 
           :is="'Module'" 
-          v-if="selected == 'procedures'"
+          v-if="selected == 'procedures' && catalog[tab]"
           :module="catalog[tab]"
           :key="catalog[tab].idx"
           @updateSelected="updateSelected"
@@ -150,7 +150,7 @@
         </component>
         <component 
           :is="defaults[tab].component"
-          :defaults="defaults"  v-else
+          :defaults="defaults"  v-else-if="selected=='defaults' && defaults[tab]"
           :key="defaults[tab].name"
           :defaultModule="defaults[tab]"
           >            	
@@ -335,14 +335,14 @@ export default {
 	},
   data(){
     return {
-      tab:0,
+      tab:4,
 			mini:true,
       defaultModule: {},
 			version: process.env.version_basestack,
 			drawer:false,
-			tabProcedure: 0, 
+			tabProcedure: 4, 
 			sel: 0,
-			selected: 'defaults',
+			selected: 'procedures',
 			colorList: [
 				"rgb(70, 240,240",
 				"rgb(128,0,0",

@@ -92,13 +92,6 @@
     </v-toolbar>
     <v-tabs-items  v-model="tabParam"  >
       <v-tab-item height="100vh"  v-for="entry in categories" :key="entry.title + 'tabitem'">
-        <!-- <ListParams
-            :items="additionals"
-            :defaultHeaders="headers"
-            :service="service"
-            :title="'Inputs and Variables'"
-          >
-          </ListParams> -->
           <component
               :is="entry.component"
               :source="entry.variable"
@@ -178,6 +171,7 @@ export default {
         }).then((response)=>{
             $this.progresses =  response.data.data
             $this.progressChecking = false
+            console.log(response.data.data,"data")
         }).catch((err)=>{
             console.error(err)
             $this.progressChecking = false
@@ -225,18 +219,22 @@ export default {
         variable.source  = src
       }
       const $this = this
-      this.$emit("updateValue", { src: src, service: $this.serviceIdx, variable: value.variable, option: value.option  }   )
-      // try{
-      //   FileService.updateCacheServiceVariable({
-      //     service: this.name,
-      //     token: (process.env.NODE_ENV == 'development' ? 'development' : this.$store.token),
-      //     value: value, 
-      //     target: (option  ? "option" : "source"),
-      //     variable: name,
-      //   })
-      // } catch(err){
-      //   console.error(err,"<<<<< error in caching update")
-      // }
+      this.$emit("updateValue", { src: src, service: $this.serviceIdx, variables: value.variable, option: value.option  }   )
+      try{
+        FileService.updateCacheServiceVariable({
+          token: (process.env.NODE_ENV == 'development' ? 'development' : this.$store.token),
+          service: $this.serviceIdx,
+          procedure: $this.procedure, 
+          module: $this.module,
+          catalog: $this.catalog,
+          value: value.src, 
+          target: (value.option  ? "option" : "source"),
+          variable: value.variable,
+        }).then((response)=>{
+        })
+      } catch(err){
+        console.error(err,"<<<<< error in caching update")
+      } 
       // try{
       //   let promises = []
       //   if (this.service.variables){
@@ -325,9 +323,11 @@ export default {
             service: $this.serviceIdx,
             procedure: $this.procedure, 
             module: $this.module,
-            catalog: $this.catalog
+            catalog: $this.catalog,
+            token: this.$store.token
         })
         this.service  = response.data.data
+        console.log(this.service.variables)
         this.status = this.service.status
 
       } catch(error){
@@ -341,11 +341,12 @@ export default {
           let response = await FileService.getServiceStatus({
               service: $this.serviceIdx,
               procedure: $this.procedure, 
+              token: $this.$store.token,
               module: $this.module,
               catalog: $this.catalog
           })
           this.status = response.data.data.status
-          // this.progresses = Object.keys(response.data.data.watches).map((key) =>  response.data.data.watches[key]);
+          this.progresses = response.data.data.watches
           // this.$emit("sendStatus", { status: this.status, service: $this.serviceIdx } )			
       } catch(err){
         this.initial=false
@@ -398,6 +399,7 @@ export default {
         service: $this.serviceIdx,
         procedure: $this.procedure, 
         module: $this.module,
+        token: $this.$store.token,
         catalog: $this.catalog,
         variables: $this.service.variables
       }).then((response)=>{

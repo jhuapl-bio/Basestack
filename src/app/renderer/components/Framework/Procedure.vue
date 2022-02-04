@@ -249,7 +249,6 @@
       </v-layout>
       </v-navigation-drawer>
       <v-card height="100%" width="100%">
-      {{selectedService.name}}
         <Service  
           :ref="selectedService.name"
           :key="selectedService.name"
@@ -343,13 +342,13 @@ export default {
 
     },
     async updateValue(event){
-      console.log(event,"<<<<<<<<<")
-      console.log(this.selectedProcedure.services)
-      if (event.option){
-        this.selectedProcedure.services[event.service].variables[event.variable].option = event.src
-      } else {
-        this.selectedProcedure.services[event.service].variables[event.variable].source = event.src
-      } 
+      // console.log(event,"<<<<<<<<<")
+      // console.log(this.selectedProcedure.services)
+      // if (event.option){
+      //   this.selectedProcedure.services[event.service].variables[event.variable].option = event.src
+      // } else {
+      //   this.selectedProcedure.services[event.service].variables[event.variable].source = event.src
+      // } 
       
       // let filtered = this.services.filter((service)=>{
       //   return service.name == event.name
@@ -434,7 +433,8 @@ export default {
       try{
         let response = await FileService.getProcedures({
           module: this.moduleIdx,
-          catalog: this.module
+          catalog: this.module,
+          token: this.$store.token
         })
         this.procedures = response.data.data.map((d,i)=>{
           d.idx = i
@@ -458,11 +458,11 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
-      console.log(this.module, this.moduleIdx, this.selectedProcedure.idx, $this.selectedProcedure.services)
       await FileService.startProcedure({
         procedure: $this.selectedProcedure.idx, 
         module: $this.moduleIdx,
         catalog: $this.module,
+        token: $this.$store.token,
         variables: $this.selectedProcedure.services.map((d)=>{
           if (!d.variables){
             return {}
@@ -543,8 +543,12 @@ export default {
       return values
     },
     selectedService(){
-      console.log(this.selectedProcedure.services[this.tabService], this.tabService)
-      return this.selectedProcedure.services[this.tabService]
+      console.log( this.tabService, this.selectedProcedure)
+      if (this.selectedProcedure.services){
+        return this.selectedProcedure.services[this.tabService]
+      } else {
+        return {}
+      }
     }
   },
   mounted(){

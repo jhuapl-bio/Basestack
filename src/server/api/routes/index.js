@@ -671,7 +671,6 @@ router.get("/catalog/installed/get", (req,res,next)=>{ // build workflow accordi
 				data.push(returnable)
 			}
 		}
-		console.log(data)
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
 	} catch(err2){
 		logger.error("%s %s", "Error in loading module to library", err2)
@@ -738,11 +737,15 @@ router.get("/modules/get/:catalog", (req,res,next)=>{ // build workflow accordin
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
-router.get("/procedures/get/:catalog/:module", (req,res,next)=>{ // build workflow according to name and index
+router.get("/procedures/get/:catalog/:module/:token", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		let procedures = store.catalog[req.params.catalog].modules[req.params.module].procedures
 		let data = []  
-		procedures.forEach((procedure)=>{
+		let token = req.params.token
+		if (!req.params.token){
+			token = 'development'
+		}
+		procedures.forEach((procedure,i)=>{
 			let { procedures, ...config } = procedure.config
 			let returnable =  {
 				status: procedure.status,
@@ -766,6 +769,9 @@ router.get("/procedures/get/:catalog/:module", (req,res,next)=>{ // build workfl
 						variables: service.config.variables
 					})
 				})
+				let tokenVals = store.server.cache.get(token)  
+				let cached_variables = nestedProperty.get(tokenVals, `catalog.${req.params.catalog}.${req.params.module}.${i}`)
+				returnable.cached_variables = cached_variables
 				data.push(returnable)
 			} 
 			catch (err){
@@ -776,7 +782,7 @@ router.get("/procedures/get/:catalog/:module", (req,res,next)=>{ // build workfl
 	} catch(err2){
 		logger.error("%s %s", "Error in loading procedure to library", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
-	}	
+	}	 
 })
 router.get("/services/get/:catalog/:module/:procedure", (req,res,next)=>{ // build workflow according to name and index
 	try {
@@ -993,26 +999,58 @@ router.get("/procedures/custom/get", (req,res,next)=>{ // build workflow accordi
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
-router.get("/service/get/:catalog/:module/:procedure/:service", (req,res,next)=>{ // build workflow according to name and index
+router.get("/service/get/:catalog/:module/:procedure/:service/:token", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		let service = store.catalog[req.params.catalog].modules[req.params.module].procedures[req.params.procedure].services[req.params.service]
 		let data = service.config
-		data.status  = service.status
-		data.variables = mapCacheVariables(data.variables, req.params.service, 'development')
+		if (req.params.token && data.variables){
+			let tokenVals = store.server.cache.get(req.params.token)  
+			let val = nestedProperty.get(tokenVals, `catalog.${req.params.catalog}.${req.params.module}.${req.params.procedure}.${req.params.service}`)
+			if (val && typeof val == 'object'){
+				for(let [key , value] of Object.entries(val)){
+					if (value.source){
+						data.variables[key].source = value.source
+					}  
+					if (value.option || value.option == 0){
+						data.variables[key].option = value.option
+					}
+					data.variables[key].cached = true
+					
+					
+				}
+			}
+			data.variables = mapCacheVariables(data.variables, req.params.service, 'development')
+		}
+		data.status  = service.status 
+		
 		res.status(200).json({status: 200, message: "retrieved procedure specifics information", data: data });
 	} catch(err2){
 		logger.error("%s %s", "Error in getting procedure status(es)", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
-router.get("/status/get/service/:catalog/:module/:procedure/:service", (req,res,next)=>{ // build workflow according to name and index
+router.get("/status/get/service/:catalog/:module/:procedure/:service/:token", (req,res,next)=>{ // build workflow according to name and index
 	try { 
-		let service = store.catalog[req.params.catalog].modules[req.params.module].procedures[req.params.procedure].services[req.params.service]
-		let data = { 
-			stream: service.status.stream.info,
-			status: service.status
-		}
-		res.status(200).json({status: 200, message: "retrieved service status specifics information", data: data });
+		(async ()=>{
+			let service = store.catalog[req.params.catalog].modules[req.params.module].procedures[req.params.procedure].services[req.params.service]
+			let token  = req.params.token
+			if (!req.params.token){
+				token = "development"
+			}
+			// let tokenVals = store.server.cache.get(req.params.token)  
+			// let val = nestedProperty.get(tokenVals, `catalog.${req.params.catalog}.${req.params.module}.${req.params.procedure}.${req.params.service}`)
+			// let watches  = await service.getProgress((val ? val : service.config.variables), service.config.output)
+			let data = { 
+				stream: service.status.stream.info,
+				status: service.status,
+				watches: []
+			}
+			res.status(200).json({status: 200, message: "retrieved service status specifics information", data: data });
+		})().catch((err2)=>{
+			logger.error("%s %s", "Error in getting procedure status(es)", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+
+		})
 	} catch(err2){
 		logger.error("%s %s", "Error in getting procedure status(es)", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
@@ -1578,6 +1616,37 @@ router.post("/variable/read", (req,res,next)=>{ // build workflow according to n
 		res.status(419).send({status: 419, data: [], message: error_alert(err2)});
 	})
 })
+router.post("/session/cache/service/variable", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			
+			cacheParams(req.body.token, req.body)
+			let response = store.server.cache.get(req.body.token)
+			let tokenVals = store.server.cache.get(req.body.token)  
+			let variables = nestedProperty.get(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}.${req.body.service}`)
+			console.log("cached", variables)
+			res.status(200).json({status: 200, message: "Completed caching of service variables", data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in caching variables", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)}); 
+		}	
+	})() 
+}) 
+
+router.get("/session/cache/get/:catalog/:module/:procedure/:token", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			
+			let tokenVals = store.server.cache.get(req.params.token)  
+			let services = nestedProperty.get(tokenVals, `catalog.${req.params.catalog}.${req.params.module}.${req.params.procedure}`)
+			
+			res.status(200).json({status: 200, message: "Completed caching of service variables", data: services });
+		} catch(err2){
+			logger.error("%s %s", "Error in caching variables", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)}); 
+		}	
+	})() 
+}) 
 
 
 router.post("/service/run", (req,res,next)=>{ // build workflow according to name and index
@@ -1587,34 +1656,42 @@ router.post("/service/run", (req,res,next)=>{ // build workflow according to nam
 			let module = req.body.module
 			let catalog = req.body.catalog
 			let service= req.body.service
-			console.log(req.body,"<")
 			let response;
 			let variables = req.body.variables
 			let token = req.body.token
 			let params = req.body
 			service = store.catalog[catalog].modules[module].procedures[procedure].services[service]
-			// if (params.variables){
-			// 	for(let [key, value] of Object.entries(params.variables)){
-			// 		let newObj  = {} 
-			// 		if (value.source){
-			// 			newObj.source = value.source
-			// 		}
-			// 		if (value.option){
-			// 			newObj.option = value.option
-			// 		}
-			// 		params.variables[key] = newObj
-			// 	}
-			// }
-			// if (!token){ 
-			// 	token = 'development'
-			// }
-			// if (req.body.variables){
-			// 	response = cacheParams(token, {
-			// 		src: `services.${name}.variables`,
-			// 		value: variables,
-			// 		config: service.config
-			// 	})
-			// }
+			if (!token){ 
+				token = 'development'
+			}
+			if (req.body.variables){
+				let bb = {
+					...req.body,
+
+				}
+				for (let [key, variable] of Object.entries(req.body.variables)){
+					if (variable.source){
+						cacheParams(token, {
+							...bb,
+							value: variable.source,
+							variable:key,
+							target: "source"
+						})
+					}
+					if (variable.option || variable.option == 0){
+						cacheParams(token, {
+							...bb,
+							variable: key,
+							value: variable.option,
+							target: "option"
+						})
+					}
+						
+				}
+					
+			}
+			let tokenVals = store.server.cache.get(token)
+			let variables_cached = nestedProperty.get(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}.${req.body.service}`)
 			await service.check_then_start(params, false)
 			logger.info("%o service sent for running", req.body.service)
 			res.status(200).json({status: 200, message: `Completed run service submission: ${service.name}`, data: req.body.service });
@@ -1663,7 +1740,37 @@ router.post("/procedure/run", (req,res,next)=>{ // build workflow according to n
 			let variables = req.body.variables
 			let token = req.body.token 
 			let params = req.body
+
 			procedure = store.catalog[catalog].modules[module].procedures[procedure]
+			if (!token){ 
+				token = 'development'
+			}
+			if (req.body.variables){
+				let bb = {
+					...req.body,
+
+				}
+				for (let [key, variable] of Object.entries(req.body.variables)){
+					if (variable.source){
+						cacheParams(token, {
+							...bb,
+							value: variable.source,
+							variable:key,
+							target: "source"
+						})
+					}
+					if (variable.option || variable.option == 0){
+						cacheParams(token, {
+							...bb,
+							variable: key,
+							value: variable.option,
+							target: "option"
+						})
+					}
+						
+				}
+					
+			}
 			variables = procedure.updateVariables(variables)
 			response = await procedure.start(variables)
 			logger.info("%o workflow sent for running", response)
@@ -1682,7 +1789,6 @@ router.post("/module/custom/remove", (req,res,next)=>{ // build workflow accordi
 		try { 
 			let response;
 			let module = store.modules[req.body.module].variants[req.body.variant];
-			console.log(req.body)
 			if (module.config.custom){
 				let path_to_procedure = module.config.path
 				await removeFile(path_to_procedure)
@@ -1866,9 +1972,6 @@ router.get("/remote/get/:target", (req,res,next)=>{ // build workflow according 
 		try {
 			let data = await fetch_external_config(req.params.target)
 			// set_stored(req.params.target, data)
-			console.log(store.config.modules.filter((d)=>{
-				return d.name == 'mytax'
-			}))
 			logger.info("%s cache %o", req.params.target, data.length)
 			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
 		
@@ -1914,23 +2017,7 @@ router.post("/session/cache/create", (req,res,next)=>{ // build workflow accordi
 	})()
 })
 
-router.post("/session/cache/service/variable", (req,res,next)=>{ // build workflow according to name and index
-	(async function(){
-		try {
-			let tokenVals = store.server.cache.get(req.body.token) 
-			nestedProperty.set(tokenVals, `services.${req.body.service}.variables.${req.body.variable}.${(req.body.target)}`, req.body.value)
-			store.server.cache.set(req.body.token, tokenVals)
-			let response = store.server.cache.get(req.body.token)
-			tokenVals = store.server.cache.get(req.body.token) 
-			let variables = nestedProperty.get(tokenVals, `services.${req.body.service}.variables`)
-			console.log(variables)
-			res.status(200).json({status: 200, message: "Completed caching of service variables", data: response });
-		} catch(err2){
-			logger.error("%s %s", "Error in caching variables", err2)
-			res.status(419).send({status: 419, message: error_alert(err2)});
-		}	
-	})()
-}) 
+
 router.post("/service/cache", (req,res,next)=>{ // build workflow according to name and index
 	
 	try {
@@ -1956,7 +2043,6 @@ router.get("/service/cache/get/:service/:token", (req,res,next)=>{ // build work
 			let variables;
 			let tokenVals = store.server.cache.get(req.params.token) 
 			variables = nestedProperty.get(tokenVals, `services.${req.params.service}.variables`)
-			console.log(variables, "get variable token services", req.params.service)
 			res.status(200).json({status: 200, message: "Completed retrieval of cached service variables", data: variables });
 		} catch(err2){
 			logger.error("%s %s", "Error in  getting cached variables", err2)

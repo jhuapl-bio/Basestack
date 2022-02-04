@@ -92,7 +92,7 @@ class FileService {
     return Api().get(`${baseEndpoint.get()}/services/get`)    
   }
   getProcedures(params){
-    return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.module}`)    
+    return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.module}/${params.token}`)    
   }
   getModulesStatus(){
     return Api().get(`${baseEndpoint.get()}/modules/get/status`)    
@@ -111,10 +111,10 @@ class FileService {
     return Api().get(`${baseEndpoint.get()}/modules/names`)    
   }
   getService(params){
-    return Api().get(`${baseEndpoint.get()}/service/get/${params.catalog}/${params.module}/${params.procedure}/${params.service}` )    
+    return Api().get(`${baseEndpoint.get()}/service/get/${params.catalog}/${params.module}/${params.procedure}/${params.service}/${params.token}` )    
   }
   getServiceStatus(params){
-    return Api().get(`${baseEndpoint.get()}/status/get/service/${params.catalog}/${params.module}/${params.procedure}/${params.service}`)    
+    return Api().get(`${baseEndpoint.get()}/status/get/service/${params.catalog}/${params.module}/${params.procedure}/${params.service}/${params.token}`)    
   }
   getProceduresStatus(params){
     return Api().get(`${baseEndpoint.get()}/procedures/status`, params)    

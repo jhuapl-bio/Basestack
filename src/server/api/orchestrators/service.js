@@ -110,8 +110,8 @@ export class Service {
         const $this = this;
         return new Promise(function(resolve,reject){
             try{
+                console.log(variables,"....")
                 let service = cloneDeep($this.config)
-
                 if (!outputs){
                     outputs = {}
                 }
@@ -121,6 +121,8 @@ export class Service {
                     let promises = []
                     for (let [ key, value] of Object.entries(cloneDeep(service.outputs))){
                         if(value.watch){
+                            let mapped = mapVariables(value, variables)
+                            console.log(mapped, variables)
                             watchable[key] = value
                             promises.push(module_status(value, key, variables, ( outputs[key] ? outputs[key] : {}   )))
                         }
