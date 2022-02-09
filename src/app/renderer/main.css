@@ -1,3 +1,7 @@
+@import url('assets/fonts/dm-sans/dm-sans.css');
+@import url('assets/fonts/source-sans-pro/source-sans-pro.css');
+@import url('assets/fonts/dm-mono/dm-mono.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

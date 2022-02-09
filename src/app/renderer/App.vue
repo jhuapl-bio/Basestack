@@ -9,6 +9,7 @@
 
 <template>
   <div id="app">
+    <h1 class="font-mono text-primary-blue">Test</h1>
   <div v-if="ready && running" >
       <MainPage 
         v-bind:defaults="defaults"
