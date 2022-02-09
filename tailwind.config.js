@@ -7,7 +7,6 @@ module.exports = {
       white: 'hsl(0, 0%, 100%, 1)',
       black: 'hsl(208, 21%, 14%, 1)',
       gray: {
-
         // check w/ caleb... all of these grays are very light
         'lightest': 'hsl(200, 50%, 98%, 100)',
         'lighter': 'hsl(210, 33%, 96%, 100)',
@@ -36,6 +35,17 @@ module.exports = {
       'display': ['"DM Sans"', 'Helvetica', 'Arial', 'sans-serif'],
       'body': ['"Source Sans Pro"', 'Tahoma', 'sans-serif'],
       'mono': ['"DM Mono"', 'Monaco'],
+    },
+    fontSize: {
+      // @todo: ask caleb about default line-heights associated to the font size
+      '2xs': '0.625rem', //10px
+      'xs': '0.75rem', //12px
+      'sm': '0.875rem', //14px
+      'base': '1rem', //16px
+      'lg': '1.25rem', //20px
+      'xl': '2rem', //32px
+      '2xl': '2.375rem', //38px
+      '3xl': '3.625rem', //38px
     },
     extend: {},
   },
