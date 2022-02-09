@@ -35,14 +35,14 @@
 
     /* label styles */
     .markup-label,
-    .markup-sm,
-    .markup-lg {
+    .markup-label-sm,
+    .markup-label-lg {
         @apply font-mono font-light uppercase;
     }
 
     .markup-label.strong,
-    .markup-sm.strong,
-    .markup-lg.strong {
+    .markup-label-sm.strong,
+    .markup-label-lg.strong {
         @apply font-medium;
     }
 
