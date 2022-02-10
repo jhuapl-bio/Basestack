@@ -7,30 +7,23 @@
   - # **********************************************************************
   -->
 <template>
-	<b-row class="mainContent">
-		<b-col sm="7" style="background: white; overflow-y:auto">
-			<div style="width:100%; ">
-				<p class="text-white bg-red-500">Whoa!!!</p>
-				<b-img style="" :src="require('@/assets/Basestack_multiple_landing.png')" fluid alt="JUHAPL"></b-img>
-			</div>
-		</b-col>
+	<AppLayout hasSidebar="true">
+		<template #title>
+			Your Basestack
+		</template>
 
-		<b-col sm="5">
-			<!-- <b-row><a href="#" @click="emitChange( {target: 'tab', value: -1})   ">All System Details</a>
-			</b-row> -->
-			<b-row>
-				<Sys class="sidebox"
-				/>
-				<About class="sidebox"></About>
-			</b-row>
-			
-				
-		
-		
-		</b-col>
-          
-        
-	</b-row>
+		<template #content>
+			<!-- <RecentModules /> -->
+			<!-- <WorkStatuses /> -->
+			<!-- <LearnBasestack /> -->
+		</template>
+
+		<template #sidebar>
+			<!-- <SystemSummary /> -->
+			<!-- <ContactUs /> -->
+			<!-- <AplLogo /> -->
+		</template>
+	</AppLayout>
 </template>
 
 <script>
@@ -40,16 +33,20 @@
 import Sys from '@/components/Dashboard/System/Sys'
 import About from '@/components/Dashboard/DashboardDefaults/About'
 import Library from '@/components/Dashboard/DashboardDefaults/Library'
+import AppLayout from '@/components/AppLayout';
+// import App from '../../App.vue';
 
  
 
 export default {
 	name: 'mainpage',
 	components:{
-		Sys,
-		Library,
-		About
-	},
+    Sys,
+    Library,
+    About,
+    // App,
+	AppLayout,
+},
 	
 	props: ['modules', 'defaults', "moduleIdx"],
 	data(){
@@ -85,7 +82,7 @@ export default {
 };
 </script>
 
-<style>
+<!-- <style>
 .sidebox{
 	max-height: 95vh;
 	overflow:auto
@@ -103,4 +100,4 @@ export default {
 </style>
 <style>
 	@import '../../../static/css/tooltip.css';
-</style>
+</style> -->

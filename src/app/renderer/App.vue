@@ -8,45 +8,51 @@
   -->
 
 <template>
-  <div id="app">
-    <h1 class="font-mono text-primary-blue">Test</h1>
-  <div v-if="ready && running" >
-      <MainPage 
+  <main id="app">
+    <div v-if="ready && running" class="flex">
+      <AppMenu />
+      <!-- <MainPage 
         v-bind:defaults="defaults"
         v-bind:modules="modules"
         v-bind:procedures="procedures"
         v-bind:services="services"
-      ></MainPage>
-  </div>
-  <div v-else-if="!ready">
-      <h3>Initiating....</h3>
-  </div>
-  <div v-else>
+      /> -->
 
+      <!-- <router-view /> -->
+      <Dashboard />
+    </div>
+
+    <div v-else-if="!ready">
+        <h3>Initiating....</h3>
+    </div>
+
+    <div v-else>
       <h3>Backend Server is not available</h3>
-      <Sys></Sys>
-  </div>
-  
-  </div>
-
+      <Sys />
+    </div>
+  </main>
 </template>
 
 <script>
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-import MainPage from '@/components/MainPage'
+// import MainPage from '@/components/MainPage'
 import FileService from '@/services/File-service.js'
 import Sys from "@/components/Dashboard/System/Sys.vue"
+import AppMenu from '@/components/AppMenu.vue'
+import Dashboard from '@/components/Dashboard/Dashboard.vue'
 
 
 const moment = require('moment');
 const {dialog}=require("electron")
 export default {
 	name: 'client',
-	components: { 
-    MainPage, 
+	components: {
+    // MainPage,
     Sys,
-  },
+    AppMenu,
+    Dashboard
+},
   data(){
     return {
       ready:false,
