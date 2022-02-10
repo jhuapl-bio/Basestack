@@ -5,12 +5,12 @@ const cloneDeep = require("lodash.clonedeep");
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
    - #
-   - # All Rights Reserved. 
+   - # All Rights Reserved.  
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
   */
 var Docker = require('dockerode'); 
-const path = require("path")
+const path = require("path")  
 var  { store }  = require("../../config/store/index.js")
 
 const {  validateFramework } = require("../controllers/validate.js")
@@ -25,21 +25,23 @@ const fs = require("file-system")
 let dockerObj; 
 
 export class Service {
-	constructor(service){
+	constructor(service, serviceIdx){
 		this.name = service.name
+        this.serviceIdx = serviceIdx
         this.type = "service"
         this.config = service 
-        this.dependencies = [],
+        this.dependencies = [], 
         this.interval = {
             checking: false,
             interval: this.create_interval()
         }
-        this.status = {
+        this.status = { 
             exists: false,
             exit_code: -1,
             error: null,
             success: null,
             running: false,
+            complete: true,
             stream: {
                 info: [
                     "Service"
@@ -49,20 +51,28 @@ export class Service {
         let depends = this.config.depends
         this.defineDependencies()
         this.readVariables()
+        this.options = null
         // this.config = this.mapConfigurations()
 
 	}
     async readVariables(){
         const $this = this;
         if ($this.config.variables){
-            for (let [key, value] of Object.entries($this.config.variables))
-            if (value.load){
-                readFile(value.load).then((data)=>{
-                    value.source = JSON.parse(data)
-                }).catch((err)=>{
-                    store.logger.error("%o error in reading file to load for server %s", err, $this.name)
-                })
-            }
+            // for (let [key, value] of Object.entries($this.config.variables)){
+            //     if (value.options){
+            //         if (!value.option){
+            //             value.option = 0
+            //         } 
+            //         value.optionValue = value.options[value.option]
+            //     }
+            //     if (value.load){
+            //         readFile(value.load).then((data)=>{
+            //             value.source = JSON.parse(data)
+            //         }).catch((err)=>{
+            //             store.logger.error("%o error in reading file to load for server %s", err, $this.name)
+            //         })
+            //     }
+            // }
         }
     }
     async create_interval (){
@@ -74,22 +84,12 @@ export class Service {
         let interval = setInterval(()=>{
             if (!checking){
                 checking = true
-                // $this.dependencyCheck().then((d)=>{
-                    // if ($this.status.partial_install){
                 $this.watch().then((e)=>{
                     checking = false
                 }).catch((err)=>{
                     logger.error("error in getting status %o", err)
                     checking = false
                 })
-                    // } 
-                    // else {
-                    //     checking = false
-                    // }
-                // }).catch((err)=>{
-                //     logger.error(err)
-                //     checking = false
-                // })
             }
         }, 5000)
         return interval
@@ -106,53 +106,7 @@ export class Service {
         }
         return optionsFile
     }
-    async getProgress(variables, outputs){
-        const $this = this;
-        return new Promise(function(resolve,reject){
-            try{
-                console.log(variables,"....")
-                let service = cloneDeep($this.config)
-                if (!outputs){
-                    outputs = {}
-                }
-                let watchable = {}
-                if (service.outputs){
-
-                    let promises = []
-                    for (let [ key, value] of Object.entries(cloneDeep(service.outputs))){
-                        if(value.watch){
-                            let mapped = mapVariables(value, variables)
-                            console.log(mapped, variables)
-                            watchable[key] = value
-                            promises.push(module_status(value, key, variables, ( outputs[key] ? outputs[key] : {}   )))
-                        }
-                    }
-
-                    Promise.allSettled(promises).then((response)=>{
-                        response.forEach((resp)=>{
-                            if (resp.status == 'fulfilled'){
-                                if (watchable[resp.value.key]){
-                                    watchable[resp.value.key].status = resp.value.status
-                                }
-
-                            } else {
-                                store.logger.error("Error in getting status for watched location: %o", resp.reason )
-                            }
-                        })
-                        // if ($this.name == 'staphb_gamma'){
-                        //     console.log("yes", watchable)
-                        // }
-                        resolve(watchable)
-                    })
-                } else {
-                    resolve(watchable)
-                }
-            } catch (err){
-                store.logger.error("%o error in get progress %s", err, $this.name)
-                reject(err)
-            }
-        })
-    }
+    
     async watch(){ 
 		let container_name = this.name
 		const $this  = this;
@@ -325,7 +279,7 @@ export class Service {
         let inner_variables = variable.match(/(\${.+?\}){1}/g)
         let final = variable
 
-        const $this = this
+        const $this = this 
         inner_variables.forEach((in_vari)=>{
             let topLevelObj = cloneDeep(variables)
             let id = in_vari.replace(/[\$\{\}]/g, "")
@@ -352,27 +306,7 @@ export class Service {
         let source = selected_option.source
         // let target = selected_option.target
         let target = selected_option.target
-        // try{
-        //     if ( target && target !== ''){
-        //         target = mapVariables(target, variables)
-        //     }
-
-        //     //Define the Bind Mounts Target  and Source
-        //     // if (selected_option.bind){
-        //     //     let bind = $this.volume_bind(selected_option)
-        //     //     selected_option.target = bind[1]
-        //     //     source = bind[0]
-        //     //     target = bind[1]
-        //     // }
-        // } catch(err){
-        //     logger.error(err)
-
-        // }
-
-        // if (!target){
-        //     target = source
-        // }
-        //Define the Source path for Bind Mounts
+       
         return [source, target]
     }
     updatePorts(ports, options){
@@ -422,12 +356,12 @@ export class Service {
 
         if (!options.Image){
             options.Image = service.image
-        }
+        }  
         options.name = this.name
-
+ 
         if (service.workingdir){
             options.WorkingDir = service.workingdir
-        }
+        } 
         return options
 
     }
@@ -453,7 +387,7 @@ export class Service {
         return tsv_file_content + "\n"
     }
 
-    start(params, wait){
+    start(params, wait){ 
 		const $this = this
         return new Promise(function(resolve,reject){
             let options = JSON.parse(JSON.stringify($this.options))
@@ -461,59 +395,42 @@ export class Service {
             if (!params){
                 params = {}
             }
-            let binds = []
-            // let complete = Object.values($this.dependencies).every((dependency)=>{
-            //     let complete2 = dependency.dependencies.every((dep)=>{
-            //         return dep.status
-            //     })
-            //     return complete2
-
-            // })
-            //Identity if the service should be started and ONLY IF all dependencies are installed for said module
-            // if (!complete){
-            //     logger.info(`running a module that has does not have all necessary deps... ${$this.command}`)
-            //     reject(new Error("All Dependencies aren't installed"))
-            // }
-            if ($this.config.binds){
-                $this.config.binds.forEach((bind)=>{
-                    binds.push(bind)
+            let bind = []
+            if ($this.config.bind){
+                $this.config.bind.forEach((bind)=>{
+                    bind.push(bind)
                 })
             }
-            if (params.binds){
-                params.binds.forEach((bind)=>{
-                    binds.push(bind)
+            if (params.bind){
+                params.bind.forEach((bind)=>{
+                    bind.push(bind)
                 })
             }
             let cmd = $this.config.command
             if (cmd){
                 options.Cmd = $this.config.command
             }
-            let promises = [];
+            let promises = []; 
             let promisesInside = []
             let values = []
             options = $this.updateConfig(options)
             /////////////////////////////////////////////////
             let custom_variables = params.variables
- 
             let defaultVariables = {}
             let seenTargetTos = []
-            if (custom_variables){
-                let config = cloneDeep($this.config) 
-                let configuration = new Configuration(config, options)
-                configuration.setVariables(custom_variables)
-                configuration.defineMapping();
-                (! custom_variables ? custom_variables = {}: '');
-                defaultVariables = configuration.config.variables
-            }
+            defaultVariables = $this.config.variables
+            if ($this.config.serve ){ 
+                let variable_port = defaultVariables[$this.config.serve]
+                options = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`], options)
+            }   
+            // $this.config.variables = defaultVariables
             if (defaultVariables &&  typeof defaultVariables == 'object'){
-                // for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                //    let srcTarget = $this.defineSourceTargetBinding(selected_option, defaultVariables)
-                //    defaultVariables[name].source =  srcTarget[0]
-                //    defaultVariables[name].target =  srcTarget[1]
-                // }
                 for (let [name, selected_option ] of Object.entries(defaultVariables)){
                     // let targetBinding = (selected_option.create ? selected_option.create : selected_option)
                     let targetBinding = selected_option
+                    if (selected_option.options && selected_option.option >=0){
+                        selected_option= selected_option.options[selected_option.option]
+                    }
                     if (selected_option.framework){
                         let validated_framework = validateFramework(selected_option.framework, defaultVariables)
                         selected_option.source = validated_framework
@@ -524,7 +441,7 @@ export class Service {
                             selected_option.copy.to
                         )
                         promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
-                            logger.error(err)
+                            logger.error(err) 
                         }))
 
                     }
@@ -532,54 +449,61 @@ export class Service {
                         if (selected_option.create.type !== 'object'){
                             let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header)
                             promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
-                                logger.error(err)
+                                logger.error(err)  
                             }))
 
-                        } else {
+                        } else { 
                             promises.push(writeFile(selected_option.create.to, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
                                 logger.error(err)
-                            }))
+                            })) 
                         }
-                    }
+                    } 
+
                     if (selected_option.bind){
                         let from = selected_option.bind.from
                         let to = selected_option.bind.to
+                        
                         try{
 
                             if (selected_option.bind_parent_dir){
-
                                 env.push(`${name}=${to}/${path.basename(from)}`)
                                 if (from && to && seenTargetTos.indexOf(to) == -1){
-                                    binds.push(`${path.dirname(from)}:${to}`)
+                                    bind.push(`${path.dirname(from)}:${to}`)
                                     seenTargetTos.push(to)
-                                }
+                                } 
                             } else {
                                 if (!selected_option.port ){
                                     env.push(`${name}=${to}`)
  
                                     if (from && to && seenTargetTos.indexOf(to) == -1){
-                                        binds.push(`${from}:${to}`)
+                                        bind.push(`${from}:${to}`) 
                                         seenTargetTos.push(to)
                                     }
-                                } else if (selected_option.port ){
-                                    options = $this.updatePorts([`${selected_option.bind.to}:${selected_option.bind.from}`], options)
-                                }
-                            }
-                        } catch(err){
+                                } 
+                            }    
+                        } catch(err){ 
                             store.logger.error("%o, with variable %s", err, name)
                         }
-                    } else {
-                        env.push(`${name}=${selected_option.target}`)
-                    }
-                    // Define the command additions if needed
-                    if (selected_option.append && cmd){
-                        if (selected_option.append.placement || selected_option.append.placement == 0){
-                            options.Cmd[selected_option.append.placement] =  options.Cmd[selected_option.append.placement]  +  selected_option.append.command + " "
-                        } else{
-                            options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
+                    } else {  
+                        env.push(`${name}=${( selected_option.target ? selected_option.target : selected_option.source)}`)
+                    }        
+                    // Define the command additions if needed  
+                    if (selected_option.append && cmd ){ 
+                        let serviceFound = selected_option.append.services.findIndex(data => data == $this.serviceIdx)
+                        // console.log(serviceFound, selected_option.append, $this.serviceIdx)
+                        console.log("<<<<<", selected_option,">>>>>")
+                        if (serviceFound >= 0){
+                            let service = selected_option.append
+                            if (service.placement || service.placement == 0){
+                                options.Cmd[service.placement] =  options.Cmd[service.placement]  +  selected_option.append.command + " "
+                            } else{
+                                options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
+                            }
+
                         }
+                            
                     }
-                } 
+                }  
             }
             if (! options.Image ){
                 throw new Error("No Image available")
@@ -588,22 +512,33 @@ export class Service {
                 options.Cmd = ['bash', '-c', options.Cmd]
             }
             options.Env = [...options.Env, ...env]
-            options.HostConfig.Binds = [...options.HostConfig.Binds, ...binds]
+            options.HostConfig.Binds = [...options.HostConfig.Binds, ...bind]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
             Promise.all(promises).then((response)=>{
                 logger.info("Finished all promises")
             }).catch((err)=>{
                 reject(err)
             })
-            logger.info("%o ______", options)
-            logger.info(`starting the container ${options.name} `)
+            // logger.info("%o ______", options)
+            // logger.info(`starting the container ${options.name} `)
+            $this.status.stream.info.push(JSON.stringify(options, null, 4))
             $this.status.success = false
             $this.status.error = false
+            $this.status.complete = false
             // resolve()
             store.docker.createContainer(options,  function (err, container) {
                 $this.container = container
                 if (err ){
                     logger.error("%s %s %o","Error in creating the docker container for: ", options.name , err)
+                    $this.status.running = false
+                    // $this.status.error = err
+                    if (err.json && err.json.message){
+                        $this.status.error = err.json.message
+                    } else {
+                        $this.status.error = err
+                    }
+                    $this.status.success= false
+                    $this.status.stream.info.push(err)
                     reject(err)
                 }
                 try{
@@ -614,18 +549,21 @@ export class Service {
                         container.start(function (err, data) {
                             if (err){ 
                                 logger.error("%o  error in container name: %s", err, $this.name)
-                                $this.status.error  = err
+                                if (err.json && err.json.message){
+                                    $this.status.error = err.json.message
+                                } else {
+                                    $this.status.error = err
+                                }
                                 reject(err)
-                            }
+                            } 
                             if (!wait || $this.config.continuous){
                                 resolve( stream )
-                            } else {
-                                stream.on("end",()=>{
-                                    resolve(stream)
+                            } else { 
+                                stream.on("end",()=>{ 
+                                    resolve(stream) 
                                 })
-                            }
-                            stream.on("end",()=>{
-                                console.log("end")
+                            } 
+                            stream.on("end",()=>{ 
                                 container.inspect((err, inspection)=>{
                                     try{
                                         if (err){
@@ -638,7 +576,9 @@ export class Service {
                                                 $this.status.success = false
                                             } else {
                                                 $this.status.success = true
+                                                // $this.status.error = "Test error"
                                             }
+                                            $this.status.complete = true
                                             $this.status.exit_code = inspection.State.ExitCode
                                         }
                                     } catch(err2){
@@ -651,10 +591,19 @@ export class Service {
                     })
                 } catch(err){
                     store.logger.error(err)
+                    console.log("_______________________________")
+                    $this.status.running = false
+                    // $this.status.error = err
+                    $this.status.success= false
+                    $this.status.complete = true 
+                    if (err.json && err.json.message){
+                        $this.status.stream.info.push(err.json.message)
+                    } else {
+                        $this.status.stream.info.push(err)
+                    }
+                    
                     reject()
                 }
-
-
             } )
 
 

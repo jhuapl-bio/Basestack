@@ -3,7 +3,9 @@
     <v-data-table
         small 
         :headers="headers"
-        :items="items" dense
+        :items="items" 
+        v-if="items && items.length  > 0"
+        dense
         :items-per-page="10"
         :footer-props="{
         showFirstLastPage: true,
@@ -16,97 +18,60 @@
     >	
         <template v-slot:top>
             <v-toolbar
-                flat
+                dark dense 
             >
-                <v-subheader  >{{ ( title ? title : 'Inputs' )  }}</v-subheader>
-                <v-divider
-                    class="mx-4"
-                    inset
-                    vertical
-                ></v-divider>
-                <v-spacer></v-spacer>
-                <v-dialog
-                    v-model="dialog"
-                    max-width="500px"
-                    >
-                    <!-- <template v-slot:activator="{ on, attrs }">
-                        <v-btn
-                        color="primary"
-                        dark
-                        class="mb-2"
-                        v-bind="attrs"
-                        v-on="on"
-                        >
-                        New Item
-                        </v-btn>
-                    </template> -->
-                    <v-card>
-                        <v-card-title>
-                        <span class="text-h5">Row Item Add</span>
-                        </v-card-title>
-                        <v-card-text>
-                            <v-container>
-                                <v-col
-                                    cols="12"
-                                    sm="6"
-                                    md="4"
-
-                                >
-                                    <v-container v-for="head in headers" :key="head.value + head.index">
-                                            <v-text-field v-if="head.value !== 'actions'"
-                                                v-model="editedItem[head.value]"
-                                                :label="head.text" 
-                                            ></v-text-field>
-                                    </v-container>
-                                    
-                                </v-col>
-                            </v-container>
-                        </v-card-text>
-                        <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn
-                            color="blue darken-1"
-                            text
-                            @click="close"
-                        >
-                            Cancel
-                        </v-btn>
-                        <v-btn
-                            color="blue darken-1"
-                            text
-                            @click="save"
-                        >
-                            Save
-                        </v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
+                <v-toolbar-title  >{{ ( title ? title : 'Inputs' )  }}</v-toolbar-title>
+                
             </v-toolbar>
         </template>
-        <template v-slot:item.source="{ item, index }">
+        <template v-slot:item.label="{ item, index }">
+            <v-tooltip  bottom>
+                <template v-slot:activator="{ on }">
+                        <v-icon v-if="item && item.hint " v-on="on" small >$question-circle
+                        </v-icon>
+                </template>
+                {{item.hint}}
+            </v-tooltip>
+            {{item.label}}
+            <v-btn icon color="primary" v-if=" ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )" @click="electronOpenDir(item, $event)">
+                <v-icon small >$archive
+                </v-icon>
+            </v-btn>
+            
+        </template>
+        
+        <template v-slot:item.source="{ item,index }">
              <div v-if="item.options"  class="entry from-group">
                 <v-select
-                    v-model="item.option"
+                    v-model="item.optionValue" 
+                    :disabled="item.output"
                     :hint="`Select an item`"
-                    @input="updateValue($event, true, item, index, item.name)"
-                    :items="item.options.map((d,i)=>{ return i})" 
+                    @input="setOption($event,index, item)"
+                    :items="item.options" 
                     label="Select"
+                    item-text="name"
                     persistent-hint
                     return-object
                     single-line
                 >
-                    <template v-slot:item="{ item }"
-                        >{{  items[index].options[item].name ? items[index].options[item].name : item.options[option] }}
-                    </template>
-                    <template v-slot:selection="{ item}"
-                        >{{  items[index].options[item].name ? items[index].options[item].name : item.options[option] }}
-                    </template>
+                   
                 </v-select>
+                <component
+                    :is="factory[item.optionValue.element]"
+                    v-if="item.element !== 'render'"
+                    :disabled="item.optionValue.output"
+                    :source="item.optionValue"
+                    :variable="item.optionValue"
+                    :hidden="item.optionValue.hidden"
+                    @updateValue="updateValue($event, false, item, index, item.name)"
+                    >
+                </component>
              </div>
             <div v-else >
                 <component
                     :is="factory[item.element]"
                     v-if="item.element !== 'render'"
+                    :disabled="item.output"
                     :source="item"
                     :variable="item"
                     :hidden="item.hidden"
@@ -126,9 +91,6 @@
             <v-list  dense v-if="item.bind">
                 <v-list-item
                 >
-                    <!-- <v-list-item-icon>
-                        <v-icon x-small>$chevron-left</v-icon>
-                    </v-list-item-icon> -->
                     <v-list-item-content>
                         <v-text-field
                             v-model="item.bind.from"
@@ -139,9 +101,6 @@
                 </v-list-item>
                 <v-list-item
                 >
-                    <!-- <v-list-item-icon>
-                        <v-icon x-small>$chevron-right</v-icon>
-                    </v-list-item-icon> -->
                     <v-list-item-content>
                         <v-text-field
                             v-model="item.bind.to"
@@ -184,7 +143,7 @@ import List  from '@/components/Framework/Mods/List.vue';
 import ConfigurationFile from '@/components/Framework/Mods/ConfigurationFile.vue';
 import Render from '@/components/Framework/Mods/Render.vue';
 import Multiselect from 'vue-multiselect'
-
+const path  = require("path")
 export default {
 	name: 'multi-select',
     components: {
@@ -222,18 +181,39 @@ export default {
       defaultHeaders(newValue, oldValue){
           console.log(newValue)
       },
+      items(newValue){
+          console.log(newValue,"<<<")
+      },
       dialogDelete (val) {
         val || this.closeDelete()
       },
     },
 	methods: {
+        setOption(event, index, item){            
+            let idx = item.options.findIndex(data => data.name == event.name)
+            item.option = idx
+            if (!event.source){
+                item.source = item.optionValue
+            }
+        },
         open_link (link, e) {
 			e.stopPropagation()
 			// this.$electron.shell.openExternal(this.getUrl(link.to))
             // console.log(this.$electron.dialog.open(this.getUrl(link.to)))
             window.open(this.getUrl(link), "browser", 'top=500,left=200,frame=true,nodeIntegration=no')
       	},
-        getUrl(link){
+        electronOpenDir(key){
+            const $this = this
+            if (key.options ){
+                key = key.options[key.option]
+            }
+            if (key.element == 'file'){
+                this.$electron.shell.openPath(path.dirname(key.source))
+            } else {
+                this.$electron.shell.openPath(key.source)
+            }
+		}, 
+        getUrl(link){ 
         //   let url  = `http://localhost:8080`
             let url  = `http://localhost:${link.bind.to}`
             if (link.suburl){
@@ -248,6 +228,7 @@ export default {
             } else {
                 variable.source  = src
             }
+            console.log(value,"<<ffffffffffff<", option, variable, name)
             this.intervalProgress = false
             this.$emit("updateValue", { src: src, option: option, variable: var_name }   )
         },
@@ -331,6 +312,7 @@ export default {
         }
     },
     mounted(){
+        console.log(this.items,"<<<")
     }, 
 
     

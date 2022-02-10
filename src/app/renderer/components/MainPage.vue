@@ -40,7 +40,7 @@ export default {
 	props: [ 'defaults' ],
 	data(){
 		return{
-			tab:4,
+			tab:0,
 			mini:true,
 			version: process.env.version_basestack,
 			drawer:false,

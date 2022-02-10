@@ -1,6 +1,6 @@
 - name: samtools
   title: "Samtools"
-  icon: "dna"
+  icon: "binoculars"
   version: 1.0
   module: True
   tooltip: "Download the samtools suite"
@@ -20,16 +20,48 @@
         - "alignment"
         - "BAM"
       tooltip: "Generate a BAM file from SAM file"
-      linking:
-        - output:  #From where to where as input to next procedure
-            service: samtools_view_sam_to_bam
-            target: outputs
-            variable: bam
-          input: 
-            service: samtools_index
-            target: variables
-            variable: bam
+      variables:
+        sam:
+          label: "SAM File"
+          element: "file"
+          hint: "Alignment SAM file to be converted to BAM"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.sam.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "%{variables.sam.bind.to}/%{variables.sam.source}"
+        bam:
+          label: "BAM File"
+          element: "file"
+          hint: "Compressed BAM file from SAM format"
+          bind_parent_dir: true
+          output: True
+          bind: 
+            from: "%{variables.bam.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.sam.bind.from})>>/<<basename,trim(%{variables.sam.source})>>.bam"
+          target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.sam.source})>>.bam"
+        bai:
+          label: "BAI File"
+          hint: "BAI index file generated from an alignment and sorted"
+          watch: True
+          output: True
+          element: "file"
+          source: "<<directory(%{variables.bam.bind.from})>>/<<basename(%{variables.bam.source})>>.bai"
+          target: "%{variables.bam.bind.to}/<<basename(%{variables.bam.source})>>.bai"
       services:
+        - name: samtools_view_sam_to_bam
+          label: "Samtools BAM from SAM"
+          image: "staphb/samtools"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "samtools view -S -F4 -b ${sam} | samtools sort > ${bam}"]
         - name: samtools_index
           label: "Samtools Index"
           image: "staphb/samtools"
@@ -39,51 +71,7 @@
           force_restart: false
           force_init: false
           command: ["bash","-c", "samtools index ${bam}"]
-          outputs:
-            bam:
-              label: "BAM File"
-              hint: "BAM file generated from an alignment and sorted"
-              watch: True
-              type: "file"
-              path: ${bam}.bai 
           variables:
-            bam:
-              label: "BAM File"
-              element: "file"
-              bind_parent_dir: true
-              bind: 
-                from: "%{variables.bam.source}"
-                to: "/opt/data"
-              class: "wb-100  p-3 mb-1"
-              source: null
-              target: "%{variables.bam.bind.to}/%{variables.bam.source}"
-        - name: samtools_view_sam_to_bam
-          label: "Samtools BAM from SAM"
-          image: "staphb/samtools"
-          workingdir: "/opt/data"
-          orchestrated: false #orchestrated means it r
-          init: false
-          force_restart: false
-          force_init: false
-          command: ["bash","-c", "samtools view -S -F4 -b ${sam} | samtools sort > ${sam}.bam"]
-          outputs:
-            bam:
-              label: "Alignment File"
-              hint: "Alignment BAM File"
-              watch: True
-              type: "file"
-              path: ${sam}.bam 
-          variables:
-            sam:
-              label: "SAM File"
-              element: "file"
-              hint: "Alignment SAM file to be converted to BAM"
-              bind_parent_dir: true
-              bind: 
-                from: "%{variables.sam.source}"
-                to: "/opt/data"
-              class: "wb-100  p-3 mb-1"
-              source: null
-              target: "%{variables.sam.bind.to}/%{variables.sam.source}"
-    
-  
+            
+        
+          

@@ -8,15 +8,11 @@
   -->
 <template>
   
-    <v-card
-      color="grey lighten-4"
-      tile class="py-4"
-    >
-      <v-toolbar class="my-5 ">
-        <!-- <v-app-bar-nav-icon v-if="selected.icon"><v-icon>{{ '$' + selected.icon }}</v-icon></v-app-bar-nav-icon> -->
-
+    <v-row  style="height: 50vh" >
+		  <v-col cols="12"  >
+			<v-card >
+      <v-toolbar class="my-5 "> 
         <v-toolbar-title>{{selected.title}}</v-toolbar-title>
-        <!-- <v-subheader>{{selected.title}}</v-subheader> -->
         <v-spacer></v-spacer>
         <v-select
             v-model="selected"  v-if="selected"
@@ -25,8 +21,8 @@
             :hint="'Version select'"
             item-text="version"
             item-value="version"
-            class="mx-auto pr-2"
-            style="max-width: 35%;"
+            class="mx-auto pr-4"
+            style="max-width: 15%;"
             @change="setProcedureDefault()"
             persistent-hint
             return-object
@@ -53,17 +49,127 @@
             </v-list-item-content>
           </template>
         </v-select>
-        <v-tooltip top class="mr-1" v-if="selected.custom">
-          <template v-slot:activator="{ on }">
-            <v-btn @click="rmCustomModule(selected)" v-on="on" icon small>
-              <v-icon color="orange" x-small>
-                $trash-alt
-              </v-icon>
+        
+        <v-divider vertical inset></v-divider>
+        <v-select
+            v-model="selectedProcedure"
+            :items="selected.procedures"
+            :prepend-icon="( selectedProcedure.icon  ? '$'+selectedProcedure.icon : '$cog')"
+            :hint="'Procedure select'"
+            item-text="title"
+            item-name="name"
+            item-value="idx"
+            class="mx-auto pl-4 pr-2"
+            style="max-width: 33%;"
+            label="Select Procedure"
+            persistent-hint
+            :return-object="true"
+            single-line
+        >
+          <template v-slot:prepend>
+            <v-icon color="primary">{{ ( selectedProcedure.icon  ? '$'+selectedProcedure.icon : '$cog' ) }}</v-icon>
+          </template>
+          <template v-slot:item="{ item, index }">
+            <v-icon v-if="item.icon" color="primary" class="mx-2" x-small>{{ '$' + item.icon }}</v-icon>
+            {{item.title}}
+          </template>
+        </v-select>
+        
+        <v-divider vertical inset></v-divider>
+        <v-menu
+          :close-on-content-click="false"
+          :nudge-width="400"
+          offset-x
+        >
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              icon
+              v-bind="attrs"
+              v-on="on"
+            >
+              <v-icon medium>$bars</v-icon>
             </v-btn>
           </template>
-          Remove Custom Procedure 
-        </v-tooltip>
-        <v-divider vertical ></v-divider>
+           
+          <v-card>
+            <v-list>
+              <v-subheader>Select Services to Run for Job</v-subheader>
+              <v-list-item-group
+                v-model="services_selected"
+                multiple
+              >
+                
+                <v-list-item
+                  v-for="(entry, key ) in selectedProcedure.services"
+                  centered
+                  v-bind:key="entry.name"
+                >
+                  <template v-slot:default="{ active, item }">
+                    <v-list-item-action>
+                      <v-checkbox
+                        :input-value="active"
+                        on-icon="$check-square"
+                        off-icon="$square"
+                        color="primary"
+                      ></v-checkbox>
+                    </v-list-item-action>
+
+                    <v-list-item-content>
+                      <v-list-item-title>Notifications</v-list-item-title>
+                      <v-list-item-subtitle>Allow notifications</v-list-item-subtitle>
+                    </v-list-item-content>
+                  </template>
+                  <v-tooltip left>
+                    <template v-slot:activator="{ on }">
+                      <v-tab v-on="on" class="" style="" >
+                        <span class="tabSideItemText">{{parseInt(key)+1}}. {{ ( entry.label  ? entry.label : key  ) }}</span>
+                      </v-tab>
+                    </template>
+                    <span>{{ ( !entry.tooltip ? entry.title : entry.tooltip )}}</span>
+                  </v-tooltip>
+                </v-list-item>
+              </v-list-item-group>
+            </v-list>
+          </v-card>
+			</v-menu>
+      
+      <v-tooltip top class="ml-2" v-if="selected.custom">
+        <template v-slot:activator="{ on }">
+          <v-btn @click="rmCustomModule(selected)" v-on="on" icon >
+            <v-icon color="orange" medium>
+              $trash-alt
+            </v-icon>
+          </v-btn>
+        </template>
+        Remove Custom Module 
+      </v-tooltip>
+      <v-tooltip top>
+          <template v-slot:activator="{ on }">
+              <v-btn v-on="on" icon @click="start_procedure()">
+                  <v-icon   color="primary" medium>
+                      $play-circle
+                  </v-icon>
+              </v-btn>
+          </template>
+          Run Procedure (1 or more services sequentially)
+      </v-tooltip>
+      <v-tooltip top v-if="job && job.running">
+          <template v-slot:activator="{ on }">
+              <v-btn v-on="on" medium icon @click="cancel_procedure()" >
+                  <v-icon color="orange darken-2" medium>
+                  $times
+                  </v-icon>
+              </v-btn>
+          </template>
+          Cancel Procedure 
+      </v-tooltip>
+      <v-progress-linear
+          :active="job && job.running"
+          :indeterminate="true"
+          absolute
+          bottom
+          color="primary"
+      ></v-progress-linear>
         
       </v-toolbar>
        <v-spacer></v-spacer>
@@ -71,16 +177,22 @@
       
         <v-divider></v-divider>
             <component 
-              :is="'Procedure'"
+              :is="'Job'"
               v-if="selected.idx || selected.idx == 0"
               :module="module.name"
+              ref="job"
+              :title="module.title"
+              :watches="(job ? job.watches : [])"
+              :status="( job ? job.services : {})"
+              :procedureIdx="selectedProcedure.idx"
               class="fill-width fill-height"
               :moduleIdx="selected.idx"
             >            	
             </component>
 
     </v-card>
-
+    </v-col>
+  </v-row  >
 </template>
 
 <script>
@@ -88,11 +200,13 @@
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
 import Procedure from "@/components/Framework/Procedure.vue"
 import FileService from '@/services/File-service.js'
+import Job from "@/components/Framework/Job.vue"
 import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
 export default {
 	name: 'module',
   components:{
     // Service,
+    Job,
     Procedure,
     LogWindow,
     LoopingRhombusesSpinner,
@@ -110,6 +224,33 @@ export default {
   methods: {
     setProcedure(event){
       this.procedure_selected_index = event
+    },
+    async getJobStatus(){
+      const $this = this
+      try{
+        let response = await FileService.getJobStatus({
+          module: this.selected.idx,
+          procedure: this.selectedProcedure.idx,
+          catalog: this.module.name
+        })
+       this.selectedProcedure.job = response.data.data
+       this.job = response.data.data
+     
+      } catch(err){
+        this.initial=false
+        console.error(`${err} error in getting status`)
+      } finally {
+        this.intervalChecking = false
+      }
+    },
+    async cancel_procedure(procedureKey){
+      let ref  = this.$refs['job']
+      ref.cancel_procedure()
+    },
+    async start_procedure(){
+      let ref  = this.$refs['job']
+      ref.start_procedure()
+
     },
     
     async rmCustomModule(selected){
@@ -137,45 +278,8 @@ export default {
         })
       }
     },
-    setProcedureDefault(){
-      // this.selectedProcedure = null
-      // this.selectedProcedure = this.module.variants[this.selected_index].procedures[this.defaultProcedure]
-      // this.procedure_selected_index = 0
-      // console.log(this.selectedProcedure,"<<<<", this.selected_index)
-    },
-    runServiceIndividually(key, idx){
-      // console.log(key)
-      let ref  = this.$refs[key]
-      ref[0].start_service()
-      this.tabService = idx
-    },
-    cancelServiceIndividually(key){
-      let ref  = this.$refs[key]
-      ref[0].cancel_service()
-
-    },
     async updateValue(event){
-      // console.log(event)
-      // let filtered = this.services.filter((service)=>{
-      //   return service.name == event.name
-      // })
-      // let procedure = this.procedure
-      // if (procedure.shared){
-      //   procedure.shared.forEach((share)=>{
-      //     if (share.output.service == event.name){
-      //       let indexes = this.services.map((d)=>{return d.name}).indexOf(share.input.service)
-      //       if (indexes > -1){
-      //         let variables = this.services[indexes][share.input.target]
-      //         console.log(share)
-      //         let indexV = variables.map((variable)=>{ return variable.name}).indexOf(share.input.variable)
-      //         if(indexV > -1){
-      //           this.services[indexes][share.input.target][indexV].source = event.target
-      //         }
-      //       }
-      //     }
-      //   })
-      // }
-      
+
     },
     getStatus(serviceIdx){
       return this.statuses[serviceIdx] && this.statuses[serviceIdx].running
@@ -206,28 +310,7 @@ export default {
         })
       })
     },
-    async cancel_procedure(procedureKey){
-      await FileService.cancelProcedure({
-        procedure: procedureKey
-      }).then((response)=>{
-        this.$swal.fire({
-          position: 'center',
-          icon: 'success',
-          showConfirmButton:true,
-          title:  response.data.message
-        })
-  			this.count +=1
-
-      }).catch((error)=>{
-        console.error(error)
-        this.$swal.fire({
-          position: 'center',
-          icon: 'error',
-          showConfirmButton:true,
-          title:  error.response.data.message
-        })
-      })
-    },
+    
     async getStatus(){
       const $this = this
       try{
@@ -240,8 +323,10 @@ export default {
         })
         try{
           if (!this.selected.name){
-            console.log(this.modules)
             this.selected = this.modules[this.selected_index]
+          }
+          if (!this.selectedProcedure.name){
+            this.selectedProcedure = this.selected.procedures[this.selected_index]
           }
         } catch(err){
           console.error("Could not assign defaults in module, ", err)
@@ -253,45 +338,13 @@ export default {
         this.intervalChecking = false
       }
     },
-    async start_procedure(name, services){
-      this.$swal.fire({
-          position: 'center',
-          icon: 'success',
-          showConfirmButton:true,
-          title:  "Sent Procedure job to run..."
-      })
-      await FileService.startProcedure({
-        procedure: name, 
-        services: this.services
-      }).then((response)=>{
-			  this.count +=1
-        this.$swal.fire({
-          position: 'center',
-          icon: 'success',
-          showConfirmButton:true,
-          title:  response.data.message
-        })
-      }).catch((error)=>{
-        console.error("-----------------", error)
-        this.$swal.fire({
-          position: 'center',
-          icon: 'error',
-          showConfirmButton:true,
-          title:  error.response.data.message
-				})
-      })
-    },
+    
     dependsFind(service){
       let returnVal = true
       if (service.depends){
         service.depends.forEach((item)=>{
           let type = item.type
           let target = item.id
-          console.log(this.status)
-          if (target in this.status.services){
-            console.log(type, target)
-
-          }
 
         })
       }
@@ -302,6 +355,7 @@ export default {
     return{
       drawer: true,
       mini: true,
+      services_selected: [],
       selectedProcedure: {},
       selected_index: 0,
       logdialog: false,
@@ -323,6 +377,7 @@ export default {
       defaultModule: 1,
       shared: [],
       status: {},
+      job: null,
       tabService: 0,
     }
   },
@@ -333,17 +388,18 @@ export default {
         this.selected = newValue[this.defaultModule]
       }
     },
+    selectedProcedure(newValue){
+      this.services_selected = newValue.services
+      const $this = this
+      if (this.interval){
+        clearInterval(this.interval)
+      }
+      $this.getJobStatus()
+      this.interval = setInterval(()=>{
+          $this.getJobStatus()
+      }, 2000)
+    }
 
-    // selected(newValue, oldValue){
-    //   this.selectedProcedure = null
-    //   let index  = this.modules.findIndex(data => data === this.selected)
-    //   this.selected_index = index
-    //   this.$emit("updateSelected", { variant: newValue, module: this.moduleIndex }   )
-    //   this.selectedProcedure = this.modules[index].procedures[this.defaultProcedure]
-    //   this.selectedProcedure = this.modules[index].procedures[this.defaultProcedure]
-    //   this.procedure_selected_index = 0
-    //   console.log(this.selectedProcedure, "<<", )
-    // }
   },
   computed: {
     computed_services(){
@@ -375,7 +431,6 @@ export default {
     selected_procedure_index(){
       if (this.selected && this.selected.name){
         let index  = this.selected.procedures.findIndex(data => data === this.selectedProcedure)
-        console.log(this.selectedProcedure, index)
         if (index == -1){
           return 0
         } else{
@@ -397,7 +452,6 @@ export default {
   mounted(){
     const $this = this;
     $this.getStatus()
-    console.log(this.module)
     // this.interval = setInterval(()=>{
     //   $this.getStatus()
     // }, 3000)

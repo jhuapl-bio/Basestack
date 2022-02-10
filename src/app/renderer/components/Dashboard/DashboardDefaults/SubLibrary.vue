@@ -60,11 +60,11 @@
         >
         <v-data-table
             style="max-width: 100%"
-            :items="selectedProcedure.dependencies"
+            :items="dependencies"
             :headers="fields"
             :items-per-page="5"
             centered
-            class="elevation-1"			
+            class="elevation-1 "			
             small dense
             :footer-props="{
             showFirstLastPage: true,
@@ -86,10 +86,9 @@
                 </v-tooltip>
             </template>
             <template v-slot:item.status.building="{ item }">
-                {{item.status.building}}
                 <v-badge :dot="!item.status.progress" :content="( item.status.progress ? `${item.status.progress}%` : null)" v-if="item.status.building "  x-small color="info" >
                     <v-progress-circular x-small  bottom
-                        indeterminate 
+                        indeterminate  
                         :size="15"
                         color="blue-grey"
                     ></v-progress-circular>                                
@@ -160,6 +159,18 @@
             <template v-slot:item.label="{ item }">
                 {{ ( item.label ? item.label : item.target   )}}
             </template>
+            <template v-slot:item.overwrite="{ item,index }">
+                
+                    <v-checkbox
+                        v-model="overwrites[index]"
+                        on-icon="$check-square"
+                        class="align-center justify-center text-xs-center" 
+                        off-icon="$square"
+                        color="primary"
+                    >
+                    
+                    </v-checkbox> 
+            </template>
             <template v-slot:item.build="{ item, index }">
                 <!-- <v-btn class="btn" x-small color="primary" 
                     style=""
@@ -198,7 +209,7 @@
 
 <script>
 import FileService from '@/services/File-service.js'
-
+const path = require("path")
 export default {
 	name: 'sublibrary',
     components: {
@@ -212,7 +223,12 @@ export default {
             else {
                 return 0
             }
+        },
+        
+        dependencies(){
+            return this.selectedProcedure.dependencies
         }
+        
 	},
 	data(){
 		return {
@@ -220,6 +236,7 @@ export default {
             procedures: [],
             defaultProcedure:0,
             procedures: [],
+            overwrites: [],
             stored: {},
             fields: [
                 {
@@ -252,6 +269,11 @@ export default {
                     align: "center",
                     text: 'Building'
                 },
+                {
+                    value: 'overwrite',
+                    align: "center",
+                    text: 'Overwrite'
+                },
                 
                 {
                     value: 'cancel',
@@ -283,6 +305,12 @@ export default {
                 this.selectedProcedure = {}
             }
         },
+        selectedProcedure(newValue){
+            console.log("new")
+            this.overwrites = newValue.dependencies.map((f,i)=>{
+                return f.overwrite
+            })
+        },
         module(newValue){
             console.log("module changed")
             if (  this.stored[newValue.name] && this.stored[newValue.name][this.moduleIdx]  ){
@@ -295,6 +323,23 @@ export default {
         }
     },
 	methods:{
+        openDir(link,format){
+            try{       
+                console.log(format)
+                if(format == 'file'){
+                    this.$electron.shell.openPath(path.dirname(link))
+                } else{
+                    this.$electron.shell.openPath(path.dirname(link))
+                }
+          } catch(err){
+            this.$swal.fire({ 
+              position: 'center',
+              icon: 'error',
+              showConfirmButton:true,
+                      title:  "Could not open the path: "+link
+            })
+          }
+        },
         async getStatus(){
             const $this = this
             try{
@@ -319,11 +364,7 @@ export default {
                         procedures: this.procedures
                     }
                 }
-                
-                // this.update = this.update + 1
-                // if (!this.isHovered){
-                //     this.isHovered = this.modules_new[6]
-                // }
+                this.$set(this.selectedProcedure , 'dependencies', this.procedures[this.selectedProcedure.idx].dependencies)
                 
             } catch(err){
                 this.initial=false
@@ -335,11 +376,12 @@ export default {
         async buildModuleDependency(name, index){
             let procedureIdx  = this.selectedProcedure.idx
             const $this = this
-            console.log(this.procedures, this.selectedProcedure)
+            let overwrite = this.dependencies[index].overwrite
             FileService.buildProcedureDependency({
                 module: $this.moduleIdx,
                 catalog: $this.catalog.name,
                 procedure: procedureIdx,
+                overwrite: overwrite,
                 dependency: index 
             })
             .then((response)=>{
@@ -390,10 +432,11 @@ export default {
                 }) 
         },
         async cancelModuleDependency(name, index){
-            FileService.cancelModuleDependency({
+            FileService.cancelProcedureDependency({
                 module: this.moduleIdx,
                 catalog: this.catalog.name,
-                dependency:index,
+                procedure: this.selectedProcedure.idx,
+                dependency: index
             })
             .then((response)=>{
                 this.$swal({
@@ -432,7 +475,10 @@ export default {
 <style>
 #logs{
 }
-
+.v-input__slot {
+  align-items: center;
+  justify-content: center;
+}
 
 
 

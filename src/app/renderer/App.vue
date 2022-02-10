@@ -11,20 +11,21 @@
   <v-app id="app" class="px-0 py-0" 
 	>
 		<v-navigation-drawer
-				v-model="drawer"
+				v-model="drawer"  
 				class="elevation-12 nav-drawer" app
 				:mini-variant.sync="mini"
-				mini-variant-width="56"
+				mini-variant-width="64"
 				permanent  
 			>
 			<!-- <v-layout column fill-height height="20px" style="overflow-y:auto"> -->
 				<v-list
 					dense class="procedure-list"
 				>
-					<v-list-item-group v-model="tab" @click="selected='procedures'">
+					<v-list-item-group  @click="selected='procedures'">
 					<v-list-item
 						v-for="(entry, key) in catalog"  
 						v-bind:key="entry.name"
+            @click="tab = key"
 						@mouseover="isHovered = entry.name; " 
 						@mouseleave="isHovered = null"
 						@change="selected = 'procedures'"
@@ -32,7 +33,7 @@
 						<v-list-item-action>
 							<v-tooltip top>
 							<template v-slot:activator="{ on }">
-								<v-icon  :color="getColor(key, 0.8)" class="mr-2" small>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
+								<v-icon  :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
 							</template>
 							{{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
 							</v-tooltip>
@@ -49,23 +50,24 @@
 			<!-- </v-layout>			 -->
 			<template v-slot:append>
 				<v-divider></v-divider>
-				<v-list-item-group v-model="tab">
+				<v-list-item-group >
 				<v-list-item
 					v-for="[key, entry] in Object.entries(defaults)"
-					justify-end
+					justify-end 
+          @click="tab = key"
 					v-bind:key="entry.name" @change="selected = 'defaults'"
 					
 				>							
 					<v-list-item-action>
 						<v-tooltip left>
 							<template v-slot:activator="{ on }">
-								<v-icon v-on="on" small >{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
+								<v-icon v-on="on" class="" medium >{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
 							</template>
 							{{ (  collapsed ? entry.title : entry.tooltip) }}
 						</v-tooltip>
 					</v-list-item-action>
 					<v-list-item-content>
-						<v-list-item-title>{{parseInt(key)+1}}. {{ ( entry.title  ? entry.title : key  ) }}</v-list-item-title>
+						<v-list-item-title>{{ ( entry.title  ? entry.title : key  ) }}</v-list-item-title>
 					</v-list-item-content>
 				</v-list-item>
 				</v-list-item-group >
@@ -105,14 +107,14 @@
         >
           <template v-slot:item="{ item }" >
             <v-list-item-avatar left>
-              <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
+              <v-icon  small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
             </v-list-item-avatar>
             
             <v-list-item-content outlined>
               <v-list-item-title >{{ item.title ? item.title : item.name }}</v-list-item-title>
               <v-list-item-subtitle>
                 <v-chip
-                  x-small
+                  small
                   v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
                 >
                 {{tag}}
@@ -130,7 +132,7 @@
               close
               v-on="on"
             >
-            <v-icon class="mr-1 "  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
+            <v-icon class="mr-1 "  small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
             {{ item.title ? item.title : item.name }}
             </v-chip>
           </template>
@@ -330,17 +332,17 @@ export default {
 	  labels(){
 		  let i = 0;
 		  let labels = Object.keys(this.procedures)
-		  return labels
+		  return labels 
 	  }
 	},
   data(){
     return {
-      tab:4,
+      tab:2,
 			mini:true,
       defaultModule: {},
 			version: process.env.version_basestack,
 			drawer:false,
-			tabProcedure: 4, 
+			tabProcedure: 0, 
 			sel: 0,
 			selected: 'procedures',
 			colorList: [

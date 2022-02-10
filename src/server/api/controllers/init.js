@@ -42,7 +42,7 @@ export async function init_dind(){
 		logger.error(`${err}, error in init procedure`)
 		throw err
 	} 
-} 
+}  
  
 export function define_service(name, service){  
 	let service_obj = new Service( 
@@ -102,9 +102,9 @@ export function create_service(key, service){
 	service_obj.setOptions()
 	return service_obj
 }
-export  function create_module(module){
+export  function create_module(module, key){
 	try{    
-		let modl = new Module(module)
+		let modl = new Module(module, module.name, key)
 		modl.initProcedures()
 		if (!store.catalog[module.name]){
 			store.catalog[module.name] = new Catalog(module)
@@ -171,7 +171,7 @@ export async function init_base_modules(){
 		logger.info("Initiating status of modules and meta in fetch.........................") 
 		for (let [key, module] of store.config.modules.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
             let staged_module = []	 
-			let modl = create_module(module)
+			let modl = create_module(module, key)
 			store.catalog[module.name].modules.push(modl)
 		}
 		return 

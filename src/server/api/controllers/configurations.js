@@ -2,10 +2,26 @@
 const { store  } = require("../../config/store/index.js")
 const { parseConfigVariables } = require("../../../shared/definitions.js")
 const { set_stored } = require("./fetch.js")
+const { Job } = require("../orchestrators/job")
 const { getFolders, readFile, getFiles} = require("./IO.js")
-import path from "path"
-const YAML = require("yaml") 
+import path from "path" 
+const YAML = require("yaml")  
 
+export async function create_job(config, variables, services){
+    let job = new Job()
+    job.defineConfiguration(config)
+    if (!services){
+        services = config.services.map((d,i)=>{
+            return i
+        })
+        
+    }
+    await job.defineServices(services)
+    if (variables){ 
+        job.setVariables(variables)
+    }
+    return job
+}
 
 
 async function import_cfgs(module, type){
@@ -26,12 +42,17 @@ async function import_cfgs(module, type){
             results.forEach((result, i)=>{ 
                 let inner_file_read = [] 
                 result.value.forEach((dir)=>{
-                    if  (module.format == 'dir'){
-                        promises_files.push(readFile(path.join( dir.path,  module.filename )    )     )
-                        files_marked.push(path.join( dir.path,  module.filename )    )
-                    } else {
-                        promises_files.push(readFile(dir )     )
-                        files_marked.push(( dir  ))
+                    try{
+                        
+                        if  (module.format == 'dir'){
+                            promises_files.push(readFile(path.join( dir.path,  module.filename )    )     )
+                            files_marked.push(path.join( dir.path,  module.filename )    )
+                        } else {
+                            promises_files.push(readFile(dir )     )
+                            files_marked.push(( dir  ))
+                        }
+                    } catch(err){
+                        console.error(err)
                     }
                 })
             })
@@ -41,16 +62,20 @@ async function import_cfgs(module, type){
         results.forEach((result, i)=>{
             if (result.status == 'fulfilled'){
                 let config = [];
+                
                 try{
                     config = parseConfigVariables(result.value, store.system)
+                    if(config){
+                        return_data.push(config)
+                    }
                     // config = parseConfigVariables(result.value, module.type, files_marked[i])
                     // config.path = files_marked[i]
                 } catch (err_2){ 
                     store.logger.error(`______Init YAML/JSON ERROR for ${result.value}___________`)
                     store.logger.error(err_2)
                     store.logger.error("_________________________")
-                }                
-                return_data.push(config)
+                }   
+                
             }
         })
         if (type !== 'docker'){
@@ -68,7 +93,7 @@ async function import_cfgs(module, type){
         }
         return return_data
     } catch(err){ 
-        console.error(err,"<<<")
+        store.logger.error("%o could not import configurations", err )
         throw err
     }
 }

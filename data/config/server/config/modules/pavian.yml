@@ -1,6 +1,6 @@
 - name: "pavian"
   title: "Pavian"
-  icon: "dna"
+  icon: "tree"
   version: 1.0
   module: True
   tags: 
@@ -21,6 +21,15 @@
         - "metagenome"
         - "pavian"
       init: false 
+      variables:
+        port:
+          label: "Served Port"
+          column: 12
+          element: "render"
+          port: true
+          bind:
+            from: "80"
+            to: "8087"
       tooltip: "View Kraken-style Classification Reports"
       dependencies:
         - target: "florianbw/pavian"
@@ -39,15 +48,7 @@
           force_restart: true
           ports:  
             - 8087:80
-          variables:
-            port:
-              label: "Served Port"
-              column: 12
-              element: "render"
-              port: true
-              bind:
-                from: "80"
-                to: "8087"
+          
         
         
           

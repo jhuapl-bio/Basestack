@@ -16,6 +16,54 @@
         - "gene"
         - "staphb"
         - "alignment"
+      variables:
+        fasta:
+          label: "FASTA File"
+          element: "file"
+          hint: "Genome FASTA File"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.fasta.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1" 
+          source: null
+        geneDB:
+          label: "Gene DB FASTA"
+          option: 0
+          options:
+            - element: "file"
+              name: "ResFinder Gamma Combined DB for AMR"
+              hint: "Combined ResFinder AMR FSA file downloaded from GitHub Source"
+              bind_parent_dir: true
+              source: "${writePath}/workflows/gamma/resfinder_combined.fsa"
+              bind: 
+                from: "%{variables.geneDB.source}"
+                to: "/opt/databases" #This ${} is converted into the variable attribute of selected option only!
+            - element: "file"
+              hint: "DB"
+              label: "Custom Database for AMR"
+              name: "Custom DB File"
+              bind_parent_dir: true
+              bind: 
+                from: "%{variables.geneDB.source}"
+                to: "/opt/databases"
+              class: "wb-100  p-3 mb-1"
+              source: null
+        gamma:
+          watch: True
+          output: True
+          label: "GAMMA file"
+          hint: ".gamma file containing AMR calls in consensus genome compared to used DB"
+          element: "file"
+          source: "<<directory(%{variables.fasta.source})>>/<<basename,trim(%{variables.output.source})>>.gamma"
+          target: "%{variables.fasta.bind.to}/<<basename,trim(%{variables.output.source})>>.gamma"
+        output:
+          label: "Output Name"
+          element: "string"
+          hint: "Text String to name output files as .gamma (tsv) format"
+          bind_parent_dir: true
+          class: "wb-100  p-3 mb-1"
+          source: "output"
       dependencies: 
         - target: "staphb/gamma"
           label: "staphb/gamma"
@@ -66,49 +114,5 @@
           command: ["bash","-c", "ls -lht /opt/databases/ && GAMMA.py $fasta $geneDB $output"
           ]
           workingdir: "/opt/data"
-          outputs:
-            gamma:
-              watch: True
-              label: "GAMMA file"
-              hint: ".gamma file containing AMR calls in consensus genome compared to used DB"
-              type: "file"
-              path: "^directory(%{variables.fasta.source})/${output}.gamma"
-          variables:
-            fasta:
-              label: "FASTA File"
-              element: "file"
-              hint: "Genome FASTA File"
-              bind_parent_dir: true
-              bind: 
-                from: "%{variables.fasta.source}"
-                to: "/opt/data"
-              class: "wb-100  p-3 mb-1" 
-              source: null
-            geneDB:
-              label: "Gene DB FASTA"
-              options:
-                - element: "file"
-                  name: "ResFinder Gamma Combined DB for AMR"
-                  hint: "Combined ResFinder AMR FSA file downloaded from GitHub Source"
-                  bind_parent_dir: true
-                  source: "${writePath}/workflows/gamma/resfinder_combined.fsa"
-                  bind: 
-                    from: "%{variables.geneDB.source}"
-                    to: "/opt/databases" #This ${} is converted into the variable attribute of selected option only!
-                - element: "file"
-                  hint: "DB"
-                  label: "Custom Database for AMR"
-                  name: "Custom DB File"
-                  bind_parent_dir: true
-                  bind: 
-                    from: "%{variables.fasta.source}"
-                    to: "/opt/databases"
-                  class: "wb-100  p-3 mb-1"
-                  source: null
-            output:
-              label: "Output Name"
-              element: "string"
-              hint: "Text String to name output files as .gamma (tsv) format"
-              bind_parent_dir: true
-              class: "wb-100  p-3 mb-1"
-              source: null
+            
+          

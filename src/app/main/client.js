@@ -90,6 +90,9 @@ export class  Client {
             icon: path.join(__dirname, '..', "static", 'img', 'jhulogo.png')
           })
         }
+        this.mainWindow.webContents.session.clearCache()
+
+
           const winURL = (process.env.NODE_ENV === 'development'
         ? `http://localhost:9080`
         : `file://${__dirname}/index.html`);

@@ -12,7 +12,7 @@ const {  listImages, fetch_external_config, set_stored } = require("./fetch.js")
 
 
 const { docker_init } = require("./init.js")
-const lodash = require("lodash")
+const lodash = require("lodash") 
 
  
 
@@ -26,15 +26,15 @@ export async function init(){
 	let response_init = await init_base_modules()
 	// let response_init_services = await init_base_services()
 	 
-	fetch_external_config('modules').then((modules)=>{
-		if (module){
-			set_stored(module.name, modules)
-		} else {
-			store.logger.info("No modules found at remote location")
-		}
-	}).catch((err)=>{
-		store.logger.error("Could not get modules externally, check connections %o", err)
-	})
+	// fetch_external_config('modules').then((modules)=>{
+	// 	if (module){
+	// 		set_stored(module.name, modules)
+	// 	} else {
+	// 		store.logger.info("No modules found at remote location")
+	// 	}
+	// }).catch((err)=>{
+	// 	store.logger.error("Could not get modules externally, check connections %o", err)
+	// })
 	
 	console.log("finished initializing")
 }

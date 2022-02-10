@@ -10,12 +10,13 @@
   <div id="file" @drop.prevent="addDropFile" @dragover.prevent >
   	<v-file-input 
         v-model="value"
+        :disabled="source.output"
         :label="(source.hint ? source.hint : '')" 
         show-size 
         counter
     > 
     </v-file-input >
-    <v-alert
+    <!-- <v-alert
       v-if="cached" dense
       color="blue lighten-3"
       icon="$question-circle"
@@ -23,7 +24,7 @@
     >
       This variable populated from cache
     </v-alert>
-    
+     -->
     
   </div>
 </template>

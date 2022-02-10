@@ -34,7 +34,7 @@
         </v-btn>
         <br><br>
         <v-spacer></v-spacer>
-        <v-subheader  style="word-wrap: anywhere;" class="entry-label" v-if="source.source" >{{source.source}} </v-subheader>
+        <v-subheader  style="word-wrap: anywhere;" class="entry-label" v-if="directory" >{{directory}} </v-subheader>
     </div>
   </div>
 </template>
@@ -68,6 +68,7 @@ export default {
         this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
             $this.directory = message
             $this.source.source = message
+            console.log($this.source,"changed dir")
         })
         this.$electron.ipcRenderer.send("openDirSelect", "")
 		},

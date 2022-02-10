@@ -30,6 +30,7 @@ export class Procedure {
 		this.name = procedure.name  
         this.type = 'procedure'
         this.config = procedure  
+        this.i =0
         this.dependencies  = cloneDeep(procedure.dependencies).map((d)=>{ 
             d.streamObj = null
             // this.fetchVersion(d) 
@@ -45,14 +46,15 @@ export class Procedure {
             d.status= status
             return d
         })
+        
         this.services_config = cloneDeep(procedure.services)
-        this.service_steps = {}
+        this.service_steps = {} 
 		this.container = null; 
 		this.cmd = null; 
-		this.options = {};
-        this.services = [];
+		this.options = {};  
+        this.services = []; 
 		this.streamObj = null;
-        this.orchestrator = null;
+        this.orchestrator = null; 
         this.status = {
             error: null, 
             stream: null,
@@ -67,16 +69,35 @@ export class Procedure {
         this.services_config.forEach((service)=>{
             this.service_steps[service] = false
         })
+        const $this = this
+        for (let [key, value] of Object.entries($this.config.variables)){
+            if (value.options){
+                if (!value.option){
+                    value.option = 0
+                } 
+                value.optionValue = value.options[value.option]
+                if (!value.options[value.option].source){
+                    value.source = value.optionValue
+                }
+            }
+            if (value.load){
+                readFile(value.load).then((data)=>{
+                    value.source = JSON.parse(data)
+                }).catch((err)=>{
+                    store.logger.error("%o error in reading file to load for server %s", err, $this.name)
+                })
+            }
+        }
 
-	}
-    async init(){
+	} 
+    async init(){ 
         // await this.defineDependencies()
         this.dependencyCheck()
         await this.initServices()
         return 
     }
     async defineDependencies(){
-        const $this = this;
+        const $this = this; 
         this.dependencies = [] 
         // if (this.config.dependencies){
         //     this.config.dependencies.forEach((dependency)=>{
@@ -84,8 +105,8 @@ export class Procedure {
         //     })
         // }
     }
-    async initServices(){
-        this.services_config.forEach((service)=>{
+    async initServices(token){
+        this.services_config.forEach((service, i)=>{
             let service_obj = new Service(service)
             service_obj.setOptions()
             this.services.push(service_obj)
@@ -95,8 +116,9 @@ export class Procedure {
 
 
 
-    async create_interval (){
+    async create_interval (){ 
         const $this = this
+        let i = 0
         let interval = setInterval(()=>{
             if (!$this.interval.checking){
                 $this.interval.checking = true
@@ -141,6 +163,7 @@ export class Procedure {
         let dependencies = this.dependencies 
 		return new Promise(function(resolve,reject){
 			let promises = []
+            
 			dependencies.forEach((dependency, index)=>{ 
 				if (dependency.type == "docker"){
 					promises.push(check_image(dependency.target))
@@ -166,8 +189,16 @@ export class Procedure {
 						dependencies[index].status.exists = false
 						dependencies[index].status.version = null
 					}
+                    // if ($this.i %2 ==0){
+                    //     dependencies[index].status.building =true
+                    // }
+                    // else{
+                    //     dependencies[index].status.building =false
+                    // }
+                    
                     v.push(dependency.value)
 				})
+                // $this.i+=1
                 let fully_installed = v.every((dependency)=>{
                     return dependency
                 })
@@ -240,24 +271,6 @@ export class Procedure {
     async statusCheck(){
 		const $this = this;
 		return new Promise(function(resolve,reject){
-            let promises = []
-                let running = false
-                let error = null
-                $this.services.forEach((service, key)=>{
-                    let step = null;
-                    if (service.status.error){
-                        error = `Service: ${key}, Error: ${service.status.error}\n`
-                    }
-                    if(service.status.exists.running){
-                        $this.service_steps[key] = true
-                        running = true
-                    } else {
-                        $this.service_steps[key] = false
-                    }
-                } )
-                $this.status.running = running
-                $this.status.error = error
-                resolve()
             $this.dependencyCheck().then((dependencies)=>{
                 resolve()
             }).catch((err)=>{
@@ -301,49 +314,7 @@ export class Procedure {
     //     })
 
     // }
-    async stop(){
-        const $this = this
-        let promises = []
-        for (let [key, service] of Object.entries(this.services)){
-            if (service.status){
-                promises.push(service.stop())
-            }
-        }
-        let response = await Promise.allSettled(promises)
-        return
-    }
-    async start(variables){
-        const $this = this
-        let services;
-        if (!variables || variables.length != $this.config.services.length ){
-            variables  = [];
-            this.config.services.map((d)=>{
-                variables[d] = { }
-            })
-        }
-        $this.status.error = null
-        $this.status.running = true
-        // return new Promise(function(resolve,reject){
-            let promises = [];
-            for (let i = 0; i < $this.services.length; i++){
-                let service = $this.services[i]
-                if (service.config.orchestrator){
-                    logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
-                } else{
-                    try{
-                        await service.check_then_start({ variables: variables[i]}, true)
-                    } catch(err){
-                        logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
-                        $this.status.error = err
-                    }
-                }
-                // promises.push(service_obj.check_then_start(service.variables, true))
-            }
-            // const serial = funcs =>
-            //     promises.reduce((promise, func) =>
-            //         promise.then(result => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]))
-            return
-    }
+    
     async loadImage(dependency){
 		const $this = this  
         return new Promise(function(resolve,reject){  
@@ -435,10 +406,10 @@ export class Procedure {
                 service.config.workingdir = dependency.workingdir
             }
             if (dependency.bind){ 
-                if (!service.config.binds){
-                    service.config.binds = []
+                if (!service.config.bind){
+                    service.config.bind = []
                 }
-                service.config.binds.push(dependency.bind)
+                service.config.bind.push(dependency.bind)
             }
             if (dependency.command){
                 if (Array.isArray(dependency.command)){
@@ -684,7 +655,6 @@ export class Procedure {
         } else {
             selectedDep  = [ $this.dependencies[dependencyIdx] ]
         }
-        console.log(selectedDep)
         selectedDep.map((dependency_obj, i)=>{            
             // dependency_obj.status.downloading = true
             objs.push(dependency_obj) 
@@ -694,6 +664,9 @@ export class Procedure {
             }
             else{
                 promises.push(removeFile(dependency_obj.target, dependency_obj.type, false) )
+                if (dependency_obj.decompress){
+                    promises.push(removeFile(dependency_obj.decompress.source, 'file', false))
+                }
             }
         })
         let settled_data = await Promise.allSettled(promises)
@@ -730,7 +703,7 @@ export class Procedure {
                 } else { 
                     return {}
                 }
-            })
+            }) 
             variables.forEach((variable, i)=>{
                 for (let [key, value] of Object.entries(variable)){
                     if (value.source && value.source !== '' && parsed_variables[i][key]){
@@ -750,11 +723,11 @@ export class Procedure {
                      
                     let serviceConfigInput = configVariables[link.input.service] //is the service getting info FROM the previous ones
                     let serviceConfigOutput = configVariables[link.output.service] //is the service going INTO the next one
-                    if (! serviceInput ||
+                    if (! serviceInput ||   
                         serviceInput[link.input.variable].source == '' ||
-                        !serviceInput[link.input.variable].source){
-                    
+                        !serviceInput[link.input.variable].source){ 
                      
+                      
                         let targetAttr = serviceConfigOutput[link.output.target][link.output.variable]
                         
                         let inner_variables = targetAttr.path.match(/(\${.+?\}){1}/g)
@@ -772,7 +745,7 @@ export class Procedure {
                     }
                 })
             }
-            // console.log(parsed_variables)
+            // console.log(parsed_variables) 
             return  parsed_variables
         } catch (err){
             logger.error(err)

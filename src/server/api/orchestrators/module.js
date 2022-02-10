@@ -8,9 +8,10 @@ const {  removeFile, decompress_file, checkExists } = require("../controllers/IO
 const { spawnLog } = require("../controllers/logger.js") 
 const {  remove_images } = require("../controllers/post-installation.js")
 export  class Module {      
-	constructor(module){       
+	constructor(module, catalog, moduleIdx){       
         this.name= module.name 
-		
+        this.module = moduleIdx
+        this.catalog = catalog
         this.type = 'module'
         this.config = module
         this.procedures = []
@@ -88,8 +89,8 @@ export  class Module {
     async initProcedures(){
         let promises = []
         const $this = this;
-        cloneDeep(this.config.procedures).forEach((procedure)=>{
-            promises.push(this.defineProcedure(procedure))
+        cloneDeep(this.config.procedures).forEach((procedure, idx)=>{
+            promises.push(this.defineProcedure(procedure, idx))
         })
         Promise.allSettled(promises).then((response)=>{
             response.forEach((item, i)=>{
@@ -101,8 +102,8 @@ export  class Module {
             })
         })
     }
-    async defineProcedure(procedure){
-        let proce = new Procedure(procedure)
+    async defineProcedure(procedure, procedureIdx){
+        let proce = new Procedure(procedure, this.catalog, this.module, procedureIdx )
         await proce.init() 
         return proce
     }

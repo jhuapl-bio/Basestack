@@ -22,6 +22,35 @@
         - "minimap2"
         - "alignment"
         - "genomics"
+      variables:
+        file:
+          label: "FASTA/Q File"
+          element: "file"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.file.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "%{variables.file.bind.to}/%{variables.file.source}"
+        ref:
+          label: "Reference to align against"
+          class: "wb-100 p-3 mb-1"
+          element: "file" 
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.ref.source}"
+            to: "/opt/ref"
+          source: null
+          target: "%{variables.ref.bind.to}/%{variables.ref.source}"
+        sam:
+          label: "Alignment File"
+          hint: "Alignment file to be used in downstream analysis"
+          watch: True
+          output: True
+          element: "file"
+          source: "%{variables.file.source}.sam" 
+      
       tooltip: "Run a Minimap2 Alignment against reference FASTA files"
       services:
         - name: minimap2
@@ -33,32 +62,5 @@
           force_restart: false
           force_init: false
           command: ["bash","-c", "minimap2  ${file} ${ref} -a -o ${file}.sam"]
-          outputs:
-            sam:
-              label: "Alignment File"
-              hint: "Alignment file to be used in downstream analysis"
-              watch: True
-              type: "file"
-              path: ${file}.sam 
-          variables:
-            file:
-              label: "FASTA/Q File"
-              element: "file"
-              bind_parent_dir: true
-              bind: 
-                from: "%{variables.file.source}"
-                to: "/opt/data"
-              class: "wb-100  p-3 mb-1"
-              source: null
-              target: "%{variables.file.bind.to}/%{variables.file.source}"
-            ref:
-              label: "Reference to align against"
-              class: "wb-100 p-3 mb-1"
-              element: "file" 
-              bind_parent_dir: true
-              bind: 
-                from: "%{variables.ref.source}"
-                to: "/opt/ref"
-              source: null
-              target: "%{variables.ref.bind.to}/%{variables.ref.source}"
+            
       

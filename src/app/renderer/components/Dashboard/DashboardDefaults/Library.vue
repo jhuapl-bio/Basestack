@@ -1,163 +1,162 @@
 <template>
   <!-- <v-container fluid> -->
     <v-row  no-gutters  >
-        <v-card dense style="max-height: 70%; overflow-y:auto">
-            <v-expansion-panels accordion style="text-align:left;"  v-model="panel">
-                <v-col  :sm="(isHovered.name !== catalog.name ? 4 : 4 )"   v-for="(catalog, key) in catalog" :key="catalog.name ">
-                    <v-card dense class="configure mx-0 elevation-4 " >
-                        <v-expansion-panel  v-model="panel" expand  @click="isHovered = catalog">
-                                    <v-expansion-panel-header 
-                                        :color="(isHovered.name == catalog.name ? 'grey' : 'light')">
-                                        <v-toolbar-title  class=" pl-0 " v-bind:style="{ color: getColor(key, 0.95, (isHovered.name == catalog.name  ), false), fontSize: '0.9em' }">
-                                            {{ catalog.title ? catalog.title : catalog.name }}
-                                        </v-toolbar-title>
-                                        <v-spacer></v-spacer> 
-                                        <v-badge v-if="catalog.status"  x-small :color="(catalog.status  && catalog.status.installed ? 'green' : 'orange darken-2')">
-                                            <template v-slot:badge>
-                                                <v-tooltip bottom>
-                                                    <template v-slot:activator="{ on }">
-                                                        <v-icon 
-                                                            x-small   v-on="on">
-                                                            {{ ( catalog.status && catalog.status.installed ? '$check' : '$exclamation' ) }}
-                                                        </v-icon>
-                                                    </template>
-                                                    {{ catalog.status.installed  ? 'Fully Installed ' : 'Module not fully installed'  }}
-                                                </v-tooltip>
-                                            </template>
-                                        </v-badge>
-                                    </v-expansion-panel-header>
-                                    <v-expansion-panel-content>
-                                    
-                                    <v-card-actions >
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon small color="primary" v-on="on" class="configure " @click="buildModule(isHovered.name)">$download</v-icon>
-                                            </template>
-                                            Build Entire Module
-                                        </v-tooltip>
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" small color="indigo " v-on:click="fetchAllRemoteLibrary(isHovered.name)" style="text-align:right" class="configure ml-2">$external-link-alt</v-icon>
-                                            </template>
-                                            Fetch Versions for Module
-                                        </v-tooltip>
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" small color="orange darken-2" v-on:click="deleteModule(isHovered.name)" style="text-align:right" class="configure ml-2">$trash-alt</v-icon>
-                                            </template>
-                                            Delete Entire Module and its dependencies
-                                        </v-tooltip>
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">    
-                                                <v-icon v-on="on" small color="light " v-on:click="cancelModule(isHovered.name)"   style="text-align:right" class="configure ml-2">$times-circle</v-icon>
-                                            </template>
-                                            Cancel Module Build
-                                        </v-tooltip>
-                                        <v-spacer></v-spacer>
-                                        
-                                        
-                                    </v-card-actions>
-                                    <v-card-actions >
-                                        <v-autocomplete
-                                            v-model="stagedRemote"
-                                            :items="catalog.remotes"
-                                            :disabled="!(catalog.remotes && catalog.remotes.length > 0)"
-                                            outlined
-                                            :hint="`Choose remote version to load`"
-                                            persistent-hint
-                                            item-text="version"
-                                            item-value="version"
-                                            :item-disabled="'loaded'"
-                                            :item-color="'primary'"
-                                            dense 
-                                            :label="(catalog.remotes && catalog.remotes.length > 0 ? 'Remote Versions' : 'No Remote Versions')"
-                                        >
-                                            <template v-slot:item="{ item }" >
-                                                <v-list-item-avatar left>
-                                                    <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
-                                                </v-list-item-avatar>
-                                                
-                                                <v-list-item-content outlined  class=" " >
-                                                    <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
-                                                    
-                                                    <v-spacer></v-spacer>
-                                                    <v-list-item-subtitle>
-                                                        <v-chip
-                                                        x-small
-                                                        v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
-                                                        >
-                                                        {{tag}}
-                                                        </v-chip>
-                                                    </v-list-item-subtitle>
-                                                
-                                                </v-list-item-content>
-                                                <v-list-item-action>
-                                                    <v-subheader v-if="item.loaded">Installed</v-subheader>
-                                                    <v-tooltip v-if="!item.loaded" bottom>
-                                                        <template v-slot:activator="{ on }">    
-                                                            <v-icon v-on="on" small color="light " v-on:click="loadRemoteModule(item)"   style="text-align:right" class="configure ml-2">$download</v-icon>
-                                                        </template>
-                                                        Load Remote Module
-                                                    </v-tooltip>
-                                                </v-list-item-action>
-                                            </template>
-                                            <template  v-if="stagedRemote && !stagedRemote.loaded" v-slot:append>
+        
+        <v-expansion-panels  style="text-align:left;"  v-model="panel">
+            <v-col  :sm="(isHovered.name !== catalog.name ? 4 : 4 )"   v-for="(catalog, key) in catalog" :key="catalog.name ">
+                <v-card dense class="configure mx-0 elevation-4 " >
+                    <v-expansion-panel  v-model="panel" expand  @click="isHovered = catalog">
+                                <v-expansion-panel-header 
+                                    :color="(isHovered.name == catalog.name ? 'grey' : 'light')">
+                                    <v-toolbar-title  class=" pl-0 " v-bind:style="{ color: getColor(key, 0.95, (isHovered.name == catalog.name  ), false), fontSize: '0.9em' }">
+                                        {{ catalog.title ? catalog.title : catalog.name }}
+                                    </v-toolbar-title>
+                                    <v-spacer></v-spacer> 
+                                    <v-badge v-if="catalog.status"  x-small :color="(catalog.status  && catalog.status.installed ? 'green' : 'orange darken-2')">
+                                        <template v-slot:badge>
                                             <v-tooltip bottom>
+                                                <template v-slot:activator="{ on }">
+                                                    <v-icon 
+                                                        x-small   v-on="on">
+                                                        {{ ( catalog.status && catalog.status.installed ? '$check' : '$exclamation' ) }}
+                                                    </v-icon>
+                                                </template>
+                                                {{ catalog.status.installed  ? 'Fully Installed ' : 'Module not fully installed'  }}
+                                            </v-tooltip>
+                                        </template>
+                                    </v-badge>
+                                </v-expansion-panel-header>
+                                <v-expansion-panel-content>
+                                
+                                <v-card-actions >
+                                    <v-tooltip bottom>
+                                        <template v-slot:activator="{ on }">
+                                            <v-icon small color="primary" v-on="on" class="configure " @click="buildModule(isHovered.name)">$download</v-icon>
+                                        </template>
+                                        Build Entire Module
+                                    </v-tooltip>
+                                    <v-tooltip bottom>
+                                        <template v-slot:activator="{ on }">
+                                            <v-icon v-on="on" small color="indigo " v-on:click="fetchAllRemoteLibrary(isHovered.name)" style="text-align:right" class="configure ml-2">$external-link-alt</v-icon>
+                                        </template>
+                                        Fetch Versions for Module
+                                    </v-tooltip>
+                                    <v-tooltip bottom>
+                                        <template v-slot:activator="{ on }">
+                                            <v-icon v-on="on" small color="orange darken-2" v-on:click="deleteModule(isHovered.name)" style="text-align:right" class="configure ml-2">$trash-alt</v-icon>
+                                        </template>
+                                        Delete Entire Module and its dependencies
+                                    </v-tooltip>
+                                    <v-tooltip bottom>
+                                        <template v-slot:activator="{ on }">    
+                                            <v-icon v-on="on" small color="light " v-on:click="cancelModule(isHovered.name)"   style="text-align:right" class="configure ml-2">$times-circle</v-icon>
+                                        </template>
+                                        Cancel Module Build
+                                    </v-tooltip>
+                                    <v-spacer></v-spacer>
+                                    
+                                    
+                                </v-card-actions>
+                                <v-card-actions >
+                                    <v-autocomplete
+                                        v-model="stagedRemote"
+                                        :items="catalog.remotes"
+                                        :disabled="!(catalog.remotes && catalog.remotes.length > 0)"
+                                        outlined
+                                        :hint="`Choose remote version to load`"
+                                        persistent-hint
+                                        item-text="version"
+                                        item-value="version"
+                                        :item-disabled="'loaded'"
+                                        :item-color="'primary'"
+                                        dense 
+                                        :label="(catalog.remotes && catalog.remotes.length > 0 ? 'Remote Versions' : 'No Remote Versions')"
+                                    >
+                                        <template v-slot:item="{ item }" >
+                                            <v-list-item-avatar left>
+                                                <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
+                                            </v-list-item-avatar>
+                                            
+                                            <v-list-item-content outlined  class=" " >
+                                                <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
+                                                
+                                                <v-spacer></v-spacer>
+                                                <v-list-item-subtitle>
+                                                    <v-chip
+                                                    x-small
+                                                    v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
+                                                    >
+                                                    {{tag}}
+                                                    </v-chip>
+                                                </v-list-item-subtitle>
+                                            
+                                            </v-list-item-content>
+                                            <v-list-item-action>
+                                                <v-subheader v-if="item.loaded">Installed</v-subheader>
+                                                <v-tooltip v-if="!item.loaded" bottom>
                                                     <template v-slot:activator="{ on }">    
-                                                        <v-icon  v-on="on" small color="light " v-on:click="loadRemoteModule(stagedRemote)"   style="text-align:right" class="configure ml-2">$download</v-icon>
+                                                        <v-icon v-on="on" small color="light " v-on:click="loadRemoteModule(item)"   style="text-align:right" class="configure ml-2">$download</v-icon>
                                                     </template>
                                                     Load Remote Module
                                                 </v-tooltip>
-                                            </template>
-                                        </v-autocomplete>
-                                    </v-card-actions>
-                                    <v-card-actions>
-                                        <v-autocomplete
-                                                v-model="selectedModule"
-                                                :items="isHovered.modules"
-                                                icon-color="primary"
-                                                dense outlined
-                                                item-text="version"
-                                                label="Loaded Versions"
-                                                item-value="version"
-                                                @change="selectedModuleEvent($event)"
-                                                :hint="`Choose Installed Module Version`"
-                                                persistent-hint
-                                                return-object
-                                            >
-                                            <template v-slot:item="{ item }" >
-                                                <v-list-item-avatar left>
-                                                <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
-                                                </v-list-item-avatar>
+                                            </v-list-item-action>
+                                        </template>
+                                        <template  v-if="stagedRemote && !stagedRemote.loaded" v-slot:append>
+                                        <v-tooltip bottom>
+                                                <template v-slot:activator="{ on }">    
+                                                    <v-icon  v-on="on" small color="light " v-on:click="loadRemoteModule(stagedRemote)"   style="text-align:right" class="configure ml-2">$download</v-icon>
+                                                </template>
+                                                Load Remote Module
+                                            </v-tooltip>
+                                        </template>
+                                    </v-autocomplete>
+                                </v-card-actions>
+                                <v-card-actions>
+                                    <v-autocomplete
+                                            v-model="selectedModule"
+                                            :items="isHovered.modules"
+                                            icon-color="primary"
+                                            dense outlined
+                                            item-text="version"
+                                            label="Loaded Versions"
+                                            item-value="version"
+                                            @change="selectedModuleEvent($event)"
+                                            :hint="`Choose Installed Module Version`"
+                                            persistent-hint
+                                            return-object
+                                        >
+                                        <template v-slot:item="{ item }" >
+                                            <v-list-item-avatar left>
+                                            <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
+                                            </v-list-item-avatar>
+                                            
+                                            <v-list-item-content outlined>
+                                                <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
                                                 
-                                                <v-list-item-content outlined>
-                                                    <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
-                                                    
-                                                    <v-spacer></v-spacer>
-                                                    <v-list-item-subtitle>
-                                                        <v-chip
-                                                        x-small
-                                                        v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
-                                                        >
-                                                        {{tag}}
-                                                        </v-chip>
-                                                    </v-list-item-subtitle>
-                                                
-                                                </v-list-item-content>
-                                                <v-list-item-action>
-                                                    <v-subheader v-if="item.remote">Remote</v-subheader>
-                                                    <v-subheader v-else-if="item.custom">Custom Made</v-subheader>
-                                                    <v-subheader v-else-if="item.local">Local, Default</v-subheader>
-                                                </v-list-item-action>
-                                            </template>
-                                        </v-autocomplete>
-                                    </v-card-actions>
-                                </v-expansion-panel-content>
-                        </v-expansion-panel>
-                    </v-card>
-                </v-col>
-            </v-expansion-panels>
-        </v-card>
+                                                <v-spacer></v-spacer>
+                                                <v-list-item-subtitle>
+                                                    <v-chip
+                                                    x-small
+                                                    v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
+                                                    >
+                                                    {{tag}}
+                                                    </v-chip>
+                                                </v-list-item-subtitle>
+                                            
+                                            </v-list-item-content>
+                                            <v-list-item-action>
+                                                <v-subheader v-if="item.remote">Remote</v-subheader>
+                                                <v-subheader v-else-if="item.custom">Custom Made</v-subheader>
+                                                <v-subheader v-else-if="item.local">Local, Default</v-subheader>
+                                            </v-list-item-action>
+                                        </template>
+                                    </v-autocomplete>
+                                </v-card-actions>
+                            </v-expansion-panel-content>
+                    </v-expansion-panel>
+                </v-card>
+            </v-col>
+        </v-expansion-panels>
         <v-col sm="12">
             <SubLibrary
                 :moduleIdx="moduleIdx"
@@ -187,7 +186,7 @@
 		data() {
 			return {
                 status: [],
-                panel: 4,
+                panel: 0,
                 selectedModule: {},
                 stagedRemote: {},
                 stored: {},
@@ -236,6 +235,7 @@
 	    },
 	    watch: { 
             isHovered(newValue){
+                console.log(newValue,"<<<")
                 this.selectedModule = newValue.modules[0]
                 if (newValue.remotes){
                     this.stagedRemote = newValue.remotes[0]
@@ -301,7 +301,7 @@
                 if (format == 'file'){
                     this.open(path.dirname(loc))
                 } else {
-                    this.open(loc)
+                    this.open(path.dirname(loc))
                 }
             },
             getColor(key, opacity, selected, background){
@@ -472,6 +472,7 @@
                         })
                         return d
                     })
+                    console.log(this.catalog[this.defaultModule])
                     if (!this.isHovered.name){
                         this.isHovered = this.catalog[this.defaultModule]
                     }                   

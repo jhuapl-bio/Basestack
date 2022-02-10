@@ -62,6 +62,7 @@ export var store = {
 	images: {},
 	procedures: [],
 	services: {},
+	jobs: {},
 	stored_config: {
 		services: {},
 		modules: {},

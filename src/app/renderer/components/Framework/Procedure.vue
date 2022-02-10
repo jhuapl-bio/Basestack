@@ -9,40 +9,37 @@
 <template>
   <div id="procedure"  >
     <v-sheet class="fill-height"  height="auto">
-    <v-select
-          v-model="selectedProcedure"
-          :items="procedures"
-          :prepend-icon="( selectedProcedure.icon  ? '$'+selectedProcedure.icon : '$cog')"
-          :hint="'Procedure select'"
-          item-text="title"
-          item-name="name"
-          item-value="idx"
-          class="mx-auto pl-2"
-          style="max-width: 43%;"
-          label="Select Procedure"
-          persistent-hint
-          :return-object="true"
-          single-line
-      >
-        <template v-slot:prepend>
-          <v-icon color="primary">{{ ( selectedProcedure.icon  ? '$'+selectedProcedure.icon : '$cog' ) }}</v-icon>
-        </template>
-        <template v-slot:item="{ item, index }">
-          <v-icon v-if="item.icon" color="primary" class="mx-2" x-small>{{ '$' + item.icon }}</v-icon>
-          {{item.title}}
-        </template>
-      </v-select>
+    
 			<v-container
 				fluid  
 				class="d-flex  align-start pa-0 align-stretch"
 			>
+      <v-card height="100%" width="100%">
+        <!-- <Service  
+          :ref="selectedService.name"
+          :key="selectedService.name"
+          @sendStatus="sendStatus" 
+          v-if="selectedService.name"
+          @updateValue="updateValue" 
+          :serviceIdx="selectedService.idx"
+          :service="selectedService"
+          :module="moduleIdx"
+          :catalog="module"
+          :procedure="selectedProcedure.idx"
+          :status="selectedService.status"
+          :label="( selectedProcedure.title  ? selectedProcedure.title : ''  )"
+            
+          >
+        </Service> -->
+        <Job>
+        </Job>
+      </v-card>
       
       <v-navigation-drawer
         v-model="drawer"
         class="elevation-12 nav-drawer" 
-        :mini-variant.sync="mini" 
-        left
-        mini-variant-width="56"
+        :mini-variant.sync="mini" left absolute
+        mini-variant-width="56" 
         permanent height="auto"
       >
       <v-layout column fill-height>
@@ -248,24 +245,7 @@
         </v-list>
       </v-layout>
       </v-navigation-drawer>
-      <v-card height="100%" width="100%">
-        <Service  
-          :ref="selectedService.name"
-          :key="selectedService.name"
-          @sendStatus="sendStatus" 
-          v-if="selectedService.name"
-          @updateValue="updateValue" 
-          :serviceIdx="selectedService.idx"
-          :service="selectedService"
-          :module="moduleIdx"
-          :catalog="module"
-          :procedure="selectedProcedure.idx"
-          :status="selectedService.status"
-          :label="( selectedProcedure.title  ? selectedProcedure.title : ''  )"
-            
-          >
-        </Service>
-      </v-card>
+     
       <!-- <v-carousel
           height="100vh" 
           v-model="tabService"
@@ -302,7 +282,7 @@
 
 import Service from '@/components/Framework/Service.vue';
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
-
+import Job from "@/components/Framework/Job.vue"
 import FileService from '@/services/File-service.js'
 import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
 export default {
@@ -310,6 +290,7 @@ export default {
   components:{
     Service,
     LogWindow,
+    Job,
     LoopingRhombusesSpinner,
     FulfillingBouncingCircleSpinner,
   },
@@ -432,7 +413,7 @@ export default {
       const $this = this
       try{
         let response = await FileService.getProcedures({
-          module: this.moduleIdx,
+          module: this.moduleIdx, 
           catalog: this.module,
           token: this.$store.token
         })

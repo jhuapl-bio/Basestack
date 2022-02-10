@@ -73,6 +73,13 @@ class FileService {
   buildProcedureDependency(params){
     return Api().post(`${baseEndpoint.get()}/procedure/build/dependency`, params)    
   }
+  cancelProcedureDependency(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/build/cancel/dependency`, params)    
+  }
+  updateVariableJob(params){
+    return Api().post(`${baseEndpoint.get()}/job/set/variable`, params)    
+  }
+  
   deleteModule(params){
     return Api().post(`${baseEndpoint.get()}/module/remove`, params)    
   }
@@ -94,6 +101,20 @@ class FileService {
   getProcedures(params){
     return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.module}/${params.token}`)    
   }
+
+  getJobStaged(params){
+    return Api().get(`${baseEndpoint.get()}/job/stage/${params.catalog}/${params.module}/${params.procedure}`)    
+  }
+  getJobStatus(params){
+    return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.module}/${params.procedure}`)    
+  }
+  startJob(params){
+    return Api().post(`${baseEndpoint.get()}/job/start`, params)    
+  }
+  cancelJob(params){
+    return Api().post(`${baseEndpoint.get()}/job/cancel`, params)    
+  }
+  
   getModulesStatus(){
     return Api().get(`${baseEndpoint.get()}/modules/get/status`)    
   }

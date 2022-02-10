@@ -21,15 +21,110 @@
           label: "jhuaplbio/agave"
           type: "docker"
           format: "docker"
-      linking: 
-        - output:  #From where to where as input to next procedure
-            service: agave_create_report
-            target: outputs
-            variable: json
-          input: 
-            service: agave_visualization
-            target: variables
-            variable: file
+      variables:
+        json: 
+          element: "file"
+          output: true
+          label: "JSON Visualization File"
+          hint: "Custom JSON generated from the AGAVE report pipeline"
+          source: "<<directory(%{variables.variant.bind.from})>>/variants.json"
+          target: "%{variables.variant.bind.to}/variants.json"
+          # bind: 
+          #   from: "%{variables.variant.source}"
+          #   to: "/data"
+        variant: 
+          label: "VCF or TSV file/folder "
+          hint: "Variant file or a folder containing variant called information (VCF, ivar TSV) for input to AGAVE"
+          option: 0
+          options:
+            - element: "file"
+              name: "File (single)"
+              bind_parent_dir: true
+              bind: 
+                from: "%{variables.variant.source}"
+                to: "/opt/data/variant"
+              class: "wb-100  p-3 mb-1"
+            - element: "dir"
+              name: "Folder"
+              bind_parent_dir: false
+              append:
+                command: "--dir"
+                placement: 2
+                services: 
+                  - 0
+              bind: 
+                from: "%{variables.variant.source}"
+                to: "/opt/data/variant"
+              class: "wb-100  p-3 mb-1"
+          source: null
+        depth: 
+          label: "Depth file(s)"
+          hint: "One or more files to be used as referencing the depth from the sample run"
+          option: 0
+          options:
+            - element: "file"
+              bind_parent_dir: true
+              name: "Depth.txt file"
+              bind: 
+                from: "%{variables.depth.source}"
+                to: "/opt/data/depth"
+              class: "wb-100  p-3 mb-1"
+            - element: "dir"
+              name: "Folder of depth.txts"
+              bind_parent_dir: false
+              bind: 
+                from: "%{variables.depth.source}"
+                to: "/opt/data/depth"
+              class: "wb-100  p-3 mb-1"
+              append:
+                command: "--dir_depth"
+                placement: 2
+                services: 
+                  - 0
+        email: 
+          label: "Email"
+          element: "string"
+          source: "brian.merritt@jhuapl.edu"
+          target: null
+        gbs:
+          label: "Genbank Files"
+          hint: ".gb files used for referencing sequences"
+          option: 0
+          # class: "wb-100 p-3 mb-1"
+          options:
+            - element: null
+              name: "H3n2, nCoV2, H1N1 Default"
+              label: ""
+              target: "/opt/app/AGAVE/data/proteins" 
+            - element: "dir"
+              name: "Custom"
+              target: null 
+              bind: 
+                from: "%{variables.gbs.source}"
+                to: "/opt/app/AGAVE/data/proteins" #This ${} is converted into the variable attribute of selected option only!
+        filetype:
+          label: "Filetype of variant calling pipeline"
+          hint: "When variants are generated, they are in the .vcf or .tsv (ivar pipeline) format"
+          # class: "wb-100 p-3 mb-1"
+          option: 0
+          options:
+            - element: null
+              name: "vcf"
+              target: "vcf" 
+            - element: null
+              name: "tsv"
+              target: "tsv" 
+        port:
+          element: "render"
+          column: 12
+          port: true
+          output: false
+          label: "Rendered Dashboard"
+          hint: "Dashboard to display in a web browser"
+          suburl: "/AGAVE/"
+          bind:
+            from: "80"
+            to: "8083"
       services:
         - name: "agave_create_report"
           label: "Create Report JSON for AGAVE Visualization"
@@ -42,7 +137,7 @@
           # command: ["bash", "-c", "python3 -m http.server"]
           command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate AGAVE && python3 controllers/src/vcfs_to_json.py              
             -i ${variant} 
-            -o /opt/data/variant/out.json
+            -o ${json}
             --filetype ${filetype}
             -cad ALT_DP 
             -crd REF_DP 
@@ -53,115 +148,17 @@
             --depth ${depth}
             "
           ]
-          outputs:
-            json:
-              watch: True
-              label: "JSON file"
-              hint: ".json file to be uploaded to the AGAVE visualization Service. "
-              type: "file"
-              path: ${variant}/out.json
-          variables:
-            variant: 
-              label: "Default.json output"
-              hint: "Output file will be in the .json format, to be ingested into the AGAVE visualization"
-              options:
-                - element: "file"
-                  name: "File (single)"
-                  bind_parent_dir: true
-                  bind: 
-                    from: "%{variables.variant.source}"
-                    to: "/opt/data/variant"
-                  class: "wb-100  p-3 mb-1"
-                - element: "dir"
-                  name: "Folder"
-                  bind_parent_dir: false
-                  append:
-                    command: "--dir"
-                    placement: 2
-                  bind: 
-                    from: "%{variables.variant.source}"
-                    to: "/opt/data/variant"
-                  class: "wb-100  p-3 mb-1"
-              source: null
-            depth: 
-              label: "Depth file(s)"
-              hint: "One or more files to be used as referencing the depth from the sample run"
-              options:
-                - element: "file"
-                  bind_parent_dir: true
-                  bind: 
-                    from: "%{variables.depth.source}"
-                    to: "/opt/data/depth"
-                  class: "wb-100  p-3 mb-1"
-                - element: "dir"
-                  name: "Folder"
-                  bind_parent_dir: false
-                  bind: 
-                    from: "%{variables.depth.source}"
-                    to: "/opt/data/depth"
-                  class: "wb-100  p-3 mb-1"
-                  append:
-                    command: "--dir_depth"
-                    placement: 2
-            email: 
-              label: "Email"
-              element: "string"
-              source: "brian.merritt@jhuapl.edu"
-              target: null
-            gbs:
-              label: "Genbank Files"
-              hint: ".gb files used for referencing sequences"
-              # class: "wb-100 p-3 mb-1"
-              options:
-                - element: null
-                  name: "H3n2, nCoV2, H1N1 Default"
-                  label: ""
-                  target: "/opt/app/AGAVE/data/proteins" 
-                - element: "dir"
-                  name: "Custom"
-                  target: null 
-                  bind: 
-                    from: "%{variables.gbs.source}"
-                    to: "/opt/app/AGAVE/data/proteins" #This ${} is converted into the variable attribute of selected option only!
-            filetype:
-              label: "Filetype of variant calling pipeline"
-              hint: "When variants are generated, they are in the .vcf or .tsv (ivar pipeline) format"
-              # class: "wb-100 p-3 mb-1"
-              options:
-                - element: null
-                  name: "vcf"
-                  target: "vcf" 
-                - element: null
-                  name: "tsv"
-                  target: "tsv" 
         - name: agave_visualization
           init: true
           hideStatus: true
-          label: "AGAVE"
+          label: "Visualization"
           force_restart: false
           config: null
           image: "jhuaplbio/agave"
           workingdir: "/AGAVE"
           continuous: true
+          serve: "port"
           ports: 
             - 8083:80
-          command: ["bash", "-c", "/etc/init.d/nginx restart; cp ${file} /AGAVE/data/default.json;  python3 -m http.server"]
-          variables:
-            file: 
-              element: "file"
-              bind_parent_dir: true
-              label: "JSON File"
-              hint: "Custom JSON generated from the AGAVE report pipeline"
-              bind: 
-                from: "%{variables.file.source}"
-                to: "/data"
-            port:
-              element: "render"
-              column: 12
-              port: true
-              label: "Rendered Dashboard"
-              hint: "Dashboard to display in a web browser"
-              suburl: "/AGAVE/"
-              bind:
-                from: "80"
-                to: "8083"
+          command: ["bash", "-c", "/etc/init.d/nginx restart; cp ${json} /AGAVE/data/default.json;  python3 -m http.server"]
+          
