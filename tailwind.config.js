@@ -47,6 +47,11 @@ module.exports = {
       '2xl': '2.375rem', //38px
       '3xl': '3.625rem', //38px
     },
+    shadow: ({theme}) => ({
+      DEFAULT: `0 0 5px 0 ${theme.colors.gray.light}`,
+      'lg': `0 0 12px 0 ${theme.colors.gray.DEFAULT}`,
+      'xl': `0 0 38px 0 ${theme.colors.gray.dark}`,
+    }),
     extend: {},
   },
   plugins: [],
