@@ -77,12 +77,24 @@ export  class Job {
                 $this.configuration.variables[key].option = value.option
             }
         }
-    }
+    } 
     setVariable(value, variable, target){
         let data = {}
         data[target] = value
         let obj = this.configuration.variables[variable]
         this.setValueVariable(data, obj, variable)
+        let variables = this.configuration.variables
+        if (variables){
+            Object.values(variables).forEach((vari)=>{
+                console.log(vari.update_on, variable)
+                if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
+                    console.log("UPDATE", vari.update_on   )
+                    let update_on = vari.update_on
+                    
+                }
+            })
+
+        }
         return
     }
     setVariables(variables){
@@ -91,6 +103,7 @@ export  class Job {
         for(let [key, value] of Object.entries(variables)){
             let obj = $this.configuration.variables[key]
             this.setValueVariable(value, obj, key)
+            console.log(obj,"<<<<<<")
         }
         this.services.forEach((service)=>{ 
             service.config.variables = $this.configuration.variables

@@ -55,30 +55,35 @@
               bind: 
                 from: "%{variables.fastq_pass.source}"
                 to: "%{variables.dir.bind.to}/fastq_pass" 
-        run_config: 
-          label: "Run Configuration File"
-          column: 6
-          read: "%{variables.dir.source}/run_config.txt"
-          element: "file"
-          header: ["configuration", "target" ]
-          bind_parent_dir: true
-          # bind: 
-          #   to: "%{variables.dir.bind.to}/run_config.txt"
-          #   from: "%{variables.dir.source}/run_config.txt"
-          class: "wb-50  p-3 mb-1"
-          hidden: true
-          create:
-            target: "%{variables.dir.source}/run_config.txt"
-            sep: "tab"
-          framework:
-            - ["primers", "%{variables.primers.source}"]
-            - ["basecalling", "%{variables.basecalling.source}"]
-            - ["barcoding", "%{variables.barcoding.source}"]
-          depends_key: "target"
-          depends: 
-            - primers
-            - basecalling
-            - barcoding
+        # run_config: 
+        #   label: "Run Configuration File"
+        #   column: 6
+        #   read: "%{variables.dir.source}/run_config.txt"
+        #   element: "file"
+        #   update: 
+        #     - primers
+        #     - basecalling
+        #     - barcoding
+        #   source: null
+        #   header: ["configuration", "target" ]
+        #   bind_parent_dir: true
+        #   # bind: 
+        #   #   to: "%{variables.dir.bind.to}/run_config.txt"
+        #   #   from: "%{variables.dir.source}/run_config.txt"
+        #   class: "wb-50  p-3 mb-1"
+        #   hidden: false
+        #   create:
+        #     target: "%{variables.dir.source}/run_config.txt"
+        #     sep: "tab"
+        #   framework:
+        #     - ["primers", "%{variables.primers.source}"]
+        #     - ["basecalling", "%{variables.basecalling.source}"]
+        #     - ["barcoding", "%{variables.barcoding.source}"]
+        #   depends_key: "target"
+        #   depends: 
+        #     - primers
+        #     - basecalling
+        #     - barcoding
         primers:
           label: "Primer Configuration"
           element: null
@@ -148,11 +153,15 @@
           sep: "tab"
           bind_parent_dir: true
           tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
+          update_on: 
+            depends:
+              - dir
+            action: "read"
+            source: "%{variables.dir.source}/manifest.txt"
           create:
             target: "%{variables.dir.source}/manifest.txt"
             sep: "tab"
           class: "wb-50  p-3 mb-1"
-          read: "%{variables.dir.source}/manifest.txt"
           source: []
           header: [ 'barcode', 'id']
         demuxes:

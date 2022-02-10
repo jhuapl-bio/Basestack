@@ -117,7 +117,7 @@ export default {
         open (link) {
           try{        
             this.$electron.shell.openPath(link)
-          } catch(err){
+          } catch(err){ 
             this.$swal.fire({ 
               position: 'center',
               icon: 'error',

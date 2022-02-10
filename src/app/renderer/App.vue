@@ -337,14 +337,14 @@ export default {
 	},
   data(){
     return {
-      tab:2,
+      tab: 0,
 			mini:true,
       defaultModule: {},
 			version: process.env.version_basestack,
 			drawer:false,
 			tabProcedure: 0, 
 			sel: 0,
-			selected: 'procedures',
+			selected: 'defaults',
 			colorList: [
 				"rgb(70, 240,240",
 				"rgb(128,0,0",

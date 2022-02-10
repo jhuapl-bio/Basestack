@@ -65,10 +65,10 @@ export class Procedure {
         this.interval = {
             checking: false, 
             interval: this.create_interval() 
-        }
+        } 
         this.services_config.forEach((service)=>{
             this.service_steps[service] = false
-        })
+        }) 
         const $this = this
         for (let [key, value] of Object.entries($this.config.variables)){
             if (value.options){
@@ -716,35 +716,35 @@ export class Procedure {
                     
             })
             let linking = this.config.linking
-            if (linking){
-                linking.forEach((link)=>{ 
-                    let serviceInput = variables[link.input.service] //is the service getting info FROM the previous ones
-                    let serviceOutput = variables[link.output.service] //is the service going INTO the next one
+            // if (linking){
+            //     linking.forEach((link)=>{ 
+            //         let serviceInput = variables[link.input.service] //is the service getting info FROM the previous ones
+            //         let serviceOutput = variables[link.output.service] //is the service going INTO the next one
                      
-                    let serviceConfigInput = configVariables[link.input.service] //is the service getting info FROM the previous ones
-                    let serviceConfigOutput = configVariables[link.output.service] //is the service going INTO the next one
-                    if (! serviceInput ||   
-                        serviceInput[link.input.variable].source == '' ||
-                        !serviceInput[link.input.variable].source){ 
+            //         let serviceConfigInput = configVariables[link.input.service] //is the service getting info FROM the previous ones
+            //         let serviceConfigOutput = configVariables[link.output.service] //is the service going INTO the next one
+            //         if (! serviceInput ||   
+            //             serviceInput[link.input.variable].source == '' ||
+            //             !serviceInput[link.input.variable].source){ 
                      
                       
-                        let targetAttr = serviceConfigOutput[link.output.target][link.output.variable]
+            //             let targetAttr = serviceConfigOutput[link.output.target][link.output.variable]
                         
-                        let inner_variables = targetAttr.path.match(/(\${.+?\}){1}/g)
-                        serviceInput = serviceConfigInput[link.input.target]
+            //             let inner_variables = targetAttr.path.match(/(\${.+?\}){1}/g)
+            //             serviceInput = serviceConfigInput[link.input.target]
                         
-                        if (inner_variables && Array.isArray(inner_variables)){
-                            inner_variables.forEach((vari)=>{
-                                let id = vari.replace(/[\$\{\}]/g, "")
-                                let val = serviceOutput[id].source
-                                serviceInput[link.input.variable].source = targetAttr.path.replaceAll(vari, val)
+            //             if (inner_variables && Array.isArray(inner_variables)){
+            //                 inner_variables.forEach((vari)=>{
+            //                     let id = vari.replace(/[\$\{\}]/g, "")
+            //                     let val = serviceOutput[id].source
+            //                     serviceInput[link.input.variable].source = targetAttr.path.replaceAll(vari, val)
                         
-                            })
-                        }
-                        parsed_variables[link.input.service] =  serviceInput 
-                    }
-                })
-            }
+            //                 })
+            //             }
+            //             parsed_variables[link.input.service] =  serviceInput 
+            //         }
+            //     })
+            // }
             // console.log(parsed_variables) 
             return  parsed_variables
         } catch (err){
