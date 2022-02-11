@@ -1,7 +1,7 @@
 # Basestack
 
 
-## Our Official Documentation has moved to https://jhuapl-bio.github.io/Basestack/
+## Our Official Documentation has moved to https://basestackwebsite.readthedocs.io/en/latest
 
 ## 1 Install Docker
 
