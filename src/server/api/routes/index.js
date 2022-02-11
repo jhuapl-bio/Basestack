@@ -56,6 +56,7 @@ const {
 	getRemoteConfigurations,
 	fetch_docker_stats,
 	fetch_external_config,
+	fetch_external_config_target,
 	set_stored, 
 	save_remote_module
 	} = require("../controllers/fetch.js")
@@ -289,16 +290,41 @@ router.get("/module/get/:module/:variant", (req,res,next)=>{ // build workflow a
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
+router.post("/catalog/remove", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){  
+		try { 
+			let response;
+			let module = store.catalog[req.body.catalog].modules[req.body.module];
+			console.log(module.config.path)
+			if (module.config.custom || !module.config.local){
+				let path_to_procedure = module.config.path
+				await removeFile(path_to_procedure)
+				let removed  = store.catalog[req.body.catalog].modules.splice(req.body.module, 1) 
+			}
+			logger.info("%o removing module complete", response)
+			res.status(200).json({status: 200, message: `Completed module removal: ${req.body.catalog}`, data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in removing module", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)}); 
+		}	
+	})().catch((err2)=>{ 
+		logger.error("%s %s", "Error in removing module", err2)
+		res.status(419).send({status: 419, message: error_alert(err2)});
+	})
+})
 router.get("/catalog/all/get", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		let catalog = store.catalog
 		let data = [] 
 
 		for (let [name, value] of Object.entries(cloneDeep(catalog))){
-			delete value['interval']
+			delete value['interval'] 
 			let { modules, ...returnable } = value;
 			if (store.remotes[name]){
-				returnable.remotes = store.remotes[name]
+				returnable.remotes = store.remotes[name].map((d,i)=>{
+					d.idx = i
+					return d
+				})
 			} else {
 				returnable.remotes = []
 			}
@@ -337,12 +363,11 @@ router.get("/catalog/installed/get", (req,res,next)=>{ // build workflow accordi
 
 router.get("/catalog/get/:name", (req,res,next)=>{ // build workflow according to name and index
 	try {
-		let catalog = cloneDeep(store.catalog[req.params.name])
-		let data = [] 
-		delete catalog['interval']
-		let { modules, ...returnable } = catalog;
-		data.push(returnable)
-		res.status(200).json({status: 200, message: "retrieved module information", data: data });
+		let modules = store.config.modules.filter((d)=>{
+			return d.name == req.params.name
+		})
+		
+		res.status(200).json({status: 200, message: "retrieved module information", data: modules });
 	} catch(err2){
 		logger.error("%s %s", "Error in loading module to library", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
@@ -666,32 +691,32 @@ router.post("/module/save/file", (req,res,next)=>{ // build workflow according t
 					module.custom = true
 					if (!module.version){
 						let d = dateFormat.asString('dd_mm_yy_hh:mm:ss', new Date()); // just the time
-						module.version = 'custom-'+d
+						module.version = 0
 					}
 					let basename = module.name + "_"+ module.version
 					let endpath = path.join(store.system.shared.modules, basename+".yml")
 					module.path = endpath
 					let modl = create_module(module)
 					store.config.modules.push(module)
-					store.modules[module.name].variants.push(modl)
+					store.catalog[module.name].modules.push(modl)
 					let response = YAML.stringify([module])
-					promises.push(writeFile(endpath, response))
+					// promises.push(writeFile(endpath, response))
 				})
 				await Promise.all(promises)
 			} else {
 				parsed.custom = true
 				if (!parsed.version){
 					let d = dateFormat.asString('dd_mm_yy_hh:mm:ss', new Date()); 
-					parsed.version = 'custom-' + d
+					parsed.version = 0
 				}
 				let basename = parsed.name + "_"+ parsed.version
 				let endpath = path.join(store.system.shared.modules, basename+".yml")
 				parsed.path = endpath
 				let modl = create_module(parsed)
 				store.config.modules.push(parsed)
-				store.modules[module.name].variants.push(modl)
+				store.catalog[module.name].modules.push(modl)
 				let response = YAML.stringify([parsed])
-				await writeFile(endpath, response)
+				// await writeFile(endpath, response)
 			}
 			logger.info("Module(s) copied %s", req.body.source)
 			res.status(200).json({status: 200, message: `Completed module copy`, data: '' });
@@ -724,18 +749,18 @@ router.post("/module/save/text", (req,res,next)=>{ // build workflow according t
 					module.custom = true
 					if (!module.version){
 						let d = dateFormat.asString('dd_mm_yy_hh:mm:ss', new Date()); // just the time
-						module.version = 'custom-' + d
+						module.version = 0
 					}
 					let modl = create_module(module)
 					let basename = module.name + "_"+ module.version
 					let endpath = path.join(store.system.shared.modules, basename+".yml")
 					module.path = endpath
 					store.config.modules.push(module)
-					store.modules[module.name].variants.push(modl)
+					store.catalog[module.name].modules.push(modl)
 					let response = YAML.stringify([module]) 
 					promises.push(writeFile(endpath, response))
-				})
-				await Promise.all(promises)
+				}) 
+				await Promise.all(promises) 
 			} else {
 				parsed.custom = true
 				
@@ -748,7 +773,7 @@ router.post("/module/save/text", (req,res,next)=>{ // build workflow according t
 				parsed.path = endpath
 				let modl = create_module(parsed)
 				store.config.modules.push(parsed)
-				store.modules[module.name].variants.push(modl)
+				store.catalog[module.name].modules.push(modl)
 				let response = YAML.stringify([parsed])
 				await writeFile(endpath, response)
 			}
@@ -933,27 +958,7 @@ router.post("/procedure/run", (req,res,next)=>{ // build workflow according to n
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	})
 })
-router.post("/module/custom/remove", (req,res,next)=>{ // build workflow according to name and index
-	(async function(){  
-		try { 
-			let response;
-			let module = store.modules[req.body.module].variants[req.body.variant];
-			if (module.config.custom){
-				let path_to_procedure = module.config.path
-				await removeFile(path_to_procedure)
-				let removed  = store.modules[req.body.module].variants.splice(req.body.variant, 1)
-			}
-			logger.info("%o removing module complete", response)
-			res.status(200).json({status: 200, message: `Completed module removal: ${module.name}`, data: response });
-		} catch(err2){
-			logger.error("%s %s", "Error in removing module", err2)
-			res.status(419).send({status: 419, message: error_alert(err2)}); 
-		}	
-	})().catch((err2)=>{ 
-		logger.error("%s %s", "Error in removing module", err2)
-		res.status(419).send({status: 419, message: error_alert(err2)});
-	})
-})
+
 
 router.post("/procedure/stop", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
@@ -985,18 +990,15 @@ router.post("/procedure/stop", (req,res,next)=>{ // build workflow according to 
 })
 
 router.post("/remote/save/modules", (req,res,next)=>{ // build workflow according to name and index
-	(async function(){
+	(async function(){ 
 		try {
 			let remote_module = store.remotes[req.body.catalog][req.body.module]
 			
-			let version = ""
-			if (remote_module.version){
-				version  = remote_module.version
-			}
-			let basename = `${remote_module.name}_${version}.yml`
+			let savePath = remote_module.path
 
-			let savePath = path.join(store.system.remotes.modules, basename)
 			await writeFile(savePath, YAML.stringify([remote_module]))
+
+			console.log(savePath, store.catalog[req.body.catalog].modules[req.body.module].config)
 			let data = []
 			logger.info("%s cache %o", req.body.catalog, data.length)
 			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
@@ -1012,7 +1014,6 @@ router.post("/remote/set/modules", (req,res,next)=>{ // build workflow according
 	(async function(){
 		try {
 			let remote_module = store.remotes[req.body.catalog][req.body.module]
-			console.log(remote_module)
 			save_remote_module(remote_module)
 			let data = []
 			logger.info("%s cache %o", req.body.catalog, data.length)
@@ -1028,8 +1029,14 @@ router.post("/remote/set/modules", (req,res,next)=>{ // build workflow according
 router.get("/remote/get/:target", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
-			let data = await fetch_external_config(req.params.target)
-			// set_stored(req.params.target, data)
+			let data = await fetch_external_config_target(req.params.target)
+			if (data && data.length >0){
+				data = data.filter((f)=>{
+					return req.params.target == f.name
+				})
+				set_stored(req.params.target, data)
+				
+			}
 			logger.info("%s cache %o", req.params.target, data.length)
 			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
 		
@@ -1039,6 +1046,22 @@ router.get("/remote/get/:target", (req,res,next)=>{ // build workflow according 
 		}	
 	})()
 })
+
+router.get("/remote/get/:target/:catalog", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			let data = await fetch_external_config_target(req.params.target, req.params.catalog)
+			set_stored(req.params.target, data)
+			logger.info("%s cache %o", req.params.target, data.length)
+			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
+		
+		} catch(err2){
+			logger.error( "Error  %o in getting config target remotely %s", err2, req.params.target)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+})
+
 
 router.get("/cache/get/:token", (req,res,next)=>{ // build workflow according to name and index
 	try {
@@ -1144,7 +1167,6 @@ router.post("/procedure/build/cancel/dependency", (req,res,next)=>{ //this metho
 		(async function() {
 			let module = store.catalog[req.body.catalog].modules[req.body.module]
 			let procedure = module.procedures[req.body.procedure]
-			console.log(procedure)
 			let response = await procedure.cancel_build(req.body.dependency)
 			logger.info("Cancel complete for procedure: %s",  req.body.module) 
 			res.status(200).json({status: 200, message: "Completely canceled the build process for procedure", data:  "" });
@@ -1187,6 +1209,23 @@ router.post("/procedure/dependencies/remove", (req,res,next)=>{ // build workflo
 		}	
 	})()
 })
+
+router.post("/module/build/cancel", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	
+	(async function(){
+		try {
+			let module = store.catalog[req.body.catalog].modules[req.body.module]
+			let procedure = module.procedures[req.body.procedure]
+			let response = await procedure.cancel_build()
+			logger.info(`Success in cancelling dependency build: ${req.body.catalog}`)
+			res.status(200).json({status: 200, message: "Removed process for installation for this module", data: response });
+		} catch(err2){
+			logger.error("%s %s", "Error in cancelling module dependency build", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+})
+
 router.post("/module/build/cancel/dependency", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	
 	(async function(){
@@ -1288,8 +1327,9 @@ router.post("/job/set/variable", (req,res,next)=>{ //this method needs to be rew
 			} else {
 				job = found 
 			}
-			job.setVariable(req.body.value, req.body.variable, req.body.target )
-			res.status(200).json({status: 200, message: "Completed job setting", data: job.configuration });
+			let changed_variables = await job.setVariable(req.body.value, req.body.variable, req.body.target )
+			console.log(changed_variables,"final changed")
+			res.status(200).json({status: 200, message: "Completed job setting", data: changed_variables });
 		} catch(err2){ 
 			logger.error("%s %s", "Error in setting job", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
@@ -1348,7 +1388,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			// console.log("req body", job.configuration.variables.file.source, job.configuration.variables.file.bind.from)
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
 			await job.start()
-			res.status(200).json({status: 200, message: "Completed job start", data: job.config });
+			res.status(200).json({status: 200, message: "Completed job", data: job.config });
 		} catch(err2){
 			logger.error("%s %s", "Error in staging job", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });

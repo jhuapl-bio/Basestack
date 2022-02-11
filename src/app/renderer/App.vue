@@ -21,11 +21,12 @@
 				<v-list
 					dense class="procedure-list"
 				>
-					<v-list-item-group  @click="selected='procedures'">
+					<v-list-item-group  @click="selected='procedures'" v-if="catalog">
 					<v-list-item
 						v-for="(entry, key) in catalog"  
+            
 						v-bind:key="entry.name"
-            @click="tab = key"
+            @click="tabProcedure = key"
 						@mouseover="isHovered = entry.name; " 
 						@mouseleave="isHovered = null"
 						@change="selected = 'procedures'"
@@ -49,13 +50,14 @@
 				</v-list>
 			<!-- </v-layout>			 -->
 			<template v-slot:append>
-				<v-divider></v-divider>
-				<v-list-item-group >
+				<v-divider></v-divider> 
+				<v-list-item-group  v-if="defaults"
+        >
 				<v-list-item
 					v-for="[key, entry] in Object.entries(defaults)"
 					justify-end 
           @click="tab = key"
-					v-bind:key="entry.name" @change="selected = 'defaults'"
+					v-bind:key="entry.name" @change="selected = 'defaults'; tabProcedure = null"
 					
 				>							
 					<v-list-item-action>
@@ -94,7 +96,8 @@
         <v-autocomplete
           :items="catalog"
           chips dense
-          v-model="tab"
+          v-model="tabProcedure"
+
           :filter="filter"
           style="max-width: 45%"
           clearable
@@ -106,11 +109,11 @@
           solo
         >
           <template v-slot:item="{ item }" >
-            <v-list-item-avatar left>
+            <v-list-item-avatar left >
               <v-icon  small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
             </v-list-item-avatar>
             
-            <v-list-item-content outlined>
+            <v-list-item-content outlined >
               <v-list-item-title >{{ item.title ? item.title : item.name }}</v-list-item-title>
               <v-list-item-subtitle>
                 <v-chip
@@ -124,7 +127,7 @@
             </v-list-item-content>
           </template>
           <template v-slot:selection="{  attr, on, item,  selected }">
-            <v-chip
+            <v-chip 
               v-bind="attr"
               :input-value="selected"
               color="blue-grey"
@@ -141,19 +144,28 @@
     </v-app-bar>
 		<v-main >
 			<v-container fluid >
+          <v-card  height="100vh" v-if="!runningServer">
+            <v-alert type="warning" shaped icon="$exclamation-triangle"
+              text > Server is not Running at specified port: {{selectedPort}}
+            </v-alert>
+             <Dashboard/>
+            
+          </v-card>
+         
         <component 
           :is="'Module'" 
-          v-if="selected == 'procedures' && catalog[tab]"
-          :module="catalog[tab]"
-          :key="catalog[tab].idx"
+          v-if="catalog && selected == 'procedures' && catalog[(tabProcedure >=0 ? tabProcedure : 0)]"
+          :module="catalog[tabProcedure]"
+          :key="catalog[tabProcedure].idx"
           @updateSelected="updateSelected"
-          :moduleIndex="tab"
+          :moduleIndex="tabProcedure"
         >       
         </component>
         <component 
           :is="defaults[tab].component"
-          :defaults="defaults"  v-else-if="selected=='defaults' && defaults[tab]"
+          :defaults="defaults"  v-else-if="defaults && selected=='defaults' && defaults[(tab >=0 ? tab : 0)]"
           :key="defaults[tab].name"
+          
           :defaultModule="defaults[tab]"
           >            	
         </component>
@@ -255,7 +267,7 @@
 				class="lighten-1 text-center"
 			>
 				<v-card-text class="white--text">
-				{{ version  }} — <strong>Basestack</strong>
+				{{  version  }} — <strong>Basestack</strong>
 				</v-card-text>
 			</v-card>
 		</v-footer>
@@ -308,6 +320,9 @@ export default {
 		FulfillingBouncingCircleSpinner
 	},
   computed: {
+    version(){
+      return  process.env.version_basestack
+    },
 	  hideSlider(){
 		  if (this.selected == 'procedures'){
 			  return false
@@ -315,6 +330,9 @@ export default {
 			  return true
 		  }
 	  },
+    selectedPort(){
+      return process.env.PORT_SERVER
+    },
 	  filtered_installed_modules(){
 		  return this.modules.filter((d)=>{
 			  if (d && d.status){
@@ -340,7 +358,6 @@ export default {
       tab: 0,
 			mini:true,
       defaultModule: {},
-			version: process.env.version_basestack,
 			drawer:false,
 			tabProcedure: 0, 
 			sel: 0,
@@ -378,7 +395,7 @@ export default {
       modules: false,
       services: false,
       procedures: false,
-      defaults: false,
+      defaults: [],
       runningServer: false,
       running: false
     }
@@ -392,16 +409,22 @@ export default {
     })
     this.$vuetify.icons.dropdown = 'fas fa-square'
 
-    
-    let f = await $this.pingServerPort()
-    if (f)
-    {
-      this.runningServer = true
-      await this.init()
-    } else {
+    try{
+      let f = await $this.pingServerPort()
+      if (f)
+      {
+        this.runningServer = true
+        await this.init()
+      } else {
+        this.createPingInterval()
+        this.ready = false
+      }
+    } catch(err){
+      console.error(err)
       this.createPingInterval()
       this.ready = false
     }
+    
 
 
     
@@ -435,9 +458,8 @@ export default {
 			this.$electron.shell.openExternal(url)
 		},
 		setTabProcedureNew(idx){
-      console.log(idx)
 			let index = this.catalog[idx]
-			this.tab = index
+			this.tabProcedure = index
 			this.selected = 'procedures'
 		},
 		filter (item, queryText, itemText) {
@@ -499,20 +521,25 @@ export default {
       this.runningServer = false
       this.ready  = false
       this.interval = setInterval(async ()=>{
-        if (this.runningServer){
+        if ($this.runningServer){
           clearInterval($this.interval)
         } else {
           try{
             let f = await $this.pingServerPort()
             if (f)
             {
-              this.runningServer = true
+              
               await this.init()
+              if ($this.catalog.length <= 0){
+                $this.runningServer = false
+              } else {
+                $this.runningServer = true
+              }
             }
           } catch(err){
               console.error("Could not get server status, check if it is running on port: ", process.env.PORT_SERVER)
-              this.ready = false
-              this.runningServer = false
+              $this.ready = false
+              $this.runningServer = false
 
           }
         }
@@ -533,7 +560,10 @@ export default {
           d.idx = i
           return d
         })
-        this.catalog = catalog
+        catalog.forEach((cat,i)=>{
+          this.$set(this.catalog, i, cat)
+        })
+        // this.catalog = catalog
         if (process.env.NODE_ENV == 'development'){
           // let token = await FileService.createSession()
           this.$store.token = 'development'

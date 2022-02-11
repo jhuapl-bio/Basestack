@@ -1,23 +1,27 @@
 <template>
-  <v-list dense>
-    <v-subheader>Basestack</v-subheader>
-      <v-list-item
-        v-for="entry in fields_system"
-        :key="entry.key"
-        class="entry"
-      >
-          
-          <v-list-item-content>
-            <v-list-item-title v-text="entry.label "></v-list-item-title>
-            <v-list-item-subtitle v-text="info_table[entry.key] ">
-            </v-list-item-subtitle>
+  <v-card dense>
+    <v-card-title>Basestack</v-card-title>
+    <v-card-subtitle>{{version}}</v-card-subtitle>
+    <v-list dense>
+      
+        <v-list-item
+          v-for="entry in fields_system"
+          :key="entry.key"
+          class="entry"
+        >
             
-          </v-list-item-content>
-          <v-list-item-icon>
-            <span style="" class="success-icon"><font-awesome-icon class="success-icon" icon="check"/></span>
-          </v-list-item-icon>
-      </v-list-item>
-  </v-list>
+            <v-list-item-content>
+              <v-list-item-title v-text="entry.label "></v-list-item-title>
+              <v-list-item-subtitle v-text="info_table[entry.key] ">
+              </v-list-item-subtitle>
+              
+            </v-list-item-content>
+            <v-list-item-icon>
+              <span style="" class="success-icon"><font-awesome-icon class="success-icon" icon="check"/></span>
+            </v-list-item-icon>
+        </v-list-item>
+    </v-list>
+  </v-card>
 </template>
 
 <script>
@@ -26,10 +30,10 @@
     data () {
       return {
         fields_system: [
-          {
-            key: 'basestack',
-            label: 'Installed Version'
-            },
+          // {
+            // key: 'basestack',
+            // label: 'Installed Version'
+            // },
             // {
             //   key: 'electron',
             //   label: 'Electron'
@@ -57,6 +61,11 @@
       }
     },
     mounted(){
+    },
+    computed: {
+      version() {
+        return  process.env.version_basestack
+      }
     },
     methods: {
       convert_gb(size, val){

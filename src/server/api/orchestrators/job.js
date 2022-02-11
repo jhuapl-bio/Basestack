@@ -4,7 +4,7 @@ import { mapVariables } from '../controllers/mapper.js';
  const { Configuration }  = require("./configuration.js")
  const { Service }  = require("./service.js")
 const { module_status }  = require("../controllers/watcher.js")
-
+const { readFile } = require("../controllers/IO.js")
 const { store }  = require("../../config/store/index.js")
    
 var logger = store.logger
@@ -78,24 +78,70 @@ export  class Job {
             }
         }
     } 
-    setVariable(value, variable, target){
-        let data = {}
-        data[target] = value
-        let obj = this.configuration.variables[variable]
-        this.setValueVariable(data, obj, variable)
-        let variables = this.configuration.variables
-        if (variables){
-            Object.values(variables).forEach((vari)=>{
-                console.log(vari.update_on, variable)
-                if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
-                    console.log("UPDATE", vari.update_on   )
-                    let update_on = vari.update_on
-                    
-                }
-            })
+    async setVariable(value, variable, target){
+        return new Promise ((resolve, reject)=>{
+            let data = {}
+            data[target] = value
+            let obj = this.configuration.variables[variable]
+            this.setValueVariable(data, obj, variable)
+            let variables = this.configuration.variables
+            let promises = []
+            if (variables){
+                for (let [key, vari] of Object.entries(variables)){
+                    if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
+                        let update_on = vari.update_on
+                        let action  = update_on.action
+                        if (action == 'read'){
+                            promises.push(
+                                readFile(update_on.source, true).then((f)=>{
+                                    let header = vari.header
+                                    let returnedVari = {
+                                        key: key, 
+                                        value: null
+                                    }
+                                    if (header){
+                                        vari.source = f.map((d)=>{
+                                            let p  = d.split("\t")
+                                            let returned = {
 
-        }
-        return
+                                            }
+                                            header.map((head,i)=>{
+                                                returned[head] = p[i]
+                                            })
+                                            return returned
+                                        })
+
+                                    } else {
+                                        vari.source = f.map((d)=>{
+                                            return d.split("\t")
+                                        })
+                                    }
+                                    returnedVari.value = vari
+                                    return returnedVari
+                                }).catch((err)=>{
+                                    store.logger.error(err)
+                                    return vari
+                                })
+                            )
+                        }
+                    }
+                }
+
+            }
+            let changed_variables = []
+            Promise.allSettled(promises).then((respo)=>{
+                respo.forEach((res)=>{
+                    if (res.status == 'fulfilled'){
+                        changed_variables.push(res.value)
+                    }
+                })
+                resolve(changed_variables)
+            }).catch((err)=>{
+                store.logger.error(err)
+                resolve(changed_variables)
+            })
+        })
+       
     }
     setVariables(variables){
         this.variables = variables
@@ -103,11 +149,9 @@ export  class Job {
         for(let [key, value] of Object.entries(variables)){
             let obj = $this.configuration.variables[key]
             this.setValueVariable(value, obj, key)
-            console.log(obj,"<<<<<<")
         }
         this.services.forEach((service)=>{ 
             service.config.variables = $this.configuration.variables
-            console.log("set variables",$this.configuration.variables.manifest, $this.configuration.variables['length-filter'].total.target)
         })
         return 
     }

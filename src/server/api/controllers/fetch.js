@@ -194,9 +194,25 @@ export async function fetch_videos_meta(){
 
 export function save_remote_module(config){
 	try{
-		
+		let version = 0
+		if (config.version){ 
+			version  = config.version
+		}
+		let basename = `${config.name}_${version}.yml`
+
+		let savePath = path.join(store.system.remotes.modules, basename) 
+		config.path = savePath 
+		config.version = version
+		config.remote = true
+		config.local = false
+		config.custom = false
+		// config.loaded = true
 		let parsed_item = parseConfigVariables(JSON.stringify(config), store.system)
 		let modl = create_module(parsed_item)
+		modl.version = config.version
+		modl.remote = config.remote 
+		modl.local = config.local
+		modl.custom = config.custom
 		store.catalog[config.name].modules.push(modl)
 	} catch(err){
 		store.logger.error(err)
@@ -218,10 +234,10 @@ export function set_stored(key, items){
 				let g = item
 				Object.defineProperty(g, 'loaded', {
 					enumerable: true,
-					get: ()=>{
+					get: ()=>{ 
 						let idx  = store.config.modules.findIndex((data)=>{
 							return data.name == item.name   && data.version == item.version
-						})
+						}) 
 						if (idx > -1){
 							return true
 						} else {
@@ -239,6 +255,28 @@ export function set_stored(key, items){
 		store.logger.error(err)
 		return
 	}
+}
+export async function fetch_external_config_target(key,catalog){
+	try{
+		let url = `https://basestack-support.herokuapp.com/db/get/${key}/${catalog}`
+		logger.info("%s %s", "Getting url: ", url)
+		let json =  await axios.get(`${url}`)
+		logger.info("returned json: %s", url)
+		try{
+			json.data.data.map((d)=>{
+				d.remote = true
+				d.local = false
+			})
+			return json.data.data
+		} catch(err){
+			logger.error(`${err} error in fetching external url____________`)
+			throw err
+		}
+		
+	} catch(err){
+		logger.error(`${err} error in fetching external url____________`)
+		throw err
+	} 
 }
 export async function fetch_external_config(key){
 	try{
@@ -296,8 +334,6 @@ export async function getRemoteConfigurations(url){
 export async function fetch_external_dockers(key){
 	let url = `https://registry.hub.docker.com/v2/repositories/${key}/tags/latest`
 	try{
-		// logger.info(url)
-		// console.log("store", url, store.images)
 		if (! store.images[key] ){
 			store.images[key] = {
 				fetching_available_images: {},
@@ -428,7 +464,7 @@ export async function check_image(image){
 				})
 				
 			})().catch((error)=>{ 
-				// logger.error(`check image exists failed or doesn't exist`)
+				// logger.error(`check image exists failed or doesn't exist %o`, error)
 				reject(error)
 			});
 		} catch(err){

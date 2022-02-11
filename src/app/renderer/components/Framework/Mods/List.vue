@@ -17,7 +17,7 @@
     <v-data-table
         small
         :headers="headers"
-        :items="values"
+        :items="source.source"
         :items-per-page="6"
         class="elevation-1"					        
     >	
@@ -166,6 +166,13 @@ export default {
       dialogDelete (val) {
         val || this.closeDelete()
       },
+      source: {
+          deep: true,
+          handler(newValue){
+              console.log("source changed!!!!", newValue)
+          }
+
+      },
       values(newVal){
           console.log(newVal,)
           this.$emit("updateValue", newVal )
@@ -175,9 +182,9 @@ export default {
         save () {
             this.editedItem.index = this.editedIndex
             if (this.editedIndex > -1) {
-                Object.assign(this.values[this.editedIndex], this.editedItem)
+                Object.assign(this.source.source[this.editedIndex], this.editedItem)
             } else {
-                this.values.push(this.editedItem)
+                this.source.source.push(this.editedItem)
             }
             this.close()
         },
@@ -196,13 +203,13 @@ export default {
             })
         },
         editItem (item) {
-            this.editedIndex = this.values.indexOf(item)
+            this.editedIndex = this.source.source.indexOf(item)
             this.editedItem = Object.assign({}, item)
             this.dialog = true
         },
 
         deleteItem (item, index) {
-            this.editedIndex = this.values.splice(index, 1)
+            this.editedIndex = this.source.source.splice(index, 1)
             this.editedItem = Object.assign({}, item)
             this.dialogDelete = true
         },
@@ -212,19 +219,19 @@ export default {
             keys.forEach((key)=>{
                 emptyRow[key] = null
             })
-			this.values.splice(index, 0, emptyRow)
+			this.source.source.splice(index, 0, emptyRow)
             // this.$set( this.values, this.values)
 		},
 		rmManifestRow(index){
-			this.values.splice(index, 1)
+			this.source.source.splice(index, 1)
 		},
         changeID(val, index, index2){
-			this.$set(this.values[index], index2, val)
+			this.$set(this.source.source[index], index2, val)
 		},
 		moveUpRow(index){
-			const tmp =  this.values[index]
-			this.$set(this.values, index ,this.values[index-1] )
-			this.$set(this.values, index-1, tmp)
+			const tmp =  this.source.source[index]
+			this.$set(this.source.source, index ,this.source.source[index-1] )
+			this.$set(this.source.source, index-1, tmp)
 		},
 	},
     props: ['source', 'status', 'service', "variable", "defaultHeaders", 'title'],

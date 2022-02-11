@@ -18,7 +18,7 @@ export  class Module {
         this.status =  { 
             fully_installed: false,
             latest: null,
-            building: true,
+            building: false,
             version:null,
             partial_install: false,
         }
@@ -40,7 +40,7 @@ export  class Module {
                     $this.interval.checking = false
                 })
             }
-        }, 5000)
+        }, 3000)
 
 
         return interval
@@ -53,6 +53,7 @@ export  class Module {
                 let running = false
                 let error = null
                 let full_install = true
+                let building = false
                 let partial_install = false
                 $this.procedures.forEach((procedure, key)=>{
                     let step = null;
@@ -72,8 +73,15 @@ export  class Module {
                     if (!procedure.status.fully_installed){
                         full_install = false
                     }
+                    if ($this.name == 'mytax'){
+                        // console.log(procedure.status, "<preocedure")
+                    }
+                    if (procedure.status.building){
+                        building = true
+                    }
 
                 } )
+                $this.status.building  = building
                 $this.status.running = running
                 $this.status.error = error
                 $this.status.fully_installed = full_install

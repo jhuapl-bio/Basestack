@@ -23,7 +23,6 @@
             item-value="version"
             class="mx-auto pr-4"
             style="max-width: 15%;"
-            @change="setProcedureDefault()"
             persistent-hint
             return-object
         >

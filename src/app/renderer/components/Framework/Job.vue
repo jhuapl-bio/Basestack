@@ -152,7 +152,6 @@ export default {
     },
     updateValue(value){
       let src = value.src
-      console.log(value, this.service)
       let variable = this.procedure.variables[value.variable]
       if (value.option){
         variable.option = src
@@ -169,6 +168,11 @@ export default {
           target: (value.option  ? "option" : "source"),
           variable: value.variable,
         }).then((response)=>{
+            if (response.data.data && Array.isArray(response.data.data)){
+                response.data.data.map((resp)=>{
+                    $this.$set($this.procedure.variables[resp.key], 'source' , resp.value.source)
+                })
+            }
         })
       } catch(err){
         console.error(err,"<<<<< error in caching update")

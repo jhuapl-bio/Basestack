@@ -2,6 +2,7 @@
   title: "Gamma"
   icon: "book"
   version: 1.0
+  basestack_released: 2.0
   module: True
   tooltip: "AMR resistance analysis Pipeline"
   procedures:
@@ -69,6 +70,10 @@
           label: "staphb/gamma"
           type: "docker"
           format: "docker"
+        - target: "bitnami/git"
+          label: "bitnami/git"
+          type: "docker"
+          format: "docker"
         - source: 
             url: "https://raw.githubusercontent.com/rastanton/GAMMA/main/ResFinderDB_Combined_05-06-20.fsa"
             type: "file"
@@ -85,22 +90,24 @@
             remove: false
             target: "${writePath}/workflows/gamma/gamma"
           type: "orchestration" 
+          
           format: "dir"
           service:
             command: [ "bash", "-c", "git clone https://bitbucket.org/genomicepidemiology/resfinder_db.git"]
             init: false
-            depends:
-              - id: "dind"
-                type: "module"
-            force_restart: false
+            force_restart: true
+            image: "bitnami/git"
+            name: "build_resfinder_db"
             force_init: false
-            config: "${configPath}/procedure_dind/dockerConfigOrchestrator.json"
+            config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
             orchestrated: true
             workingdir: "/tmp"
           target: "${writePath}/workflows/gamma/resfinder_db"
           bind: "${writePath}/workflows/gamma:/tmp"
+          depends:
+            - 1
           workingdir: "/tmp"
-          command: ["bash", "-c", "rm -rf /tmp/resfinder_db; git clone https://bitbucket.org/genomicepidemiology/resfinder_db.git"]
+          command: ["sh", "-c", "rm -rf /tmp/resfinder_db; git clone https://bitbucket.org/genomicepidemiology/resfinder_db.git"]
           overwrite: true
           label: "AMR ResFinder Database"
       services:

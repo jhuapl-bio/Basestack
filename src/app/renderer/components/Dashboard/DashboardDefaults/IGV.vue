@@ -17,7 +17,7 @@
   
 
   export default {
-    name: 'IGV',
+    name: 'IGV', 
     methods: {
       open (link) {
         this.$electron.shell.openExternal(link)

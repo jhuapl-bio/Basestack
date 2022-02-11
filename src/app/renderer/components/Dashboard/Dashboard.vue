@@ -29,7 +29,7 @@
 				</v-input>
 					<v-text-field class="pr-5 pl-5"
 						hint="Only change if the default port (5003) is in use"
-						label="Change the backend server port to use"
+						label="Change the backend server port to connect to"
 						v-model="port" type="number"
 						min="1000" max="9999"
 						append-icon="$caret-square-up"

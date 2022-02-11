@@ -2,6 +2,7 @@
   title: "Samtools"
   icon: "binoculars"
   version: 1.0
+  basestack_released: 2.0
   module: True
   tooltip: "Download the samtools suite"
   procedures: 

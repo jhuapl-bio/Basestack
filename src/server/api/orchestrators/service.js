@@ -16,12 +16,12 @@ var  { store }  = require("../../config/store/index.js")
 const {  validateFramework } = require("../controllers/validate.js")
 const { readFile, writeFile, copyFile } = require("../controllers/IO.js")
 const { module_status }  = require("../controllers/watcher.js")
-const { check_container,  } = require("../controllers/fetch.js")
+const { check_container, check_image  } = require("../controllers/fetch.js")
 const { spawnLog } = require("../controllers/logger.js")
 const { Configuration }  = require("./configuration.js")
 var logger = store.logger
 // var docker = new Docker();
-const fs = require("file-system")
+const fs = require("file-system") 
 let dockerObj; 
 
 export class Service {
@@ -44,7 +44,6 @@ export class Service {
             complete: true,
             stream: {
                 info: [
-                    "Service"
                 ]
             },
         };
@@ -83,7 +82,7 @@ export class Service {
         })
         let interval = setInterval(()=>{
             if (!checking){
-                checking = true
+                checking = true 
                 $this.watch().then((e)=>{
                     checking = false
                 }).catch((err)=>{
@@ -196,7 +195,7 @@ export class Service {
                 } else {
                     resolve("Already dead...")
                 }
-            } else {
+            } else { 
                 var container = store.docker.getContainer(container_name).remove({force:true}, function(err,data){
                     if (err){
                         logger.error("%s %s %o", "Error in stopping docker container: ",container_name, err)
@@ -215,16 +214,21 @@ export class Service {
             ( async ()=>{
                 let name = $this.name;
                 let exists = await check_container($this.name)
+                // let imageExists = await check_image($this.config.image)
+                // console.log(imageExists,"imafffffffge exists")
+                // if (!imageExists){
+                //     await $this.pullImage($this.config.image)
+                // }
                 if ( ( exists.exists && $this.config.force_restart) ||  exists.exists ){
-                    logger.info("Force restarting")
+                    store.logger.info("Force restarting")
                     await $this.stop()
                 }
                 $this.container = null
                 let stream = await $this.start(params, wait)
-                logger.info(`started run...${name}`)
+                store.logger.info(`started run...${name}`)
                 resolve(stream)
             })().catch((err)=>{
-                logger.error(err)
+                store.logger.error(err)
                 reject(err)
             })
         })
@@ -396,16 +400,18 @@ export class Service {
                 params = {}
             }
             let bind = []
+            console.log(0,bind)
             if ($this.config.bind){
-                $this.config.bind.forEach((bind)=>{
-                    bind.push(bind)
+                $this.config.bind.forEach((b)=>{
+                    bind.push(b)
                 })
             }
             if (params.bind){
-                params.bind.forEach((bind)=>{
-                    bind.push(bind)
+                params.bind.forEach((b)=>{
+                    bind.push(b)
                 })
             }
+            console.log(1)
             let cmd = $this.config.command
             if (cmd){
                 options.Cmd = $this.config.command
@@ -491,23 +497,27 @@ export class Service {
                     if (selected_option.append && cmd ){ 
                         let serviceFound = selected_option.append.services.findIndex(data => data == $this.serviceIdx)
                         // console.log(serviceFound, selected_option.append, $this.serviceIdx)
-                        console.log("<<<<<", selected_option,">>>>>")
-                        if (serviceFound >= 0){
+                        console.log("<<<<<", selected_option,">>>>>") 
+                        if (serviceFound >= 0){ 
                             let service = selected_option.append
                             if (service.placement || service.placement == 0){
                                 options.Cmd[service.placement] =  options.Cmd[service.placement]  +  selected_option.append.command + " "
                             } else{
                                 options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
                             }
-
-                        }
+ 
+                        } 
                             
                     }
                 }  
             }
+            if ($this.config.image){
+                options.Image = $this.config.image
+            }
             if (! options.Image ){
                 throw new Error("No Image available")
             }
+            
             if (typeof options.Cmd == "string"){
                 options.Cmd = ['bash', '-c', options.Cmd]
             }
@@ -519,17 +529,20 @@ export class Service {
             }).catch((err)=>{
                 reject(err)
             })
-            // logger.info("%o ______", options)
+            logger.info("%o ______", options)
             // logger.info(`starting the container ${options.name} `)
             $this.status.stream.info.push(JSON.stringify(options, null, 4))
-            $this.status.success = false
-            $this.status.error = false
+            $this.status.success = false 
+            $this.status.error = false 
             $this.status.complete = false
             // resolve()
             store.docker.createContainer(options,  function (err, container) {
                 $this.container = container
                 if (err ){
                     logger.error("%s %s %o","Error in creating the docker container for: ", options.name , err)
+                    // if (err.reason && err.reason == 'no such container'){
+                    //     store.docker.pull(options.Image)
+                    // }
                     $this.status.running = false
                     // $this.status.error = err
                     if (err.json && err.json.message){

@@ -18,10 +18,31 @@
           }"
       > Refresh
         <v-icon class="ml-3" small >$sync</v-icon>
-      </v-btn>
-      <v-row class=" mt-3 ml-2 mr-3 ">
-        <object v-if="show" type="text/html"  id ="nextstrainObj" class="renderObj p-0 m-0" data="https://nextstrain.org/ncov/global"></object>
-      </v-row>
+    </v-btn>
+      <v-tabs 
+        v-model="tab" 
+        show-arrows centered
+        next-icon="$arrow-alt-circle-right"
+        prev-icon="$arrow-alt-circle-left"
+        icons-and-text 
+        class=""
+        color="blue-grey"
+        slider-color="light"
+      >
+        <v-tab   v-for="(option, serviceIdx) in options" :title="option.title" :key="serviceIdx">
+            {{option.title}}				
+            <v-icon @click="open(option.data)" class="mb-4" small color="primary">$external-link-alt</v-icon>
+        </v-tab>
+        
+        <v-tab-item v-for="(option, serviceIdx) in options" :title="option.title" :key="serviceIdx">
+          
+            <v-row class=" mt-3 ml-2 mr-3 ">
+              <object v-if="show" type="text/html"  :id="`nextstrainObj-${serviceIdx}`" class="renderObj p-0 m-0" :data="option.data"></object>
+            </v-row>
+        </v-tab-item>
+      </v-tabs>
+    
+      
         
   </v-card>
 </template>
@@ -37,6 +58,17 @@ import FileService from '../../../services/File-service.js'
     data(){
       return {
         fastqDir:null,
+        tab:0,
+        options: [
+          {
+            title: "Nextstrain Default",
+            data: "https://nextstrain.org/ncov/global"
+          },
+          {
+            title: "Nextstrain AKU",
+            data: "https://nextstrain.org/community/AKU-CITRIC-Center-for-Bioinformatics/ncov/Pakistan"
+          }
+        ],
         show:true
       }
     },
@@ -53,7 +85,7 @@ import FileService from '../../../services/File-service.js'
       open (link) {
         this.$electron.shell.openExternal(link)
       },
-      forceRerender(){
+      forceRerender(ref){
         const $this =this
         $this.show = false
         setTimeout(()=>{
@@ -65,17 +97,17 @@ import FileService from '../../../services/File-service.js'
 </script>
 <style>
 #nextstrain{
-  height:100%;
+  /* height:100%; */
   overflow-y:auto;
   width: 100%;
 }
 #nextstrainObj{
-  min-height: 70vh;
+  /* min-height: 70vh; */
   position: relative; 
   background: none; 
   /*border:1px solid #000;  */
   width:100%; 
-  height: 100%;
+  /* height: 100%; */
   overflow-y:auto; 
 }
 </style>

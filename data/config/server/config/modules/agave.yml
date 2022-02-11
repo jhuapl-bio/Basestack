@@ -1,6 +1,7 @@
 
 - name: agave #Top level is the left-hand selection of the menu and the major module to install 
   title: "AGAVE"
+  basestack_released: 2.0
   icon: "dna"
   module: True
   init: false 

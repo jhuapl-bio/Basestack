@@ -46,6 +46,18 @@
             </template>
             {{item.path}}
           </v-tooltip>
+          <v-tooltip bottom v-if="item.openSelf">
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item, true)">
+                <v-icon 
+                  class="" color="primary" 
+                  small>$file
+                </v-icon>
+              </v-btn>
+              {{item.label}}
+            </template>
+            {{item.path}}
+          </v-tooltip>
           <v-tooltip top>
             <template v-slot:activator="{ on }">
               <v-icon 
@@ -102,8 +114,8 @@ export default {
         
     },
 	methods: {
-        determineOpen(item){
-          console.log(item)
+        determineOpen(item, self){
+          console.log(item,"open")
           if (item.element != 'file'){
             if (typeof item.source =='string'){
               this.open(path.dirname(item.source))
@@ -111,7 +123,11 @@ export default {
               this.open(path.dirname(item.source[0]))
             }
           } else{
-            this.open(path.dirname(item.source))
+            if (self){
+              this.open(item.source)
+            } else {
+              this.open(path.dirname(item.source))
+            }
           }
         },
         open (link) {

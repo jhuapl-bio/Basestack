@@ -8,7 +8,7 @@
   -->
 <template>
   <div id="dir" class="wv-50 p-1" @drop.prevent="addDropFiles" @dragover.prevent >
-    <div >
+    <div  style="border: 1px solid grey">
         <!-- <v-file-input 
           :label="( directory ? directory : 'Directory input')"
           v-model="directory"
@@ -21,14 +21,16 @@
         <v-btn
             @click="electronOpenDir('data')"
             color="light"
+            disabled
             
             variant="secondary"
             append-icon="$archive"
             x-small
+            class="mt-5 mb-5"
             style="cursor:pointer"
-        >Select Folder 
+        >Drag Folder here 
           <v-icon
-            x-small class="ml-2"
+           small class="ml-2"
           > $archive
           </v-icon>
         </v-btn>

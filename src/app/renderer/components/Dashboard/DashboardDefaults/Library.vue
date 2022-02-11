@@ -1,7 +1,7 @@
 <template>
   <!-- <v-container fluid> -->
-    <v-row  no-gutters  >
-        
+    <v-row   height="10vh" >
+        <v-col sm="12">
         <v-expansion-panels  style="text-align:left;"  v-model="panel">
             <v-col  :sm="(isHovered.name !== catalog.name ? 4 : 4 )"   v-for="(catalog, key) in catalog" :key="catalog.name ">
                 <v-card dense class="configure mx-0 elevation-4 " >
@@ -12,51 +12,21 @@
                                         {{ catalog.title ? catalog.title : catalog.name }}
                                     </v-toolbar-title>
                                     <v-spacer></v-spacer> 
-                                    <v-badge v-if="catalog.status"  x-small :color="(catalog.status  && catalog.status.installed ? 'green' : 'orange darken-2')">
+                                    <v-badge v-if="catalog.status && catalog.status.installed"  x-small :color="(catalog.status  && catalog.status.latest_installed ? 'green' : 'orange darken-2')">
                                         <template v-slot:badge>
                                             <v-tooltip bottom>
                                                 <template v-slot:activator="{ on }">
                                                     <v-icon 
                                                         x-small   v-on="on">
-                                                        {{ ( catalog.status && catalog.status.installed ? '$check' : '$exclamation' ) }}
+                                                        {{ ( catalog.status.latest_installed && catalog.status.latest_installed ? '$check' : '$exclamation' ) }}
                                                     </v-icon>
                                                 </template>
-                                                {{ catalog.status.installed  ? 'Fully Installed ' : 'Module not fully installed'  }}
+                                                {{ catalog.status.latest_installed  ? 'Latest Installed' : 'Module not at the latest'  }}
                                             </v-tooltip>
                                         </template>
                                     </v-badge>
                                 </v-expansion-panel-header>
-                                <v-expansion-panel-content>
-                                
-                                <v-card-actions >
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on }">
-                                            <v-icon small color="primary" v-on="on" class="configure " @click="buildModule(isHovered.name)">$download</v-icon>
-                                        </template>
-                                        Build Entire Module
-                                    </v-tooltip>
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on }">
-                                            <v-icon v-on="on" small color="indigo " v-on:click="fetchAllRemoteLibrary(isHovered.name)" style="text-align:right" class="configure ml-2">$external-link-alt</v-icon>
-                                        </template>
-                                        Fetch Versions for Module
-                                    </v-tooltip>
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on }">
-                                            <v-icon v-on="on" small color="orange darken-2" v-on:click="deleteModule(isHovered.name)" style="text-align:right" class="configure ml-2">$trash-alt</v-icon>
-                                        </template>
-                                        Delete Entire Module and its dependencies
-                                    </v-tooltip>
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on }">    
-                                            <v-icon v-on="on" small color="light " v-on:click="cancelModule(isHovered.name)"   style="text-align:right" class="configure ml-2">$times-circle</v-icon>
-                                        </template>
-                                        Cancel Module Build
-                                    </v-tooltip>
-                                    <v-spacer></v-spacer>
-                                    
-                                    
-                                </v-card-actions>
+                                <v-expansion-panel-content>                                
                                 <v-card-actions >
                                     <v-autocomplete
                                         v-model="stagedRemote"
@@ -112,45 +82,8 @@
                                     </v-autocomplete>
                                 </v-card-actions>
                                 <v-card-actions>
-                                    <v-autocomplete
-                                            v-model="selectedModule"
-                                            :items="isHovered.modules"
-                                            icon-color="primary"
-                                            dense outlined
-                                            item-text="version"
-                                            label="Loaded Versions"
-                                            item-value="version"
-                                            @change="selectedModuleEvent($event)"
-                                            :hint="`Choose Installed Module Version`"
-                                            persistent-hint
-                                            return-object
-                                        >
-                                        <template v-slot:item="{ item }" >
-                                            <v-list-item-avatar left>
-                                            <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
-                                            </v-list-item-avatar>
-                                            
-                                            <v-list-item-content outlined>
-                                                <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
-                                                
-                                                <v-spacer></v-spacer>
-                                                <v-list-item-subtitle>
-                                                    <v-chip
-                                                    x-small
-                                                    v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
-                                                    >
-                                                    {{tag}}
-                                                    </v-chip>
-                                                </v-list-item-subtitle>
-                                            
-                                            </v-list-item-content>
-                                            <v-list-item-action>
-                                                <v-subheader v-if="item.remote">Remote</v-subheader>
-                                                <v-subheader v-else-if="item.custom">Custom Made</v-subheader>
-                                                <v-subheader v-else-if="item.local">Local, Default</v-subheader>
-                                            </v-list-item-action>
-                                        </template>
-                                    </v-autocomplete>
+                                    
+                                    
                                 </v-card-actions>
                             </v-expansion-panel-content>
                     </v-expansion-panel>
@@ -159,14 +92,14 @@
         </v-expansion-panels>
         <v-col sm="12">
             <SubLibrary
-                :moduleIdx="moduleIdx"
-                :module="selectedModule"
                 :catalog="isHovered"
+                :latest="isHovered.latest_version"
                 v-if="selectedModule.name"
             >
             </SubLibrary>
             <Docker/>
         </v-col>
+    </v-col>
     </v-row>
   <!-- </v-container> -->
 </template>
@@ -213,15 +146,15 @@
             defaultModule(){
                 return this.panel
             },
-            moduleIdx(){
-                if (this.isHovered.modules && this.selectedModule){
-                    // return   this.isHovered.variants.findIndex(data => data === this.selectedModule)
-                    return   ( this.selectedModule.idx && this.selectedModule.idx >= 0 ? this.selectedModule.idx : 0 )
-                }
-                else {
-                    return 0
-                }
-            }
+            // moduleIdx(){
+            //     if (this.isHovered.modules && this.selectedModule){
+            //         // return   this.isHovered.variants.findIndex(data => data === this.selectedModule)
+            //         return   ( this.selectedModule.idx && this.selectedModule.idx >= 0 ? this.selectedModule.idx : 0 )
+            //     }
+            //     else {
+            //         return 0
+            //     }
+            // }
 		
 		},
 		
@@ -235,15 +168,14 @@
 	    },
 	    watch: { 
             isHovered(newValue){
-                console.log(newValue,"<<<")
                 this.selectedModule = newValue.modules[0]
                 if (newValue.remotes){
                     this.stagedRemote = newValue.remotes[0]
-                }
+                }  else {
+                    this.stagedRemote = null
+                }               
             },
             selectedModule(newValue){
-                // this.selectedProcedure = newValue.procedures[0]
-                console.log("new module selected")
                 this.stored[newValue.name] = newValue
             }
 
@@ -264,11 +196,11 @@
             },
             async loadRemoteModule(item){
                 FileService.setRemoteModule({
-                    module: this.moduleIdx,
+                    module: item.idx,
                     catalog: this.isHovered.name,
                 }).then((response)=>{
                     FileService.saveRemoteModule({
-                        module: this.moduleIdx,
+                        module: item.idx,
                         catalog: this.isHovered.name,
                     }).then((response2)=>{
                         this.$swal({
@@ -277,6 +209,7 @@
                             showConfirmButton: true,
                             allowOutsideClick: true
                         });
+                        this.stagedRemote = null
                     }).catch((err)=>{
                         this.$swal.fire({
                             position: 'center',
@@ -295,8 +228,7 @@
                     
                 }) 
             },
-            selectedModuleEvent(event){
-            },
+           
             openDir(loc, format){
                 if (format == 'file'){
                     this.open(path.dirname(loc))
@@ -325,131 +257,6 @@
                     }
                 }
             },
-            async deleteModule(name){
-                const $this  = this;
-                this.$swal({
-                    title: 'Are you sure you want to remove this module?',
-                    text: "You won't be able to revert this!",
-                    type: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#2b57b9',
-                    cancelButtonColor: '#a60139',
-                    confirmButtonText: 'Yes, remove it!'
-                }).then((res) => {
-                    if (res.value) {
-                        this.$swal({
-                            title: "Module Deletion Initiated",
-                            text: "Please wait.. this may take some time",
-                            icon: 'info',
-                            showConfirmButton: true,
-                            allowOutsideClick: true
-                        });
-                        let variantIdx  = this.selectedModule.idx
-                        let procedureIdx  = this.selectedModule.procedures.findIndex(data => data === this.selectedProcedure)
-                        FileService.deleteProcedureDependencies({
-                            module: name,
-                            variant: variantIdx,
-                            procedure:procedureIdx
-                        }).then((response)=>{
-                            this.$swal({
-                                title: "Module deletion completed!",
-                                icon: 'success',
-                                showConfirmButton: true,
-                                allowOutsideClick: true
-                            });
-                        }).catch((err)=>{
-                            this.$swal.fire({
-                                position: 'center',
-                                icon: 'error',
-                                showConfirmButton:true,
-                                title: err.response.data.message
-                            })
-                            
-                        }) 
-                    }
-                });
-                
-                
-            },
-            async cancelModule(name){
-                FileService.cancelModule({
-                    module: name
-                })
-               .then((response)=>{
-                    this.$swal({
-                        title: "Module Build Cancelled",
-                        text: "Please wait.. this may take some time",
-                        icon: 'info',
-                        showConfirmButton: true,
-                        allowOutsideClick: true
-                    });
-                })
-                .catch((err)=>{
-                    this.$swal.fire({
-                        position: 'center',
-                        icon: 'error',
-                        showConfirmButton:true,
-                        title: err.response.data.message
-                    })
-                    
-                }) 
-            },
-            async buildModule(name){
-                let variantIdx  = this.selectedModule.idx
-                let procedureIdx  = this.selectedModule.procedures.findIndex(data => data === this.selectedProcedure)
-                FileService.buildProcedure({
-                    module: name,
-                    variant: variantIdx,
-                    procedure:procedureIdx
-                })
-               .then((response)=>{
-                    this.$swal({
-                        title: "Module Build Initiated",
-                        text: "Please wait.. this may take some time",
-                        icon: 'info',
-                        showConfirmButton: true,
-                        allowOutsideClick: true
-                    });
-                })
-                .catch((err)=>{
-                    this.$swal.fire({
-                        position: 'center',
-                        icon: 'error',
-                        showConfirmButton:true,
-                        title: err.response.data.message
-                    })
-                    
-                }) 
-            },
-            async fetchAllRemoteLibrary(name){
-                // this.$swal({
-                //     title: "Module Fetch Initiated",
-                //     text: "Please wait.. this may take some time",
-                //     icon: 'info',
-                //     showConfirmButton: true,
-                //     allowOutsideClick: true
-                // });
-                const $this = this
-                FileService.fetchRemoteAll('modules')
-                .then((response)=>{
-                    // this.$swal({
-                    //     title: "Module Fetch completed",
-                    //     icon: 'info',
-                    //     showConfirmButton: true,
-                    //     allowOutsideClick: true
-                    // });
-                    this.stored = {}
-                })
-                .catch((err)=>{
-                    this.$swal.fire({
-                        position: 'center',
-                        icon: 'error',
-                        showConfirmButton:true,
-                        title: err.response.data.message
-                    })
-                    
-                }) 
-            },
             
             
             async getStatus(){
@@ -472,10 +279,11 @@
                         })
                         return d
                     })
-                    console.log(this.catalog[this.defaultModule])
                     if (!this.isHovered.name){
                         this.isHovered = this.catalog[this.defaultModule]
-                    }                   
+                    } else {
+                        this.isHovered = this.catalog[this.isHovered.idx]
+                    }       
                 } catch(err){
                     this.initial=false
                     console.error(`${err} error in getting status`)

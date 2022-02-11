@@ -49,7 +49,7 @@ class FileService {
   setRemoteModule(params){
     return Api().post(`${baseEndpoint.get()}/remote/set/modules`, params)    
   }
-  saveRemoteModule(params){
+  saveRemoteModule(params){ 
     return Api().post(`${baseEndpoint.get()}/remote/save/modules`, params)    
   }
   getCatalog(){
@@ -61,7 +61,7 @@ class FileService {
   getInstalledModules(){
     return Api().get(`${baseEndpoint.get()}/catalog/installed/get`) 
   }
-  cancelModule(params){
+  cancelBuild(params){
     return Api().post(`${baseEndpoint.get()}/module/build/cancel`, params)    
   }
   buildModule(params){
@@ -203,9 +203,14 @@ class FileService {
   rmModule(params) {
     return Api().post(`${baseEndpoint.get()}/module/custom/remove`, params)
   }
-
+  fetchRemoteCatalog(target, name){
+    return Api().get(`${baseEndpoint.get()}/remote/get/${target}/${name}`)
+  }
   fetchRemoteAll(name){
     return Api().get(`${baseEndpoint.get()}/remote/get/${name}`)
+  }
+  removeCatalog(params){
+    return Api().post(`${baseEndpoint.get()}/catalog/remove`, params)
   }
   deleteProcedureDependencies(params){
     return Api().post(`${baseEndpoint.get()}/procedure/dependencies/remove`, params)

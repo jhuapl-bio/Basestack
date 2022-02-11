@@ -4,7 +4,7 @@
     },
     "Privileged": true,
     "HostConfig": {
-        "AutoRemove": false,
+        "AutoRemove": true,
         "Privileged": true,
         "Binds": [
             "basestack-docker2:/var/lib/docker",

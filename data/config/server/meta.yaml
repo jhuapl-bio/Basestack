@@ -81,7 +81,7 @@ modules:
 #   custom:
 #     - path: "${writePath}/custom/services/"
 #       format: "files"
-#       custom: true
+#       custom: true 
 #       type: "yml"
 orchestrators:
   default:
@@ -91,14 +91,14 @@ orchestrators:
   subclient:
     format: "single"
     type: "json" 
-    path: ${configPath}/procedure_dind/dockerConfigSubclient.json #used by the Docker API, refere to the url for more information
+    path: ${configPath}/dockerConfigs/dockerConfigSubclient.json #used by the Docker API, refere to the url for more information
   dind:
     service:
       path: "${configPath}/service_dind/dind.yml"
       format: "single" 
       type: "yml"
       config:
-        file: ${configPath}/service_dind/dockerConfig.json #used by the Docker API, refere to the url for more information
+        file: ${configPath}/dockerConfigs/dockerConfig.json #used by the Docker API, refere to the url for more information
     procedure:
       path: "${configPath}/procedure_dind/procedure_dind.yml"
       format: "single" 

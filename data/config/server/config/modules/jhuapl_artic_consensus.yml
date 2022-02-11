@@ -2,6 +2,7 @@
   title: "JHUAPL - Artic Consensus"
   icon: "dna"
   version: 1.0
+  basestack_released: 2.0
   module: True
   tags: 
     - "consensus"
@@ -227,9 +228,6 @@
           # command: ["bash","-c", "echo Starting consensus pipeline... "]
           command: ["bash","-c", "echo Starting consensus pipeline...   && 
             bash artic-module1-barcode-demux.sh  -i ${dir}"]
-            
-          
-              
       dependencies:
         - target: "jhuaplbio/basestack_consensus"
           label: "jhuaplbio/basestack_consensus"

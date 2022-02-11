@@ -2,6 +2,7 @@
   title: "Minimap2"
   icon: "dna"
   version: 1.0
+  basestack_released: 2.0
   module: True
   tags: 
     - "minimap2"

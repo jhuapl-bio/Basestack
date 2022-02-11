@@ -15,7 +15,7 @@
 	</v-btn>
 	<v-tooltip bottom >
 		<template v-slot:activator="{ on }">
-		<v-icon align="end" v-on="on" class="configure" @click="open_link('', $event)" color="info" x-small>$external-link-alt
+		<v-icon align="end" v-on="on" class="configure" @click="open_link('', $event)" color="info" >$external-link-alt
 		</v-icon>
 		</template>
 		View in Browser

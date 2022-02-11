@@ -42,7 +42,6 @@ export  class Configuration {
                             let result;
                             if (d == 'length'){ 
                                 result = matched_string.length
-                                console.log("matched length", matched_string)
                             } else {
                                 result = functions[d](matched_string)
                                 if (d == 'trim'){
@@ -129,7 +128,7 @@ export  class Configuration {
                             let result;
                             if (d == 'length'){ 
                                 found = found.length
-                            } else {
+                            } else { 
                                 result = functions[d](found)
                                 if (d == 'trim'){
                                     found = result.name

@@ -106,7 +106,6 @@ export  var module_status = async function(params, key){
 		    	
 			})	
 		} else { // we need to look to see if all files are found
-			
 			if (typeof outputs.total == 'object'){
 				// console.log(outputs.total.target, outputs.total, typeof outputs.total.target) 
 				mod.status.total = (outputs.total.target ? outputs.total.target : 0);

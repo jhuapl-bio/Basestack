@@ -80,10 +80,13 @@
                 </component>
                 <v-tooltip bottom v-else>
                     <template v-slot:activator="{ on }">
-                    <v-icon align="end" v-on="on" class="configure" @click="open_link(item, $event)" color="info" x-small>$external-link-alt
-                    </v-icon>
+                        <v-btn icon-and-text v-on="on" class="configure mt-5 mb-5 mr-5 ml-5" @click="open_link(item, $event)" color="info" large>
+                            <v-icon align="end"  >$external-link-alt
+                            </v-icon>
+                            Click Me! 
+                        </v-btn>
                     </template>
-                    View in Browser
+                    View Visualization in Browser
                 </v-tooltip>  
             </div>
         </template>
@@ -182,7 +185,7 @@ export default {
           console.log(newValue)
       },
       items(newValue){
-          console.log(newValue,"<<<")
+          console.log(newValue,"<<<NEWVALUEITEMS")
       },
       dialogDelete (val) {
         val || this.closeDelete()

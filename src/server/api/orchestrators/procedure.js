@@ -37,6 +37,7 @@ export class Procedure {
             let status = { 
                 downloading: false, 
                 decompressing: false, 
+                dependComplete: true,
                 exists: false, 
                 error: null, 
                 stream: null,
@@ -59,6 +60,7 @@ export class Procedure {
             error: null, 
             stream: null,
             running: false,
+            building: false,
             fully_installed: false,
             partial_install: false
         }
@@ -163,7 +165,7 @@ export class Procedure {
         let dependencies = this.dependencies 
 		return new Promise(function(resolve,reject){
 			let promises = []
-            
+            let building=false
 			dependencies.forEach((dependency, index)=>{ 
 				if (dependency.type == "docker"){
 					promises.push(check_image(dependency.target))
@@ -189,16 +191,32 @@ export class Procedure {
 						dependencies[index].status.exists = false
 						dependencies[index].status.version = null
 					}
-                    // if ($this.i %2 ==0){
+                    // if ($this.i %2 !=0){
                     //     dependencies[index].status.building =true
                     // }
                     // else{
                     //     dependencies[index].status.building =false
                     // }
+                    if (dependencies[index].status.building){
+                        building = true
+                    }
                     
+                    if (dependencies[index].depends){
+                        let dependComplete = response.filter((f,i)=>{
+                            if (dependencies[index].depends.indexOf(i) > -1){
+                                return true
+                            } else {
+                                return false
+                            }
+                        }).every((f)=>{
+                            return f.value
+                        })
+                        dependencies[index].status.dependComplete = dependComplete
+                    }
                     v.push(dependency.value)
 				})
                 // $this.i+=1
+                $this.status.building = building
                 let fully_installed = v.every((dependency)=>{
                     return dependency
                 })
@@ -389,6 +407,7 @@ export class Procedure {
     async orchestrateDownload(dependency){
 		const $this = this  
         return new Promise(function(resolve,reject){ 
+            
             if (dependency.streamObj){
                 store.logger.info("Closing since it already exists as a stream obj for orchestration %o", dependency.target)
                 try{
@@ -418,6 +437,9 @@ export class Procedure {
                     service.config.command = [dependency.command]
                 }
             }
+            dependency.status.building = true
+            dependency.status.downloading = true
+            dependency.status.error = null
             
             
             service.setOptions()
@@ -425,14 +447,18 @@ export class Procedure {
                 store.logger.error(err)
                 dependency.status.building = false
                 dependency.status.downloading= false
-                dependency.status.error = err
+                dependency.status.error = err 
             }).then((stream)=>{
                 dependency.streamObj = stream
-                dependency.streamObj.on("close", (response)=>{
-                    dependency.status.building = false
-                    dependency.status.downloading= false
-                    dependency.status.error = null
-                })
+                try{
+                    dependency.streamObj.on("close", (response)=>{
+                        dependency.status.building = false
+                        dependency.status.downloading= false
+                        dependency.status.error = null
+                    })
+                } catch(err){
+                    store.logger.error(err)
+                }
             })
             resolve()
            
@@ -543,12 +569,14 @@ export class Procedure {
                             dependency.streamObj.destroy()
                             // promises.push(dependency.streamObj.destroy())
                         } else if(dependency.type == 'orchestration'){
-                            dependency.streamObj.remove({force:true})
+                            dependency.streamObj.destroy()
+                            // dependency.streamObj.remove({force:true})
                         } else{
                             // promises.push(dependency.streamObj.end())
                             dependency.streamObj.close()
 
                             dependency.streamObj.end()
+                            dependency.streamObj.destroy()
                         }
                     } else { 
                         // promises.push(new Promise((resolve, reject)=>{ resolve(`Skipping removal due to it not running`) }))
@@ -579,11 +607,15 @@ export class Procedure {
                 dependency_obj.status.downloading = true
                 dependency_obj.status.building = true
                 objs.push(dependency_obj) 
+                let overwrite_idx = false
                 if (!overwrite){
                     if (dependency_obj.overwrite){  
-                        overwrite = true
+                        overwrite_idx = true
                     }
                 }   
+                if (Array.isArray(overwrite) && overwrite[i]){
+                    overwrite_idx = overwrite[i]
+                }
                 if (dependency_obj.type == 'docker' && !dependency_obj.build && !dependency_obj.local ){
                     promises.push($this.pullImage(dependency_obj))
                 }   else if (dependency_obj.type == 'docker-local' && dependency_obj.build ){
@@ -591,21 +623,20 @@ export class Procedure {
                 }   else if (dependency_obj.type == 'docker' && dependency_obj.local  ){
                     promises.push($this.loadImage(dependency_obj))
                 } else if (dependency_obj.type == 'orchestration'  ){
-                    console.log("orchestrated download") 
                     promises.push($this.orchestrateDownload(dependency_obj).catch((err)=>{
                         store.logger.error("Error in downloading source url: %o", err);
                         dependency_obj.status.downloading = false
 
                     }))
                 } else {
-                    promises.push($this.downloadSource(dependency_obj, overwrite).then((response)=>{
+                    promises.push($this.downloadSource(dependency_obj, overwrite_idx).then((response)=>{
                         dependency_obj.status.downloading = false  
                         store.logger.info(`______Item download: ${dependency_obj.source.target}`)
                         checkExists(dependency_obj.source.target).then((exists)=>{
                             if (dependency_obj.decompress){ 
                                 store.logger.info("Decompressing required, doing so now for final target... %s", dependency_obj.target)
                                 checkExists(dependency_obj.target).then((exists)=>{
-                                    if (!exists || exists && overwrite || exists && dependency_obj.decompress.overwrite){
+                                    if (!exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
                                         dependency_obj.status.building = true
                                         decompress_file(dependency_obj.decompress.source, path.dirname(dependency_obj.target)).then(()=>{
                                             dependency_obj.status.building = false
