@@ -7,14 +7,14 @@
   - # **********************************************************************
   -->
 <template>
-	<v-card class="" style="margin-top: 5%; margin-right: 5%;">
+	<v-card class="mx-5" style="margin-top: 5%; margin-right: 5%;">
 		<v-row id="topLogs" >
-			<v-col sm="4">
+			<v-col sm="4" class="mx-0">
 
 				
 				<v-select
 					v-model="selectedTarget" 
-					:items="['modules', 'services', 'procedures']" 
+					:items="catalog" 
 					:select-size="4"
 					:menu-props="{ maxHeight: '400' }"
 					label=  "Select Target"
@@ -32,8 +32,8 @@
 			</v-col>
 			<v-col sm="8">
 				<v-select
-					v-model="selected" 
-					:items="names[selectedTarget]" 
+					v-model="selectedModule" 
+					:items="selected" 
 					:select-size="4"
 					prepend-icon="$comment"
 					:label=  "`Select ${selectedTarget}`"
@@ -41,25 +41,30 @@
 					multiple
           			persistent-hint
 				>
-					<!-- <template v-slot:prepend-item>
-						<v-list-item
-							ripple
-							@mousedown.prevent
-							@click="toggle"
+					<template v-slot:selection="{ item, index }">
+						<v-chip v-if="index <= 2">
+						<span>{{ item }}</span>
+						</v-chip>
+						<span
+							v-if="index === 3"
+							class="grey--text text-caption"
 						>
-						<v-list-item-action>
-							<v-icon :color="selected.length > 0 ? 'white darken-4' : ''">
-								{{ icon }}
-							</v-icon>
-						</v-list-item-action>
-						<v-list-item-content>
-							<v-list-item-title>
-							Select All
-							</v-list-item-title>
-						</v-list-item-content>
-						</v-list-item>
-						<v-divider class="mt-2"></v-divider>
-					</template> -->
+						(+{{ selected.length - 3 }} others)
+						</span>
+					</template>
+				</v-select>
+			</v-col>
+			<v-col sm="8">
+				<v-select
+					v-model="selected" 
+					:items="selected" 
+					:select-size="4"
+					prepend-icon="$comment"
+					:label=  "`Select ${selectedTarget}`"
+					:hint="`Choose 1 or more ${selectedTarget}`"
+					multiple
+          			persistent-hint
+				>
 					<template v-slot:selection="{ item, index }">
 						<v-chip v-if="index <= 2">
 						<span>{{ item }}</span>

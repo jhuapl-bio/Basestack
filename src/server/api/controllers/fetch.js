@@ -9,12 +9,15 @@
 const fs = require("fs")
 const { convert_custom, checkFileExist,  checkFolderExists, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
+const { create_module } = require("./init.js")
 const { store }  = require("../../config/store/index.js")
 var  logger  = store.logger
-const { getFiles, readFile,  writeFolder } = require("./IO.js")
+const { getFiles, readFile,  writeFile, writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 const { spawn } = require("child_process")
 const axios = require("axios")
+const YAML = require("yaml") 
+const { parseConfigVariables } = require("../../../shared/definitions.js")
 
 export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathVersion){
 	return new Promise((resolve, reject)=>{
@@ -126,29 +129,29 @@ export async function fetch_primers(){
 		})
 	}
 	return response
-}
-export async function fetch_videos_meta(){
+}    
+export async function fetch_videos_meta(){ 
 	const server_config  = store.config.modules['basestack_tutorial'].config
 	let videoMeta = await checkFileExist(server_config.basePath, "system.json")
-	let userMeta = await readFile(store.system.userMeta)
-	userMeta = JSON.parse(userMeta).modules.basestack_tutorial
-
-	let meta={};
+	let userMeta = await readFile(store.system.userMeta) 
+	userMeta = JSON.parse(userMeta).modules.basestack_tutorial  
+    
+	let meta={};   
 	let srcMetaString =  await readFile(server_config.meta)			
-	let srcMeta  = JSON.parse(srcMetaString)
+	let srcMeta  = JSON.parse(srcMetaString)  
 	const base = server_config.base +":" + server_config.port
 	const videoAddress  = base + "/" + server_config.mp4
-	const resourceAddress = base + "/" + server_config.material
+	const resourceAddress = base + "/" + server_config.material 
 	if(!videoMeta){
 		await writeFolder(server_config.basePath)
-		videoMeta = true
-		meta = srcMeta
-	} else {
+		videoMeta = true 
+		meta = srcMeta 
+	} else { 
 		//the video file already exists, store the older, user defined meta file to compare to new resources one
-		let string = await readFile(server_config.meta)		
-		meta = (JSON.parse(string))
-		const keys = Object.keys(meta)
-		for(let i = 0; i < keys.length; i++){
+		let string = await readFile(server_config.meta)		 
+		meta = (JSON.parse(string))     
+		const keys = Object.keys(meta)    
+		for(let i = 0; i < keys.length; i++){ 
 			const key = keys[i]
 			if(srcMeta[key]){
 				const sections = meta[key].sections
@@ -175,19 +178,129 @@ export async function fetch_videos_meta(){
 			meta[key].sections[j].fullpath = videoAddress +"/"+section.video
 			if (section.script){
 				meta[key].sections[j].script =  resourceAddress + "/" +section.script
-			}
+			} 
 			if (section.pptx){
 				meta[key].sections[j].pptx = resourceAddress + "/" +section.pptx
-			}
+			} 
 			if (section.pdf){
 				meta[key].sections[j].pdf = resourceAddress + "/" +section.pdf	
 			}
 		}
-	}
+	} 
 		
 	return meta
 	
 }
+
+export function save_remote_module(config){
+	try{
+		let version = 0
+		if (config.version){ 
+			version  = config.version
+		}
+		let basename = `${config.name}_${version}.yml`
+
+		let savePath = path.join(store.system.remotes.modules, basename) 
+		config.path = savePath 
+		config.version = version
+		config.remote = true
+		config.local = false
+		config.custom = false
+		// config.loaded = true
+		let parsed_item = parseConfigVariables(JSON.stringify(config), store.system)
+		let modl = create_module(parsed_item)
+		modl.version = config.version
+		modl.remote = config.remote 
+		modl.local = config.local
+		modl.custom = config.custom
+		store.catalog[config.name].modules.push(modl)
+	} catch(err){
+		store.logger.error(err)
+		return
+	}
+}
+
+export function set_stored(key, items){
+	try{
+		let remotes = {}
+		if (items && Array.isArray(items)){
+			
+			items.forEach((item)=>{
+				if (!store.remotes[item.name]){
+					store.remotes[item.name] = []
+				} 
+				
+				
+				let g = item
+				Object.defineProperty(g, 'loaded', {
+					enumerable: true,
+					get: ()=>{ 
+						let idx  = store.config.modules.findIndex((data)=>{
+							return data.name == item.name   && data.version == item.version
+						}) 
+						if (idx > -1){
+							return true
+						} else {
+							return false
+						}
+
+
+					}
+				})
+				store.remotes[item.name].push(g)
+				
+			})
+		} 
+	} catch(err){
+		store.logger.error(err)
+		return
+	}
+}
+export async function fetch_external_config_target(key,catalog){
+	try{
+		let url = `https://basestack-support.herokuapp.com/db/get/${key}/${catalog}`
+		logger.info("%s %s", "Getting url: ", url)
+		let json =  await axios.get(`${url}`)
+		logger.info("returned json: %s", url)
+		try{
+			json.data.data.map((d)=>{
+				d.remote = true
+				d.local = false
+			})
+			return json.data.data
+		} catch(err){
+			logger.error(`${err} error in fetching external url____________`)
+			throw err
+		}
+		
+	} catch(err){
+		logger.error(`${err} error in fetching external url____________`)
+		throw err
+	} 
+}
+export async function fetch_external_config(key){
+	try{
+		let url = `https://basestack-support.herokuapp.com/db/get/${key}`
+		logger.info("%s %s", "Getting url: ", url)
+		let json =  await axios.get(`${url}`)
+		logger.info("returned json: %s", url)
+		try{
+			json.data.data.map((d)=>{
+				d.remote = true
+				d.local = false
+			})
+			return json.data.data
+		} catch(err){
+			logger.error(`${err} error in fetching external url____________`)
+			throw err
+		}
+		
+	} catch(err){
+		logger.error(`${err} error in fetching external url____________`)
+		throw err
+	} 
+}
+
 
 export async function getExternalSource(url){
 	try{
@@ -200,14 +313,13 @@ export async function getExternalSource(url){
 		throw err
 	} 
 }
-
-
+  
+ 
 export async function getRemoteConfigurations(url){
 	var clone = require("git-clone/promise");
 	try{
 		logger.info("%s %s", "Getting url: ", url)
 		let json = await clone(url, "/Users/Desktop/tmp")
-		console.log( json )
 		logger.info("%s %o", "returned json: ", json.data)
 		return json
 	} catch(err){
@@ -215,15 +327,13 @@ export async function getRemoteConfigurations(url){
 		throw err 
 	} 
 }
-
  
+
 
 
 export async function fetch_external_dockers(key){
 	let url = `https://registry.hub.docker.com/v2/repositories/${key}/tags/latest`
 	try{
-		// logger.info(url)
-		// console.log("store", url, store.images)
 		if (! store.images[key] ){
 			store.images[key] = {
 				fetching_available_images: {},
@@ -354,7 +464,7 @@ export async function check_image(image){
 				})
 				
 			})().catch((error)=>{ 
-				// logger.error(`check image exists failed or doesn't exist`)
+				// logger.error(`check image exists failed or doesn't exist %o`, error)
 				reject(error)
 			});
 		} catch(err){

@@ -8,99 +8,105 @@
   - # **********************************************************************
   -->
 <template>
+  <div id="service" v-if="status">
+  <v-toolbar dense dark >
+    <!-- <v-app-bar-nav-icon></v-app-bar-nav-icon> -->
 
-  <div id="service">
-    <!-- <v-row>
-      <div  v-if="status" class=" p-3 outer-entry-right">
-        <span 
-            class="center-align-icon configure"
-            v-if="!status || !status.exists|| status.exists && !status.exists.running"
-            @click="start_service(service)"> Start Service
-          <font-awesome-icon  icon="sync" style="margin-left: 10px; margin-right: 10px"/>
-        </span>
-        <span v-v-tooltip.hover.top
-            v-else-if="status && status.exists && status.exists.running" 
-            class="center-align-icon configure"
-            style="width: 100%"
-            @click="cancel_service(name)" > Cancel Service
-          <font-awesome-icon  icon="times" style="margin-left: 10px; margin-right: 10px"/>
-        </span>
-        <span class="center-align-icon" style="float:middle; display:flex" v-tooltip="{
-              content: 'Running',
-              placement: 'top',
-              classes: ['info'],
-              trigger: 'hover',
-              targetClasses: ['it-has-a-tooltip'],
-              }">
-        </span>        
-        </span>
+      <v-toolbar-title class="white--text text-center ">{{service.label}}</v-toolbar-title>
+      <div v-if="status.running">
+        <looping-rhombuses-spinner  
+          :animation-duration="6000" 
+          :size="6" class="ml-3"
+          :color="'white'"
+        />
       </div>
-    </v-row> -->
-    <v-card-title centered class="text-center">
-      Service {{serviceIdx+1}}: {{service.label}}
-    </v-card-title>
-    <v-row v-if="service.variables"  style="" class=" ">
-        <v-col :cols="(variable.column ? variable.column : 6)" v-for="[key, variable] of Object.entries(service.variables)" :key="key"  :class="getClass(variable.class, variable.element)" >
-            <label class="entry-label" v-if="!variable.hidden">{{variable.label}}</label>
-            <div v-if="!variable.options"  class="entry from-group">
-              <component
-                  :is="factory[variable.element]"
-                  :source="variable"
-                  :status="status"
-                  :service="service"
-                  :count="count"
-                  :variable="key"
-                  :hidden="variable.hidden"
-                  @updateValue="updateValue($event, false, variable, key)"
-                  >
-              </component>
-
-            </div>
-            <div v-else  class="entry from-group">
-              <multiselect 
-                  v-model="variable.option" 
-                  :options="variable.options.map((d,i)=>{ return i})" 
-                  :searchable="false" 
-                  @input="updateValue($event, true, variable, key)"
-                  :preselect-first="true"
-                  :close-on-select="true" 
-                  :allow-empty="false"
-                  :show-labels="false" 
-                  style="overflow-wrap:anywhere"
-                  placeholder="Pick a db">
-                      <template slot="singleLabel" 
-                        slot-scope="{ option }">{{ variable.options[option].name ? variable.options[option].name : variable.options[option] }}
-                      </template>
-                      <template slot="option" 
-                        slot-scope="{ option }">{{ variable.options[option].name ? variable.options[option].name : variable.options[option] }}
-                      </template>
-              </multiselect>
-                <component
-                    v-if="variable.option || variable.option == 0"
-                    :is="variable.options[variable.option].element"
-                    :source="variable.option"
-                    :hidden="variable.options[variable.option].hidden"
-                    :variable="key"
-                    :status="status"
-                    :service="service"
-                    @updateValue="updateValue($event, true, variable, key)"
-                >
-                </component> 
-            </div>
-        </v-col>  
-    </v-row>
-    
-    <div class="w-100 p-3 mv-1">
-        <Progresses
-            v-if="progresses"
-            :progresses="progresses"
-            :running="( status.exists ? status.exists.running : false )"
-        ></Progresses>
-    </div>
-     <div v-if="status && status.stream" class="w-100 p-3 mv-1">
-        <p class="entry-label" style="font-size: 120%">Logs</p>
-        <LogWindow :info="status.stream.info"></LogWindow>
-    </div>    
+      <div v-else-if="status.error">
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-icon v-on="on" color="orange darken-2"  class="ml-3"  small >$exclamation-triangle</v-icon>
+          </template>
+          Error in running procedure, check logs
+        </v-tooltip>
+      </div>
+      <v-spacer></v-spacer>
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-icon class="mx-4" v-on="on" @click="start_service()" medium >$play-circle</v-icon> 
+        </template>
+        Run Service Individually
+      </v-tooltip>
+      <v-tooltip top v-if="status.running">
+        <template v-slot:activator="{ on }">
+          <v-icon class="mx-4"  v-on="on"  @click="cancel_service()" color="orange darken-2" medium>$times</v-icon>
+        </template>
+        Cancel Service 
+      </v-tooltip> 
+      <v-dialog
+          v-model="logdialog" v-if="status && status.stream"
+        > 
+          <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  color="light"
+                  
+                  icon
+                  class="mx-2"
+                  v-bind="attrs"
+                  v-on="on"
+                  ><v-icon medium >$comment</v-icon>
+                </v-btn>
+          </template>
+          <v-card  class="w-100 pr-2 pl-2 mt-2 mb-2">
+            <p class="entry-label" style="font-size: 120%">Logs</p>
+            <LogWindow :info="status.stream.info"></LogWindow>
+          </v-card> 
+      </v-dialog>
+      <template v-slot:extension>
+          <v-tabs 
+            v-model="tabParam" 
+            show-arrows 
+            next-icon="$arrow-alt-circle-right"
+            prev-icon="$arrow-alt-circle-left"
+            icons-and-text 
+            color="white"
+            slider-color="primary"
+          >
+            <v-tab 
+              centered
+              v-for="entry in categories"
+              v-bind:key="entry.title"
+            >
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on }">
+                  <div  >
+                    <span class="tabSideItemText">{{entry.title }}</span>
+                  </div>
+                </template>
+                <span>{{entry.tooltip}}</span>
+              </v-tooltip>
+              <v-icon x-small> 
+                {{ '$' + entry.icon }}
+              </v-icon>						
+            </v-tab>
+          </v-tabs>
+      </template>
+    </v-toolbar>
+    <v-tabs-items  v-model="tabParam"  >
+      <v-tab-item height="100vh"  v-for="entry in categories" :key="entry.title + 'tabitem'">
+          <component
+              :is="entry.component"
+              :source="entry.variable"
+              :status="status"
+              :items="additionals"
+              :defaultHeaders="headers"
+              :progresses="progresses"
+              @updateValue="updateValue"
+              :running="( status.exists ? status.exists.running : false )"
+              :service="service"
+          >
+        </component>
+      </v-tab-item>
+    </v-tabs-items>
+   
   </div>
 </template>
 
@@ -110,11 +116,14 @@ import File from '@/components/Framework/Mods/File.vue';
 import Dir from '@/components/Framework/Mods/Dir.vue';
 import List  from '@/components/Framework/Mods/List.vue';
 import Render from '@/components/Framework/Mods/Render.vue';
+import ConfigurationFile from '@/components/Framework/Mods/ConfigurationFile.vue';
+import Advanced from "@/components/Framework/Advanced.vue"
 import FileService from '@/services/File-service.js'
 import Progresses from '@/components/Framework/Progresses.vue'
 import {LoopingRhombusesSpinner} from 'epic-spinners'
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
 import Multiselect from 'vue-multiselect'
+import ListParams  from '@/components/Framework/Mods/ListParams.vue';
 
 
 
@@ -142,10 +151,13 @@ export default {
     Dir,
     String,
     List,
+    ConfigurationFile,
  		LoopingRhombusesSpinner,
     Progresses,
     LogWindow,
-    Multiselect
+    ListParams,
+    Multiselect,
+    Advanced
   },
   methods: {
     getServiceProgress(){
@@ -159,7 +171,7 @@ export default {
         }).then((response)=>{
             $this.progresses =  response.data.data
             $this.progressChecking = false
-
+            console.log(response.data.data,"data")
         }).catch((err)=>{
             console.error(err)
             $this.progressChecking = false
@@ -176,143 +188,9 @@ export default {
         }
       }
     },
-    updateValue(value, option, variable, name){
-      let src = value
-      if (option){
-        variable.option = src
-      } else {
-        variable.source  = src
-      }
-      const $this = this
-      try{
-        FileService.updateCacheServiceVariable({
-          service: this.name,
-          token: (process.env.NODE_ENV == 'development' ? 'development' : this.$store.token),
-          value: value, 
-          target: (option  ? "option" : "source"),
-          variable: name,
-        })
-      } catch(err){
-        console.error(err,"<<<<< error in caching update")
-      }
-      try{
-        let promises = []
-        if (this.service.variables){
-          let reads = []
-          for (let [key, f] of Object.entries($this.service.variables)){
-            if (f.read){
-              reads.push(f)
-            }
-          }
-          if (variable && reads.length > 0){
-            reads.forEach((variable)=>{
-              FileService.readDepVariable({
-                value: variable.read,
-                variable: variable, 
-                variables: $this.service.variables
-              }).then((response)=>{
-                let data = response.data.data
-                if (variable.depends){
-                  let key = variable.depends_key
-                  variable.depends.map((d)=>{
-                    data.forEach((row)=>{
-                      if (row[key] == d){
-                        if ($this.service.variables[row[key]].option || $this.service.variables[row[key]].option  == 0){
-                          let index = $this.service.variables[row[key]].options.map((e)=>{
-                            return e 
-                          }).indexOf(row.configuration)
-                          $this.service.variables[row[key]].option = index
-                        } else {
-                          $this.service.variables[row[key]].source = row.configuration
-                        }
-                      }
-                    })
-                  })
-                }
-                variable.source = response.data.data
-              }).catch((err)=>{
-                console.log(err)
-              })
-              
-            })
-          }
-        }
-        
-      } catch(err){
-        // $this.logger.error(err)
-        console.error(err)
-      }
-
-      if (!this.intervalProgress){
-          try{
-              this.intervalProgress = true
-              if ($this.service.progress){
-                if ($this.intervalProgress){
-                  try{
-                    clearInterval($this.intervalProgress)
-                  } catch(err){
-                    console.error(err)
-                  }
-                }
-                if  ($this.progresses.filter((d)=>{return d != 1}).length > 1 ){
-                  clearInterval($this.intervalProgress)
-                } 
-                else {
-                  $this.progressChecking = false
-                  $this.getServiceProgress()
-                  $this.intervalProgress = setInterval(()=>{
-                    if (!$this.progressChecking){
-                      $this.getServiceProgress()
-                    }
-                  }, 3000)
-                }
-              }
-          }
-          catch (err){
-              console.error(err)
-          } finally{
-              this.intervalProgress = false
-              this.$emit("updateValue", { src: src, name: $this.name, target: value }   )
-          }
-      }
-    },
-    async getService(){
-      const $this = this
-      try{
-        let response = await FileService.getService($this.name)
-        this.service  = response.data.data
-      } catch(error){
-        console.error(error,"error in init config for service", $this.name)
-        this.$swal.fire({
-          position: 'center',
-          icon: 'error',
-          showConfirmButton:true,
-          title:  error.response.data.message
-        })
-      }
-      
-    },
-    async getStatus(){
-      const $this = this
-      try{
-          let response = await FileService.getServiceStatus({
-              service: $this.name,
-              variables: $this.service.variables
-          })
-          this.status = response.data.data.status
-          this.progresses = Object.keys(response.data.data.watches).map((key) =>  response.data.data.watches[key]);
-          this.$emit("sendStatus", { status: this.status, service: $this.serviceIdx } )			
-      } catch(err){
-        this.initial=false
-        console.error(`${err} error in getting status`)
-      } finally {
-        this.intervalChecking = false
-      }
-    },
-    async cancel_service(){
-      // console.log(this.service.variables, workflowIdx, serviceIdx, this.moduleIdx)
-      await FileService.cancelService({
-        service: this.name,
+    async rm_service(){
+      await FileService.rmService({
+        service: this.name
       }).then((response)=>{
         this.$swal.fire({
           position: 'center',
@@ -332,23 +210,198 @@ export default {
         })
       })
     },
-    // checkError(){
-    //   //First, check if all variables have been assigned otherwise call error
-    //   let errors = { 'variables': [], called: true }
-    //   let warnings = { 'variables': [], called: false }
-    //   if (this.service.variables){
-    //     this.services.variables.forEach((variable)=>{
-    //       if (!variable.source || variable.source === ''){
-    //         errors
-    //       }
-    //     })
-    //   }
-    // },
+    updateValue(value){
+      let src = value.src
+      let variable = this.service.variables[value.variable]
+      if (value.option){
+        variable.option = src
+      } else {
+        variable.source  = src
+      }
+      const $this = this
+      this.$emit("updateValue", { src: src, service: $this.serviceIdx, variables: value.variable, option: value.option  }   )
+      try{
+        FileService.updateCacheServiceVariable({
+          token: (process.env.NODE_ENV == 'development' ? 'development' : this.$store.token),
+          service: $this.serviceIdx,
+          procedure: $this.procedure, 
+          module: $this.module,
+          catalog: $this.catalog,
+          value: value.src, 
+          target: (value.option  ? "option" : "source"),
+          variable: value.variable,
+        }).then((response)=>{
+        })
+      } catch(err){
+        console.error(err,"<<<<< error in caching update")
+      } 
+      // try{
+      //   let promises = []
+      //   if (this.service.variables){
+      //     let reads = []
+      //     for (let [key, f] of Object.entries($this.service.variables)){
+      //       if (f.read){
+      //         reads.push(f)
+      //       }
+      //     }
+      //     if (variable && reads.length > 0){
+      //       reads.forEach((variable)=>{
+      //         FileService.readDepVariable({
+      //           value: variable.read,
+      //           variable: variable, 
+      //           variables: $this.service.variables
+      //         }).then((response)=>{
+      //           let data = response.data.data
+      //           if (variable.depends){
+      //             let key = variable.depends_key
+      //             variable.depends.map((d)=>{
+      //               data.forEach((row)=>{
+      //                 if (row[key] == d){
+      //                   if ($this.service.variables[row[key]].option || $this.service.variables[row[key]].option  == 0){
+      //                     let index = $this.service.variables[row[key]].options.map((e)=>{
+      //                       return e 
+      //                     }).indexOf(row.configuration)
+      //                     $this.service.variables[row[key]].option = index
+      //                   } else {
+      //                     $this.service.variables[row[key]].source = row.configuration
+      //                   }
+      //                 }
+      //               })
+      //             })
+      //           }
+      //           variable.source = response.data.data
+      //         }).catch((err)=>{
+      //           console.log(err)
+      //         })
+              
+      //       })
+      //     }
+      //   }
+        
+      // } catch(err){
+      //   // $this.logger.error(err)
+      //   console.error(err)
+      // }
+
+      // if (!this.intervalProgress){
+      //     try{
+      //         this.intervalProgress = true 
+      //         if ($this.service.progress){
+      //           if ($this.intervalProgress){
+      //             try{
+      //               clearInterval($this.intervalProgress)
+      //             } catch(err){
+      //               console.error(err)
+      //             }
+      //           }
+      //           if  ($this.progresses.filter((d)=>{return d != 1}).length > 1 ){
+      //             clearInterval($this.intervalProgress)
+      //           } 
+      //           else {
+      //             $this.progressChecking = false
+      //             $this.getServiceProgress()
+      //             $this.intervalProgress = setInterval(()=>{
+      //               if (!$this.progressChecking){
+      //                 $this.getServiceProgress()
+      //               }
+      //             }, 3000)
+      //           }
+      //         }
+      //     }
+      //     catch (err){
+      //         console.error(err)
+      //     } finally{
+      //         this.intervalProgress = false
+      //        
+      //     }
+      // }
+    },
+    async getService(){
+      const $this = this
+      try{
+        let response = await FileService.getService({
+            service: $this.serviceIdx,
+            procedure: $this.procedure, 
+            module: $this.module,
+            catalog: $this.catalog,
+            token: this.$store.token
+        })
+        this.service  = response.data.data
+        console.log(this.service.variables)
+        this.status = this.service.status
+
+      } catch(error){
+        console.error(error,"error in init config for service", $this.name)
+      }
+      
+    },
+    async getStatus(){
+      const $this = this
+      try{
+          let response = await FileService.getServiceStatus({
+              service: $this.serviceIdx,
+              procedure: $this.procedure, 
+              token: $this.$store.token,
+              module: $this.module,
+              catalog: $this.catalog
+          })
+          this.status = response.data.data.status
+          this.progresses = response.data.data.watches
+          // this.$emit("sendStatus", { status: this.status, service: $this.serviceIdx } )			
+      } catch(err){
+        this.initial=false
+        console.error(`${err} error in getting status`)
+      } finally {
+        this.intervalChecking = false
+      }
+    },
+    async cancel_service(){
+      const $this = this
+      await FileService.cancelService({
+        service: $this.serviceIdx,
+        procedure: $this.procedure, 
+        module: $this.module,
+        catalog: $this.catalog,
+      }).then((response)=>{
+        this.$swal.fire({
+          position: 'center',
+          icon: 'success',
+          showConfirmButton:true,
+          title:  response.data.message
+        })
+  			this.count +=1
+
+      }).catch((error)=>{
+        console.error(error)
+        this.$swal.fire({
+          position: 'center',
+          icon: 'error',
+          showConfirmButton:true,
+          title:  error.response.data.message
+        })
+      })
+    },
+    close () {
+        this.logdialog = false
+    },
     async start_service( ){
       // this.checkError()
+      const $this = this
+      let variables ={}
+      if (this.service.variables){
+        for (let [key, value] of Object.entries(this.service.variables)){
+          variables[key] = {}
+          variables[key].source = value.source
+          variables[key].option = value.option
+        }
+      }
       await FileService.startService({
-        service: this.name, 
-        variables: this.service.variables
+        service: $this.serviceIdx,
+        procedure: $this.procedure, 
+        module: $this.module,
+        token: $this.$store.token,
+        catalog: $this.catalog,
+        variables: $this.service.variables
       }).then((response)=>{
 			  this.count +=1
         this.$swal.fire({
@@ -370,12 +423,49 @@ export default {
 	},
   data(){
     return{
-      
+      arguments: [
+
+      ],
+      tabParam: 0, 
+      mini:true,
+      drawer: true,
+      selectedItem: 0,
+      service: {},
+      status: {},
+      headers: [
+        // {
+        //   text: "Actions",
+        //   value: "actions",
+        //   sortable: true
+        // },
+        {
+          text: "Param",
+          value: "label",
+          sortable: true
+        },
+        // {
+        //   text: "Bind",
+        //   value: "bind",
+        //   sortable: true
+        // },
+        {
+          text: "Source",
+          value: "source",
+          sortable: true
+        },
+        // {
+        //   text: "Target",
+        //   value: "target",
+        //   sortable: true
+        // }
+      ],
+      logdialog: false,
       factory: {
 
         'string': "String",
         "file": "File",
         "render": "Render",
+        "configuration-file": "ConfigurationFile",
         "dir": "Dir",
         "list": "List"
 
@@ -385,24 +475,87 @@ export default {
       count:0,
       variables: {},
       intervalChecking:false,
-      tab:0,
-      status: {},
       progresses: [],
-      service: {},
-      tabService: 2,
+      tabService: 0,
     }
   },
-  props: [  'name', 'procedure', 'serviceIdx' ],
+  props: [  'module', 'procedure', 'catalog',  'serviceIdx'],
+  watch: {
+    logdialog (val) {
+      val || this.close()
+    },
+    variant(){
+      this.status = {}
+    },
+    serviceIdx(){
+      this.status = {}
+    },
+    procedure(){
+      this.status = {}
+    }
+  },
   computed: {
-   
+    categories(){
+      let categories = [
+        {
+          "tooltip": "Variables and Parameters to Set on Run",
+          "title": "Params",
+          "icon": "cog",
+          "component": "ListParams"
+        },
+        {
+          "tooltip": "Outputs to watch, report",
+          "title": "Outputs",
+          "icon": "folder",
+          "component": "Progresses"
+        }
+      ]
+      this.additionals.forEach((variable, i)=>{
+        if (variable.element == 'render'){
+          categories.push(
+            {
+              "tooltip": i + ". Rendered visualization or dashboard from pipeline service",
+              "title": "Render " + i,
+              "icon": "desktop",
+              "variable": variable,
+              "component": "Render"
+            }
+          )
+        }
+      })
+      
+      return categories
+    },
+    additionals(){
+     let ta= []
+     if (this.service.variables){
+       for (let [key, value ] of Object.entries(this.service.variables)){
+         value.name = key
+          ta.push(value)
+        }
+     }
+        
+     return ta
+   }
   },
   mounted(){
     const $this = this
-    this.getService($this.name).then(()=>{
-      this.getStatus().then(()=>{
-        this.started = true
-          this.interval = setInterval(()=>{
-              if (!this.intervalChecking){
+    this.getService({
+      module: this.module,
+      catalog: this.catalog,
+      service: this.serviceIdx, 
+      procedure: this.procedure
+    
+    }).then(()=>{
+      $this.getStatus({
+      module: $this.module,
+      catalog: $this.catalog,
+      service: $this.serviceIdx, 
+      procedure: $this.procedure
+    }).then(()=>{
+        $this.started = true
+          $this.interval = setInterval(()=>{
+              if (!$this.intervalChecking){
                   $this.getStatus()
               }
           }, 1500)

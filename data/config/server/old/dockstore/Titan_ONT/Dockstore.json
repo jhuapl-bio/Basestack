@@ -1,5 +1,0 @@
-{
-  "titan_ont.primer_bed": "/opt/app/data/test-data/artic-ncov2019/primer_schemes/SARS-CoV-2/V3/nCoV-2019.primer.bed",
-  "titan_ont.demultiplexed_reads": "/opt/app/data/test-data/NB03_full.fastq",
-  "titan_ont.samplename": "String"
-}

@@ -35,9 +35,6 @@ export  class Server {
     defineCache(token){
         console.log("define cache")
         return {
-            services: {},
-            procedures: {},
-            modules: {},
         }
     }
     async initiate_server(port){

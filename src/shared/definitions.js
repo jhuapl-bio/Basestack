@@ -9,8 +9,8 @@ export function parseConfigVariables(data, config){
 	data = data.replace(/\$\{configPath\}/g, config.configPath)
 	data = data.replace(/\$\{uploadPath\}/g, config.uploadPath)
 	data = data.replace(/\$\{resourcePath\}/g, config.resourcePath)
-	data = data.replace(/\\/g, "/") 
-	data= YAML.parse(data) 
+	// data = data.replace(/\\/g, "/") 
+	data= YAML.parse(data)  
 	return data 
 } 
  

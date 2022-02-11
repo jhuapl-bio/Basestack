@@ -43,15 +43,43 @@ class FileService {
   getDefaults(){
     return Api().get(`${baseEndpoint.get()}/defaults/get`)    
   }
-  getModules(){
-    return Api().get(`${baseEndpoint.get()}/modules/get`)    
+  getModule(param){
+    return Api().get(`${baseEndpoint.get()}/modules/get/${param.catalog}`)    
   }
-  cancelModule(params){
+  setRemoteModule(params){
+    return Api().post(`${baseEndpoint.get()}/remote/set/modules`, params)    
+  }
+  saveRemoteModule(params){ 
+    return Api().post(`${baseEndpoint.get()}/remote/save/modules`, params)    
+  }
+  getCatalog(){
+    return Api().get(`${baseEndpoint.get()}/catalog/all/get`)    
+  }
+  getModules(param){
+    return Api().get(`${baseEndpoint.get()}/modules/get/${param.catalog}`)    
+  }
+  getInstalledModules(){
+    return Api().get(`${baseEndpoint.get()}/catalog/installed/get`) 
+  }
+  cancelBuild(params){
     return Api().post(`${baseEndpoint.get()}/module/build/cancel`, params)    
   }
   buildModule(params){
     return Api().post(`${baseEndpoint.get()}/module/build`, params)    
   }
+  buildProcedure(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/build`, params)    
+  }
+  buildProcedureDependency(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/build/dependency`, params)    
+  }
+  cancelProcedureDependency(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/build/cancel/dependency`, params)    
+  }
+  updateVariableJob(params){
+    return Api().post(`${baseEndpoint.get()}/job/set/variable`, params)    
+  }
+  
   deleteModule(params){
     return Api().post(`${baseEndpoint.get()}/module/remove`, params)    
   }
@@ -70,15 +98,27 @@ class FileService {
   getServices(){
     return Api().get(`${baseEndpoint.get()}/services/get`)    
   }
-  getProcedures(){
-    return Api().get(`${baseEndpoint.get()}/procedures/get`)    
+  getProcedures(params){
+    return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.module}/${params.token}`)    
   }
+
+  getJobStaged(params){
+    return Api().get(`${baseEndpoint.get()}/job/stage/${params.catalog}/${params.module}/${params.procedure}`)    
+  }
+  getJobStatus(params){
+    return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.module}/${params.procedure}`)    
+  }
+  startJob(params){
+    return Api().post(`${baseEndpoint.get()}/job/start`, params)    
+  }
+  cancelJob(params){
+    return Api().post(`${baseEndpoint.get()}/job/cancel`, params)    
+  }
+  
   getModulesStatus(){
     return Api().get(`${baseEndpoint.get()}/modules/get/status`)    
   }
-  getServiceStatus(params){
-    return Api().post(`${baseEndpoint.get()}/service/status`, params)    
-  }
+  
   getAllServiceStatus(){
     return Api().get(`${baseEndpoint.get()}/services/status`)    
   }
@@ -91,8 +131,11 @@ class FileService {
   getAllModuleNames(){
     return Api().get(`${baseEndpoint.get()}/modules/names`)    
   }
-  getService(name){
-    return Api().get(`${baseEndpoint.get()}/service/get/${name}` )    
+  getService(params){
+    return Api().get(`${baseEndpoint.get()}/service/get/${params.catalog}/${params.module}/${params.procedure}/${params.service}/${params.token}` )    
+  }
+  getServiceStatus(params){
+    return Api().get(`${baseEndpoint.get()}/status/get/service/${params.catalog}/${params.module}/${params.procedure}/${params.service}/${params.token}`)    
   }
   getProceduresStatus(params){
     return Api().get(`${baseEndpoint.get()}/procedures/status`, params)    
@@ -100,8 +143,8 @@ class FileService {
   getStatusProceduresSelect(params){
     return Api().post(`${baseEndpoint.get()}/procedures/status/select`, params)    
   }
-  getStatusProcedure(name){
-    return Api().get(`${baseEndpoint.get()}/procedure/status/${name}` )    
+  getStatusProcedure(params){
+    return Api().get(`${baseEndpoint.get()}/status/get/procedure/${params.module}/${params.variant}/${params.procedure}` )    
   }
   getSelectProceduresStatuses(params){
     return Api().post(`${baseEndpoint.get()}/procedures/status/select`, params)    
@@ -159,6 +202,21 @@ class FileService {
   }
   rmModule(params) {
     return Api().post(`${baseEndpoint.get()}/module/custom/remove`, params)
+  }
+  fetchRemoteCatalog(target, name){
+    return Api().get(`${baseEndpoint.get()}/remote/get/${target}/${name}`)
+  }
+  fetchRemoteAll(name){
+    return Api().get(`${baseEndpoint.get()}/remote/get/${name}`)
+  }
+  removeCatalog(params){
+    return Api().post(`${baseEndpoint.get()}/catalog/remove`, params)
+  }
+  deleteProcedureDependencies(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/dependencies/remove`, params)
+  }
+  removeProcedureDependency(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/remove/dependency`, params)
   }
   startService(params){
     return Api().post(`${baseEndpoint.get()}/service/run`, params)

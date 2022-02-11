@@ -1,10 +1,10 @@
-# - name: "introduction"
-#   icon: "home"
-#   title: "Home"
-#   component: "Introduction"
-#   module: False
-#   tooltip: null
-#   image: null
+- name: "dashboard"
+  icon: "home"
+  title: "Home"
+  component: "Dashboard"
+  module: False
+  tooltip: "Home Page"
+  image: null
 - name: "library"
   icon: "book"
   title: "Library"
@@ -37,12 +37,12 @@
       component: "Nextstrain"
       module: False
       tooltip: "Compare mutations on Nextstrain (internet access required)"
-- name: "logs"
-  icon: "book-open"
-  title: "Logs"
-  component: "LogDashboard"
-  module: False
-  tooltip: "View currently running logs of processes"
+# - name: "logs"
+#   icon: "book-open"
+#   title: "Logs"
+#   component: "LogDashboard"
+#   module: False
+#   tooltip: "View currently running logs of processes"
 - name: "system"
   icon: "cog"
   title: "System"

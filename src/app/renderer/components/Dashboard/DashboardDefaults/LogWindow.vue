@@ -20,7 +20,7 @@
             <font-awesome-icon :icon="(scroll ? 'comment' : 'comment-slash')" size="sm"/>
     </span>	
     <div class="logWindow" >
-        <div v-if="info" class="logDiv" style="max-height: 200px; overflow-y:auto; ">
+        <div v-if="info" class="logDiv" style="max-height: 400px; overflow-y:auto; ">
             <code >
                 <p v-for="(line, index) in info"  v-bind:key="index">{{ line }}</p>
             </code>

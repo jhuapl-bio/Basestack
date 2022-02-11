@@ -71,7 +71,6 @@ export async function createVolumes(names){
 export var prune_images = async function(){ 
 	try{
 		let responseContainers = await store.docker.pruneContainers()
-    	console.log(responseContainers   )
 		let responseawait = await store.docker.pruneImages( { 'filters' : { 'dangling' : { 'true' : true } } } )
 		return responseawait 
 	}
@@ -155,7 +154,7 @@ export var pullImage  = function(name){
         }
         resolve(stream)
       }).catch((errStream)=>{
-        logger.error("Err in pulling image %s", name)
+        store.logger.error("Err in pulling image %s", name)
         reject(errStream)
       });
     })

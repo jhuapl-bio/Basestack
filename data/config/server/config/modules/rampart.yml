@@ -1,0 +1,130 @@
+- name: "rampart"
+  title: "Rampart"
+  icon: "tree"
+  basestack_released: 2.0
+  version: 1.0
+  module: True
+  tags: 
+    - "visualization"
+    - "genomic annotation"
+    - "targeted sequencing"
+    - "artic"
+  tooltip: "Run the Artic RAMPART annotation tool"
+  procedures: 
+    - name: "rampart"
+      title: "RAMPART"
+      icon: "tree"
+      component: "RAMPART"
+      module: True
+      init: false 
+      variables:
+        port:
+          label: "Served Port"
+          column: 12
+          element: "render"
+          port: true
+          bind:
+            from: "3000"
+            to: "3000"
+        # /opt/basestack_consensus/code/artic-ncov2019/rampart
+        protocol:
+          label: "Protocol JSON"
+          element: "dir"
+          hint: "Must be json file that contains your protocol for your sequencing setup"
+          bind_parent_dir: false
+          class: "wb-50  p-3 mb-1"
+          option: 0
+          options:
+            - hidden: false
+              name: "Artic Default Protocol"
+              source: "/opt/basestack_consensus/code/artic-ncov2019/rampart/protocol.json" 
+            - element: "file"
+              name: "Custom Protocol"
+              source: null
+              target: null
+              bind_parent_dir: true
+              bind: 
+                from: "%{variables.protocol.source}"
+                to: "/opt/protocol" 
+        references:
+          label: "Genome Reference"
+          hint: "Must be fasta file"
+          bind_parent_dir: false
+          class: "wb-50  p-3 mb-1"
+          option: 0
+          options:
+            - hidden: false
+              name: "Default Genome fastas for SARS-nCoV-2"
+              source: "/opt/basestack_consensus/code/artic-ncov2019/rampart/references.fasta" 
+            - element: "file"
+              name: "Custom Protocol"
+              source: null
+              target: null
+              bind_parent_dir: true
+              bind: 
+                from: "%{variables.reference.source}"
+                to: "/opt/reference" 
+        clear: 
+          label: "Clear Annotated"
+          hint: "clear annotations, start fresh run"
+          option: 0
+          options:
+            - element: null
+              name: "Clear Annotated"
+              append:
+                command: " --clearAnnotated"
+                placement: 2
+                services: 
+                  - 0
+            - element: null
+              name: "Resume Annotations"
+        anotations:
+          label: "Annotations"
+          element: "dir"
+          output: True
+          hint: "Annotation files"
+          bind_parent_dir: false
+          source: "%{variables.fastq.source}/annotations"
+          target: "%{variables.fastq.bind.to}/"
+        fastq:
+          label: "Fastq Directory"
+          element: "dir"
+          hint: "Files must not be compressed!"
+          bind_parent_dir: false
+          bind: 
+            from: "%{variables.fastq.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "%{variables.fastq.bind.to}/%{variables.fastq.source}"
+      tooltip: "View RAMPART"
+      dependencies:
+        - target: "jhuaplbio/basestack_consensus"
+          label: "jhuaplbio/basestack_consensus"
+          type: "docker"
+          format: "docker"
+      services: 
+        - name: "rampart"
+          image: "jhuaplbio/basestack_consensus"
+          continuous: true
+          orchestrated: false #orchestrated means it r
+          init: true
+          command: ['bash', '-c',
+              "cd  ${fastq}
+              && source $HOME/.bashrc
+              && set +u; conda activate artic-ncov2019; set -u
+              && rampart
+              --protocol ${protocol}
+              --annotatedPath ${fastq}
+              --basecalledPath ${fastq}
+              --referencesPath ${references}" ]
+          hideStatus: true
+          label: "RAMPART"
+          force_restart: true
+          ports:  
+            - 3001:3001
+            - 3000:3000
+          
+        
+        
+          

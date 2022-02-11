@@ -23,6 +23,8 @@ const  targz = require('targz');
 var Client = require('ftp');
 const extract = require('extract-zip')
 const clone = require('git-clone');
+const tar = require("tar")
+
 
 export function set(attribute, value, obj, type) {
     var depth_attributes = attribute.split('.');
@@ -429,13 +431,13 @@ export async function decompress_file(file, outpath){
 			extract(file, { dir: outpath }, (err, stream)=>{
 				if(err) {
 					reject(err)
-				} else {
+				} else { 
 					store.logger.info("Decompressed .zip file: %s ", file)
-					resolve()
+					resolve() 
 				} 
 			}).catch((err)=>{
 				store.logger.error("Not able to unzip file")
-				reject(err)
+				reject(err) 
 
 			})
 		} else {
@@ -447,11 +449,46 @@ export async function decompress_file(file, outpath){
 
 	
 }	
-	
+export async function archive(filepath, gzip){
+	return new Promise((resolve, reject)=>{
+			fs.exists(filepath, function(exists){
+			if (exists){
+				let filetar = path.resolve(`${filepath}.tar`)
+				if (gzip){
+					filetar = filetar+".gz"
+				}
+				let basefilename = path.basename(filepath)
+				let foldername = path.dirname(filepath)
+				let basefiletar = path.basename(filetar) 
+				// let writer = fs.createWriteStream(filetar)
+				tar.c( // or tar.create
+				{
+					gzip: gzip,
+					file: filetar,
+					C: foldername,
+					cwd: foldername,
+					preservePaths: true
+				},
+				[basefilename]
+				).then(_ => { 
+					store.logger.info("%s tar archive made", filetar)
+					resolve()
+				}).catch((err)=>{
+					store.logger.error("err in writing archive tgx %s %s", filetar, err)
+					reject(err)
+				})
+				
+			} else {
+				reject("File doesnt exist " + filepath)
+			}
+		})	 
+	})
+}
 
 export async function writeFile(filepath, content){
 	return new Promise((resolve, reject)=>{
 			const directory = path.dirname(filepath)
+			console.log("writing file: file", filepath)
 			mkdirp(directory).then(response=>{
 				fs.writeFile(filepath, content,(errFile)=>{
 					if (errFile){

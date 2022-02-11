@@ -25,7 +25,7 @@
             <v-toolbar
                 flat
             >
-                <v-toolbar-title>List Table</v-toolbar-title>
+                <v-toolbar-title>{{ ( title ? title : 'List Table' )  }}</v-toolbar-title>
                 <v-divider
                     class="mx-4"
                     inset
@@ -60,10 +60,10 @@
 
                                 >
                                     <v-container v-for="head in headers" :key="head.value + head.index">
-                                        <v-text-field v-if="head.value !== 'actions'"
-                                            v-model="editedItem[head.value]"
-                                            :label="head.text"
-                                        ></v-text-field>
+                                            <v-text-field v-if="head.value !== 'actions'"
+                                                v-model="editedItem[head.value]"
+                                                :label="head.text"
+                                            ></v-text-field>
                                     </v-container>
                                     
                                 </v-col>
@@ -108,51 +108,7 @@
        
         
     </v-data-table>
-   <!-- <table class="table table-striped" style="text-align:center">
-        <thead class="thead-dark">
-            <th v-for="(head, index) in source.header" :key="index" scope="col">
-                {{head}}::
-            </th>
-        </thead>
-        <draggable v-model="source.source" tag="tbody">
-            <tr v-for="(element, index) in source.source" :key="index">
-                <td v-for="col in Object.keys(element)"
-                    :key="col"
-                >
-                    <v-input
-                        @input="changeID($event, index, col)"
-                        class="formGroup-input"
-                        hint="Input element"
-                        :value="element[col]"
-                        type="text"
-                    ></v-input>
-
-                </td>
-                <v-tooltip right>
-                    <template v-slot:activator="{ on }">
-                        <v-icon
-                            right x-small class="mr-2"
-                            color="light" v-on:click="rmManifestRow(index)"  v-on="on"
-                        >
-                            $minus
-                        </v-icon>
-                    </template>
-                    Remove Item
-                </v-tooltip>
-            </tr>
-        </draggable>
-    </table> -->
-        <!--
-        <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.minLength">Specify one or more barcode</div>
-        <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.stateManifestID">
-            <span  
-                style="text-align:center"  >
-                No NTC present
-                <font-awesome-icon class="help" icon="question-circle" v-v-tooltip.hover
-                title="One Sample ID must have NTC (No Template Control)" />
-            </span>
-        </div>
-         -->
+   
   </div>
 </template>
 <script>
@@ -178,7 +134,10 @@ export default {
             return item
         },
         headers(){
-            if (this.source && this.source.header){
+            if (this.defaultHeaders){
+                return this.defaultHeaders
+            }
+            else if (this.source && this.source.header){
                 let tt = this.source.header.map((d,i)=>{
                     return {
                         text: d,
@@ -201,9 +160,23 @@ export default {
       dialog (val) {
         val || this.close()
       },
+      defaultHeaders(newValue, oldValue){
+          console.log(newValue)
+      },
       dialogDelete (val) {
         val || this.closeDelete()
       },
+      source: {
+          deep: true,
+          handler(newValue){
+              console.log("source changed!!!!", newValue)
+          }
+
+      },
+      values(newVal){
+          console.log(newVal,)
+          this.$emit("updateValue", newVal )
+      }
     },
 	methods: {
         save () {
@@ -239,7 +212,6 @@ export default {
             this.editedIndex = this.source.source.splice(index, 1)
             this.editedItem = Object.assign({}, item)
             this.dialogDelete = true
-            console.log(this.source.source,"<<<<<", item, index)
         },
 		addManifestRow(index){
             let emptyRow  = {}
@@ -257,12 +229,12 @@ export default {
 			this.$set(this.source.source[index], index2, val)
 		},
 		moveUpRow(index){
-			const tmp =  this.values[index]
+			const tmp =  this.source.source[index]
 			this.$set(this.source.source, index ,this.source.source[index-1] )
 			this.$set(this.source.source, index-1, tmp)
 		},
 	},
-    props: ['source', 'status', 'service', "variable"],
+    props: ['source', 'status', 'service', "variable", "defaultHeaders", 'title'],
     data (){
         return {
             values: [],
@@ -274,6 +246,7 @@ export default {
     },
     mounted(){
         console.log("mounted multiselect")
+        console.log(this.defaultHeaders)
     }, 
 
     

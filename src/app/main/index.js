@@ -90,7 +90,7 @@ client.app.on('activate', () => {
   if (client.mainWindow === null) {
     client.createWindow()
     client.createUpdater()
-    client.checkUpdates()
+    client.checkUpdates() 
     client.createMenu()
   }
 })

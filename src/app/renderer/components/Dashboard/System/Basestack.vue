@@ -1,38 +1,27 @@
 <template>
-  <v-list dense>
-    <v-subheader>Basestack</v-subheader>
-      <v-list-item
-        v-for="entry in fields_system"
-        :key="entry.key"
-        class="entry"
-      >
-          
-          <v-list-item-content>
-            <v-list-item-title v-text="entry.label "></v-list-item-title>
-            <v-list-item-subtitle v-text="info_table[entry.key] ">
-            </v-list-item-subtitle>
-            
-          </v-list-item-content>
-          <v-list-item-icon>
-            <span style="" class="success-icon"><font-awesome-icon class="success-icon" icon="check"/></span>
-          </v-list-item-icon>
-      </v-list-item>
-  </v-list>
-  <!-- <div style="display:flex">
-     
-    <div 
-    v-for="entry in fields_system"
-    :key="entry.key"
-    class="entry"
-    >
-        <p style="font-size: 90%; color:grey; margin: 0px" v-if="info_table[entry.key]">{{ entry.label }}</p>
-        <p style="font-size: 90%; color: black"> {{  info_table[entry.key]  }}</p>
-    </div>
-    <div style=" display:flex;  font-size: 50%">
-      <span style="" class="success-icon">System Up to Date<font-awesome-icon class="success-icon" icon="check"/></span>
+  <v-card dense>
+    <v-card-title>Basestack</v-card-title>
+    <v-card-subtitle>{{version}}</v-card-subtitle>
+    <v-list dense>
       
-    </div>
-  </div> -->
+        <v-list-item
+          v-for="entry in fields_system"
+          :key="entry.key"
+          class="entry"
+        >
+            
+            <v-list-item-content>
+              <v-list-item-title v-text="entry.label "></v-list-item-title>
+              <v-list-item-subtitle v-text="info_table[entry.key] ">
+              </v-list-item-subtitle>
+              
+            </v-list-item-content>
+            <v-list-item-icon>
+              <span style="" class="success-icon"><font-awesome-icon class="success-icon" icon="check"/></span>
+            </v-list-item-icon>
+        </v-list-item>
+    </v-list>
+  </v-card>
 </template>
 
 <script>
@@ -41,10 +30,10 @@
     data () {
       return {
         fields_system: [
-          {
-            key: 'basestack',
-            label: 'Installed Version'
-            },
+          // {
+            // key: 'basestack',
+            // label: 'Installed Version'
+            // },
             // {
             //   key: 'electron',
             //   label: 'Electron'
@@ -72,6 +61,11 @@
       }
     },
     mounted(){
+    },
+    computed: {
+      version() {
+        return  process.env.version_basestack
+      }
     },
     methods: {
       convert_gb(size, val){

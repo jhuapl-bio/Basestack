@@ -21,14 +21,16 @@ export async function create_server(port){
         let server = new Server((port ? port : process.env.PORT_SERVER))
         store.server = server
         server.server_configuration().then((response)=>{
-            server.initiate(process.env.PORT_SERVER).then((response)=>{
-                server.initiate_cache().catch((err)=>{
-                    store.logger.error("%o error in redis caching", err)
-                }).then(()=>{
-                    console.log(response, "redis cacher successfully created server");
+        
+            server.initiate_cache().catch((err)=>{
+                store.logger.error("%o error in redis caching", err)
+            }).then(()=>{
+                console.log(response, "redis cacher successfully created server");
+                server.initiate(process.env.PORT_SERVER).then((response)=>{
+                    resolve()
                 })
-                resolve()
             })
+            
         }).catch((err)=>{
             console.error(err, "Error in server config or init")
             reject(err)

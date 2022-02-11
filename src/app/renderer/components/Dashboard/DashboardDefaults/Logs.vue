@@ -66,7 +66,7 @@ export default {
 	data(){
 		return {
 			systemLog: [],
-			scroll: true
+			scroll: true 
 		}
 	},
 	methods:{

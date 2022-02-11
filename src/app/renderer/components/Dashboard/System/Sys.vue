@@ -1,15 +1,10 @@
 <template>
 
-  <div>
-    
-    <v-card v-if="server" >     
-      <div v-for="entry  in  components " :key="entry" class="entry">
-        <component :is="entry" v-if="resources" v-bind:docker="resources.docker" v-bind:resources="resources"></component><hr>
-      </div>
-    </v-card>
-    
-    
-  </div>
+  <v-card v-if="server" max-height="1px" >     
+    <div v-for="entry  in  components " :key="entry" class="entry">
+      <component :is="entry" v-if="resources" v-bind:docker="resources.docker" v-bind:resources="resources"></component><hr>
+    </div>
+  </v-card>
 </template>
 
 <script>
@@ -22,7 +17,7 @@
   import FileService from '@/services/File-service';
   export default {
     components: {
-      CPU,
+      CPU, 
       Memory,
       Disk,
       Docker,

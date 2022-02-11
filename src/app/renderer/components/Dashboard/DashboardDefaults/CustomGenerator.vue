@@ -7,20 +7,18 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="customgenerator" style="text-align:center" >
-	
-  	<div style="text-align:center; margin:auto; width:100%" >
-        <v-select
+  	<v-card class="mx-2 mt-3" >
+        <!-- <v-select
             :items="options" 
             label="Type of Customizable Entry (Service, Module, Procedure)" 
             v-model="selected_option"
             
         >
-        </v-select>
+        </v-select> -->
 
-        <v-select
+        <v-select 
             :items="types"
-            v-model="selected_type"
+            v-model="selected_type" class="mx-4 mt-3"
             label="Type of Custom Generator (Text, File.yml)"
         >
         </v-select>
@@ -29,7 +27,7 @@
             v-if="selected_type == 'text'"
             :items="textTypes"
             v-model="textType"
-            :label="`Create Custom ${selected_option} from ${selected_type}`"
+            :label="`Create Custom Module from ${selected_type}`"
             
         >
         </v-select>
@@ -42,20 +40,20 @@
         
         >
         </v-textarea>
-        
-        <v-file-input
-            v-model="file"
-            label="Input Custom YAML or JSON file"
-            v-else
-        >
-        </v-file-input>
+        <div v-else @drop.prevent="addDropFile" @dragover.prevent>
+            <v-file-input
+                v-model="file" 
+                label="Input Custom YAML or JSON file"
+                
+            >
+            </v-file-input>
+        </div>
         <v-btn
-            class="btn sideButton"
-            @click="save()"
+            class="btn " color="primary"
+            @click="save()" 
         > Save Input
         </v-btn>
-  	</div>
-  </div >
+  	</v-card>
 </template>
 
 <script>
@@ -66,8 +64,8 @@ export default {
      
     data(){
         return {
-            options: ['Module', 'Procedure', 'Service'],
-            selected_option: 'Procedure',
+            // options: ['Module', 'Procedure', 'Service'],
+            // selected_option: 'Procedure',
             types: ['text', 'file'],
             text:null,
             file: null, 
@@ -78,6 +76,10 @@ export default {
         }
     },
 	methods: {
+        addDropFile(e) { 
+            this.file = e.dataTransfer.files[0]; 
+            console.log(this.file)
+        },
         async save(){
             try{
                 if (this.selected_type == 'text'){
@@ -88,34 +90,13 @@ export default {
                     } else{
                         text = JSON.parse(this.text)
                     }
-                    if (this.selected_option == 'Procedure'){ 
-                        await FileService.saveProcedureText({
-                           source: this.text,
-                           type: this.textType
-
-                        })
-                    } else if (this.selected_option == 'Service'){
-                       await FileService.saveServiceText({
-                           type: this.textType,
-                           source: this.text
-                        })
-
-                    } else{
-                       await FileService.saveModuleText({
-                           source: this.text,
-                           type: this.textType
-                        })
-                        
-                    }
-
+                    console.log(this.textType, this.text)
+                    await FileService.saveModuleText({
+                        source: this.text,
+                        type: this.textType
+                    })
                 } else {
-                    if (this.selected_option == 'Procedure'){
-                       await FileService.saveProcedureFile({source: this.file.path})
-                    } else if (this.selected_option == 'Service'){
-                       await  FileService.saveServiceFile({source: this.file.path})
-                    } else{
-                        await FileService.saveModuleFile({source: this.file.path})
-                    }
+                    await FileService.saveModuleFile({source: this.file.path})
                 }
             } catch(error){
                 this.$swal.fire({

@@ -77,19 +77,22 @@ export class  Client {
             useContentSize: true,
             width: 1080,
             title: "Basestack",
-            webPreferences: {webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
+            webPreferences: { zoomFactor: 0.83, webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
             icon: path.join(__dirname, '..', 'static', 'img', 'jhulogo.png')
-          })
-        } else {
+          }) 
+        } else { 
           this.mainWindow = new BrowserWindow({
-            height: 1000,
+            height: 1000, 
             useContentSize: true,
             width: 1080,
             title: "Basestack",
-            webPreferences: {webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
+            webPreferences: {zoomFactor: 0.83,  webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
             icon: path.join(__dirname, '..', "static", 'img', 'jhulogo.png')
           })
         }
+        this.mainWindow.webContents.session.clearCache()
+
+
           const winURL = (process.env.NODE_ENV === 'development'
         ? `http://localhost:9080`
         : `file://${__dirname}/index.html`);
@@ -100,6 +103,7 @@ export class  Client {
         });
         try{
           this.mainWindow.loadURL(winURL)
+          
         } catch(err){
           console.log(err)
         }

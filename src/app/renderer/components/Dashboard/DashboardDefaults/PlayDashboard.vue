@@ -7,27 +7,31 @@
   - # **********************************************************************
   -->
 <template>
-	<v-tabs 
-		v-model="tab" 
-		show-arrows centered
-		next-icon="$arrow-alt-circle-right"
-		prev-icon="$arrow-alt-circle-left"
-		icons-and-text 
-		class=""
-		color="blue-grey"
-		slider-color="light"
-	>
-		<v-tab   v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
-				{{option.title}}				
-		</v-tab>
-		<v-tab-item v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
-			<component
-				:is="option.component"
-				style=""
-			>
-			</component>	
-		</v-tab-item>
-	</v-tabs>
+	<v-row  class="max-height: 10vh" >
+		<v-col cols="12"  >
+		<v-tabs 
+			v-model="tab" 
+			show-arrows centered
+			next-icon="$arrow-alt-circle-right"
+			prev-icon="$arrow-alt-circle-left"
+			icons-and-text 
+			class=""
+			color="blue-grey"
+			slider-color="light"
+		>
+			<v-tab   v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
+					{{option.title}}				
+			</v-tab>
+			<v-tab-item v-for="(option, serviceIdx) in defaultModule.options" :title="option.title" :key="serviceIdx">
+				<component
+					:is="option.component"
+					style="" class="ml-4"
+				>
+				</component>	
+			</v-tab-item>
+		</v-tabs>
+		</v-col >
+	</v-row>
 	 
 </template>
 
