@@ -97,7 +97,7 @@
           :items="catalog"
           chips dense
           v-model="tabProcedure"
-
+          @input="selected ='procedures'"
           :filter="filter"
           style="max-width: 45%"
           clearable
