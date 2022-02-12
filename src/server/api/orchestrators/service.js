@@ -390,6 +390,7 @@ export class Service {
         }).join('\n')
         return tsv_file_content + "\n"
     }
+    
 
     start(params, wait){ 
 		const $this = this
@@ -555,12 +556,46 @@ export class Service {
                     reject(err)
                 }
                 try{
-                    container.attach({stream: true, stdout: true, stderr: true}, function (err, stream){
+                    function inspect(container){
+                        return new Promise((resolve, reject)=>{
+                            container.inspect((err, inspection)=>{
+                                try{
+                                    console.log(inspection.State)
+                                    if (err){
+                                        logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
+                                        $this.status.error  = err
+                                    } else {
+                                        logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
+                                        if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 137 ) || inspection.State.ExitCode == 1 ){
+                                            $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}`
+                                            $this.status.success = false
+                                        } else {
+                                            $this.status.success = true
+                                            // $this.status.error = "Test error"
+                                        }
+                                        $this.status.complete = true
+                                        $this.status.exit_code = inspection.State.ExitCode
+                                    }
+                                } catch(err2){
+                                    logger.error("%o error in inspecting container on end", err2)
+                                } finally{
+                                    if(inspection){
+                                        resolve(inspection.State.Running)
+                                    } else {
+                                        resolve(false)
+                                    }
+                                }
+
+                            })
+                        })
+                    }
+                    var interval = null
+                    container.attach({stream: true, stdout: true, stdin:true, stderr: true}, function (err, stream){
                         $this.log = spawnLog(stream, $this.logger)
                         $this.status.stream =  $this.log
-                        $this.stream = stream
+                        $this.stream = stream 
                         container.start(function (err, data) {
-                            if (err){ 
+                            if (err){  
                                 logger.error("%o  error in container name: %s", err, $this.name)
                                 if (err.json && err.json.message){
                                     $this.status.error = err.json.message
@@ -572,33 +607,25 @@ export class Service {
                             if (!wait || $this.config.continuous){
                                 resolve( stream )
                             } else { 
-                                stream.on("end",()=>{ 
-                                    resolve(stream) 
-                                })
+                                if (process.platform == 'win32'){
+                                    let ended = false
+                                    interval = setInterval(()=>{
+                                        if (ended){
+                                            clearInterval(interval)
+                                        }
+                                        inspect(container).then((res)=>{
+                                            if (!res){
+                                                ended = true
+                                                resolve(stream)
+                                            }
+                                        })
+
+                                    },4000)
+                                }
                             } 
                             stream.on("end",()=>{ 
-                                container.inspect((err, inspection)=>{
-                                    try{
-                                        if (err){
-                                            logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
-                                            $this.status.error  = err
-                                        } else {
-                                            logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
-                                            if (inspection.State.ExitCode > 0 && inspection.State.Error ){
-                                                $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}`
-                                                $this.status.success = false
-                                            } else {
-                                                $this.status.success = true
-                                                // $this.status.error = "Test error"
-                                            }
-                                            $this.status.complete = true
-                                            $this.status.exit_code = inspection.State.ExitCode
-                                        }
-                                    } catch(err2){
-                                        logger.error("%o error in inspecting container on end", err2)
-                                    }
-
-                                })
+                                inspect(container)
+                                resolve(stream)
                             })
                         })
                     })
@@ -618,63 +645,6 @@ export class Service {
                     reject()
                 }
             } )
-
-
-
-
-            // else {
-            //     console.log("orchestrated")
-            //     if ($this.orchestratorContainer){
-            //         options.Cmd = [ "sleep", "100"]
-            //         let contnr = $this.orchestratorContainer
-            //         contnr.exec({Cmd: options.Cmd, Tty: true, WorkingDir: "/data/", Env: options.Env, AttachStdin: true, AttachStdout: true}, function(err, exec) {
-            //             exec.start({hijack: false, stdin: true}, function(err, stream) {
-            //                 $this.log = spawnLog(stream, $this.logger)
-            //                 $this.status.stream =  $this.log
-
-            //                 exec.inspect((err, inspection)=>{
-            //                     $this.pid = inspection.ID
-            //                     console.log(inspection)
-            //                 })
-            //                 stream.on("end",(err, data)=>{
-            //                     exec.inspect((err, inspection)=>{
-            //                         try{
-            //                             if (err){
-            //                                 logger.error(`${err}, error in exec finalization of exit code: ${$this.name}`)
-            //                                 $this.status.error  = err
-            //                             } else {
-            //                                 logger.info(`${$this.name}, exec finalized with exit code: ${inspection.ExitCode}`)
-            //                                 if (inspection.ExitCode > 0){
-            //                                     $this.status.error  = `ERROR: exit code: ${inspection.ExitCode}`
-            //                                     $this.status.success = false
-            //                                 } else {
-            //                                     console.log("exited successfully")
-            //                                     $this.status.success = true
-            //                                 }
-            //                                 $this.status.exit_code = inspection.ExitCode
-            //                             }
-            //                         } catch(err2){
-            //                             logger.error(err2)
-            //                         }
-            //                     })
-            //                 })
-            //                 stream.on("error",(err, data)=>{
-            //                     store.logger.error("Error in exec %s", err)
-            //                     $this.status.error = err
-            //                 })
-            //             });
-            //             if (err){
-            //                 store.logger.error("Error in exec %s", err)
-            //             }
-            //         });
-            //         resolve()
-            //     } else {
-            //         reject("No orchestrator present, exiting....")
-            //     }
-
-            // }
-
         });
-
 	}
 }

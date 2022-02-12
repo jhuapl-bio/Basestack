@@ -260,13 +260,16 @@ export  class Job {
         $this.status.complete = false
         let promises = [];
         this.configuration.setVariables()
+        console.log(")))))", $this.services.length)
         for (let i = 0; i < $this.services.length; i++){
+
             let service = $this.services[i]
             if (service.config.orchestrator){
                 logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
             } else{
                 try{
                     await service.check_then_start({ variables: $this.variables}, true)
+                    console.log("completion of job service index", i)
                 } catch(err){
                     logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
                     $this.status.error = err

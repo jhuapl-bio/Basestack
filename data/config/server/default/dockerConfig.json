@@ -20,6 +20,7 @@
         }
     },
     "Tty": false,
+    "OpenStdin": true,
     "Image": null,
     "Cmd": []
 }      
