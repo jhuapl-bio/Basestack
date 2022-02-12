@@ -392,6 +392,7 @@ export default {
 			isLoading: false,
       ready:false,
       interval: null,
+      catalogInterval: null,
       modules: false,
       services: false,
       procedures: false,
@@ -410,19 +411,24 @@ export default {
     this.$vuetify.icons.dropdown = 'fas fa-square'
 
     try{
-      let f = await $this.pingServerPort()
-      if (f)
-      {
-        this.runningServer = true
-        await this.init()
-      } else {
-        this.createPingInterval()
-        this.ready = false
-      }
+      await $this.pingServerPort()
+      await this.init()
+      this.ready = true
+      this.runningServer = true
+      // if (f)
+      // {
+      //   this.runningServer = true
+      //   await this.init()
+      // } else {
+      //   this.createPingInterval()
+      //   this.ready = false
+      // }
     } catch(err){
       console.error(err)
-      this.createPingInterval()
       this.ready = false
+    } finally {
+      this.createPingInterval()
+      this.ready = true
     }
     
 
@@ -514,40 +520,41 @@ export default {
     async createPingInterval(){
       console.log("create interval for ping", process.env.PORT_SERVER)
       const $this = this;
-      if (this.interval){
-        clearInterval(this.interval)
-      }
-      this.clearAll()
-      this.runningServer = false
+      this.runningServer = true
       this.ready  = false
       this.interval = setInterval(async ()=>{
         if ($this.runningServer){
           clearInterval($this.interval)
-        } else {
-          try{
-            let f = await $this.pingServerPort()
-            if (f)
-            {
-              
-              await this.init()
-              if ($this.catalog.length <= 0){
-                $this.runningServer = false
-              } else {
-                $this.runningServer = true
-              }
-            }
-          } catch(err){
-              console.error("Could not get server status, check if it is running on port: ", process.env.PORT_SERVER)
-              $this.ready = false
-              $this.runningServer = false
-
+        }
+        try{
+          let f = await $this.pingServerPort()
+          if (f)
+          {            
+            await $this.init()
           }
+        } catch(err){
+            console.error("Could not get server status, check if it is running on port: ", process.env.PORT_SERVER)
+            $this.ready = false
+            $this.runningServer = false
+
         }
         
-      }, 2000)
+      }, 6000)
     },
     async pingServerPort(){
       return FileService.pingServerPort()
+    },
+    async getModules(){ 
+      let catalog = await FileService.getInstalledModules()
+      catalog = catalog.data.data.map((d,i)=>{
+        d.idx = i
+        return d
+      })
+      catalog.forEach((cat,i)=>{
+        this.$set(this.catalog, i, cat)
+      })
+      this.catalog = catalog
+      return 
     },
     async init(){
       try{
@@ -555,14 +562,13 @@ export default {
         // let modules = await FileService.getModules()
         // this.modules = modules.data.data
         let defaults= await FileService.getDefaults()
-        let catalog = await FileService.getInstalledModules()
-        catalog = catalog.data.data.map((d,i)=>{
-          d.idx = i
-          return d
-        })
-        catalog.forEach((cat,i)=>{
-          this.$set(this.catalog, i, cat)
-        })
+        await this.getModules()
+        if (this.moduleInterval){
+          clearInterval(this.moduleInterval)
+        }
+        this.moduleInterval = setInterval(()=>{
+          this.getModules()
+        }, 2000)
         // this.catalog = catalog
         if (process.env.NODE_ENV == 'development'){
           // let token = await FileService.createSession()
@@ -576,7 +582,7 @@ export default {
         this.defaults = defaults.data.data
         // this.services = services.data.data
         // this.procedures = procedures.data.data
-        this.running = true
+        this.runningServer = true
         return 
       } catch(err){
         console.error(err, "Backend server is not running")

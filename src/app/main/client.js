@@ -3,7 +3,7 @@ import { ClientMenu } from "./menu"
 import { Updater } from "./updater"
 const { ipcMain, BrowserWindow, dialog, shell, Menu } = require('electron')
 const path = require("path")
-
+ 
 export class  Client {
 	constructor(app){
 		this.logger = null

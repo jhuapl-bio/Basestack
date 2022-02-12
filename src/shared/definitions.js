@@ -5,11 +5,20 @@ import YAML from "yaml"
 
 
 export function parseConfigVariables(data, config){ 
+  if (process.platform == 'win32'){
+    config.writePath = config.writePath.replace(/\\/g, "/")
+    config.resourcePath = config.resourcePath.replace(/\\/g, "/")
+    // config.uploadPath = config.uploadPath.replace(/\\/g, "/")
+    config.configPath = config.configPath.replace(/\\/g, "/")
+    
+  }
+  console.log(config)
 	data = data.replace(/\$\{writePath\}/g, config.writePath)
 	data = data.replace(/\$\{configPath\}/g, config.configPath)
 	data = data.replace(/\$\{uploadPath\}/g, config.uploadPath)
 	data = data.replace(/\$\{resourcePath\}/g, config.resourcePath)
 	// data = data.replace(/\\/g, "/") 
+  // console.log(data)
 	data= YAML.parse(data)  
 	return data 
 } 

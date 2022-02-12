@@ -40,14 +40,14 @@ async function import_cfgs(module, type){
         if (promises_folders.length > 0){    
             let results = await Promise.allSettled(promises_folders)
             results.forEach((result, i)=>{ 
-                let inner_file_read = [] 
+                let inner_file_read = []  
                 result.value.forEach((dir)=>{
-                    try{
+                    try{  
                         
                         if  (module.format == 'dir'){
                             promises_files.push(readFile(path.join( dir.path,  module.filename )    )     )
                             files_marked.push(path.join( dir.path,  module.filename )    )
-                        } else {
+                        } else { 
                             promises_files.push(readFile(dir )     )
                             files_marked.push(( dir  ))
                         }
