@@ -33,12 +33,10 @@ export default {
 	},
 	props: ['source', 'status', 'service', 'variable'],
     mounted(){
-        console.log(this.value, "<value", this.source.source, "surc")
         this.value = this.source.source
     },
     watch: {
         value(newValue, oldValue){
-            console.log(newValue)
             this.$emit("updateValue", newValue )
         }
     }

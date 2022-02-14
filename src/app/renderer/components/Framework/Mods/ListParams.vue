@@ -86,7 +86,7 @@
                             Click Me! 
                         </v-btn>
                     </template>
-                    View Visualization in Browser
+                    View Visualization in Browser. Ensure that the service is running first!
                 </v-tooltip>  
             </div>
         </template>
@@ -181,12 +181,6 @@ export default {
       dialog (val) {
         val || this.close()
       },
-      defaultHeaders(newValue, oldValue){
-          console.log(newValue)
-      },
-      items(newValue){
-          console.log(newValue,"<<<NEWVALUEITEMS")
-      },
       dialogDelete (val) {
         val || this.closeDelete()
       },
@@ -231,7 +225,6 @@ export default {
             } else {
                 variable.source  = src
             }
-            console.log(value,"<<ffffffffffff<", option, variable, name)
             this.intervalProgress = false
             this.$emit("updateValue", { src: src, option: option, variable: var_name }   )
         },
@@ -268,7 +261,6 @@ export default {
             this.editedIndex = this.items.splice(index, 1)
             this.editedItem = Object.assign({}, item)
             this.dialogDelete = true
-            console.log(this.items,"<<<<<", item, index)
         },
 		addManifestRow(index){
             let emptyRow  = {}
@@ -291,7 +283,7 @@ export default {
 			this.$set(this.items, index-1, tmp)
 		},
 	},
-    props: ['items', "defaultHeaders", 'title', "service"],
+    props: ['items', "defaultHeaders", 'title', "service", "job"],
     data (){
         return {
             values: [],
@@ -315,7 +307,6 @@ export default {
         }
     },
     mounted(){
-        console.log(this.items,"<<<")
     }, 
 
     

@@ -14,6 +14,7 @@
             class="configure"
         >
             <template v-for="(entry, key) in services"  >
+                
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
                     :key="key+'-entry'"
@@ -25,14 +26,22 @@
                     @click="el = key+1"
                     :step="key+1"
                 >
-                    {{ ( entry.label ? entry.label : entry.name ) }}
+                    {{ ( entry.label ? entry.label : entry.name ) }} 
                     <v-tooltip top v-if="status && status[key] && status[key].error">
                         <template v-slot:activator="{ on }">
-                            <v-icon v-on="on" small color="orange darken-2">
+                            <v-icon v-on="on" class="ml-2"  small color="orange darken-2">
                                 $exclamation-triangle
                             </v-icon>
                         </template>
                         {{status[key].error}}
+                    </v-tooltip>
+                    <v-tooltip top v-else-if="status && status[key] && status[key].cancelled">
+                        <template v-slot:activator="{ on }">
+                            <v-icon v-on="on"  class="ml-2" small color="orange darken-2">
+                                $slash
+                            </v-icon>
+                        </template>
+                        Cancelled!
                     </v-tooltip>
                 </v-stepper-step>
                 <v-divider
@@ -41,32 +50,41 @@
                 ></v-divider>
             </template>
         </v-stepper-header>
+        <v-alert type="warning" icon="$exclamation" shaped
+          text v-if="jobStatus && !jobStatus.fully_installed ">All dependencies are not installed. Check the Library to see missing components
+        </v-alert>
+        <v-card v-if="procedure && procedure.variables">
+          <ListParams
+              :items="additionals"
+              v-if="additionals.length > 0"
+              :defaultHeaders="headers"
+              @updateValue="updateValue"
+
+          >
+          </ListParams>
+          <Progresses
+              :progresses="watches"
+              v-if="headers.length > 0 && procedure "
+              :status="status"
+              :job="jobStatus"
+              :catalog="module"
+              :module="moduleIdx"
+              :procedure="procedureIdx"
+              :defaultHeaders="outputHeaders"
+          >
+          </Progresses>
+      </v-card>
         <v-stepper-items v-if="services">
             <v-stepper-content
                 v-for="(entry, key) in services" :key="entry.name+`content`" 
                 :step="key+1"
             >
+                
                 <LogWindow  v-if="status && status[key]" :info="status[key].stream.info" :key="entry.name"></LogWindow> 
             </v-stepper-content>
         </v-stepper-items>
     </v-stepper>    
-    <v-card v-if="procedure && procedure.variables">
-        <ListParams
-            :items="additionals"
-            v-if="additionals.length > 0"
-            :defaultHeaders="headers"
-            @updateValue="updateValue"
-
-        >
-        </ListParams>
-        <Progresses
-            :progresses="watches"
-            v-if="headers.length > 0 && procedure "
-            :status="status"
-            :defaultHeaders="outputHeaders"
-        >
-        </Progresses>
-    </v-card>
+    
 
   </v-card>
 </template>
@@ -126,7 +144,6 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
-      console.log("yes")
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
@@ -134,12 +151,15 @@ export default {
         token: $this.$store.token,
         variables: $this.procedure.variables
       }).then((response)=>{
+        if (!response.data.skip){
             this.$swal.fire({
                 position: 'center',
                 icon: 'success',
                 showConfirmButton:true,
                 title:  response.data.message
             })
+
+        }
       }).catch((error)=>{
         console.error("-----------------", error)
         this.$swal.fire({
@@ -217,6 +237,12 @@ export default {
                 sortable: false,
                 align:"center"
             },
+            {
+                text: "Remove",
+                value: "remove",
+                sortable: false,
+                align:"center"
+            }
         ],
         headers: [
             // {
@@ -262,7 +288,7 @@ export default {
      
     }
   },
-  props: [ 'module', 'moduleIdx', 'procedureIdx', 'title', 'status' ,'watches' ],
+  props: [ 'module', 'moduleIdx', 'procedureIdx', 'title', 'status' ,'watches', "jobStatus" ],
   watch: {
     procedureIdx(newValue){
         console.log("new procedure")

@@ -4,13 +4,13 @@ import { mapVariables } from '../controllers/mapper.js';
  const { Configuration }  = require("./configuration.js")
  const { Service }  = require("./service.js")
 const { module_status }  = require("../controllers/watcher.js")
-const { readFile } = require("../controllers/IO.js")
+const { readFile, removeFile, removeFolder } = require("../controllers/IO.js")
 const { store }  = require("../../config/store/index.js")
    
 var logger = store.logger
 
 export  class Job { 
-    constructor(){         
+    constructor(procedure){         
         this.config = null  
         this.options = null   
         this.configurations = null
@@ -18,6 +18,11 @@ export  class Job {
         this.variables = {}
         this.status = { 
             exists: false, 
+            fully_installed: true,
+            procedure: procedure.status,
+            dependencies: procedure.dependencies.map((f)=>{
+                return f.status
+            }),
             error: null, 
             running: false,
             success: false,
@@ -26,6 +31,7 @@ export  class Job {
             watches: [],
             services: []
         }
+        this.promises = []
         this.service_steps = []
         this.interval = {
             checking: false, 
@@ -99,6 +105,9 @@ export  class Job {
                                         key: key, 
                                         value: null
                                     }
+                                    f  = f.filter(function (el) {
+                                        return el != null && el !== '';
+                                    });
                                     if (header){
                                         vari.source = f.map((d)=>{
                                             let p  = d.split("\t")
@@ -142,6 +151,58 @@ export  class Job {
             })
         })
        
+    }
+    async removeOutputs(dependency){
+		const $this = this  
+        return new Promise(function(resolve,reject){  
+            let promises = []
+            if (dependency >= 0 || dependency){
+                console.log("Single remove!")
+                let watch = $this.status.watches[dependency]
+                console.log(watch)
+                if (typeof watch.source == 'string'){
+                    promises.push(removeFile(watch.source))
+                } else {
+                    watch.source.forEach((w)=>{
+                        promises.push(removeFile(w))
+                    })
+                }
+            } else {
+                console.log("Multiple all")
+                if ($this.configuration.removal_override){
+                    let type = $this.configuration.removal_override
+                    if (!type){
+                        type == 'file'
+                    }
+                    if ($this.configuration.removal_override.source){
+                        if(type == 'file') {
+                            promises.push(removeFile($this.configuration.removal_override.source))
+                        }
+                        else{
+                            promises.push(removeFile($this.configuration.removal_override.source, 'dir'))
+                        }
+                    }
+                    
+                } else {
+                    for (let i  = 0;  i < $this.status.watches.length; i++){
+                        let watch = $this.status.watches[i]
+                        if (typeof watch.source == 'string'){
+                            promises.push(removeFile(watch.source))
+                        } else {
+                            watch.source.forEach((w)=>{
+                                promises.push(removeFile(w))
+                            })
+                        }
+                    }
+                }
+            }
+            Promise.allSettled(promises).then((respo)=>{
+                console.log(respo)
+                resolve()
+            }).catch((err)=>{
+                reject(err)
+            })
+        })
     }
     setVariables(variables){
         this.variables = variables
@@ -233,6 +294,10 @@ export  class Job {
                 $this.status.stream = $this.services.map((d)=>{
                     return d.status.stream
                 })
+                let cancelled = $this.services.some((d)=>{
+                    return d.status.cancelled
+                })
+                $this.status.fully_installed = $this.status.procedure.fully_installed
                 $this.status.success = success 
                 $this.status.complete = complete
                 $this.status.running = running
@@ -260,23 +325,38 @@ export  class Job {
         $this.status.complete = false
         let promises = [];
         this.configuration.setVariables()
-        console.log(")))))", $this.services.length)
+        this.promises.forEach((service)=>{
+            if (service && service.streamObj){
+                service.streamObj.close()
+            }
+        })
+        let cancelled_or_skip = false
         for (let i = 0; i < $this.services.length; i++){
-
+            $this.services[i].status.complete = false
+        }
+        for (let i = 0; i < $this.services.length; i++){
             let service = $this.services[i]
             if (service.config.orchestrator){
                 logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
             } else{
                 try{
-                    await service.check_then_start({ variables: $this.variables}, true)
-                    console.log("completion of job service index", i)
+                    let skip
+                    skip = await service.check_then_start({ variables: $this.variables}, true)
+                    if (skip){
+                        cancelled_or_skip = skip
+                        i = $this.services.length
+                    }
                 } catch(err){
                     logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
+                    // if (!$this.configuration.skipError){
+                    //     i = $this.services.length
+                    // }
+                    cancelled_or_skip = true
                     $this.status.error = err
                 }
             }
         }
-        return
+        return cancelled_or_skip
     }
     
     

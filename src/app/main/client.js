@@ -58,6 +58,7 @@ export class  Client {
     createMenu(){
         // let menu = makeMenu(this.this.logger)
         console.log("creating menu")
+        
         let menu = new ClientMenu(this.logger, this.mainWindow, dialog, this.app, this.system, this.spawned_logs, this.updater)
         menu.store = this.store
         let m = menu.makeMenu()
@@ -114,6 +115,12 @@ export class  Client {
         ipcMain.on("queryRelease", (event, arg) => {
           event.reply('releaseNotes', $this.updater.releaseNotes)
         })
+        ipcMain.on("openLogs", (event, arg) => {
+          shell.openPath($this.store.system.logPath ) 
+        })
+        
+
+
         ipcMain.on("checkUpdates", (event, arg) => {
           console.log("Checking updates")
           $this.updater.checkUpdates() 

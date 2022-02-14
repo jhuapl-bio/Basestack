@@ -75,7 +75,7 @@
         </v-select>
         
         <v-divider vertical inset></v-divider>
-        <v-menu
+        <!-- <v-menu
           :close-on-content-click="false"
           :nudge-width="400"
           offset-x
@@ -130,7 +130,7 @@
               </v-list-item-group>
             </v-list>
           </v-card>
-			</v-menu>
+			</v-menu> -->
       
       <v-tooltip top class="ml-2" v-if="selected.custom">
         <template v-slot:activator="{ on }">
@@ -167,6 +167,8 @@
           :indeterminate="true"
           absolute
           bottom
+          style="top: -25px"
+          height="25"
           color="primary"
       ></v-progress-linear>
         
@@ -184,6 +186,7 @@
               :watches="(job ? job.watches : [])"
               :status="( job ? job.services : {})"
               :procedureIdx="selectedProcedure.idx"
+              :jobStatus="job"
               class="fill-width fill-height"
               :moduleIdx="selected.idx"
             >            	
@@ -234,6 +237,7 @@ export default {
         })
        this.selectedProcedure.job = response.data.data
        this.job = response.data.data
+      //  console.log(this.selectedProcedure, this.job, "<<<")
      
       } catch(err){
         this.initial=false

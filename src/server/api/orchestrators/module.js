@@ -40,7 +40,7 @@ export  class Module {
                     $this.interval.checking = false
                 })
             }
-        }, 3000)
+        }, 1000)
 
 
         return interval

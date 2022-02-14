@@ -44,7 +44,7 @@ let releaseNotes;
 let os = require("os")
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
-  // process.env.version_basestack = autoUpdater.currentVersion
+  process.env.version_basestack = autoUpdater.currentVersion
   releaseNotes = {
     releaseNotes: "None Available",
     version: "Not Available",

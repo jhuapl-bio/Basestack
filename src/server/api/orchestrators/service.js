@@ -25,11 +25,12 @@ const fs = require("file-system")
 let dockerObj; 
 
 export class Service {
-	constructor(service, serviceIdx){
+	constructor(service, serviceIdx, orchestrated){
 		this.name = service.name
         this.serviceIdx = serviceIdx
         this.type = "service"
         this.config = service 
+        this.orchestrated = orchestrated
         this.dependencies = [], 
         this.interval = {
             checking: false,
@@ -47,6 +48,7 @@ export class Service {
                 ]
             },
         };
+        this.jobInterval = null
         let depends = this.config.depends
         this.defineDependencies()
         this.readVariables()
@@ -91,7 +93,7 @@ export class Service {
                 })
             }
         }, 5000)
-        return interval
+    //     return interval
     }
 	defineConfig(){
         let service = this.config
@@ -115,7 +117,17 @@ export class Service {
                     $this.status.exists = response
                     if (response && typeof response === 'object' ){
                         $this.status.running = response.running
-
+                        if ('err' in response && response.err && !$this.status.cancelled){
+                            $this.status.error = response.err
+                        }
+                        if (response.msg){
+                            $this.status.stream.info.push(response.msg)
+                        }
+                        if ($this.orchestrated){
+                            $this.building = response.running
+                        }
+                        $this.status.complete = response.complete
+                        $this.status.success = response.success
                     }
                     if (response && response.container && !$this.container){
                         $this.container = response.container
@@ -124,23 +136,7 @@ export class Service {
                 }).catch((err)=>{
                     reject(err)
                 })
-            // }
-            // else {
-            //     if ($this.pid){
-            //         console.log($this.pid,"FFFFFF");
-            //         ( async ()=>{
-            //             let exec = await store.docker.getExec($this.pid)
-            //             exec.inspect((err, data)=>{
-            //                 console.log(data)
-            //                 resolve()
-            //             })
-
-            //         })()
-
-            //     } else {
-            //         resolve()
-            //     }
-            // }
+          
 
 		})
 	}
@@ -185,8 +181,10 @@ export class Service {
     async stop() {
 		let container_name = this.name;
         const $this = this;
+        $this.status.cancelled = true
 		return new Promise(function(resolve,reject){
 			// delete store.modules[container_name]
+            
             if ($this.config.orchestrated){
                 let process = $this.pid
                 let contr  = $this.orchestratorContainer
@@ -205,6 +203,7 @@ export class Service {
                         resolve(`Success in stop module: ${container_name}`)
                     }
                 })
+                
             }
 		})
 	}
@@ -214,19 +213,18 @@ export class Service {
             ( async ()=>{
                 let name = $this.name;
                 let exists = await check_container($this.name)
-                // let imageExists = await check_image($this.config.image)
-                // console.log(imageExists,"imafffffffge exists")
-                // if (!imageExists){
-                //     await $this.pullImage($this.config.image)
-                // }
                 if ( ( exists.exists && $this.config.force_restart) ||  exists.exists ){
                     store.logger.info("Force restarting")
                     await $this.stop()
                 }
                 $this.container = null
-                let stream = await $this.start(params, wait)
-                store.logger.info(`started run...${name}`)
-                resolve(stream)
+                let skip = false
+                skip = await $this.start(params, wait)
+                if ($this.status.cancelled){
+                    skip = true
+                }
+                store.logger.info(`started END run...${name}`)
+                resolve(skip)
             })().catch((err)=>{
                 store.logger.error(err)
                 reject(err)
@@ -362,14 +360,14 @@ export class Service {
             options.Image = service.image
         }  
         options.name = this.name
- 
+  
         if (service.workingdir){
             options.WorkingDir = service.workingdir
         } 
         return options
 
     }
-    createContentOutput(item, sep, header){
+    createContentOutput(item, sep, header, newline){
         if (!sep){
             sep = ","
         }
@@ -388,20 +386,26 @@ export class Service {
             return full.join( ( sep == 'tab' ? "\t" : sep )  )
 
         }).join('\n')
-        return tsv_file_content + "\n"
+        if (newline){
+            tsv_file_content = tsv_file_content + "\n"
+        }
+        return tsv_file_content 
     }
     
 
     start(params, wait){ 
 		const $this = this
+        this.status.error = null
+        this.status.running = true
+        this.status.cancelled = false
         return new Promise(function(resolve,reject){
             let options = JSON.parse(JSON.stringify($this.options))
+            
             let env = []
             if (!params){
                 params = {}
             }
             let bind = []
-            console.log(0,bind)
             if ($this.config.bind){
                 $this.config.bind.forEach((b)=>{
                     bind.push(b)
@@ -412,7 +416,6 @@ export class Service {
                     bind.push(b)
                 })
             }
-            console.log(1)
             let cmd = $this.config.command
             if (cmd){
                 options.Cmd = $this.config.command
@@ -454,7 +457,7 @@ export class Service {
                     }
                     if (selected_option.create){
                         if (selected_option.create.type !== 'object'){
-                            let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header)
+                            let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline)
                             promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                                 logger.error(err)  
                             }))
@@ -497,8 +500,6 @@ export class Service {
                     // Define the command additions if needed  
                     if (selected_option.append && cmd ){ 
                         let serviceFound = selected_option.append.services.findIndex(data => data == $this.serviceIdx)
-                        // console.log(serviceFound, selected_option.append, $this.serviceIdx)
-                        console.log("<<<<<", selected_option,">>>>>") 
                         if (serviceFound >= 0){ 
                             let service = selected_option.append
                             if (service.placement || service.placement == 0){
@@ -560,21 +561,26 @@ export class Service {
                         return new Promise((resolve, reject)=>{
                             container.inspect((err, inspection)=>{
                                 try{
-                                    console.log(inspection.State)
                                     if (err){
                                         logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
                                         $this.status.error  = err
-                                    } else {
+                                    } else if (!inspection){
+                                        $this.status.complete= true
+                                        $this.status.running = false
+                                    } else if (inspection.State.exited) {
                                         logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
                                         if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 137 ) || inspection.State.ExitCode == 1 ){
                                             $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}`
                                             $this.status.success = false
                                         } else {
                                             $this.status.success = true
-                                            // $this.status.error = "Test error"
                                         }
                                         $this.status.complete = true
+                                        $this.status.running = false
                                         $this.status.exit_code = inspection.State.ExitCode
+                                    } else {
+                                        $this.status.running = true
+                                        $this.status.complete = false
                                     }
                                 } catch(err2){
                                     logger.error("%o error in inspecting container on end", err2)
@@ -584,12 +590,11 @@ export class Service {
                                     } else {
                                         resolve(false)
                                     }
-                                }
+                                } 
 
                             })
                         })
                     }
-                    var interval = null
                     container.attach({stream: true, stdout: true, stdin:true, stderr: true}, function (err, stream){
                         $this.log = spawnLog(stream, $this.logger)
                         $this.status.stream =  $this.log
@@ -605,27 +610,31 @@ export class Service {
                                 reject(err)
                             } 
                             if (!wait || $this.config.continuous){
-                                resolve( stream )
+                                resolve( false )
                             } else { 
-                                if (process.platform == 'win32'){
-                                    let ended = false
-                                    interval = setInterval(()=>{
-                                        if (ended){
-                                            clearInterval(interval)
-                                        }
-                                        inspect(container).then((res)=>{
-                                            if (!res){
-                                                ended = true
-                                                resolve(stream)
-                                            }
-                                        })
+                                
+                                // if (process.platform == 'win32'){
+                                let ended = false
+                                $this.jobInterval = setInterval(()=>{
+                                    if (ended){
+                                        clearInterval($this.jobInterval)
+                                    }
+                                    if ($this.status.complete){
+                                        ended = true
+                                        clearInterval($this.jobInterval)
+                                        if ($this.status.error){
+                                            resolve(true)
+                                        } else {
+                                            resolve(false)
 
-                                    },4000)
-                                }
+                                        }
+                                    }
+                                },1000)
+                                // }
                             } 
-                            stream.on("end",()=>{ 
-                                inspect(container)
-                                resolve(stream)
+                            stream.on("error",(err)=>{ 
+                                $this.status.error  = err
+                                resolve(false)
                             })
                         })
                     })

@@ -242,11 +242,14 @@ class FileService {
   logArticConsensus(params){
     return Api().get(`${baseEndpoint.get()}/artic_consensus/log`, params)
   }
-  fetchLog(params){
-    return Api().get(`${baseEndpoint.get()}/log/` + params.name +`/`+params.type)    
+  fetchLogs(){
+    return Api().get(`${baseEndpoint.get()}/log/system`)    
   }
   fetchPrimers(){
     return Api().get(`${baseEndpoint.get()}/primers/fetch`)
+  }
+  deleteOutputs(params){
+    return Api().post(`${baseEndpoint.get()}/output/remove`, params)
   }
   fetchProtocols(){
     return Api().get(`${baseEndpoint.get()}/protocols/fetch`)

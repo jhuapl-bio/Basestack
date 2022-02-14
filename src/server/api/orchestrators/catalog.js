@@ -28,10 +28,10 @@ export class Catalog {
     async statusCheck(){
 		const $this = this;
 		return new Promise(function(resolve,reject){
-            let promises = []
+            let promises = [] 
                 let running = false
-                let error = null
-                let full_install = true
+                let error = null 
+                let full_install = true 
                 let partial_install = false
                 let latest_version  = 0
                 let latest = null
@@ -106,7 +106,7 @@ export class Catalog {
                     $this.interval.checking = false
                 }) 
             }
-        }, 2500)
+        }, 1500)
 
 
         return interval

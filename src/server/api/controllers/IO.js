@@ -18,6 +18,7 @@ import parse  from 'csv-parser'
 import axios from "axios";
 import { dir } from "console";
 import { stream } from "winston";
+const { bytesToSize } = require("./configurations.js")
 const { store }  = require("../../config/store/index.js")
 const  targz = require('targz');
 var Client = require('ftp');
@@ -195,8 +196,17 @@ export async function readTableFile(filepath, delimeter, header){
 }
 export async function checkExists(path){
 	return new Promise((resolve, reject)=>{
-		fs.exists(path, function(exists){
+		fs.stat(path, function(err, exists){
+				
+			if (err){
+				resolve(false)
+			}
 			if(exists){
+				// let size = 0
+				// if (exists.size){
+				// 	size = bytesToSize(exists.size)
+				// 	console.log(size, path)
+				// }
 				resolve(true)
 			} else {
 				resolve(false)
@@ -209,6 +219,9 @@ export async function removeFile(filepath, type, silentExists){
 	return new Promise((resolve, reject)=>{
 		 fs.exists(filepath, function(exists){
 		    if(exists){
+				if (!type){
+					type = "file"
+				}
 		    	if (type == "file"){
 			      fs.unlink(filepath, (err) => {
 					  if (err) {

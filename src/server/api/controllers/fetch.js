@@ -406,13 +406,65 @@ export async function check_container(container_name){
 	return new Promise(function(resolve,reject){
 		(async ()=>{
 			var container = await store.docker.getContainer(container_name);
+			let err = null
+			let complete = false
+			let success = false
+			let running = false
 
-			await container.inspect((err,info)=>{ 
-				if (err){
-					resolve({container: null, running: false, exists: false})
-				} else { 
-					resolve({container: container, running: info.State.Running, exists: true })
-				} 
+			let returnable = {
+				complete: false,
+				exists: false,
+				running: false, 
+				msg: null,
+				success:false
+			}
+			await container.inspect((err,inspection)=>{ 
+				try{
+					if (err){ 
+						// logger.error(`${err}, error in container finalization of exit code: ${container_name}`)
+						// returnable.error  = err
+						returnable.running = false
+						returnable.success = false
+						returnable.complete= true
+					} else if (!inspection){
+						returnable.complete= true
+						returnable.running = false
+					} else if (inspection.State.Status == 'exited') {
+						returnable.exists = true
+						// if (container_name == 'mytax_kraken2_report'){
+						// 	console.log(inspection.State)
+						// }
+						if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 127 ) || inspection.State.ExitCode == 1 ){
+							// logger.info(`${container_name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
+							returnable.err  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}. Check Logs!`
+							if (inspection.State.OOMKilled){
+								returnable.err += ', Killed by Memory Limit being reached'
+								returnable.msg  = "Killed by Memory Limit"
+							} 
+							returnable.success = false
+						} else {
+							returnable.success = true
+						}
+						returnable.complete = true
+						returnable.running = false
+						returnable.exit_code = inspection.State.ExitCode
+					} else {
+						returnable.exists = true
+						returnable.running = true
+						returnable.complete = false
+					} 
+				} catch(err2){
+					// logger.error("%o error in inspecting container on end", err2)
+				} finally{
+					resolve(returnable)
+				}
+
+
+				// if (err){
+				// 	resolve({container: null, running: false, exists: false})
+				// } else if (info) { 
+				// 	resolve({container: container, running: info.State.Running, exists: true })
+				// } 
 			})
 		})().catch((error)=>{ 
 			logger.error("%s error checking if docker exists", error)  

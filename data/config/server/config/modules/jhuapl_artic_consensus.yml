@@ -17,6 +17,9 @@
       tooltip: "Create a nCov consensus report"
       force_restart: true
       config: null
+      removal_override: 
+        source: "%{variables.dir.source}/artic-pipeline"
+        type: "dir"
       tags: 
         - "consensus"
         - "coronavirus"
@@ -56,35 +59,6 @@
               bind: 
                 from: "%{variables.fastq_pass.source}"
                 to: "%{variables.dir.bind.to}/fastq_pass" 
-        # run_config: 
-        #   label: "Run Configuration File"
-        #   column: 6
-        #   read: "%{variables.dir.source}/run_config.txt"
-        #   element: "file"
-        #   update: 
-        #     - primers
-        #     - basecalling
-        #     - barcoding
-        #   source: null
-        #   header: ["configuration", "target" ]
-        #   bind_parent_dir: true
-        #   # bind: 
-        #   #   to: "%{variables.dir.bind.to}/run_config.txt"
-        #   #   from: "%{variables.dir.source}/run_config.txt"
-        #   class: "wb-50  p-3 mb-1"
-        #   hidden: false
-        #   create:
-        #     target: "%{variables.dir.source}/run_config.txt"
-        #     sep: "tab"
-        #   framework:
-        #     - ["primers", "%{variables.primers.source}"]
-        #     - ["basecalling", "%{variables.basecalling.source}"]
-        #     - ["barcoding", "%{variables.barcoding.source}"]
-        #   depends_key: "target"
-        #   depends: 
-        #     - primers
-        #     - basecalling
-        #     - barcoding
         primers:
           label: "Primer Configuration"
           element: null
@@ -165,6 +139,38 @@
           class: "wb-50  p-3 mb-1"
           source: []
           header: [ 'barcode', 'id']
+          append_newline: true
+        run_config:
+          label: "Run Config File"
+          element: "file"
+          hidden: true
+          sep: "tab"
+          bind_parent_dir: false
+          tooltip: "Long format config for primer, barcoding, basecalling"
+          # update_on: 
+          #   depends:
+          #     - dir
+          #   action: "read"
+          #   source: "%{variables.dir.source}/run_config.txt"
+          create:
+            target: "%{variables.dir.source}/run_config.txt"
+            sep: "tab"
+          class: "wb-50  p-3 mb-1"
+          source: []
+          framework: [
+            [
+              "primers", "%{variables.primers.source}"
+            ],
+            [
+              "basecalling", "%{variables.basecalling.source}"
+            ],
+            [
+              "barcoding", "%{variables.barcoding.source}"
+            ],
+            [
+              ""
+            ]
+          ]
         demuxes:
           watch: True
           label: "Demux"

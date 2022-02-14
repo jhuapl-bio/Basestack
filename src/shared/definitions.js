@@ -12,7 +12,6 @@ export function parseConfigVariables(data, config){
     config.configPath = config.configPath.replace(/\\/g, "/")
     
   }
-  console.log(config)
 	data = data.replace(/\$\{writePath\}/g, config.writePath)
 	data = data.replace(/\$\{configPath\}/g, config.configPath)
 	data = data.replace(/\$\{uploadPath\}/g, config.uploadPath)

@@ -132,24 +132,16 @@ router.post("/container/cancel", (req,res,next)=>{
 	}
 })
 
-router.get("/log/:container_name/:type", (req,res,next)=>{
+router.get("/log/system", (req,res,next)=>{
 	try {
-		if (req.params.type == 'container'){
-			if (store.modules[req.params.container_name]){
-				const log = store.modules[req.params.container_name].status.stream
-				res.status(200).json({status: 200, message: "Watching  log", data: log });
-			} else {
-				res.status(201).json({status: 201, message: "No Stream" });			
-			}
-		} else if (req.params.type == 'system'){
-			(async function(){
-				let log = await readFile(store.system.logFile, true)
-				res.status(200).json({status: 200, message: "Got system log", data: log});
-			})().catch((Err)=>{
-				res.status(419).send({status: 419, message: "There was an error"});
-			})
-		}
-		
+		(async function(){
+			console.log(store.system)
+			let log = await readFile(store.system.logs.info, true)
+			res.status(200).json({status: 200, message: "Got system log", data: log});
+		})().catch((err)=>{
+			store.logger.error(err)
+			res.status(419).send({status: 419, message: `There was an error ${err}`});
+		})
 	} catch(err){
 		res.status(419).send({status: 419, message: error_alert(err) });
 	}	
@@ -1143,6 +1135,27 @@ router.post("/procedure/build/dependency", (req,res,next)=>{ // build workflow a
 	})()
 }) 
 
+router.post("/output/remove", (req,res,next)=>{ // build workflow according to name and index
+	(async function(){
+		try {
+			// let module = store.catalog[req.body.catalog].modules[req.body.module]
+			// let procedure = module.procedures[req.body.procedure]
+			let job = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`)
+			if (job){
+				let response = await job.removeOutputs( req.body.idx ) 
+				logger.info(`Success in beginning to building of procedure output for: ${req.body.module}`)
+				res.status(200).json({status: 200, message: "Completed removal of output", data: response });
+			} else {
+				logger.error("Error in removing output for job")
+				res.status(419).send({status: 419, message:  'No Job available'});
+			}
+		} catch(err2){
+			logger.error("%s %s", "Error in removing output", err2)
+			res.status(419).send({status: 419, message: error_alert(err2)});
+		}	
+	})()
+}) 
+
 router.post("/procedure/build/cancel", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	try {
 		(async function() {
@@ -1293,10 +1306,15 @@ router.get("/job/status/:catalog/:module/:procedure", (req,res,next)=>{ //this m
 				let services = procedure.services.map((d,i)=>{
 					return i
 				}) 
-				let job = await create_job(procedure.config, {}, services)
+				let job = await create_job(procedure.config, {}, services, procedure)
 				found = job
+				// let dep_status = procedure.dependencies.map((f)=>{
+				// 	return f.status
+				// })
+				// found.status.dependencies = dep_status
 				nestedProperty.set(store, `jobs.catalog.${req.params.catalog}.${req.params.module}.${req.params.procedure}`, job)
 			}
+			// console.log("getjob", found.status)
 			
 			res.status(200).json({status: 200, message: "Completed job setting", data: found.status });
 		} catch(err2){
@@ -1322,7 +1340,7 @@ router.post("/job/set/variable", (req,res,next)=>{ //this method needs to be rew
 			
 			if (!found){
 				let services = req.body.services
-				job = await create_job(procedure.config, req.body.variables, services)
+				job = await create_job(procedure.config, req.body.variables, services, procedure)
 				nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
 			} else {
 				job = found 
@@ -1384,11 +1402,17 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 				delete store.jobs.catalog[req.body.catalog][req.body.module][req.body.procedure]
 			}
 			
-			let job = await create_job(procedure.config, req.body.variables, services)
+			let job = await create_job(procedure.config, req.body.variables, services, procedure)
 			// console.log("req body", job.configuration.variables.file.source, job.configuration.variables.file.bind.from)
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
-			await job.start()
-			res.status(200).json({status: 200, message: "Completed job", data: job.config });
+			let skip = await job.start()
+			console.log("Done, ", skip)
+			if (!skip){
+				res.status(200).json({status: 200, message: "Completed job " + procedure.name, skip: skip });
+			} else {
+				res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
+			}	
+			
 		} catch(err2){
 			logger.error("%s %s", "Error in staging job", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
@@ -1410,8 +1434,8 @@ router.post("/job/cancel", (req,res,next)=>{ //this method needs to be reworked 
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`)
 			if (found){ 
 				await found.stop() 
-				found.cleanup() 
-				delete store.jobs.catalog[req.body.catalog][req.body.module][req.body.procedure]
+				// found.cleanup() 
+				// delete store.jobs.catalog[req.body.catalog][req.body.module][req.body.procedure]
 			} else {
 				found = {}
 			}

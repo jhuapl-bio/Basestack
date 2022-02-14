@@ -22,6 +22,15 @@
         >
         </looping-rhombuses-spinner>
       </div>
+      <v-spacer>
+      </v-spacer>
+      <v-btn icon-and-text color="orange darken-2" v-if="progresses && progresses.length > 0" @click="deleteOutputs()">
+        <v-icon
+          small
+        > $trash-alt
+        </v-icon>
+        Delete Outputs
+      </v-btn>
     </v-toolbar>
     
   	<v-data-table
@@ -69,6 +78,13 @@
           </v-tooltip>
             
         </template>
+        <template v-slot:item.remove="{ item, index }">
+            <v-icon 
+                @click="deleteOutputs(index)"
+                v-if="(item.source && !Array.isArray(item.source)) || (Array.isArray(item.source) && item.source.length > 0)"
+                small> $trash-alt
+            </v-icon>
+        </template>
         <template v-slot:item.element="{ item }">
             <v-icon 
                 v-if="item.type == 'files'"
@@ -94,6 +110,7 @@
 
 <script>
 import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
+import FileService from '@/services/File-service.js'
 
 
 const path = require("path")
@@ -130,6 +147,29 @@ export default {
             }
           }
         },
+        deleteOutputs(outputs){
+          FileService.deleteOutputs({
+              idx: outputs,
+              catalog: this.catalog,
+              module: this.module, 
+              procedure: this.procedure
+          }).then((response2)=>{
+              this.$swal({
+                  title: "Deletion of outputs completed!",
+                  icon: 'success',
+                  showConfirmButton: true,
+                  allowOutsideClick: true
+              });
+              this.stagedRemote = null
+          }).catch((err)=>{
+              this.$swal.fire({
+                  position: 'center',
+                  icon: 'error',
+                  showConfirmButton:true,
+                  title: err.response.data.message
+              })
+          }) 
+        },
         open (link) {
           try{        
             this.$electron.shell.openPath(link)
@@ -143,7 +183,7 @@ export default {
           }
         },
 	},
-	props: ['defaultHeaders', 'progresses', 'status'],
+	props: ['defaultHeaders', 'progresses', 'status', 'catalog', 'module', 'procedure'],
     mounted(){
     },
     watch: {

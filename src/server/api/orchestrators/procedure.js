@@ -131,7 +131,7 @@ export class Procedure {
                     $this.interval.checking = false
                 })
             }
-        }, 3500)
+        }, 1500)
 
 
         return interval
@@ -173,7 +173,7 @@ export class Procedure {
 				} else if (dependency.type == "docker-local"){
 					promises.push(check_image(dependency.target))
 				}
-                else {
+                else { 
                     promises.push(checkExists(dependency.target))
                 }
                 if (dependency.streamObj && dependency.streamObj.status){
@@ -182,25 +182,22 @@ export class Procedure {
 			})
 			Promise.allSettled(promises).then((response, err)=>{
                 let v = []
+                let uninstalled = []
 				response.forEach((dependency, index)=>{
 					if (dependency.status == 'fulfilled'){
 						dependencies[index].status.exists = dependency.value
                         
 						dependencies[index].status.version = dependency.value.version
-					} else {
+					} else { 
 						dependencies[index].status.exists = false
 						dependencies[index].status.version = null
+                        
+                        
 					}
-                    // if ($this.i %2 !=0){
-                    //     dependencies[index].status.building =true
-                    // }
-                    // else{
-                    //     dependencies[index].status.building =false
-                    // }
+                    
                     if (dependencies[index].status.building){
                         building = true
                     }
-                    
                     if (dependencies[index].depends){
                         let dependComplete = response.filter((f,i)=>{
                             if (dependencies[index].depends.indexOf(i) > -1){
@@ -215,18 +212,19 @@ export class Procedure {
                     }
                     v.push(dependency.value)
 				})
-                // $this.i+=1
                 $this.status.building = building
                 let fully_installed = v.every((dependency)=>{
                     return dependency
                 })
                 let exists_any = $this.dependencies.some((dependency)=>{
+                    
                     if (dependency && dependency.status){
                         return dependency.status.exists
                     } else {
                         return false
                     }
                 })
+                
                 let exists_all = $this.dependencies.every((dependency)=>{
                     if (dependency && dependency.status){
                         return dependency.status.exists
@@ -332,7 +330,7 @@ export class Procedure {
     //     })
 
     // }
-    
+   
     async loadImage(dependency){
 		const $this = this  
         return new Promise(function(resolve,reject){  
@@ -419,7 +417,9 @@ export class Procedure {
                 }
             }
             let service = new Service( 
-                cloneDeep(dependency.service)
+                cloneDeep(dependency.service),
+                null,
+                true
             )
             if (dependency.workingdir){
                 service.config.workingdir = dependency.workingdir
