@@ -82,7 +82,7 @@
             }
         ],
         "dmg": {
-            "icon": "build/icons/basestack.icns",
+            "icon": "build/icons/icon.icns",
             "sign": false,
             "contents": [
                 {
@@ -99,7 +99,7 @@
             ]
         },
         "mac": {
-            "icon": "build/icons/basestack.icns",
+            "icon": "build/icons/icon.icns",
             "target": [
                 "dmg",
                 "zip"
@@ -110,10 +110,10 @@
             "entitlementsInherit": "build/entitlement.mac.plist"
         },
         "win": {
-            "icon": "\"build/icons/basestack.ico\"" 
+            "icon": "\"build/icons/icon.ico\"" 
         },
         "linux": {
-            "icon": "build/icons/basestack.ico",
+            "icon": "build/icons/icon.icns",
             "executableName": "Basestack",
             "artifactName": "Basestack.${ext}"
         },
