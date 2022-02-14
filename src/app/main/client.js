@@ -72,9 +72,16 @@ export class  Client {
          * Initial window options
          */
         const $this = this  
-        let icon = path.join(__dirname, "..", "static", "img", '/basestack.ico')
+        
         if (process.env.NODE_ENV !== 'production'){
-          
+            let icon = path.join(__dirname, "..", "static", "img")
+            if (process.env.platform_os == "linux"){
+              icon = path.join(icon, "/icon_1024x1024.png")
+            } else if (process.env.platform_os == 'win'){
+              icon = path.join(icon, "/basestack.ico")
+            } else {
+              icon = path.join(icon, "/basestack.icns")
+            }
           this.mainWindow = new BrowserWindow({
             height: 1000,
             useContentSize: true,
@@ -85,6 +92,15 @@ export class  Client {
           }) 
            console.log(icon,  __dirname)
         } else { 
+          let icon = path.join(__dirname, "icons")
+            if (process.env.platform_os == "linux"){
+              icon = path.join(icon, "/icon_1024x1024.png")
+            } else if (process.env.platform_os == 'win'){
+              icon = path.join(icon, "/basestack.ico")
+            } else {
+              icon = path.join(icon, "/basestack.icns")
+            }
+            console.log(__dirname,"DIRNAME")
           this.mainWindow = new BrowserWindow({
             height: 1000, 
             useContentSize: true,
