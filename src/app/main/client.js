@@ -71,8 +71,8 @@ export class  Client {
         /**
          * Initial window options
          */
-        const $this = this 
-        let icon = path.join(__dirname, "..", "static", "img", '/icon_1024x1024.png')
+        const $this = this  
+        let icon = path.join(__dirname, "..", "static", "img", '/basestack.ico')
         if (process.env.NODE_ENV !== 'production'){
           
           this.mainWindow = new BrowserWindow({
