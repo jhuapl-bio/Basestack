@@ -110,10 +110,10 @@
             "entitlementsInherit": "build/entitlement.mac.plist"
         },
         "win": {
-            "icon": "\"build/icons/icon_256x256.png\""
+            "icon": "\"build/icons/icon_1024x1024.png\""
         },
         "linux": {
-            "icon": "build/icons/icon_256x256.png",
+            "icon": "build/icons/icon_1024x1024.png",
             "executableName": "Basestack",
             "artifactName": "Basestack.${ext}"
         },

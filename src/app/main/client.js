@@ -72,8 +72,9 @@ export class  Client {
          * Initial window options
          */
         const $this = this 
+        let icon = path.join(__dirname, "..", "static", "img", '/icon_1024x1024.png')
         if (process.env.NODE_ENV !== 'production'){
-          let icon = path.join(__dirname, '/basestack.ico')
+          
           this.mainWindow = new BrowserWindow({
             height: 1000,
             useContentSize: true,
@@ -90,7 +91,7 @@ export class  Client {
             width: 1080,
             title: "Basestack",
             webPreferences: {zoomFactor: 0.83,  webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
-            icon: path.join(__dirname, '..', "static", 'img', 'icon_512x512.png')
+            icon: icon
           })
         }
        
