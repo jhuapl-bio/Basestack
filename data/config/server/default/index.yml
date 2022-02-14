@@ -1,0 +1,52 @@
+- name: "dashboard"
+  icon: "home"
+  title: "Home"
+  component: "Dashboard"
+  module: False
+  tooltip: "Home Page"
+  image: null
+- name: "library"
+  icon: "book"
+  title: "Library"
+  component: "Library"
+  module: False
+  tooltip: "Install or Modify Modules as Docker Images"
+  image: null
+- name: "customgenerator"
+  icon: "cog"
+  title: "Create"
+  component: "CustomGenerator"
+  module: False
+  tooltip: "Create your own custom services, modules, or procedures"
+  image: null
+- name: "playdashboard"
+  icon: "globe"
+  component: "PlayDashboard"
+  title: "Play"
+  tooltip: "View built-in modules, pre-packaged in Basestack"
+  options:
+    - name: "igv"
+      icon: "globe"
+      title: "IGV"
+      component: "IGV"
+      module: False
+      tooltip: "View the externally hosted (internet required) page from Integrative Genomics Viewer"
+    - name: "nextstrain"
+      icon: "tree"
+      title: "Nextstrain"
+      component: "Nextstrain"
+      module: False
+      tooltip: "Compare mutations on Nextstrain (internet access required)"
+- name: "logs"
+  icon: "book-open"
+  title: "Logs"
+  component: "LogDashboard"
+  module: False
+  tooltip: "View currently running logs of the connected server"
+- name: "system"
+  icon: "cog"
+  title: "System"
+  component: "Sys"
+  module: False
+  tooltip: "View your system information including available space, Docker status and more"
+  image: null

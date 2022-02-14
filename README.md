@@ -1,5 +1,19 @@
 # Basestack
 
+## 1 Running Basestack Developer Mode
+
+- Window 1: `npm run dev:server`
+- Window 2: `npm run dev:app`
+
+OR 
+
+- Window 1: `npm run dev`
+
+## Building the app
+
+`npm run build`
+
+**note: target extensions will be based on your operating system (.dmg for OSX, .exe NSIS for Win, .AppImage for Linux)
 
 ## Our Official Documentation has moved to https://basestackwebsite.readthedocs.io/en/latest
 
@@ -297,6 +311,20 @@ Note that this will map all of your processes INSIDE the docker containers to yo
 </details>
 
 <hr>
+
+
+<hr>
+
+#### Permisson denied (Linux)
+
+Please ensure that you follow the correct [instructions](#1-install-docker) here to using `userns-remap`
+
+Note that this will map all of your processes INSIDE the docker containers to your user id if used properly. You will need sudo to delete any files or folders that are causing issues.
+
+</details>
+
+<hr>
+
 
 ### A2 Install Basestack
 

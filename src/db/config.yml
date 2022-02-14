@@ -1,0 +1,17 @@
+# services:
+#   - path: "../../data/config/server/services"
+#     format: "yaml"
+#   - path: "../../data/config/server/service_dind"
+#     format: "yaml"
+# procedures:
+#   - path: "../../data/config/server/procedures"
+#     format: "yaml"
+#   - path: "../../data/config/server/procedure_dind"
+#     format: "yaml"
+modules:
+  - path: "../../data/config/server/config/modules"
+    format: "yml"
+    recursive: true
+    ignores: [
+      "docker-compose.yml"
+    ]

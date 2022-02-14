@@ -1,0 +1,112 @@
+logs:
+  path: "${writePath}/logs"
+  error: "${writePath}/logs/serverError.log"
+  info:  "${writePath}/logs/server.log"
+  docker: "${writePath}/logs/docker.log"
+shared: 
+  path: "${writePath}/data" 
+  modules: "${writePath}/custom/modules/"
+default:
+  path: ${configPath}/default
+  items:
+    - default:
+      path: "${configPath}/default/index.yml"
+      format: "single"
+      type: "yml"
+remotes:
+  modules: "${writePath}/remote/modules/"
+modules:
+  - path: "${configPath}/config/modules"
+    format: "files" 
+    type: "yml"
+    local: True
+    custom: False
+  - path: "${writePath}/custom/modules/"
+    format: "files" 
+    type: "yml"
+    custom: True
+    local: True
+  - path: "${writePath}/remote/modules"
+    format: "files" 
+    type: "yml"
+    custom: False
+    local: False
+# services:  
+#   - path: "${configPath}/config/services"
+#     format: "files" 
+#     type: "yml"
+#     local: true
+
+
+# modules: 
+#   local:
+#     - path: "${configPath}/modules/workflows/"
+#       filename: "index.yml"
+#       format: "dir"
+#       type: "yml"
+#   remote:
+#     - path: "${writePath}/remote/modules/"
+#       remote: true
+#       format: "files"
+#       custom: false
+#       type: "yml"
+#   custom:
+#     - path: "${writePath}/custom/modules/"
+#       format: "files"
+#       custom: true
+#       type: "yml"
+# procedures: 
+#   local:  
+#     - path: "${configPath}/procedures"
+#       format: "files" 
+#       type: "yml"
+#   remote:
+#     - path: "${writePath}/remote/procedures/"
+#       remote: true
+#       format: "files"
+#       custom: false
+#       type: "yml"
+#   custom:  
+#     - path: "${writePath}/custom/procedures/"
+#       format: "files" 
+#       custom: true
+#       type: "yml"
+
+#   remote:
+#     - path: "${writePath}/remote/services/"
+#       remote: true
+#       format: "files"
+#       custom: false
+#       type: "yml"
+#   custom:
+#     - path: "${writePath}/custom/services/"
+#       format: "files"
+#       custom: true 
+#       type: "yml"
+orchestrators:
+  default:
+    format: "single"
+    type: "json" 
+    path: ${configPath}/default/dockerConfig.json #used by the Docker API, refere to the url for more information
+  subclient:
+    format: "single"
+    type: "json" 
+    path: ${configPath}/dockerConfigs/dockerConfigSubclient.json #used by the Docker API, refere to the url for more information
+  dind:
+    service:
+      path: "${configPath}/service_dind/dind.yml"
+      format: "single" 
+      type: "yml"
+      config:
+        file: ${configPath}/dockerConfigs/dockerConfig.json #used by the Docker API, refere to the url for more information
+    procedure:
+      path: "${configPath}/procedure_dind/procedure_dind.yml"
+      format: "single" 
+      type: "yml"
+    module:
+      path: ${configPath}/modules/dind/index.yml
+      format: "single"
+      type: "yml"
+      build: 
+        file: "${configPath}/modules/dind/Dockerfile"
+      
