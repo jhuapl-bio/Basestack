@@ -82,7 +82,7 @@
             }
         ],
         "dmg": {
-            "icon": "build/icons/icon_osx.icns",
+            "icon": "build/icons/basestack.icns",
             "sign": false,
             "contents": [
                 {
@@ -99,7 +99,7 @@
             ]
         },
         "mac": {
-            "icon": "build/icons/icon_osx.icns",
+            "icon": "build/icons/basestack.icns",
             "target": [
                 "dmg",
                 "zip"

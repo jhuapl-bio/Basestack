@@ -510,7 +510,7 @@ export class Service {
  
                         } 
                             
-                    }
+                    } 
                 }  
             }
             if ($this.config.image){

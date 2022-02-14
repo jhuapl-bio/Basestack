@@ -1,6 +1,6 @@
 - name: minimap2
   title: "Minimap2"
-  icon: "dna"
+  icon: "highlighter"
   version: 1.0
   basestack_released: 2.0
   module: True

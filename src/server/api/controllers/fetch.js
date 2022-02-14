@@ -345,6 +345,7 @@ export async function fetch_external_dockers(key){
 		store.images[key].fetching_available_images.status = true
 		let json =  await axios.get(url)
 		let latest = null;
+		console.log(json,"<")
 		latest = json.data
 		store.images[key].latest_digest = latest.images[0].digest
 		return store.images[key]
@@ -480,10 +481,10 @@ export async function listImages(dind){
 	return new Promise((resolve, reject)=>{
 		if (dind){
 			store.dind.listImages().then((images)=>{
-				console.log("images")
+				console.log("images") 
 				resolve(images)
 
-			})
+			}) 
 		} else {
 			store.docker.listImages().then((images)=>{
 				console.log("images")
@@ -524,7 +525,7 @@ export async function check_image(image){
 			reject(err)
 		}
 	})
-}
+} 
 
 export async function fetch_histories(){
 	const historyPath = store.config.modules['basestack_consensus'].config.historyPath

@@ -54,16 +54,16 @@ export class  Client {
       console.log(`updating port to ${port}`)
       process.env.PORT_SERVER = port
       this.mainWindow.webContents.send("changePort", port)
-    }
-    createMenu(){
-        // let menu = makeMenu(this.this.logger)
+    } 
+    createMenu(){  
+        // let menu = makeMenu(this.this.logger)  
         console.log("creating menu")
-        
+         
         let menu = new ClientMenu(this.logger, this.mainWindow, dialog, this.app, this.system, this.spawned_logs, this.updater)
         menu.store = this.store
-        let m = menu.makeMenu()
+        let m = menu.makeMenu() 
     }
-    createUpdater(){
+    createUpdater(){ 
         this.updater = new Updater(this.logger, this.mainWindow, dialog)
         this.updater.defineUpdater()
     }
@@ -71,16 +71,18 @@ export class  Client {
         /**
          * Initial window options
          */
-        const $this = this
+        const $this = this 
         if (process.env.NODE_ENV !== 'production'){
+          let icon = path.join(__dirname, '/basestack.ico')
           this.mainWindow = new BrowserWindow({
             height: 1000,
             useContentSize: true,
             width: 1080,
-            title: "Basestack",
+            title: "Basestack", 
             webPreferences: { zoomFactor: 0.83, webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
-            icon: path.join(__dirname, '..', 'static', 'img', 'jhulogo.png')
+            icon: icon
           }) 
+           console.log(icon,  __dirname)
         } else { 
           this.mainWindow = new BrowserWindow({
             height: 1000, 
@@ -88,9 +90,10 @@ export class  Client {
             width: 1080,
             title: "Basestack",
             webPreferences: {zoomFactor: 0.83,  webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
-            icon: path.join(__dirname, '..', "static", 'img', 'jhulogo.png')
+            icon: path.join(__dirname, '..', "static", 'img', 'icon_512x512.png')
           })
         }
+       
         this.mainWindow.webContents.session.clearCache()
 
 

@@ -71,6 +71,7 @@ export class Procedure {
         this.services_config.forEach((service)=>{
             this.service_steps[service] = false
         }) 
+        this.checkDependenciesVersion()
         const $this = this
         for (let [key, value] of Object.entries($this.config.variables)){
             if (value.options){
@@ -159,6 +160,26 @@ export class Procedure {
         }
 
         return
+    }
+    async checkDependenciesVersion(){
+        const $this = this;
+        return new Promise(function(resolve,reject){
+            let dependencies = $this.dependencies
+            dependencies.forEach((dependency)=>{
+                if (dependency.type == 'docker'){
+                    fetch_external_dockers(dependency.target).then((response)=>{
+                        if ( response){  
+                            dependency.status.latest = response.latest_digest
+                        } else {
+                            dependency.status.latest  = null
+                        }
+                    }).catch((err)=>{
+                        store.logger.error(err)
+                    })
+                }
+            })
+           
+        })
     }
     async dependencyCheck(){ 
 		const $this = this; 

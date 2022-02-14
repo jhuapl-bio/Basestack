@@ -61,12 +61,20 @@
 					
 				>							
 					<v-list-item-action>
-						<v-tooltip left>
-							<template v-slot:activator="{ on }">
-								<v-icon v-on="on" class="" medium >{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
-							</template>
-							{{ (  collapsed ? entry.title : entry.tooltip) }}
-						</v-tooltip>
+            <v-badge    v-if="entry.name == 'library' && catalog && catalog.length <= 0 " :color="(catalog && catalog.length > 0  ? 'green' : 'orange darken-2')">
+                <v-tooltip left>
+                  <template v-slot:activator="{ on }">
+                    <v-icon v-on="on" class="" medium >{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
+                  </template>
+                  {{ (  collapsed ? entry.title : entry.tooltip) }}
+                </v-tooltip>
+            </v-badge>
+            <v-tooltip v-else left>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" class="" medium >{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
+              </template>
+              {{ (  collapsed ? entry.title : entry.tooltip) }}
+            </v-tooltip>
 					</v-list-item-action>
 					<v-list-item-content>
 						<v-list-item-title>{{ ( entry.title  ? entry.title : key  ) }}</v-list-item-title>

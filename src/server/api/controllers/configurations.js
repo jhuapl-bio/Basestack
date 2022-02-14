@@ -5,7 +5,7 @@ const { set_stored } = require("./fetch.js")
 const { Job } = require("../orchestrators/job")
 const { getFolders, readFile, getFiles} = require("./IO.js")
 import path from "path" 
-const YAML = require("yaml")  
+const YAML = require("yaml")   
 
 export function bytesToSize(bytes) {
    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];

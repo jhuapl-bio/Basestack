@@ -1,6 +1,6 @@
 - name: "rampart"
   title: "Rampart"
-  icon: "tree"
+  icon: "campground"
   basestack_released: 2.0
   version: 1.0
   module: True
