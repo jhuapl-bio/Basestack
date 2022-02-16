@@ -25,7 +25,7 @@ var Client = require('ftp');
 const extract = require('extract-zip')
 const clone = require('git-clone');
 const tar = require("tar")
-
+import glob from "glob"
 
 export function set(attribute, value, obj, type) {
     var depth_attributes = attribute.split('.');
@@ -177,41 +177,62 @@ export async function readTableFile(filepath, delimeter, header){
 						dataFull.push(data)
 						//perform the operation
 					}
-					catch(err) {
-						reject(err)
+					catch(err) { 
+						reject(err)  
 						//error handler
 					}
 				})
 				.on('end',function(){
-					resolve(dataFull)
+					resolve(dataFull) 
 				})
 				.on("error", function(err){
 					store.logger.error(err)
-				});  
+				});   
 			} else {
 				resolve(dataFull)
 			}
 		})
 	})
 }
-export async function checkExists(path){
+export async function checkExists(location, globSet){
 	return new Promise((resolve, reject)=>{
-		fs.stat(path, function(err, exists){
+		if (!globSet){
+			fs.stat(location, function(err, exists){
 				
-			if (err){
-				resolve(false)
-			}
-			if(exists){
-				// let size = 0
-				// if (exists.size){
-				// 	size = bytesToSize(exists.size)
-				// 	console.log(size, path)
-				// }
-				resolve(true)
-			} else {
-				resolve(false)
-			}
-		})
+				if (err){
+					resolve(false) 
+				}
+				if(exists){
+					// let size = 0 
+					// if (exists.size){
+					// 	size = bytesToSize(exists.size)
+					// 	console.log(size, path)
+					// }
+					resolve(true)
+				} else {
+					resolve(false)
+				}
+			})
+		} else { 
+			glob(
+			path.basename(location),
+				{ cwd: path.dirname(location) },  // you want to search in parent directory
+				(err, files) => {
+					if (err) {
+					resolve(false)
+					}
+					console.log(path.basename(location), path.dirname(location))
+				
+					if (files && files.length) {
+						console.log(files,"<<<<<")
+					resolve(true)
+					} else {
+					resolve(false)
+					}
+				}
+			);
+		}
+		
 	})
 }
 

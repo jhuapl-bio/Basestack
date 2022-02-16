@@ -12,10 +12,10 @@ import Api from './Api.js'
 let baseEndpoint = {
   get () {
     if (process.env.NODE_ENV == 'production'){
-     return `http://localhost:${process.env.PORT_SERVER}`
+     return `http://localhost:${( process.env.PORT_SERVER ? process.env.PORT_SERVER : 5003)}`
     } else {
       //  return 'api'
-      return `http://localhost:${process.env.PORT_SERVER}`
+      return `http://localhost:${( process.env.PORT_SERVER ? process.env.PORT_SERVER : 5003)}`
     }
   }
 };

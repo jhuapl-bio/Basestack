@@ -345,7 +345,6 @@ export async function fetch_external_dockers(key){
 		store.images[key].fetching_available_images.status = true
 		let json =  await axios.get(url)
 		let latest = null;
-		console.log(json,"<")
 		latest = json.data
 		store.images[key].latest_digest = latest.images[0].digest
 		return store.images[key]

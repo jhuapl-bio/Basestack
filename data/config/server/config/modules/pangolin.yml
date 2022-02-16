@@ -1,0 +1,77 @@
+- name: pangolin
+  title: "Pangolin"
+  icon: "highlighter"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tags: 
+    - "lineages"
+    - "phylogenetics"
+    - "sars-cov-2"
+  tooltip: "Phylogenetic Analysis of SARS-CoV-2"
+  procedures:
+    - name: pangolin #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Pangolin"
+      icon: "highlighter"
+      module: True
+      init: false 
+      dependencies:
+        - target: "staphb/pangolin"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "phylogenetics"
+        - "lineage"
+        - "visualization"
+      variables:
+        file:
+          label: "FASTA File"
+          element: "file"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.file.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "%{variables.file.bind.to}/%{variables.file.source}"
+        autoUpdate:
+          label: "AutoUpdated"
+          element: "checkbox"
+          source: true
+          # hint: "Mapped alignment file from anonymised SARS-CoV-2 sequence"
+          append:
+            command: "pangolin --update; "
+            placement: 2
+            position: "start"
+            services: 
+              - 0
+        alignment:
+          label: "Alignment FASTA File"
+          element: "file"
+          # hint: "Mapped alignment file from anonymised SARS-CoV-2 sequence"
+          output: true
+          openSelf: True
+          source: "<<directory(%{variables.file.source})>>/sequences.aln.fasta"
+          target: "%{variables.file.bind.to}/sequences.aln.fasta"
+        report:
+          label: "Lineage Report"
+          element: "file"
+          output: true
+          openSelf: True
+          bind_parent_dir: false
+          source: "<<directory(%{variables.file.source})>>/lineage_report.csv"
+          # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
+          target: "%{variables.file.bind.to}/lineage_report.csv"
+      tooltip: "Run the pangolin UI interface"
+      services:
+        - name: pangolin
+          label: "Pangolin Analysis"
+          image: "staphb/pangolin:latest"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "pangolin --alignment ${file}"]
+            
+      

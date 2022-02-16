@@ -30,9 +30,22 @@
           element: "string"
           class: "wb-50  p-3 mb-1"
           source: "Test"
+        summary:
+          label: "Sequencing Summary File"
+          hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory"
+          element: "exists"
+          source:  null
+          update_on: 
+            depends:
+              - dir
+            action: "exists"
+            source: "%{variables.dir.source}/sequencing_summary*.txt"
+          target: "%{variables.file.bind.to}/"
         dir:
           label: "Input Long-Reads Full Run Directory"
+          hint: "Directory that contains your fastq_pass, fast5_pass, and sequencing summary.txt file. Output directory from a Oxford Nanopore run"
           element: "dir"
+          optional: false
           bind_parent_dir: false
           source: null
           bind: 
@@ -41,6 +54,7 @@
           class: "wb-50  p-3 mb-1"
         fastq_pass:
           label: "Input Long-Reads FASTQ Directory"
+          hint: "Folder that contains 1 or more fastq files in UNCOMPRESSED format"
           element: "dir"
           bind_parent_dir: false
           class: "wb-50  p-3 mb-1"
@@ -62,7 +76,9 @@
         primers:
           label: "Primer Configuration"
           element: null
+          hint: "List of primers to choose from"
           column: 4
+          option: 0
           link: run_config
           class: "wb-50 p-3 mb-1"
           options:
@@ -70,9 +86,17 @@
             - "nCoV-2019/V4"
             - "nCoV-2019/V2"
             - "nCoV-2019/V1"
+            - element: "dir"
+              hidden: false
+              name: "Custom Primer"
+              source: null
+              bind: 
+                from: "%{variables.primers.source}"
+                to: "/opt/basestack_consensus/primer_schemes/<<basename(%{variables.primers.source})>>" 
         basecalling:
           label: "Basecalling Configuration"
           element: null
+          hint: "Which basecalling configuration you used to create your fastq_pass folder"
           link: run_config
           class: "wb-50 p-3 mb-1"
           column: 4
@@ -99,6 +123,7 @@
         barcoding:
           label: "Barcode Configuration"
           element: null
+          hint: "Which barcoding configuration you used. If no demux took place, select any"
           link: run_config
           column: 4
           class: "wb-50 p-3 mb-1"
@@ -123,6 +148,7 @@
         manifest:
           label: "Input Manifest"
           element: "list"
+          hint: "Mapping of your Barcodes to Sample IDs"
           columns: 2
           column: 12
           sep: "tab"

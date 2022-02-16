@@ -4,7 +4,7 @@ import { mapVariables } from '../controllers/mapper.js';
  const { Configuration }  = require("./configuration.js")
  const { Service }  = require("./service.js")
 const { module_status }  = require("../controllers/watcher.js")
-const { readFile, removeFile, removeFolder } = require("../controllers/IO.js")
+const { readFile, removeFile, removeFolder, checkExists } = require("../controllers/IO.js")
 const { store }  = require("../../config/store/index.js")
    
 var logger = store.logger
@@ -97,6 +97,22 @@ export  class Job {
                     if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
                         let update_on = vari.update_on
                         let action  = update_on.action
+                        if (action == 'exists'){
+                            let returnedVari = {
+                                key: key, 
+                                value: null
+                            }
+                            promises.push(
+                                checkExists(update_on.source, true).then((f)=>{
+                                    vari.source = f
+                                    returnedVari.value = vari
+                                    return returnedVari
+                                }).catch((err)=>{
+                                    store.logger.error(err)
+                                    return vari
+                                })
+                            )
+                        }
                         if (action == 'read'){
                             promises.push(
                                 readFile(update_on.source, true).then((f)=>{
@@ -159,7 +175,6 @@ export  class Job {
             if (dependency >= 0 || dependency){
                 console.log("Single remove!")
                 let watch = $this.status.watches[dependency]
-                console.log(watch)
                 if (typeof watch.source == 'string'){
                     promises.push(removeFile(watch.source))
                 } else {
@@ -168,7 +183,6 @@ export  class Job {
                     })
                 }
             } else {
-                console.log("Multiple all")
                 if ($this.configuration.removal_override){
                     let type = $this.configuration.removal_override
                     if (!type){

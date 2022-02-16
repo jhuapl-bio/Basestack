@@ -367,7 +367,7 @@ export default {
 			mini:true,
       defaultModule: {},
 			drawer:false,
-			tabProcedure: null, 
+			tabProcedure: null , 
 			sel: 0,
 			selected: 'defaults',
 			colorList: [

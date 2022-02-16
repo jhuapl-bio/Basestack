@@ -8,19 +8,11 @@
   -->
 <template>
   <div id="configuration-file" >  
-  	<!-- <v-textarea
-        v-model="value"
-        :label="(source.hint ? source.hint : '' )"
-    >
-    </v-textarea> -->
-   
     <v-badge left style="width: 92%" x-small color="orange">
         <template x-small v-slot:badge>
             <v-tooltip top >
                 <template v-slot:activator="{ on }">
                     <v-icon   x-small v-on="on"  >$pencil-alt</v-icon>
-                    <!-- <v-toolbar-title v-if="source.hint"><small style="font-size: 0.7em">{{source.hint}}</small>
-                    </v-toolbar-title> -->
                 </template>
                 Edit Me!    
             </v-tooltip>

@@ -8,16 +8,7 @@
   -->
 <template>
   <div id="dir" class="wv-50 p-1" @drop.prevent="addDropFiles" @dragover.prevent >
-    <div  style="border: 1px solid grey">
-        <!-- <v-file-input 
-          :label="( directory ? directory : 'Directory input')"
-          v-model="directory"
-          multiple
-          variant="secondary"
-          style="cursor:pointer"
-        >
-        </v-file-input>
-        < -->
+    <v-layout  style="border: 1px solid grey">
         <v-btn
             @click="electronOpenDir('data')"
             color="light"
@@ -37,25 +28,46 @@
         <br><br>
         <v-spacer></v-spacer>
         <v-subheader  style="word-wrap: anywhere;" class="entry-label" v-if="directory" >{{directory}} </v-subheader>
-    </div>
+        <v-tooltip bottom v-if="!$v.directory.required">
+          <template v-slot:activator="{ on }">
+            <v-icon class=" " v-on="on" small color="warning lighten-1" >$exclamation-triangle
+            </v-icon>
+          </template>
+          Valid Directory required
+      </v-tooltip>
+    </v-layout>
+   
+    
   </div>
 </template>
 
 <script>
 const path = require("path")
+
+import { required, requiredIf, minLength, between } from 'vuelidate/lib/validators'
+
 export default {
 	name: 'file',
-    data() {
-        return {
-            value: null,
-            valueDir: null,
-            directory: null,
-            test: "placeholder"
-        }
-    },
-    computed: {
-        
-    },
+  data() {
+      return {
+          value: null,
+          valueDir: null,
+          directory: null,
+          test: "placeholder",
+      }
+  },
+  computed: {
+      
+  },
+  validations (){
+    return{
+        directory: {
+            required: requiredIf((value)=>{
+              return value && !this.source.optional
+            })
+        },
+    }
+  },
 	methods: {
     addDropFiles(e) {
       this.value = Array.from(e.dataTransfer.files);
@@ -77,6 +89,7 @@ export default {
 	},
 	props: ['source', 'status', 'service', 'variable'],
   mounted(){
+    this.directory = this.source.source 
   },
   watch: {
         directory(newValue, oldValue){
@@ -93,8 +106,6 @@ export default {
     				newValue = newValue[0]
     			}		
 	    		const flat  = newValue.flat(2) //flatten up to 2 directories down
-                console.log(flat)
-    		 	// this.changeRunDir(flat, 'dir')
     		} 
         }
     }

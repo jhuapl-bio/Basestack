@@ -407,7 +407,7 @@ router.get("/modules/get/:catalog", (req,res,next)=>{ // build workflow accordin
 				status: module.status,
 				procedures:procedures
 			}
-			try{
+			try{ 
 				let procedures_config = module.procedures.map((d)=>{
 					return d.config
 				})
@@ -459,12 +459,14 @@ router.get("/procedures/get/:catalog/:module/:token", (req,res,next)=>{ // build
 				returnable.cached_variables = cached_variables
 				data.push(returnable)
 			} 
+			
 			catch (err){
 				store.logger.error("Could not get procedure build loaded for... %o %o", data, err)
 			}
 		})
+		
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
-	} catch(err2){
+	} catch(err2){ 
 		logger.error("%s %s", "Error in loading procedure to library", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	 

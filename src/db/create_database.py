@@ -46,6 +46,7 @@ parser.add_argument('--local', required = False, default=False, action='store_tr
 parser.add_argument('--api_key', required = False, default=None, type=str, help = 'API key to push/pull')
 parser.add_argument('--overwrite_version', required = False, default=False, action='store_true', help = 'If set, overwrite latest version of service, procedure, or module 0.1 if any change in config versus last, most recent version')
 parser.add_argument('--config', required = False, default=None,type=str, help = 'Config YAML for mapping directory of YAMLS to table in db')
+parser.add_argument('--filter', required = False, default=None,type=str, nargs="+", help = 'Only choose modules with specific name')
 
 
 
@@ -116,7 +117,8 @@ def main():
                             target_config = yaml.safe_load(stream)
                             for entry in target_config:
                                 if ('name' in entry):
-                                    full_config[key].append(entry)
+                                    if not args['filter'] or ( args['filter'] and entry['name'] in args['filter']):
+                                        full_config[key].append(entry)
                         except yaml.YAMLError as exc:
                             print(exc)
     # print(yaml.dump(full_config, allow_unicode=True, default_flow_style=False))

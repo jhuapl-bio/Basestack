@@ -23,7 +23,7 @@ const { spawnLog, createLoggingObject } = require("../controllers/logger.js")
 var logger = store.logger
 // var docker = new Docker();   
 const fs = require("file-system")    
-let dockerObj;   
+let dockerObj;    
   
 export class Procedure { 
 	constructor(procedure){
@@ -47,6 +47,7 @@ export class Procedure {
             d.status= status
             return d
         })
+        this.buildStream = [],
         
         this.services_config = cloneDeep(procedure.services)
         this.service_steps = {} 
@@ -59,6 +60,7 @@ export class Procedure {
         this.status = {
             error: null, 
             stream: null,
+            buildStream: [],
             running: false,
             building: false,
             fully_installed: false,
@@ -144,7 +146,7 @@ export class Procedure {
         const $this = this
         this.services_config.forEach((service)=>{
             if (service in store.services){
-                $this.services[service] = store.services[service]
+                $this.services[service] = store.services[service] 
             }
         })
 
@@ -195,7 +197,7 @@ export class Procedure {
 					promises.push(check_image(dependency.target))
 				}
                 else { 
-                    promises.push(checkExists(dependency.target))
+                    promises.push(checkExists(dependency.target)) 
                 }
                 if (dependency.streamObj && dependency.streamObj.status){
                     dependency.status.progress = cloneDeep(dependency.streamObj.status)
@@ -204,6 +206,7 @@ export class Procedure {
 			Promise.allSettled(promises).then((response, err)=>{
                 let v = []
                 let uninstalled = []
+                let logs = []
 				response.forEach((dependency, index)=>{
 					if (dependency.status == 'fulfilled'){
 						dependencies[index].status.exists = dependency.value
@@ -215,6 +218,10 @@ export class Procedure {
                         
                         
 					}
+                    if (dependencies[index].status && dependencies[index].status.stream && Array.isArray(dependencies[index].status.stream.info)){
+                            
+                        logs.push(...dependencies[index].status.stream.info)
+                    }
                     
                     if (dependencies[index].status.building){
                         building = true
@@ -233,6 +240,8 @@ export class Procedure {
                     }
                     v.push(dependency.value)
 				})
+                $this.status.buildStream = logs
+                
                 $this.status.building = building
                 let fully_installed = v.every((dependency)=>{
                     return dependency
@@ -362,15 +371,16 @@ export class Procedure {
             loadImage(dependency.source.target).then((stream, error)=>{ 
                 dependency.status.downloading = true 
                 dependency.status.building = true
-                dependency.status.error = null
+                dependency.status.error = null 
                 dependency.status.stream = spawnLog(stream, $this.logger)
-                dependency.streamObj = stream 
+                   
+                dependency.streamObj = stream     
                 $this.buildlog = spawnLog(stream, $this.logger)
                 stream.on("close", (err, data)=>{
                     dependency.status.downloading = false
                     dependency.status.building = false
-                })
-                resolve()  
+                }) 
+                resolve()   
             }).catch((err)=>{
                 store.logger.error("%s %o %o","Error in pulling docker image for: ", dependency , err)
                 dependency.status.downloading = false
@@ -400,7 +410,8 @@ export class Procedure {
                 dependency.status.building = true
                 dependency.status.downloading = true
                 dependency.status.error = null
-                dependency.status.stream = spawnLog(stream, $this.logger)
+                $this.log  = spawnLog(stream, $this.logger)
+                dependency.status.stream = $this.log
                 dependency.streamObj = stream 
                 $this.buildlog = spawnLog(stream, $this.logger)
                 stream.on("close", (err, data)=>{
@@ -417,16 +428,16 @@ export class Procedure {
             }).catch((err)=>{  
                 store.logger.error("%s %s %o","Error in pulling docker image for: ", dependency.target , err)
                 dependency.status.downloading = false
-                dependency.status.building = false
-                dependency.status.error = err
-                reject(err)
-            }) 
+                dependency.status.building = false 
+                dependency.status.error = err  
+                reject(err)  
+            })   
         })
-    } 
+    }   
     async orchestrateDownload(dependency){
-		const $this = this  
-        return new Promise(function(resolve,reject){ 
-            
+		const $this = this   
+        return new Promise(function(resolve,reject){  
+             
             if (dependency.streamObj){
                 store.logger.info("Closing since it already exists as a stream obj for orchestration %o", dependency.target)
                 try{

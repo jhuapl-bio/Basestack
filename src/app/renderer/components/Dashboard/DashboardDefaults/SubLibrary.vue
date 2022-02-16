@@ -300,15 +300,19 @@
         
         </v-data-table>
     </div>
+    <LogWindow   :info="procedureLogs" :key="'logwindowModules'"></LogWindow> 
   </v-card> 
 </template>
 
 <script>
 import FileService from '@/services/File-service.js'
+import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
+
 const path = require("path")
 export default {
 	name: 'sublibrary',
     components: {
+        LogWindow
         
     },
 	computed: {
@@ -320,6 +324,20 @@ export default {
                 return 0
             }
         },
+        // procedureLogs(){
+        //     let logs = []
+        //     if (this.selectedProcedure.status && this.selectedProcedure.status.buildStream){
+        //         // logs = this.selectedProcedure.buildStream
+        //         this.selectedProcedure.status.buildStream.forEach((entry, i)=>{
+        //             logs.push(entry)
+        //         })
+
+        //     }
+        //     console.log("logs,change")
+
+        //     return logs
+
+        // },
         moduleIdx(){
             if (this.selectedModule && this.selectedModule.idx >= 0 ){
                 return this.selectedModule.idx
@@ -339,7 +357,9 @@ export default {
             procedures: [],
             selectedModule: {},
             defaultProcedure:0,
+            procedureLogs: [],
             procedures: [],
+            status: null,
             overwrites: [],
             stored: {},
             fields: [
@@ -415,6 +435,7 @@ export default {
             this.getStatus()
             // this.stored[this.catalog.name].selected = newValue
             
+            
         },
         selectedProcedure(newValue){
             if (newValue.dependencies){
@@ -422,6 +443,7 @@ export default {
                     return f.overwrite
                 })
             }
+          
         },
         catalog(newValue){
             if (  this.stored[newValue.name] ){
@@ -599,6 +621,7 @@ export default {
                 this.procedures.map((d,i)=>{
                     d.idx = i
                 })
+                
                 // if (!this.stored[this.catalog.name]){
                 //     this.stored[this.catalog.name] = []
                 // }
@@ -616,6 +639,20 @@ export default {
                     procedures: this.procedures
                 }
                 this.$set(this.selectedProcedure , 'dependencies', this.procedures[this.selectedProcedure.idx].dependencies)
+                
+                if (this.selectedProcedure.status && this.selectedProcedure.status.buildStream){
+                    // logs = this.selectedProcedure.buildStream
+                    this.selectedProcedure.status.buildStream.forEach((entry, i)=>{
+                        this.procedureLogs.push(entry)
+                    })
+
+                }
+                this.procedureLogs = []
+                try{
+                    this.procedureLogs = this.procedures[this.selectedProcedure.idx].status.buildStream
+                } catch(err){
+                    console.log(err)
+                }
                 
             } catch(err){
                 this.initial=false

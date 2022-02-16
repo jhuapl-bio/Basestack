@@ -399,7 +399,7 @@ export class Service {
         this.status.running = true
         this.status.cancelled = false
         return new Promise(function(resolve,reject){
-            let options = JSON.parse(JSON.stringify($this.options))
+            let options = cloneDeep($this.options)
             
             let env = []
             if (!params){
@@ -423,7 +423,7 @@ export class Service {
             let promises = []; 
             let promisesInside = []
             let values = []
-            options = $this.updateConfig(options)
+            options = cloneDeep($this.updateConfig(options))
             /////////////////////////////////////////////////
             let custom_variables = params.variables
             let defaultVariables = {}
@@ -431,7 +431,7 @@ export class Service {
             defaultVariables = $this.config.variables
             if ($this.config.serve ){ 
                 let variable_port = defaultVariables[$this.config.serve]
-                options = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`], options)
+                options = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options)
             }   
             // $this.config.variables = defaultVariables
             if (defaultVariables &&  typeof defaultVariables == 'object'){
@@ -498,14 +498,22 @@ export class Service {
                         env.push(`${name}=${( selected_option.target ? selected_option.target : selected_option.source)}`)
                     }        
                     // Define the command additions if needed  
-                    if (selected_option.append && cmd ){ 
+                    if (selected_option.append && cmd && selected_option.source ){ 
                         let serviceFound = selected_option.append.services.findIndex(data => data == $this.serviceIdx)
                         if (serviceFound >= 0){ 
                             let service = selected_option.append
                             if (service.placement || service.placement == 0){
-                                options.Cmd[service.placement] =  options.Cmd[service.placement]  +  selected_option.append.command + " "
+                                if (selected_option.append.position == 'start'){
+                                    options.Cmd[service.placement] =  selected_option.append.command + " " + options.Cmd[service.placement]  +  " "
+                                }else {
+                                    options.Cmd[service.placement] =  options.Cmd[service.placement]  +  selected_option.append.command + " "
+                                }
                             } else{
-                                options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
+                                if (selected_option.append.position == 'start'){
+                                    options.Cmd[options.Cmd.length - 1] =  selected_option.append.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
+                                } else {
+                                    options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
+                                }
                             }
  
                         } 
@@ -572,13 +580,13 @@ export class Service {
                                         if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 137 ) || inspection.State.ExitCode == 1 ){
                                             $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}`
                                             $this.status.success = false
-                                        } else {
+                                        } else { 
                                             $this.status.success = true
                                         }
                                         $this.status.complete = true
                                         $this.status.running = false
                                         $this.status.exit_code = inspection.State.ExitCode
-                                    } else {
+                                    } else {  
                                         $this.status.running = true
                                         $this.status.complete = false
                                     }
@@ -594,7 +602,7 @@ export class Service {
 
                             })
                         })
-                    }
+                    } 
                     container.attach({stream: true, stdout: true, stdin:true, stderr: true}, function (err, stream){
                         $this.log = spawnLog(stream, $this.logger)
                         $this.status.stream =  $this.log

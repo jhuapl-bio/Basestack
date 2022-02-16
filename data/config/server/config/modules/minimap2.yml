@@ -37,6 +37,7 @@
         ref:
           label: "Reference to align against"
           class: "wb-100 p-3 mb-1"
+          hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
           element: "file" 
           bind_parent_dir: true
           bind: 
@@ -49,6 +50,7 @@
           hint: "Alignment file to be used in downstream analysis"
           watch: True
           output: True
+          openSelf: True
           element: "file"
           source: "%{variables.file.source}.sam" 
       

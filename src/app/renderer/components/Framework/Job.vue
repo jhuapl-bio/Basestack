@@ -328,6 +328,7 @@ export default {
                 }
             }
         }
+        console.log(ta,"<<<")
         return ta
             
     }

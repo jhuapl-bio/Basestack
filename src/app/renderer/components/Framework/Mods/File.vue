@@ -7,29 +7,30 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="file" @drop.prevent="addDropFile" @dragover.prevent >
-  	<v-file-input 
+  <v-layout id="file" @drop.prevent="addDropFile" @dragover.prevent >
+    <v-file-input 
         v-model="value"
-        :disabled="source.output"
         :label="(source.hint ? source.hint : '')" 
-        show-size 
+        show-size  
         counter
     > 
     </v-file-input >
-    <!-- <v-alert
-      v-if="cached" dense
-      color="blue lighten-3"
-      icon="$question-circle"
-      type="info"
-    >
-      This variable populated from cache
-    </v-alert>
-     -->
+    <v-tooltip bottom v-if="!$v.value.required">
+        <template v-slot:activator="{ on }">
+          <v-icon class="mt-5 ml-1" v-on="on" small color="warning lighten-1" >$exclamation-triangle
+          </v-icon>
+        </template>
+        Valid File required
+    </v-tooltip>
+  	
     
-  </div>
+  </v-layout>
 </template>
 
 <script>
+
+import { required, requiredIf, minLength, between, helpers } from 'vuelidate/lib/validators'
+const optional = (optional) => (value) => { console.log(optional,value,"fjsdfsdjflk"); return !optional && !value }
 export default {
 	name: 'file',
   data() {
@@ -39,6 +40,15 @@ export default {
           cached: false
       }
   },
+  validations (){
+    return{
+        value: {
+            required: requiredIf((value)=>{
+              return value && !this.source.optional
+            })
+        },
+    }
+  },
   computed: {
     
   },
@@ -46,6 +56,9 @@ export default {
     addDropFile(e) { 
       this.value = e.dataTransfer.files[0]; 
     },
+    
+    
+
 
 	},
 	props: ['source', 'variable'],

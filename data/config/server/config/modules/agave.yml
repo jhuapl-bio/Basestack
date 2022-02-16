@@ -26,6 +26,7 @@
         json: 
           element: "file"
           output: true
+          openSelf: True
           label: "JSON Visualization File"
           hint: "Custom JSON generated from the AGAVE report pipeline"
           source: "<<directory(%{variables.variant.bind.from})>>/variants.json"
@@ -85,7 +86,7 @@
         email: 
           label: "Email"
           element: "string"
-          source: "brian.merritt@jhuapl.edu"
+          source: ""
           target: null
         gbs:
           label: "Genbank Files"

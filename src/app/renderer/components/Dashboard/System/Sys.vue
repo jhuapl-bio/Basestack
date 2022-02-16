@@ -51,7 +51,7 @@
         resources: null,
         intervalDocker:null,
         interval: null,
-        port: process.env.PORT_SERVER,
+        port: ( process.env.PORT_SERVER ? process.env.PORT_SERVER : 5003),
         components: [
           'Basestack',
           'Docker',

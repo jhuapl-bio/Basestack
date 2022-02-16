@@ -77,7 +77,7 @@ export default {
 		return{
 			status: {},
 			system: {},
-			port: process.env.PORT_SERVER,
+			port: ( process.env.PORT_SERVER ? process.env.PORT_SERVER : 5003),
 		}
 	},
 	created(){

@@ -51,10 +51,11 @@
                   small>$archive
                 </v-icon>
               </v-btn>
-              {{item.label}}
+              
             </template>
-            {{item.path}}
+            {{item.source}}
           </v-tooltip>
+          {{item.label}}
           <v-tooltip bottom v-if="item.openSelf">
             <template v-slot:activator="{ on }">
               <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item, true)">
@@ -63,11 +64,10 @@
                   small>$file
                 </v-icon>
               </v-btn>
-              {{item.label}}
             </template>
-            {{item.path}}
+            {{item.source}}
           </v-tooltip>
-          <v-tooltip top>
+          <v-tooltip top v-if="item.hint">
             <template v-slot:activator="{ on }">
               <v-icon 
                 v-on="on" class="configure" color="info" 
