@@ -17,6 +17,7 @@ export class Updater {
         this.quitAndInstall = false
     }
     checkUpdates(){
+        console.log("check updates")
         if(process.env.NODE_ENV == 'production'){
             this.releaseNotes.version = 0
             this.releaseNotes.releaseNotes = "Fetching..."
@@ -81,7 +82,7 @@ export class Updater {
                 icon: 'success',
                 patchNotes: true,
                 message: `Update downloaded. Restart the application to apply install changes \n ${info.releaseNotes}`,
-                })
+                }) 
                 $this.releaseNotes=info
                 $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
                 $this.quitUpdateInstall ? $this.autoUpdater.quitAndInstall() : '';

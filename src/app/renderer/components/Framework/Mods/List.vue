@@ -1,180 +1,114 @@
 <template>
   <div id="list" >
-    <b-form-group
-        label="List"
-        label-align-sm="center"
-        label-size="sm"
-        id="manifest_label"
-        label-for="filterInput"
-        class="mb-0 formGroup"						           
-        >
-        <template slot="label" v-if="source.tooltip">
-            <span v-b-tooltip.hover
-                :title="source.tooltip" 
-                style="text-align:center"  >
-                <font-awesome-icon class="help" icon="question-circle"  />
-            </span>
+    <!-- <v-tooltip >
+        <template v-slot:activator="{ on }">
+            <v-btn v-on:click="addManifestRow(0)"  v-on="on"
+            class="ml-0 pl-0" small color="primary">
+            <v-icon
+                right class="mr-2"
+                dark x-small
+            >
+                $plus
+            </v-icon>Add
+            </v-btn>
         </template>
-       <div style="text-align:right">
-            <!-- <b-form-input
-                v-model="selectedHistory.runDir.manifest.filename"
-                label="Filename"
-                class="formGroup-input"
-                type="text"
-                required
-                :state="selectedHistory.runDir.manifest.validation"
-                placeholder="manifest.txt"
-            ></b-form-input>
-            <b-form-invalid-feedback 
-                v-b-tooltip.hover
-                title="You will need to create it manually on the left or make it directly within the run folder"
-                :state="selectedHistory.runDir.manifest.validation">
-                manifest.txt not found. 
-            </b-form-invalid-feedback>
-            <hr> -->
-            <b-button v-on:click="addManifestRow(0)"  v-b-tooltip.hover
-                title="Add a row to the list" 
-                class="btn sideButton" >
-                <span >
-                    <font-awesome-icon icon="plus"/>
-                </span>
-            </b-button>
-
-        </div>
-        <b-input-group-append id="manifest"
-        >	
-            <table class="table table-striped" style="text-align:center">
-                <thead class="thead-dark">
-                    <th v-for="(head, index) in source.header" :key="index" scope="col">
-                        {{head}}
-                    </th>
-                </thead>
-                <draggable v-model="source.source" tag="tbody">
-                    <tr v-for="(element, index) in source.source" :key="index">
-                        <td v-for="col in Object.keys(element)"
-                            :key="col"
+        Add row to the list
+    </v-tooltip> -->
+    <v-data-table
+        small
+        :headers="headers"
+        :items="source.source"
+        :items-per-page="6"
+        class="elevation-1"					        
+    >	
+        <template v-slot:top>
+            <v-toolbar
+                flat
+            >
+                <v-toolbar-title>{{ ( title ? title : 'List Table' )  }}</v-toolbar-title>
+                <v-divider
+                    class="mx-4"
+                    inset
+                    vertical
+                ></v-divider>
+                <v-spacer></v-spacer>
+                <v-dialog
+                    v-model="dialog"
+                    max-width="500px"
+                    >
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-btn
+                        color="primary"
+                        dark
+                        class="mb-2"
+                        v-bind="attrs"
+                        v-on="on"
                         >
-                            <b-form-input
-                                @input="changeID($event, index, col)"
-                                class="formGroup-input"
-                                :value="element[col]"
-                                type="text"
-                            ></b-form-input>
+                        New Item
+                        </v-btn>
+                    </template>
+                    <v-card>
+                        <v-card-title>
+                        <span class="text-h5">Row Item Add</span>
+                        </v-card-title>
+                        <v-card-text>
+                            <v-container>
+                                <v-col
+                                    cols="12"
+                                    sm="6"
+                                    md="4"
 
-                        </td>
-                        <b-button style="text-align:center; margin:auto; justify-content:center" v-on:click="rmManifestRow(index)"  class="" >
-                            <span>
-                                <font-awesome-icon  variant="error" icon="minus"/>
-                            </span>
-                        </b-button>
-                    </tr>
-                </draggable>
-            </table>
-            <!-- <draggable v-model="source.source" group="people" @start="drag=true" @end="drag=false">
-                <div style="display:flex; width: 100%;  solid black 1px" v-for="(element, index) in source.source" :key="index">
-                    <b-form-input
-                        @input="changeID($event, index, 0)"
-                        class="formGroup-input"
-                        :value="element[col]"
-                        v-for="col in Object.keys(element)"
-                        :key="col"
-                        type="text"
-                    ></b-form-input>
-                     <b-button v-on:click="rmManifestRow(index)"  class="btn cntrButton" >
-                        <span>
-                            <font-awesome-icon   icon="minus"/>
-                        </span>
-                    </b-button>
-                </div>
-            </draggable> -->
-            <!-- <b-table
-                show-empty
-                small
-                responsive
-                id="manifest_table"
-                class="formGroup-input"
-                :fields="source.header"
-                :items="source.source"
-                sticky-header="250px"	
-            > -->
-                <!-- <template  v-slot:cell()="row"> -->
-                    <!-- <b-form-input
-                        v-model.trim="selectedHistory.runDir.manifest.entries[row.index].barcode"
-                        label="barcode"
-                        @input="changeBarcode($event, row.index)"
-                        class="formGroup-input"
-                        type="text"
-                        :disabled="!isNew && !overrideManifest"
-                        :state="stateValidationNull(row.item.barcode)"
-                        placeholder="NB01"
-                    ></b-form-input>									  -->
-                <!-- </template> -->
-                <!-- <template  v-slot:cell(id)="row">
-                    <b-form-input
-                        v-model.trim="selectedHistory.runDir.manifest.entries[row.index].id"
-                        label="barcode"
-                        @input="changeID($event, row.index)"
-                        class="formGroup-input"
-                        type="text"
-                        :disabled="!isNew && !overrideManifest"
-                        placeholder="MDHP-00057"
-                        :state="stateManifestID(row.item.id)"							          
-                    ></b-form-input>									 
-                </template> -->
-                <!-- <template  v-slot:cell(id)="row">
-                     <b-form-input
-                        @input="changeID($event, row.index, 0)"
-                        class="formGroup-input"
-                        :value="row.value"
-                        type="text"
-                    ></b-form-input> {{row}}
-                    <b-row class="nopadcolumn">
-                        <b-col sm="2">
-                            <b-button v-on:click="addManifestRow(row.index)"  class="btn cntrButton" >
-                                    <span>
-                                        <font-awesome-icon   icon="plus"/>
-                                    </span>
-                            </b-button>
-                        </b-col>
-                        <b-col sm="2" v-if="source.source.length > 1">
-                            <b-button v-on:click="rmManifestRow(row.index)"  class="btn cntrButton" >
-                                <span>
-                                    <font-awesome-icon   icon="minus"/>
-                                </span>
-                            </b-button>
-                        </b-col>
-                        <b-col sm="2" v-if="source.source.length > 1 && row.index > 0">
-                            <b-button v-on:click="moveUpRow(row.index)"  class="btn cntrButton" >
-                                <span>
-                                    <font-awesome-icon   icon="angle-up"/>
-                                </span>
-                            </b-button>
-                        </b-col>
-                        <b-col sm="2" v-if="source.source.length > 1 && row.index < source.source.length-1">
-                            <b-button v-on:click="moveDownRow(row.index)"  class="btn cntrButton" >
-                                <span>
-                                    <font-awesome-icon   icon="angle-down"/>
-                                </span>
-                            </b-button>
-                        </b-col>
-                    </b-row>
-                </template>
-
-                
-            </b-table> -->
-        </b-input-group-append>
-        <!--
-        <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.minLength">Specify one or more barcode</div>
-        <div class="error" style="text-align:center" v-if="!$v.selectedHistory.runDir.manifest.entries.stateManifestID">
-            <span  
-                style="text-align:center"  >
-                No NTC present
-                <font-awesome-icon class="help" icon="question-circle" v-b-tooltip.hover
-                title="One Sample ID must have NTC (No Template Control)" />
-            </span>
-        </div>
-         -->
-    </b-form-group>
+                                >
+                                    <v-container v-for="head in headers" :key="head.value + head.index">
+                                            <v-text-field v-if="head.value !== 'actions'"
+                                                v-model="editedItem[head.value]"
+                                                :label="head.text"
+                                            ></v-text-field>
+                                    </v-container>
+                                    
+                                </v-col>
+                            </v-container>
+                        </v-card-text>
+                        <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn
+                            color="blue darken-1"
+                            text
+                            @click="close"
+                        >
+                            Cancel
+                        </v-btn>
+                        <v-btn
+                            color="blue darken-1"
+                            text
+                            @click="save"
+                        >
+                            Save
+                        </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
+            </v-toolbar>
+        </template>
+        <template v-slot:item.actions="{ item, index }">
+            <v-icon
+                x-small
+                class="mr-2" color="light"
+                @click="editItem(item)"
+            >
+                $edit
+            </v-icon>
+            <v-icon
+                x-small color="orange"
+                @click="deleteItem(item, index)"
+            >
+                $minus
+            </v-icon>
+        </template>
+       
+        
+    </v-data-table>
+   
   </div>
 </template>
 <script>
@@ -187,9 +121,99 @@ export default {
     components: {
         draggable
     },
+    computed: {
+        
+        defaultItem(){
+            let item = {}
+            if (this.headers){
+                this.headers.forEach((d)=>{
+                    item[d] = null
+                })
+                
+            }
+            return item
+        },
+        headers(){
+            if (this.defaultHeaders){
+                return this.defaultHeaders
+            }
+            else if (this.source && this.source.header){
+                let tt = this.source.header.map((d,i)=>{
+                    return {
+                        text: d,
+                        value: d,
+                        index: i,
+                        sortable: true
+                    }
+                })
+                tt.push({
+                    text: "Actions",
+                    value: "actions"
+                })
+                return tt 
+            } else {
+                return []
+            }
+        }
+    },
+    watch: {
+      dialog (val) {
+        val || this.close()
+      },
+      defaultHeaders(newValue, oldValue){
+          console.log(newValue)
+      },
+      dialogDelete (val) {
+        val || this.closeDelete()
+      },
+      source: {
+          deep: true,
+          handler(newValue){
+              console.log("source changed!!!!", newValue)
+          }
+
+      },
+      values(newVal){
+          console.log(newVal,)
+          this.$emit("updateValue", newVal )
+      }
+    },
 	methods: {
+        save () {
+            this.editedItem.index = this.editedIndex
+            if (this.editedIndex > -1) {
+                Object.assign(this.source.source[this.editedIndex], this.editedItem)
+            } else {
+                this.source.source.push(this.editedItem)
+            }
+            this.close()
+        },
+        close () {
+            this.dialog = false
+            this.$nextTick(() => {
+                this.editedItem = Object.assign({}, this.defaultItem)
+                this.editedIndex = -1
+            })
+        },
+        closeDelete () {
+            this.dialogDelete = false
+            this.$nextTick(() => {
+            this.editedItem = Object.assign({}, this.defaultItem)
+            this.editedIndex = -1
+            })
+        },
+        editItem (item) {
+            this.editedIndex = this.source.source.indexOf(item)
+            this.editedItem = Object.assign({}, item)
+            this.dialog = true
+        },
+
+        deleteItem (item, index) {
+            this.editedIndex = this.source.source.splice(index, 1)
+            this.editedItem = Object.assign({}, item)
+            this.dialogDelete = true
+        },
 		addManifestRow(index){
-            console.log(this.source,"<<<")
             let emptyRow  = {}
             let keys = this.source.header
             keys.forEach((key)=>{
@@ -205,19 +229,24 @@ export default {
 			this.$set(this.source.source[index], index2, val)
 		},
 		moveUpRow(index){
-			const tmp =  this.values[index]
+			const tmp =  this.source.source[index]
 			this.$set(this.source.source, index ,this.source.source[index-1] )
 			this.$set(this.source.source, index-1, tmp)
 		},
 	},
-    props: ['source', 'status', 'service', "variable"],
+    props: ['source', 'status', 'service', "variable", "defaultHeaders", 'title'],
     data (){
         return {
             values: [],
+            dialog: false,
+            editedIndex: -1,
+            editedItem: {},
+            dialogDelete: false,
         }
     },
     mounted(){
         console.log("mounted multiselect")
+        console.log(this.defaultHeaders)
     }, 
 
     

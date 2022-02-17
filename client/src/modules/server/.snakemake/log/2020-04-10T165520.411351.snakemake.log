@@ -1,0 +1,19 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	all
+	1	demultiplex_porechop
+	1	minimap2
+	1	parse_mapping
+	4
+
+[Fri Apr 10 16:55:20 2020]
+rule minimap2:
+    input: /home/brianmerritt/Documents/Projects/basecamp/jhu_workshop/test-data/ncov2019/fastq_pass/FAK96895_pass_258ea23a_0.fastq, /home/brianmerritt/Documents/Projects/basecamp/jhu_workshop/src/rampart_jhuapl/example_protocols/EBOV/references.fasta
+    output: /home/brianmerritt/Documents/Projects/basecamp/basecamp/client/server/annotations/temp/FAK96895_pass_258ea23a_0.paf
+    jobid: 3
+    wildcards: filename_stem=FAK96895_pass_258ea23a_0
+

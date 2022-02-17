@@ -1,5 +1,5 @@
 <template>
-    <b-row>
+    <v-row>
       <div class="label-entry"><strong class="text-center">Disk</strong><br></div>
       <div
         v-for="disk in resources.disk"
@@ -15,7 +15,7 @@
       </div>
       <hr>
       </div>
-  </b-row>
+  </v-row>
 </template>
 
 <script>

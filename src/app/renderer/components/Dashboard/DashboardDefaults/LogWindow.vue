@@ -19,8 +19,18 @@
         }" @click="scroll=!scroll">
             <font-awesome-icon :icon="(scroll ? 'comment' : 'comment-slash')" size="sm"/>
     </span>	
+    <v-btn
+        icon-and-text
+        color="primary" small
+        @click="open(link)"
+    ><v-icon
+        x-small
+    >$external-link-alt
+    </v-icon>
+    Open Log Folder
+    </v-btn>
     <div class="logWindow" >
-        <div v-if="info" class="logDiv" style="max-height: 200px; overflow-y:auto; ">
+        <div v-if="info" class="logDiv" style="max-height: 400px; overflow-y:auto; ">
             <code >
                 <p v-for="(line, index) in info"  v-bind:key="index">{{ line }}</p>
             </code>
@@ -39,12 +49,25 @@ export default {
 		return {
 			systemLog: [],
 			scroll: true,
+            link: null,
             element: { pause: null }
 		}
 	},
-    props: ['info'],
+    props: ['info',' link'],
 	methods:{
-		
+		open (link) {
+          try{        
+            // this.$electron.shell.openPath(link)
+            this.$electron.ipcRenderer.send("openLogs")
+          } catch(err){ 
+            this.$swal.fire({ 
+              position: 'center',
+              icon: 'error',
+              showConfirmButton:true,
+                      title:  "Could not open the path: "+link
+            })
+          }
+        },
 		
 	},
 	updated: function(){

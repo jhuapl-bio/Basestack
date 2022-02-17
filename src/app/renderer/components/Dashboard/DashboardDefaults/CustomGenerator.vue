@@ -7,74 +7,53 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="customgenerator" style="text-align:center" >
-	
-  	<div style="text-align:center; margin:auto; width:100%" >
-        <b-form-group
-            label="Type of Customizable Entry (Service, Module, Procedure)"            
-            label-align-sm="center"
-            label-size="sm"
-            id="manifest_label"
-            label-for="filterInput"
-            class="mb-0 formGroup"						           
-        > 
-            <b-form-select
-                :options="options" 
-                v-model="selected_option"
-                
-            >
-            </b-form-select>
-        </b-form-group>
-        <b-form-group
-            label="Type of Custom Generator (Text, File.yml)"
-            label-align-sm="center"
-            label-size="sm"
-            id="manifest_label"
-            label-for="filterInput"
-        > 
-            <b-form-select
-                :options="types"
-                v-model="selected_type"
-                
-            >
-            </b-form-select>
-        </b-form-group>
-        <b-form-group
-            :label="`Create Custom ${selected_option} from ${selected_type}`"
-            label-align-sm="center"
-            label-size="sm"
-            id="manifest_label"
-            label-for="filterInput"
-            class="mb-0 formGroup"						           
+  	<v-card class="mx-2 mt-3" >
+        <!-- <v-select
+            :items="options" 
+            label="Type of Customizable Entry (Service, Module, Procedure)" 
+            v-model="selected_option"
+            
         >
-            <b-form-select
-                v-if="selected_type == 'text'"
-                :options="textTypes"
-                v-model="textType"
+        </v-select> -->
+
+        <v-select 
+            :items="types"
+            v-model="selected_type" class="mx-4 mt-3"
+            label="Type of Custom Generator (Text, File.yml)"
+        >
+        </v-select>
+
+        <v-select
+            v-if="selected_type == 'text'"
+            :items="textTypes"
+            v-model="textType"
+            :label="`Create Custom Module from ${selected_type}`"
+            
+        >
+        </v-select>
+        <v-textarea
+            v-model="text"
+            rows="8"
+            clearable
+            clear-icon="$times-circle"
+            v-if="selected_type == 'text'"
+        
+        >
+        </v-textarea>
+        <div v-else @drop.prevent="addDropFile" @dragover.prevent>
+            <v-file-input
+                v-model="file" 
+                label="Input Custom YAML or JSON file"
                 
             >
-            </b-form-select>
-            <b-form-textarea
-                v-model="text"
-                rows="8"
-                v-if="selected_type == 'text'"
-            
-            >
-            </b-form-textarea>
-            
-            <b-form-file
-                v-model="file"
-                v-else
-            >
-            </b-form-file>
-            <b-button
-                class="btn sideButton"
-                @click="save()"
-            > Save Input
-            </b-button>
-        </b-form-group>
-  	</div>
-  </div >
+            </v-file-input>
+        </div>
+        <v-btn
+            class="btn " color="primary"
+            @click="save()" 
+        > Save Input
+        </v-btn>
+  	</v-card>
 </template>
 
 <script>
@@ -85,8 +64,8 @@ export default {
      
     data(){
         return {
-            options: ['Module', 'Procedure', 'Service'],
-            selected_option: 'Procedure',
+            // options: ['Module', 'Procedure', 'Service'],
+            // selected_option: 'Procedure',
             types: ['text', 'file'],
             text:null,
             file: null, 
@@ -97,6 +76,10 @@ export default {
         }
     },
 	methods: {
+        addDropFile(e) { 
+            this.file = e.dataTransfer.files[0]; 
+            console.log(this.file)
+        },
         async save(){
             try{
                 if (this.selected_type == 'text'){
@@ -107,34 +90,13 @@ export default {
                     } else{
                         text = JSON.parse(this.text)
                     }
-                    if (this.selected_option == 'Procedure'){ 
-                        await FileService.saveProcedureText({
-                           source: this.text,
-                           type: this.textType
-
-                        })
-                    } else if (this.selected_option == 'Service'){
-                       await FileService.saveServiceText({
-                           type: this.textType,
-                           source: this.text
-                        })
-
-                    } else{
-                       await FileService.saveModuleText({
-                           source: this.text,
-                           type: this.textType
-                        })
-                        
-                    }
-
+                    console.log(this.textType, this.text)
+                    await FileService.saveModuleText({
+                        source: this.text,
+                        type: this.textType
+                    })
                 } else {
-                    if (this.selected_option == 'Procedure'){
-                       await FileService.saveProcedureFile({source: this.file.path})
-                    } else if (this.selected_option == 'Service'){
-                       await  FileService.saveServiceFile({source: this.file.path})
-                    } else{
-                        await FileService.saveModuleFile({source: this.file.path})
-                    }
+                    await FileService.saveModuleFile({source: this.file.path})
                 }
             } catch(error){
                 this.$swal.fire({

@@ -3,12 +3,12 @@
   <div id="moduleconfig"  style="" v-if="staged">
    <label style="text-align:center" class="typo__label">Installation Type</label>
    	<div style="display:flex">
-		<b-form-select :value="staged.installation.type"  :options="['offline', 'online']" >
-		</b-form-select>
+		<v-form-select :value="staged.installation.type"  :options="['offline', 'online']" >
+		</v-form-select>
 		
 	</div>
 	<div v-if="staged.installation.type =='offline'">
-    	<b-form-file 
+    	<v-form-file 
              :ref="'docker_archive'+staged.name" 
              :id="'docker_archive'+staged.name" 
              aria-describedby="seq_file" 
@@ -17,22 +17,22 @@
              placeholder="Drag/choose docker image (offline)"
              drop-placeholder="Drop .tar.gz file here"
              >
-        </b-form-file> 
+        </v-form-file> 
     </div> 
     <div v-if="staged.installation.type =='online' && staged.installation.dependencies">
 		<div v-for="(resource, index) in staged.installation.dependencies"  :key="resource.name">
     		<div v-if="resource.type =='file'">
     			<label style="text-align:center" class="typo__label">{{resource.name}}</label>
-		        <font-awesome-icon class="help" icon="question-circle"  v-if="resource.tooltip" v-b-tooltip.hover.top 
+		        <font-awesome-icon class="help" icon="question-circle"  v-if="resource.tooltip" v-v-tooltip.hover.top 
 		        	:title="resource.tooltip"/>
-    			<b-form-file 
+    			<v-form-file 
 	                 :value="resource.src"
 					 @input="updateSrc(index, $event)"
 	                 style="max-width: 100%"
 	                 :placeholder="resource.name"
 	                 drop-placeholder="Place File here"
 	                 >
-	            </b-form-file> 
+	            </v-form-file> 
     		</div>
     	</div>
     </div>

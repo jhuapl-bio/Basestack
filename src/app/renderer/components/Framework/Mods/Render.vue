@@ -7,11 +7,26 @@
   - # **********************************************************************
   -->
 <template>
-  <div class="render" >
-	<b-row v-if="status.exists && status.exists.running">
-		<object type="text/html" class="renderObj" :data="`http://localhost:${source.to}`">
-		</object>
-	</b-row>
+  <div  class="render ">
+	<v-divider></v-divider>
+	<v-btn small class="mb-4 mr-2" v-on:click="forceRerender()"
+		> Refresh
+		<v-icon class="ml-3" small >$sync</v-icon>
+	</v-btn>
+	<v-tooltip bottom >
+		<template v-slot:activator="{ on }">
+		<v-icon align="end" v-on="on" class="configure" @click="open_link('', $event)" color="info" >$external-link-alt
+		</v-icon>
+		</template>
+		View in Browser
+	</v-tooltip>  
+	<v-divider></v-divider>
+	<v-row v-if="show && status.exists && status.exists.running" class="">
+		<!-- <object type="text/html"  class="renderObj ml-4 mr-2" :data="getUrl()"></object> -->
+		<object type="text/html"  class="renderObj ml-4 mr-2" :data="getUrl()"></object>
+	</v-row>
+	
+	
   </div> 
   
 </template>
@@ -28,7 +43,14 @@ export default {
 	props: ['source', 'status', 'service'],
 	data(){
 		return {
-				
+			show: true,
+			items: [
+				{
+				text: 'View in Browser',
+					disabled: false,
+					href: null,
+				}
+			],
 		}
 	}, 
 	async mounted(){
@@ -42,10 +64,28 @@ export default {
 		// this.cancel_module()
     },
 	methods: {
-		open_link (link,e) {
+		forceRerender(){
+			const $this =this
+			$this.show = false
+			setTimeout(()=>{
+			$this.show = true
+			},400)
+		},
+		openUrl(){
+			this.$electron.shell.openExternal(this.getUrl())
+		},
+		open_link (link, e) {
 			e.stopPropagation()
-			this.$emit("open", link)
+			this.openUrl()
       	},
+		getUrl(){
+			//   let url  = `http://localhost:8080`
+			  let url  = `http://localhost:${this.source.bind.to}`
+			  if (this.source.suburl){
+				  url = url + this.source.suburl
+			  }
+			  return url
+		  }
 	}
 };
 </script>
@@ -53,7 +93,8 @@ export default {
 <style>
 .render{
 	height:100%;
-    overflow-y:auto;
+	overflow-y:auto; 
+	overflow-x:auto; 
     width: 100%;
 }
 
@@ -65,6 +106,7 @@ export default {
   width:100%; 
   height: 100%;
   overflow-y:auto; 
+  overflow-x:auto; 
 }
 
 </style>

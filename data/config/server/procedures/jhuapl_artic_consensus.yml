@@ -1,9 +1,0 @@
-artic_consensus_jhuapl:
-  title: "Artic Consensus - JHUAPL"
-  icon: "dna"
-  init: false
-  tooltip: "Create a nCov consensus report"
-  force_restart: true
-  config: null  
-  services: 
-    - artic_consensus_jhuapl

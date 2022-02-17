@@ -5,14 +5,14 @@
    - # All Rights Reserved.
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
-  */
+  */ 
 const express  = require('express')
 const app = express() 
-const http  = require("http")   
-const cors =  require("cors")
-const path = require('path')
+const http  = require("http")    
+const cors =  require("cors")     
+const path = require('path')  
 var bodyParser = require('body-parser'); 
-
+ 
 
 app.use(express.json())
 app.use(express.urlencoded({extended: true, limit: '500mb'}));
@@ -40,14 +40,14 @@ app.use((req,res,next)=>{
     "Access-Control-Allow-Methods",
     "GET, POST, PATCH,PUT, DELETE, OPTIONS"
   );
-  next(); 
-})
-
-app.use(cors())
-
-let server;
-
-
+  next();
+}) 
+ 
+app.use(cors())   
+ 
+let server; 
+ 
+  
 
 export var open_server = async function(port){
   return new Promise((resolve, reject)=>{

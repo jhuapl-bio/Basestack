@@ -1,42 +1,17 @@
 <template>
-  <b-row>
-      <div class="label-entry"><strong class="text-center">Memory</strong><br></div>
-      <div 
-        v-for="entry in fields_mem"
+  <v-list dense>
+    <v-subheader>Memory</v-subheader>
+    <v-list-item
+       v-for="entry in fields_mem"
         :key="entry.key"
         class="entry"
-      >
-          <p  class="entry-label" v-if="resources.mem[entry.key]">{{ entry.label }}</p>
-          <p class="entry-description"> {{convert_gb(resources.mem[entry.key], 'B')}}</p>
-      </div>
-      <!-- <b-table
-        striped
-        hover
-        class="text-center"
-        :fields="fields_mem"
-        :items="[resources.mem]"
-      >
-      <template  v-slot:cell(total)="row">
-        {{convert_gb(row.item.total, 'B')}}
-      </template>
-      <template  v-slot:cell(active)="row">
-        {{convert_gb(row.item.active, 'B')}}
-      </template>
-      <template  v-slot:cell(available)="row">
-        <span v-if="row.item.available < 2000000000" class="center-align-icon warn-icon" style="margin:auto; text-align:center" >
-          <font-awesome-icon v-tooltip="{
-          content: 'Low available memory detected (<2GB), starting pipelines or module builds may fail',
-          placement: 'top',
-          classes: ['warning'],
-          trigger: 'hover',
-          targetClasses: ['it-has-a-tooltip'],
-          }" class="warn-icon" icon="exclamation"  size="sm" />
-          {{convert_gb(row.item.available, 'B')}}
-        </span>
-        <p v-else >{{convert_gb(row.item.available, 'B')}}</p>
-      </template>
-      </b-table> -->
-    </b-row>
+    >
+        <v-list-item-content>
+          <v-list-item-title v-text="entry.label "></v-list-item-title>
+          <v-list-item-subtitle v-text="convert_gb(resources.mem[entry.key]) "></v-list-item-subtitle>
+        </v-list-item-content>
+    </v-list-item>
+  </v-list>
 </template>
 
 <script>

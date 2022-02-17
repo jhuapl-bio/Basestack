@@ -1,10 +1,10 @@
-# - name: "introduction"
-#   icon: "home"
-#   title: "Home"
-#   component: "Introduction"
-#   module: False
-#   tooltip: null
-#   image: null
+- name: "dashboard"
+  icon: "home"
+  title: "Home"
+  component: "Dashboard"
+  module: False
+  tooltip: "Home Page"
+  image: null
 - name: "library"
   icon: "book"
   title: "Library"
@@ -42,7 +42,7 @@
   title: "Logs"
   component: "LogDashboard"
   module: False
-  tooltip: "View currently running logs of processes"
+  tooltip: "View currently running logs of the connected server"
 - name: "system"
   icon: "cog"
   title: "System"

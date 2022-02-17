@@ -7,30 +7,49 @@
   - # **********************************************************************
   -->
 <template>
-	<b-row class="mainContent">
-		<b-col sm="7" style="background: white; overflow-y:auto">
-			<div style="width:100%; ">
-				<p class="text-white bg-red-500">Whoa!!!</p>
-				<b-img style="" :src="require('@/assets/Basestack_multiple_landing.png')" fluid alt="JUHAPL"></b-img>
-			</div>
-		</b-col>
+	<v-row  class="max-height: 10vh" >
+		<v-col cols="6"  >
+			<v-card >
+				<v-img  
+					contain
+					width="100%" class="configure"
+					height="100%"  @click="open_external('https://basestackwebsite.readthedocs.io/en/latest/index.html')"
+					:src="require('@/assets/Basestack_multiple_landing.png')" fluid alt="JUHAPL">
+				</v-img>
+				<v-divider></v-divider>
 
-		<b-col sm="5">
-			<!-- <b-row><a href="#" @click="emitChange( {target: 'tab', value: -1})   ">All System Details</a>
-			</b-row> -->
-			<b-row>
-				<Sys class="sidebox"
-				/>
-				<About class="sidebox"></About>
-			</b-row>
+				<About class=""></About>
+				<v-divider></v-divider>
+				<v-card>
+				<br> 
+				<v-input
+					disabled
+					label="Backend Port" class="pr-5 pl-5"
+				>
+				</v-input>
+					<v-text-field class="pr-5 pl-5"
+						hint="Only change if the default port (5003) is in use"
+						label="Change the backend server port to connect to"
+						v-model="port" type="number"
+						min="1000" max="9999"
+						append-icon="$caret-square-up"
+						prepend-icon="$server"
+						@click:append="changePort(port)"
+						clearable shaped centered outlined
+					>
+					</v-text-field>
+				</v-card>
+			</v-card>
 			
-				
+			
+		</v-col>
 		
-		
-		</b-col>
-          
-        
-	</b-row>
+		<v-col cols="6" >
+			<Sys class=""
+			/>
+		</v-col>
+	</v-row>
+	
 </template>
 
 <script>
@@ -41,12 +60,14 @@ import Sys from '@/components/Dashboard/System/Sys'
 import About from '@/components/Dashboard/DashboardDefaults/About'
 import Library from '@/components/Dashboard/DashboardDefaults/Library'
 
+import Docker from "@/components/Dashboard/System/Docker";
  
 
 export default {
 	name: 'mainpage',
 	components:{
 		Sys,
+		Docker, 
 		Library,
 		About
 	},
@@ -56,6 +77,7 @@ export default {
 		return{
 			status: {},
 			system: {},
+			port: process.env.PORT_SERVER,
 		}
 	},
 	created(){
@@ -79,7 +101,13 @@ export default {
 	methods: {
       emitChange( data){
 		   this.$emit("emitChange", data)
-	  }
+	  },
+	  changePort(val){
+        this.$electron.ipcRenderer.send("changePort", val)
+      },
+	  open_external(url){
+		this.$electron.shell.openExternal(url)
+	  },
       
 	}
 };

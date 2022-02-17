@@ -3,7 +3,7 @@ import { ClientMenu } from "./menu"
 import { Updater } from "./updater"
 const { ipcMain, BrowserWindow, dialog, shell, Menu } = require('electron')
 const path = require("path")
-
+ 
 export class  Client {
 	constructor(app){
 		this.logger = null
@@ -54,15 +54,16 @@ export class  Client {
       console.log(`updating port to ${port}`)
       process.env.PORT_SERVER = port
       this.mainWindow.webContents.send("changePort", port)
-    }
-    createMenu(){
-        // let menu = makeMenu(this.this.logger)
+    } 
+    createMenu(){  
+        // let menu = makeMenu(this.this.logger)  
         console.log("creating menu")
+         
         let menu = new ClientMenu(this.logger, this.mainWindow, dialog, this.app, this.system, this.spawned_logs, this.updater)
         menu.store = this.store
-        let m = menu.makeMenu()
+        let m = menu.makeMenu() 
     }
-    createUpdater(){
+    createUpdater(){ 
         this.updater = new Updater(this.logger, this.mainWindow, dialog)
         this.updater.defineUpdater()
     }
@@ -70,26 +71,49 @@ export class  Client {
         /**
          * Initial window options
          */
-        const $this = this
+        const $this = this  
+        
         if (process.env.NODE_ENV !== 'production'){
+            let icon = path.join(__dirname, "..", "static", "img")
+            if (process.env.platform_os == "linux"){
+              icon = path.join(icon, "/icon_1024x1024.png")
+            } else if (process.env.platform_os == 'win'){
+              icon = path.join(icon, "/basestack.ico")
+            } else {
+              icon = path.join(icon, "/basestack.icns")
+            }
           this.mainWindow = new BrowserWindow({
             height: 1000,
             useContentSize: true,
             width: 1080,
-            title: "Basestack",
-            webPreferences: {webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
-            icon: path.join(__dirname, '..', 'static', 'img', 'jhulogo.png')
-          })
-        } else {
+            title: "Basestack", 
+            webPreferences: { zoomFactor: 0.83, webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
+            icon: icon
+          }) 
+           console.log(icon,  __dirname)
+        } else { 
+          let icon = path.join(__dirname, "icons")
+            if (process.env.platform_os == "linux"){
+              icon = path.join(icon, "/icon_1024x1024.png")
+            } else if (process.env.platform_os == 'win'){
+              icon = path.join(icon, "/basestack.ico")
+            } else {
+              icon = path.join(icon, "/basestack.icns")
+            }
+            console.log(__dirname,"DIRNAME")
           this.mainWindow = new BrowserWindow({
-            height: 1000,
+            height: 1000, 
             useContentSize: true,
             width: 1080,
             title: "Basestack",
-            webPreferences: {webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
-            icon: path.join(__dirname, '..', "static", 'img', 'jhulogo.png')
+            webPreferences: {zoomFactor: 0.83,  webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
+            icon: icon
           })
         }
+       
+        this.mainWindow.webContents.session.clearCache()
+
+
           const winURL = (process.env.NODE_ENV === 'development'
         ? `http://localhost:9080`
         : `file://${__dirname}/index.html`);
@@ -100,6 +124,7 @@ export class  Client {
         });
         try{
           this.mainWindow.loadURL(winURL)
+          
         } catch(err){
           console.log(err)
         }
@@ -110,6 +135,12 @@ export class  Client {
         ipcMain.on("queryRelease", (event, arg) => {
           event.reply('releaseNotes', $this.updater.releaseNotes)
         })
+        ipcMain.on("openLogs", (event, arg) => {
+          shell.openPath($this.store.system.logPath ) 
+        })
+        
+
+
         ipcMain.on("checkUpdates", (event, arg) => {
           console.log("Checking updates")
           $this.updater.checkUpdates() 
