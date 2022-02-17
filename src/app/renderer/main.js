@@ -11,6 +11,7 @@ import Vue from 'vue'
 import axios from 'axios'
  
 import App from './App'
+import './main.css'
 import router from './router'
 import store from './store'
 // import { BootstrapVue } from 'bootstrap-vue'
