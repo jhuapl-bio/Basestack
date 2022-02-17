@@ -36,3 +36,4 @@ client/*
 *.zip
 cromwell*
 !data/config
+/yarn-error.log
