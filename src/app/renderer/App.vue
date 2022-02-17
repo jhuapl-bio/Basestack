@@ -34,7 +34,7 @@
 						<v-list-item-action>
 							<v-tooltip top>
 							<template v-slot:activator="{ on }">
-								<v-icon  :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
+								<v-icon :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
 							</template>
 							{{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
 							</v-tooltip>
@@ -83,7 +83,7 @@
 				</v-list-item-group >
 				<v-img   :src="require('@/assets/1-icon.svg')" 
 					max-height="40"
-					class="mb-5 pb-2 configure"
+					class="pb-2 mb-5 configure"
 					max-width="200" 
 					contain @click="open_external('https://github.com/jhuapl-bio/Basestack')"
 				>
@@ -95,7 +95,7 @@
       >
         <v-img   :src="require('@/assets/1-logo.svg')" 
           max-height="40"
-          class="mx-0 px-0 configure"
+          class="px-0 mx-0 configure"
           max-width="200"
           contain  @click="open_external('https://basestackwebsite.readthedocs.io/en/latest/index.html')"
         >
@@ -272,7 +272,7 @@
 				tile
 				width="100%"
 				color="primary"
-				class="lighten-1 text-center"
+				class="text-center lighten-1"
 			>
 				<v-card-text class="white--text">
 				{{  version  }} — <strong>Basestack</strong>
