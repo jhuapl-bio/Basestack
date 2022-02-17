@@ -1,0 +1,55 @@
+- name: "pavian"
+  title: "Pavian"
+  icon: "tree"
+  basestack_released: 2.0
+  version: 1.0
+  module: True
+  tags: 
+    - "sankey"
+    - "visualization"
+    - "metagenome"
+    - "pavian"
+  tooltip: "Run Pavian Report Viewer from Kraken Classification Output"
+  procedures: 
+    - name: "pavian_default"
+      title: "Pavian"
+      icon: "tree"
+      component: "Pavian"
+      module: True
+      tags: 
+        - "sankey"
+        - "visualization"
+        - "metagenome"
+        - "pavian"
+      init: false 
+      variables:
+        port:
+          label: "Served Port"
+          column: 12
+          element: "render"
+          port: true
+          bind:
+            from: "80"
+            to: "8087"
+      tooltip: "View Kraken-style Classification Reports"
+      dependencies:
+        - target: "florianbw/pavian"
+          label: "florianbw/pavian"
+          type: "docker"
+          format: "docker"
+      services: 
+        - name: "pavian"
+          image: "florianbw/pavian"
+          continuous: true
+          orchestrated: false #orchestrated means it r
+          init: true
+          command: [ 'bash', '-c', 'Rscript -e  "host <- \"0.0.0.0\"; pavian::runApp(port=80,host=host,maxUploadSize=900*1024^2)" ' ]
+          hideStatus: true
+          label: "Pavian Default"
+          force_restart: true
+          ports:  
+            - 8087:80
+          
+        
+        
+          

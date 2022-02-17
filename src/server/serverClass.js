@@ -3,12 +3,39 @@ var { store } = require("./config/store/index.js")
 var {define_configuration }  = require("../shared/definitions.js")
 let { open_server } = require("./server.js");
 
-
+let { createCache } = require("./api/controllers/cache.js")
 
 export  class Server { 
     constructor(port){
         this.port = ( port ? port : ( process.env.PORT_SERVER ? process.env.PORT_SERVER : 5003))
         this.store  = store
+        this.cache = null
+    }
+    async initiate_cache(){
+        return new Promise((resolve, reject)=>{
+            (async ()=>{
+                let response = await createCache(
+                    ( process.env.REDIS_PORT ? process.env.REDIS_PORT : 5014),
+                    ( process.env.REDIS_HOST ? process.env.REDIS_HOST : 'host-redis')
+                )
+                this.cache = response
+
+                if (process.env.NODE_ENV == 'development' || process.env.serveProduction == 'true' ){
+                    // let obj = { my: "Special", variable: 42 };
+                    let obj = this.defineCache('development')
+                    let success = this.cache.set( "development", obj, 1000 );
+                }
+                resolve()
+            })().catch((err)=>{
+                console.error(err, "error in starting cacher redis server")
+                reject(err)
+            });	
+        })
+    }
+    defineCache(token){
+        console.log("define cache")
+        return {
+        }
     }
     async initiate_server(port){
         console.log("initiating the server")
@@ -30,7 +57,6 @@ export  class Server {
                 console.error(err, "Error  found in init wserver function")
                 reject(err)
             }).then((res)=>{
-
                 console.log(res,"_____resolved successfully")
                 resolve(res)
             })

@@ -30,15 +30,56 @@ class FileService {
   pingServerPort(){
     return Api().get(`${baseEndpoint.get()}/server/ping`)    
   }
+  
+  createSession(){
+    return Api().post(`${baseEndpoint.get()}/session/cache/create`)    
+  }
+  updateCacheServiceVariable(params) {
+    return Api().post(`${baseEndpoint.get()}/session/cache/service/variable`, params)    
+  }
+  getCachedVariablesService(service, token) {
+    return Api().get(`${baseEndpoint.get()}/service/cache/get/${service}/${token}`)    
+  }
   getDefaults(){
     return Api().get(`${baseEndpoint.get()}/defaults/get`)    
   }
-  getModules(){
-    return Api().get(`${baseEndpoint.get()}/modules/get`)    
+  getModule(param){
+    return Api().get(`${baseEndpoint.get()}/modules/get/${param.catalog}`)    
+  }
+  setRemoteModule(params){
+    return Api().post(`${baseEndpoint.get()}/remote/set/modules`, params)    
+  }
+  saveRemoteModule(params){ 
+    return Api().post(`${baseEndpoint.get()}/remote/save/modules`, params)    
+  }
+  getCatalog(){
+    return Api().get(`${baseEndpoint.get()}/catalog/all/get`)    
+  }
+  getModules(param){
+    return Api().get(`${baseEndpoint.get()}/modules/get/${param.catalog}`)    
+  }
+  getInstalledModules(){
+    return Api().get(`${baseEndpoint.get()}/catalog/installed/get`) 
+  }
+  cancelBuild(params){
+    return Api().post(`${baseEndpoint.get()}/module/build/cancel`, params)    
   }
   buildModule(params){
     return Api().post(`${baseEndpoint.get()}/module/build`, params)    
   }
+  buildProcedure(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/build`, params)    
+  }
+  buildProcedureDependency(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/build/dependency`, params)    
+  }
+  cancelProcedureDependency(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/build/cancel/dependency`, params)    
+  }
+  updateVariableJob(params){
+    return Api().post(`${baseEndpoint.get()}/job/set/variable`, params)    
+  }
+  
   deleteModule(params){
     return Api().post(`${baseEndpoint.get()}/module/remove`, params)    
   }
@@ -48,35 +89,62 @@ class FileService {
   buildModuleDependency(params){
     return Api().post(`${baseEndpoint.get()}/module/build/dependency`, params)    
   }
+  removeModuleDependency(params){
+    return Api().post(`${baseEndpoint.get()}/module/build/remove/dependency`, params)    
+  }
+  cancelModuleDependency(params){
+    return Api().post(`${baseEndpoint.get()}/module/build/cancel/dependency`, params)    
+  }
   getServices(){
     return Api().get(`${baseEndpoint.get()}/services/get`)    
   }
-  getProcedures(){
-    return Api().get(`${baseEndpoint.get()}/procedures/get`)    
+  getProcedures(params){
+    return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.module}/${params.token}`)    
   }
+
+  getJobStaged(params){
+    return Api().get(`${baseEndpoint.get()}/job/stage/${params.catalog}/${params.module}/${params.procedure}`)    
+  }
+  getJobStatus(params){
+    return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.module}/${params.procedure}`)    
+  }
+  startJob(params){
+    return Api().post(`${baseEndpoint.get()}/job/start`, params)    
+  }
+  cancelJob(params){
+    return Api().post(`${baseEndpoint.get()}/job/cancel`, params)    
+  }
+  
   getModulesStatus(){
     return Api().get(`${baseEndpoint.get()}/modules/get/status`)    
   }
-  getServiceStatus(params){
-    return Api().post(`${baseEndpoint.get()}/service/status`, params)    
-  }
+  
   getAllServiceStatus(){
     return Api().get(`${baseEndpoint.get()}/services/status`)    
   }
   getAllServiceNames(){
     return Api().get(`${baseEndpoint.get()}/services/names`)    
-  }
+  } 
   getAllProcedureNames(){
     return Api().get(`${baseEndpoint.get()}/procedures/names`)    
   }
   getAllModuleNames(){
     return Api().get(`${baseEndpoint.get()}/modules/names`)    
   }
+  getService(params){
+    return Api().get(`${baseEndpoint.get()}/service/get/${params.catalog}/${params.module}/${params.procedure}/${params.service}/${params.token}` )    
+  }
+  getServiceStatus(params){
+    return Api().get(`${baseEndpoint.get()}/status/get/service/${params.catalog}/${params.module}/${params.procedure}/${params.service}/${params.token}`)    
+  }
   getProceduresStatus(params){
     return Api().get(`${baseEndpoint.get()}/procedures/status`, params)    
   }
   getStatusProceduresSelect(params){
     return Api().post(`${baseEndpoint.get()}/procedures/status/select`, params)    
+  }
+  getStatusProcedure(params){
+    return Api().get(`${baseEndpoint.get()}/status/get/procedure/${params.module}/${params.variant}/${params.procedure}` )    
   }
   getSelectProceduresStatuses(params){
     return Api().post(`${baseEndpoint.get()}/procedures/status/select`, params)    
@@ -114,6 +182,9 @@ class FileService {
   getResources(){
     return Api().get(`${baseEndpoint.get()}/status/fetch`)    
   }
+  getDockerStats(){
+    return Api().get(`${baseEndpoint.get()}/docker/status/get`)    
+  }
   getServerStatus(){
     return Api().get(`${baseEndpoint.get()}/server/status/fetch`)    
   }
@@ -131,6 +202,21 @@ class FileService {
   }
   rmModule(params) {
     return Api().post(`${baseEndpoint.get()}/module/custom/remove`, params)
+  }
+  fetchRemoteCatalog(target, name){
+    return Api().get(`${baseEndpoint.get()}/remote/get/${target}/${name}`)
+  }
+  fetchRemoteAll(name){
+    return Api().get(`${baseEndpoint.get()}/remote/get/${name}`)
+  }
+  removeCatalog(params){
+    return Api().post(`${baseEndpoint.get()}/catalog/remove`, params)
+  }
+  deleteProcedureDependencies(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/dependencies/remove`, params)
+  }
+  removeProcedureDependency(params){
+    return Api().post(`${baseEndpoint.get()}/procedure/remove/dependency`, params)
   }
   startService(params){
     return Api().post(`${baseEndpoint.get()}/service/run`, params)
@@ -156,11 +242,14 @@ class FileService {
   logArticConsensus(params){
     return Api().get(`${baseEndpoint.get()}/artic_consensus/log`, params)
   }
-  fetchLog(params){
-    return Api().get(`${baseEndpoint.get()}/log/` + params.name +`/`+params.type)    
+  fetchLogs(){
+    return Api().get(`${baseEndpoint.get()}/log/system`)    
   }
   fetchPrimers(){
     return Api().get(`${baseEndpoint.get()}/primers/fetch`)
+  }
+  deleteOutputs(params){
+    return Api().post(`${baseEndpoint.get()}/output/remove`, params)
   }
   fetchProtocols(){
     return Api().get(`${baseEndpoint.get()}/protocols/fetch`)

@@ -7,31 +7,42 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="dir" class="wb-50 p-1">
-    <div >
-        <!-- <b-button
-            @click="electronOpenDir('data')"
-            src=""
-            variant="secondary"
-            style="cursor:pointer"
-            >Select Folder
-        </b-button> -->
-        <b-form-file 
+  <div id="dir" class="wv-50 p-1" @drop.prevent="addDropFiles" @dragover.prevent >
+    <div  style="border: 1px solid grey">
+        <!-- <v-file-input 
+          :label="( directory ? directory : 'Directory input')"
           v-model="directory"
-          src=""
-          :file-name-formatter="formatNames"
-          directory
-          label="select folder"
+          multiple
           variant="secondary"
           style="cursor:pointer"
         >
-        </b-form-file>
-        <p  style="word-wrap: anywhere;" class="entry-label" v-if="value" >{{value}} </p>
+        </v-file-input>
+        < -->
+        <v-btn
+            @click="electronOpenDir('data')"
+            color="light"
+            disabled
+            
+            variant="secondary"
+            append-icon="$archive"
+            x-small
+            class="mt-5 mb-5"
+            style="cursor:pointer"
+        >Drag Folder here 
+          <v-icon
+           small class="ml-2"
+          > $archive
+          </v-icon>
+        </v-btn>
+        <br><br>
+        <v-spacer></v-spacer>
+        <v-subheader  style="word-wrap: anywhere;" class="entry-label" v-if="directory" >{{directory}} </v-subheader>
     </div>
   </div>
 </template>
 
 <script>
+const path = require("path")
 export default {
 	name: 'file',
     data() {
@@ -46,6 +57,10 @@ export default {
         
     },
 	methods: {
+    addDropFiles(e) {
+      this.value = Array.from(e.dataTransfer.files);
+      this.directory = this.value[0].path
+    },
     formatNames(files) {
       console.log(files)
       return files.length === 1 ? `Selected` : `${files.length} files selected`
@@ -53,7 +68,9 @@ export default {
     electronOpenDir(key){
         const $this = this
         this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
-            $this.value = message
+            $this.directory = message
+            $this.source.source = message
+            console.log($this.source,"changed dir")
         })
         this.$electron.ipcRenderer.send("openDirSelect", "")
 		},
@@ -62,16 +79,15 @@ export default {
   mounted(){
   },
   watch: {
-        value(newValue, oldValue){
+        directory(newValue, oldValue){
             this.$emit("updateValue", newValue )
         },
-        directory(newValue, oldValue){
-            if (newValue){
-              this.value  = newValue.path.replace(newValue.name, "")
-            }
-        },
+        // directory(newValue, oldValue){
+        //     if (newValue){
+        //       this.value  = newValue.path.replace(newValue.name, "")
+        //     }
+        // },
         valueDir(newValue, oldValue){
-            console.log(newValue)
             if (newValue && newValue.length > 0){   
     			if (newValue.length == 1){
     				newValue = newValue[0]

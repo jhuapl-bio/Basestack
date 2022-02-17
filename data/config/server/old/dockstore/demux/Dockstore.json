@@ -1,6 +1,0 @@
-{
-  "NanoporeGuppyAssembly.barcode": "barcode03",
-  "NanoporeGuppyAssembly.covid_genome": "/opt/app/data/test-data/artic-ncov2019/primer_schemes/nCoV-2019/V3/nCoV-2019.reference.fasta",
-  "NanoporeGuppyAssembly.gcs_fastq_dir": "/opt/app/data/test-data/20200514_2000_X3_FAN44250_e97e74b4/fastq_pass",
-  "NanoporeGuppyAssembly.sample_id": "SampleRun"
-}

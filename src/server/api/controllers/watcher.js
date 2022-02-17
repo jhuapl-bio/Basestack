@@ -7,14 +7,15 @@
    - # **********************************************************************
   */
 const path = require("path")
-const { store }  = require("../../config/store/index.js")
+const { store }  = require("../../config/store/index.js") 
 const chokidar = require("chokidar")
-const { getFiles} = require("./IO.js")
+const { getFiles} = require("./IO.js") 
 const {checkFolderExists } = require("./validate.js")
-const { mapVariables } = require("./mapper.js")
-var  logger  = store.logger 
+const { mapVariables, mapConfigurations } = require("./mapper.js")
+var  logger  = store.logger  
 const fs = require("fs")  
 const glob = require("glob")  
+import nestedProperty from "nested-property"
 var readFile = function(filename){ 
     return new Promise(function(resolve,reject){ 
 	    fs.readFile(filename, function(err,data){  
@@ -46,7 +47,6 @@ export var watch_consensus = async function (params){
 export var list_module_statuses = async function(paths){
 	return new Promise(function(resolve,reject){ 
 		let promises = [] 
-		console.log(paths,"<<<<")
 		paths.forEach((path)=>{ 
 			promises.push(get_status_complete(path))
 		}) 
@@ -71,52 +71,52 @@ async function get_status_complete (filepath){
 			}
 			else if(files.length){
 				status = 1
-			} else {
-				status = 0
-			}
+			} else { 
+				status = 0 
+			} 
 			resolve(status)
-		})	
+		})	  
 	})
-}
-
-export  var module_status = async function(params, key, variables, outputs){
+} 
+ 
+export  var module_status = async function(params, key){
 	const $this = this;
+	let outputs = params;
 	return new Promise(function(resolve,reject){
-		let mod = {
+		let mod = { 
 			status: {
-				total: 0, 
+				total: 0,  
 				complete: 0,
 				source: null
 			},
 			key: key
-		}
-		params.path = mapVariables(params.path, variables)
-		if (params.type =="file"){
+		} 
+		if (params.element =="file"){ 
 			mod.status.total = 1
-			fs.access(params.path, function( error){
+			fs.access(params.source, function( error){
 				if (error){
-					mod.status.complete = 0
-					mod.status.source = params.path
+					mod.status.complete = 0 
+					mod.status.source = params.source
 				}
 				else{
 					mod.status.complete = 1
-					mod.status.source = params.path
+					mod.status.source = params.source
 		    	} 
-				resolve(mod)
+				resolve(mod) 
 		    	
 			})	
 		} else { // we need to look to see if all files are found
-			
 			if (typeof outputs.total == 'object'){
+				// console.log(outputs.total.target, outputs.total, typeof outputs.total.target) 
 				mod.status.total = (outputs.total.target ? outputs.total.target : 0);
 			} else {
 				mod.status.total = (outputs.total ? outputs.total : 0);
 			}
 			(async ()=>{
-				const exists = await checkFolderExists(params.path)
+				const exists = await checkFolderExists(params.source)
 				let files_complete = [];
 				if (exists){
-					let files = await getFiles(params.path)
+					let files = await getFiles(params.source)
 					
 					let count = 0;
 					for (let j = 0; j < files.length; j++){

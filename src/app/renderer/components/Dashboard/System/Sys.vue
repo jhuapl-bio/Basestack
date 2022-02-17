@@ -1,41 +1,10 @@
 <template>
 
-  <b-row >
-    
-    <div v-if="server" class="box">
-      <span class="no-border-entry" style=""
-      > <font-awesome-icon class="" icon="cog" size="sm"  />
-        System Summary
-      </span> 
-      
-      <div v-for="entry  in  components " :key="entry" class="entry">
-        <!-- <Docker v-if="resources" v-bind:resources="resources" v-bind:docker="resources.docker"></Docker> -->
-        <component :is="entry" v-if="resources" v-bind:resources="resources"></component><hr>
-      </div>
-      <hr>
-      <span  class="text-danger align-center" v-if="!docker || !docker.running">Docker is not connected or installed</span>
-      <span v-else>Docker is installed and running</span>
+  <v-card v-if="server" max-height="1px" >     
+    <div v-for="entry  in  components " :key="entry" class="entry">
+      <component :is="entry" v-if="resources" v-bind:docker="resources.docker" v-bind:resources="resources"></component><hr>
     </div>
-    <div  class="box">
-      <span class="no-border-entry" style=""
-        >
-          Update Server Port
-        </span> 
-        <b-form-input
-          min="1000"
-          max="9999"
-          number
-          v-model="port"
-        
-        >
-        </b-form-input>
-        <b-button 
-          class="sideButton btn"
-          @click="changePort(port)"
-        >Update
-        </b-button>
-    </div>
-  </b-row>
+  </v-card>
 </template>
 
 <script>
@@ -48,7 +17,7 @@
   import FileService from '@/services/File-service';
   export default {
     components: {
-      CPU,
+      CPU, 
       Memory,
       Disk,
       Docker,
@@ -58,18 +27,36 @@
     computed: {
       
     },
-    
+    beforeDestroy: function(){
+      if (this.interval){
+        try{
+          clearInterval(this.interval)
+        } catch(err){
+          console.error(err)
+        }
+      }
+      if (this.intervalDocker){
+        try{
+          clearInterval(this.intervalDocker)
+        } catch(err){
+          console.error(err)
+        }
+      }
+    },
     data () {
       return {
         system: null,
         server: null,
         docker: null,
         resources: null,
+        intervalDocker:null,
+        interval: null,
         port: process.env.PORT_SERVER,
         components: [
           'Basestack',
-          'CPU',
+          'Docker',
           'Memory',
+          'CPU',
           'OS',
         ],
         checkingResources: false,
@@ -84,27 +71,22 @@
         $this.server = status.data.message
       })
       $this.getResources()
-      setInterval(()=>{
+      this.interval = setInterval(()=>{
         if (!$this.checkingResources){
           $this.checkingResources = true
           $this.getResources()
         }
       }, 3000)
+      
         
     },
     methods: {
-      changePort(val){
-        this.$electron.ipcRenderer.send("changePort", val)
-        // this.$electron.ipcRenderer.on('changePort', (evt, port)=>{
-        //   console.log("change port")
-        //   process.env.PORT_SERVER = port
-        // })
-      },
+      
+      
       async getResources(){
         const $this = this
         FileService.getResources().then((status)=>{
           $this.resources= status.data.data.resources
-          $this.docker = status.data.data.docker
           $this.checkingResources = false
           return 
         }).catch((err)=>{

@@ -9,6 +9,7 @@ exports.default = async function notarizing(context) {
     return;
   } else {
     const appName = context.packager.appInfo.productFilename;
+    // return;
     console.log("Signing", appName, appOutDir, electronPlatformName)
       return await notarize({
       appBundleId: 'com.yourcompany.yourAppId',

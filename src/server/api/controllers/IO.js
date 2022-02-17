@@ -8,6 +8,7 @@
   */
 var ncp = require("ncp").ncp
 const http = require("http")
+const https = require("https")
 ncp.limit = 16;
 const fs  = require("fs")
 import  path  from "path"
@@ -17,11 +18,14 @@ import parse  from 'csv-parser'
 import axios from "axios";
 import { dir } from "console";
 import { stream } from "winston";
+const { bytesToSize } = require("./configurations.js")
 const { store }  = require("../../config/store/index.js")
 const  targz = require('targz');
 var Client = require('ftp');
 const extract = require('extract-zip')
 const clone = require('git-clone');
+const tar = require("tar")
+
 
 export function set(attribute, value, obj, type) {
     var depth_attributes = attribute.split('.');
@@ -192,8 +196,17 @@ export async function readTableFile(filepath, delimeter, header){
 }
 export async function checkExists(path){
 	return new Promise((resolve, reject)=>{
-		fs.exists(path, function(exists){
+		fs.stat(path, function(err, exists){
+				
+			if (err){
+				resolve(false)
+			}
 			if(exists){
+				// let size = 0
+				// if (exists.size){
+				// 	size = bytesToSize(exists.size)
+				// 	console.log(size, path)
+				// }
 				resolve(true)
 			} else {
 				resolve(false)
@@ -206,6 +219,9 @@ export async function removeFile(filepath, type, silentExists){
 	return new Promise((resolve, reject)=>{
 		 fs.exists(filepath, function(exists){
 		    if(exists){
+				if (!type){
+					type = "file"
+				}
 		    	if (type == "file"){
 			      fs.unlink(filepath, (err) => {
 					  if (err) {
@@ -244,10 +260,10 @@ export async function downloadSource(url, target, params)  {
 			
 			var received_bytes = 0;
 			var total_bytes = 0;
-			if (url.startsWith("https")){
-				store.logger.info("https not supported, falling back on http url instead...")
-				url = url.replace("https", "http")
-			}	
+			// if (url.startsWith("https")){
+			// 	store.logger.info("https not supported, falling back on http url instead...")
+			// 	url = url.replace("https", "http")
+			// }	
 			let writer; 
 			// p = url.parse(url),           
 			let timeout = 1000; 
@@ -317,7 +333,7 @@ export async function downloadSource(url, target, params)  {
 									resolve(null);
 								}).once('error', function (err) {
 									store.logger.error(`Got error on ftp get: %o`, err);
-									c.end()
+									c.end() 
 									writer.destroy()
 									// reject(err.message);
 								});
@@ -336,13 +352,17 @@ export async function downloadSource(url, target, params)  {
 						password: params.password
 					})
 				} else { 
-					store.logger.info("http protocol called to get file %s", url)
-					if (!url.startsWith("http://")){
-						store.logger.info("url not beginning with http://, appending now..")
-						url = "http://" + url
-					}
+					store.logger.info("http(s) protocol called to get file %s", url)
+					// if (!url.startsWith("http://")){
+					// 	store.logger.info("url not beginning with http://, appending now..")
+					// 	url = "http://" + url
+					// }
 					console.log(url, "to", dirpath)
-					let request = http.get(url).on("response", (response)=>{
+					let fnct = https
+					if (url.startsWith("http:")){
+						fnct  = http
+					} 
+					let request = fnct.get(url).on("response", (response)=>{
 						var len = parseInt(response.headers['content-length'], 10);
 						response.on('data', function(chunk) {
 							downloaded += chunk.length;
@@ -424,13 +444,13 @@ export async function decompress_file(file, outpath){
 			extract(file, { dir: outpath }, (err, stream)=>{
 				if(err) {
 					reject(err)
-				} else {
+				} else { 
 					store.logger.info("Decompressed .zip file: %s ", file)
-					resolve()
+					resolve() 
 				} 
 			}).catch((err)=>{
 				store.logger.error("Not able to unzip file")
-				reject(err)
+				reject(err) 
 
 			})
 		} else {
@@ -442,11 +462,46 @@ export async function decompress_file(file, outpath){
 
 	
 }	
-	
+export async function archive(filepath, gzip){
+	return new Promise((resolve, reject)=>{
+			fs.exists(filepath, function(exists){
+			if (exists){
+				let filetar = path.resolve(`${filepath}.tar`)
+				if (gzip){
+					filetar = filetar+".gz"
+				}
+				let basefilename = path.basename(filepath)
+				let foldername = path.dirname(filepath)
+				let basefiletar = path.basename(filetar) 
+				// let writer = fs.createWriteStream(filetar)
+				tar.c( // or tar.create
+				{
+					gzip: gzip,
+					file: filetar,
+					C: foldername,
+					cwd: foldername,
+					preservePaths: true
+				},
+				[basefilename]
+				).then(_ => { 
+					store.logger.info("%s tar archive made", filetar)
+					resolve()
+				}).catch((err)=>{
+					store.logger.error("err in writing archive tgx %s %s", filetar, err)
+					reject(err)
+				})
+				
+			} else {
+				reject("File doesnt exist " + filepath)
+			}
+		})	 
+	})
+}
 
 export async function writeFile(filepath, content){
 	return new Promise((resolve, reject)=>{
 			const directory = path.dirname(filepath)
+			console.log("writing file: file", filepath)
 			mkdirp(directory).then(response=>{
 				fs.writeFile(filepath, content,(errFile)=>{
 					if (errFile){

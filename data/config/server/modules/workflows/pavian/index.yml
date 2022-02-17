@@ -1,9 +1,0 @@
-pavian:
-  title: "Pavian"
-  icon: "dna"
-  module: True
-  tooltip: "Run Pavian Report Viewer from Kraken Classification Output"
-  dependencies:
-    - target: "florianbw/pavian"
-      type: "docker"
-  

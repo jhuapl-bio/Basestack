@@ -7,11 +7,12 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="string" >
-  	<b-form-input
+  <div id="string" > 
+  	<v-text-field
         v-model="value"
+        :label="(source.hint ? source.hint : '' )"
     >
-    </b-form-input>
+    </v-text-field>
   </div>
 </template>
 
@@ -36,7 +37,6 @@ export default {
     },
     watch: {
         value(newValue, oldValue){
-            console.log(newValue)
             this.$emit("updateValue", newValue )
         }
     }

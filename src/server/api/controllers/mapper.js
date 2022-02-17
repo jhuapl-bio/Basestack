@@ -1,7 +1,47 @@
 import nestedProperty from "nested-property"
 const cloneDeep = require("lodash.clonedeep");
-
+const path  = require("path")
 const { store }  = require("../../config/store/index.js")
+
+
+export function mapFunctions(target){  
+    let functions = {
+        "directory": path.dirname,
+        "basename": path.basename,
+    }
+    
+
+    
+    const $this  = this
+    if (target && typeof target == 'object'){
+
+        Object.keys(target).forEach(function (key) {
+            if (typeof target[key] === 'object') {
+                target[key] = mapFunctions(target[key]) 
+            } else {
+                target[key] = mapFunctions(target[key]) 
+            }
+        })
+    } else if (typeof target == 'string') {
+        let regexp =  /\^\(.+?\)/g;
+        let inner_variables = target.match(/(?<=\^).*?(?=\))/gs); 
+        if (inner_variables && Array.isArray(inner_variables)){     
+            inner_variables.forEach((vari)=>{
+                let split = vari.split("(")
+                if (split[0] in functions){
+                    let newTarget = functions[split[0]](split[1])
+                    target = target.replace("^"+vari+")", newTarget)
+                }
+            })
+
+            return target
+        } else {
+            return target
+        }
+    }
+    return target
+}
+
 
 export function mapVariables(target, variables){  
 	try{ 
@@ -19,7 +59,6 @@ export function mapVariables(target, variables){
 						if (id in variables){
 							if (typeof variables[id] === 'object'){
 								target = target.replaceAll(vari, variables[id].source) 
-
 							} else {
 								target = target.replaceAll(vari, variables[id]) 
 							}
@@ -41,66 +80,52 @@ export function mapVariables(target, variables){
 		return target
 	}
 }
-
-export function findObjectByLabel(obj, pattern, fullObj) {
-    const $this  = this
-    if (obj && typeof obj == 'object'){
-        Object.keys(obj).forEach(function (key) {
-            if (typeof obj[key] === 'object') {
-                findObjectByLabel(obj[key], pattern, fullObj) 
-                // return null
-            } else if (typeof obj[key] === 'string'){  
-                var replace = `${pattern}` 
-                var re = new RegExp(replace,"g");
-                let fullstring = cloneDeep(obj[key])
-                let fo = obj[key].match(re)   
-                if (fo && Array.isArray(fo)){  
-                    fo.forEach((match)=>{ 
-                        try{
-                            let id = match.replace(/[\%\{\}]/g, "")
-                            Object.defineProperty(obj, key, {
-                                get: function(){
-                                    let found =  nestedProperty.get(fullObj, id)
-                                    
-                                  
-                                    fullstring  = fullstring.replaceAll(match, found)
-                                    
-                                    return  fullstring
-                                } 
-                            })
-                        } catch(err)  {
-                            store.logger.error(err)
-                        }
-                    }) 
-                } 
-                return obj[key]
+export function mapCacheVariables(variables, service, token){
+    let tokenVals = store.server.cache.get(token) 
+    let cachedVariables = nestedProperty.get(tokenVals, `services.${service}.variables`)
+    if (cachedVariables){
+        for(let [key, value ] of Object.entries(cachedVariables)){
+            if (value.option){
+                variables[key].option = value.option
             }
-            else{
-                return null
-            }
-        })
-    } else {
-        return null
-    }
-}
-export function mapTargetConfiguration(target, configuration){
-    findObjectByLabel(target, "(\%\{.+\})", configuration)
-    return target
-}
-
-
-export function mapConfigurations(configuration_string, variables){
-    for (let [key, value] of Object.entries(variables)){
-        var replace = `\\$\\{${key}\\}`
-        var re = new RegExp(replace,"g");
-        if (typeof configuration_string == 'string'){
-            configuration_string = configuration_string.replace(re, value.target    )
+            if (value.source){
+                variables[key].source = value.source
+                
+            } 
         }
-    } 
-    if (typeof configuration_string == 'string'){
-        configuration_string = JSON.parse(configuration_string)
+        console.log(cachedVariables, "get variable token services", service)
     }
-    let founds =findObjectByLabel(configuration_string, "(\%\{.+\})", configuration_string)
-    return configuration_string
-
+    return variables
 }
+
+// export function mapTargetConfiguration(target, configuration){
+//     findObjectByLabel(target, "(\%\{.+?\})", configuration)
+//     return target
+// }
+// export function mapObject(targetString, pattern, variables){
+//     let newTarget = findObjectByLabel(targetString, pattern, variables)
+//     newTarget = mapFunctions(newTarget)
+//     return newTarget
+// }
+
+// export function mapConfigurations(configuration_string, variables){
+//     for (let [key, value] of Object.entries(variables)){
+//         var replace = `\\$\\{${key}\\}`
+//         var re = new RegExp(replace,"g");
+//         if (typeof configuration_string == 'string'){
+//             configuration_string = configuration_string.replace(re, value.target    )
+//         }
+//     } 
+//     let newString = mapObject(configuration_string, "(\%\{.+?\})", variables)
+//     return newString
+
+// }
+
+// export function defineMapping(target){
+//     // console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< define mapping")
+//     let newTarget = findObjectByLabel(target, "(\%\{.+?\})", target) 
+//     newTarget = target 
+//     // newTarget.variables.file.source = "yes"
+//     // console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+//     return target
+// }

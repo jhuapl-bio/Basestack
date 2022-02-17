@@ -8,7 +8,7 @@
   -->
 <template>
   <div id="IGV">
-      <object type="text/html" data="https://igv.org/app/" id="igvObj" >
+      <object  class="mr-2 ml-2" type="text/html" data="https://igv.org/app/" id="igvObj" >
       </object>      
   </div>
 </template>
@@ -17,7 +17,7 @@
   
 
   export default {
-    name: 'IGV',
+    name: 'IGV', 
     methods: {
       open (link) {
         this.$electron.shell.openExternal(link)

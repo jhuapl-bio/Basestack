@@ -6,78 +6,48 @@
   // - # For any other permission, please contact the Legal Office at JHU/APL.
   // - # **********************************************************************
 
-// Import Vue
+
 import Vue from 'vue'
-// import router from './router'
-import Vuex from 'vuex'
-import store from './store'
 import axios from 'axios'
-
-// Bootstrap Vue Wrapper
-import { BootstrapVue } from 'bootstrap-vue'
-import { BootstrapVueIcons } from 'bootstrap-vue'
-import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
-
-// VueSweetAlert - used for modals/dialogs/popups/toasts
+ 
+import App from './App'
+import router from './router'
+import store from './store'
+// import { BootstrapVue } from 'bootstrap-vue'
 import VueSweetalert2 from 'vue-sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css';
+import Vuex from 'vuex'
 
-// Forms + Form Validation
+
 import Vuelidate from 'vuelidate'
 import Multiselect from 'vue-multiselect'
-import ToggleButton from 'vue-js-toggle-button'
-
-// Font Awesome Icons
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
-
-// Vuetify
-import Vuetify from 'vuetify'
-import 'vuetify/dist/vuetify.min.css'
-
-// Additional Vue Libraries
 import VTooltip from 'v-tooltip'
-import VueScrollTo from 'vue-scrollto'
+import  VueScrollTo from 'vue-scrollto'
 import {Slide, Carousel } from 'vue-carousel';
-
-// Promise-flavored IPC calls in Electron [yarn add electron-promise-ipc]
-import promiseIpc from 'electron-promise-ipc' 
-
-// Spinners 
 const  { HalfCircleSpinner, AtomSpinner } = require('epic-spinners');
-
-// Functions
-import path from "path"
-
-// Entry Points
-import './main.css';
-import App from './App'
-
+import path from "path" 
+import ToggleButton from 'vue-js-toggle-button'
+import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
+// import { BootstrapVueIcons } from 'bootstrap-vue'
+// import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
  
-Vue.use(Vuetify)
 
 let config = process.env.logfile
 let configError = process.env.errorfile
 // let logger = require("../../shared/logger.js").logger(configError, config)
+import TreeView from "vue-json-tree-view"
+Vue.use(TreeView)
 
-// Install desired font awesome icons + define icon component
-library.add( faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench,faAngleUp, faCheck, faTimesCircle, faAngleDown, faPlus, faMinus, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree,faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
-Vue.component('font-awesome-icon', FontAwesomeIcon)
 
-// Global event bus
-Vue.prototype.$eventHub = new Vue(); 
-
+Vue.prototype.$eventHub = new Vue(); // Global event bus
 // window.localStorage.clear()
 
-if (!process.env.IS_WEB) {
-  Vue.use(require('vue-electron'))
-}
-
+if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
-Vue.use(BootstrapVue)
+// Install BootstrapVue
+// Vue.use(BootstrapVue)
 Vue.use(VueSweetalert2)
 Vue.use(Vuelidate)
 Vue.use(ToggleButton)
@@ -88,7 +58,7 @@ Vue.component('Slide', Slide)
 Vue.use(require('vue-moment'));
 Vue.use(Multiselect)
 Vue.use(Vuex)
-Vue.use(BootstrapVueIcons)
+// Vue.use(BootstrapVueIcons)
 Vue.use(VTooltip, {
 	defaultBoundariesElement: document.body
 });
@@ -102,24 +72,22 @@ Vue.use(VueScrollTo);
 //   devtools.connect('localhost', process.env.rendererBasePort)
 // }
 
+
 // Vue.prototype.$logger = logger
 import upperFirst from 'lodash/upperFirst'
 import camelCase from 'lodash/camelCase'
 
-
-// Register all vue files in 
-// `/src/app/renderer/components/Framework/Mods` as global vue components
 const requireComponent = require.context(
   // The relative path of the components folder
   './components/Framework/Mods',
-
   // Whether or not to look in subfolders
   false,
-
   // The regular expression used to match base component filenames
   /Base[A-Z]\w+\.(vue)$/
 )
  
+
+
 requireComponent.keys().forEach(fileName => {
   // Get component config
   const componentConfig = requireComponent(fileName)
@@ -150,13 +118,15 @@ Vue.directive('pin', {
         el[d[0]] = d[1]
       })
   }
+
 })
 
-
+import vuetify from '@/plugins/vuetify' // path to vuetify export
 /* eslint-disable no-new */
 new Vue({
-  components: { App },
-  // router,
+  vuetify,
+  components: { App,},
+  router,
   store,
   template: '<App/>'
 }).$mount('#app')

@@ -7,33 +7,61 @@
   - # **********************************************************************
   -->
 <template>
-  <b-row id="about" >
+  <!-- <v-card id="about" > -->
+  	<v-list dense>
+		<v-list-item
+		>
+			<v-list-item-icon>
+				<span style="info-icon" ><font-awesome-icon class="" icon="envelope"/></span>
+			</v-list-item-icon>
+			<v-list-item-content>
+				<v-list-item-title v-text="'Questions? Contact here'"></v-list-item-title>
+				<v-list-item-subtitle style="font-size: 90%;">Brian Merritt (brian.merritt@jhuapl.edu)</v-list-item-subtitle>
+			</v-list-item-content>
+			
+		</v-list-item>
+		
+		<v-subheader>Third Party Applications</v-subheader>
+		<v-list-item
+			v-for="entry in third_parties"
+			:key="entry.name"
+			class="entry"
+		>
+			<v-list-item-content>
+				<v-list-item-subtitle >
+					<a class="center-y-img" style="font-size: 90%;" href="" v-on:click="open(entry.url,$event)">{{entry.name}}
+					</a>
+				</v-list-item-subtitle>
+				 <!-- <v-list-item-subtitle v-text=""v-on:click="open(entry.url,$event)" v-text="'Location'" ></v-list-item-subtitle> -->
+			</v-list-item-content>
+		</v-list-item>
+	</v-list>
 	
-  	<div class="box">
-		<span class="no-border-entry" style=""
-		> <font-awesome-icon class="" icon="phone" size="sm"  />
-			Questions? Contact us
-		</span> <hr>
-		<div class="label-entry"><strong class="">Third Party Applications</strong><br></div>
-  		<ul class="entry list_about">
-  			<li><a class="center-y-img" style="font-size: 90%; color: black" href="" v-on:click="open('https://nextstrain.org/ncov/global',$event)">Nextstrain</a></li>
-  			<li><a class="center-y-img" style="font-size: 90%; color: black" href="" v-on:click="open('https://github.com/artic-network/rampart',$event)">ARTIC Network</a></li>
-  			<li><a class="center-y-img" style="font-size: 90%; color: black" href="" v-on:click="open('https://igv.org/',$event)">IGV</a></li>
-  		</ul>	
-		<hr>
-		<div class="label-entry"><strong class="text-center">Basestack Developers</strong><br></div>
-		<div class="entry list_about">
-			<p style="font-size: 90%; color: black">Brian Merritt (brian.merritt@jhuapl.edu)</p>
-		</div>
-
-  	</div>
-  </b-row>
 </template>
 
 <script>
 export default {
 	name: 'foot',
+	data(){
+		return {
+			third_parties: [
+				{
+					name: "Nextstrain",
+					url: "https://nextstrain.org/ncov/global"
+				},
+				{
+					name: "Artic Network",
+					url: "https://github.com/artic-network/rampart"
+				},
+				{
+					name: "IGV",
+					url: "https://igv.org/"
+				}
+			]
+		}
+	},
 	methods: {
+		
 		open (link,e) {
 			e.stopPropagation()
         	this.$electron.shell.openExternal(link)

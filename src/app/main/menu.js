@@ -41,7 +41,7 @@ export class ClientMenu {
 				{ role: 'delete' },
 				{ type: 'separator' },
 				{ role: 'selectAll' }
-			])
+			]) 
 			]
 		},
 		{
@@ -75,6 +75,7 @@ export class ClientMenu {
 			{
 				label: 'Restart $this.app',
 				click() {  
+
 				if (process.env.NODE_ENV === 'production'){
 					$this.app.relaunch(); $this.app.quit()
 				} else { 
@@ -268,6 +269,7 @@ export class ClientMenu {
 		{
 			label: "Check for Updates",
 			click() { 
+				
 				$this.updater.checkUpdates()
 			}
 		},
@@ -278,6 +280,18 @@ export class ClientMenu {
 				label: 'Open Logs',
 				click() {  shell.openPath($this.store.system.logPath )  }
 			},
+			{
+				label: 'Test Notification',
+				click() {  
+					$this.mainWindow.webContents.send('mainNotification', {
+						icon: 'success',
+						patchNotes: true,
+						message: `Test Success`,
+					})
+
+				 }
+			},
+			
 			{
 				label: 'View Release Notes',
 				click() {  
