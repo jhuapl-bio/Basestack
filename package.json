@@ -110,7 +110,7 @@
       "entitlementsInherit": "build/entitlement.mac.plist"
     },
     "win": {
-      "icon": "\"build/icons/icon_512x512.png\""
+      "icon": "\"build/icons/basestack.ico\""
     },
     "linux": {
       "icon": "build/icons/icon_256x256.png",
