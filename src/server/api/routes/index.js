@@ -1095,6 +1095,7 @@ router.post("/session/cache/create", (req,res,next)=>{ // build workflow accordi
 				}
 				var token = buffer.toString('hex');
 				let response;
+				console.log("Create session")
 				let cach = store.server.defineCache(token)
 				store.server.cache.set(token, cach)
 				// let response = await server.cache(req.body.variables, req.body.token)
@@ -1430,7 +1431,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			let skip = await job.start()
 			store.logger.info("Completed or Exited Job!")
 			if (!skip){
-				res.status(200).json({status: 200, message: "Completed job " + procedure.name, skip: skip });
+				res.status(200).json({status: 200, message: "Initiated job " + procedure.name, skip: skip });
 			} else {
 				res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
 			}	

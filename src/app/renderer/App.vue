@@ -601,8 +601,9 @@ export default {
           // let token = await FileService.createSession()
           this.$store.token = 'development'
         } else {
-          let token = await FileService.createSession()
-          this.$store.token = token.data.data
+          // let token = await FileService.createSession() Deprecated for now
+          // this.$store.token = token.data.data
+          this.$store.token = 'development'
         }
         // // let serverStatus = await FileService.getServerStatus()
         // let dockerStatus = await FileService.getDockerStatus()

@@ -258,16 +258,15 @@ export default {
         this.intervalChecking = false
       }
     },
-    async cancel_procedure(procedureKey){
+    cancel_procedure(procedureKey){
       let ref  = this.$refs['job']
       ref.cancel_procedure()
     },
-    async start_procedure(){
+    start_procedure(){
       let ref  = this.$refs['job']
       ref.start_procedure()
 
     },
-    
     async rmCustomModule(selected){
       if (selected.custom){
         await FileService.rmModule({

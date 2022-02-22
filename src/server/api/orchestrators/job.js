@@ -331,29 +331,10 @@ export  class Job {
         let response = await Promise.allSettled(promises)
         return
     }
-    async start(){
-        const $this = this
-        let services;
-        $this.status.error = null
-        $this.status.running = true
-        $this.status.complete = false
-        let promises = [];
-        store.logger.info("%s setting variables", $this.name)
-        this.configuration.setVariables()
-        store.logger.info("%s closing existing streams if existent", $this.name)
-        this.promises.forEach((service)=>{
-            if (service && service.streamObj){
-                service.streamObj.close()
-            }
-        })
-        store.logger.info("%s setting every complete status to false", $this.name)
-
+    async loopServices(){
+        const $this  = this
         let cancelled_or_skip = false
-        for (let i = 0; i < $this.services.length; i++){
-            $this.services[i].status.complete = false
-        }
         let end = false
-        store.logger.info("Job starting: %s", $this.name)
         try{
             for (let i = 0; !end && i < $this.services.length; i++){
                 let service = $this.services[i]
@@ -385,6 +366,37 @@ export  class Job {
             return cancelled_or_skip
         } catch(err){
             store.logger.error("Err in starting job %o", err)
+            throw err
+        }
+    }
+    async start(){
+        const $this = this
+        let services;
+        $this.status.error = null
+        $this.status.running = true
+        $this.status.complete = false
+        let promises = [];
+        store.logger.info("%s setting variables", $this.name)
+        this.configuration.setVariables()
+        store.logger.info("%s closing existing streams if existent", $this.name)
+        this.promises.forEach((service)=>{
+            if (service && service.streamObj){
+                service.streamObj.close()
+            }
+        })
+        store.logger.info("%s setting every complete status to false", $this.name)
+
+
+        for (let i = 0; i < $this.services.length; i++){
+            $this.services[i].status.complete = false
+        }
+        
+        store.logger.info("Job starting: %s", $this.name)
+        try{
+            this.loopServices()
+            return 
+        } catch (err){
+            store.logger.error(err)
             throw err
         }
         
