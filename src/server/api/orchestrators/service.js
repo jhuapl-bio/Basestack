@@ -496,9 +496,17 @@ export class Service {
                         }
                     } else {  
                         env.push(`${name}=${( selected_option.target ? selected_option.target : selected_option.source)}`)
-                    }        
+                    }     
+                    if (selected_option.define){
+                        for( let [key, value] of Object.entries(selected_option.define)){
+                            env.push(`${key}=${value}`)
+                        }
+                    }   
                     // Define the command additions if needed  
-                    if (selected_option.append && cmd && selected_option.source ){ 
+                    if (selected_option.append){
+                        console.log("APPEND!")
+                    }
+                    if (selected_option.append && cmd && ( !selected_option.element ||  selected_option.source ) ){ 
                         let serviceFound = selected_option.append.services.findIndex(data => data == $this.serviceIdx)
                         if (serviceFound >= 0){ 
                             let service = selected_option.append
@@ -522,21 +530,21 @@ export class Service {
                 }  
             }
             if ($this.config.image){
-                options.Image = $this.config.image
+                options.Image = $this.config.image  
             }
-            if (! options.Image ){
+            if (! options.Image ){ 
                 throw new Error("No Image available")
-            }
-            
-            if (typeof options.Cmd == "string"){
+            } 
+               
+            if (typeof options.Cmd == "string"){  
                 options.Cmd = ['bash', '-c', options.Cmd]
-            }
-            options.Env = [...options.Env, ...env]
+            }   
+            options.Env = [...options.Env, ...env] 
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...bind]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
             Promise.all(promises).then((response)=>{
-                logger.info("Finished all promises")
-            }).catch((err)=>{
+                logger.info("Finished all promises") 
+            }).catch((err)=>{ 
                 reject(err)
             })
             logger.info("%o ______", options)
@@ -642,13 +650,12 @@ export class Service {
                             } 
                             stream.on("error",(err)=>{ 
                                 $this.status.error  = err
-                                resolve(false)
+                                reject()
                             })
                         })
                     })
                 } catch(err){
                     store.logger.error(err)
-                    console.log("_______________________________")
                     $this.status.running = false
                     // $this.status.error = err
                     $this.status.success= false

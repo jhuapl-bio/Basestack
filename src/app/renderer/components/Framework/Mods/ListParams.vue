@@ -35,10 +35,17 @@
                 {{item.hint}}
             </v-tooltip>
             {{item.label}}
+            <!-- <v-tooltip  bottom v-if="item.warning">
+                <template v-slot:activator="{ on }">
+                        <v-icon color="primary" v-if="item && item.warning " v-on="on" small >$exclamation
+                        </v-icon>
+                </template>
+                {{item.warning}}
+            </v-tooltip> -->
             <v-tooltip bottom v-if="(item.element == 'file' || item.element == 'dir') &&  ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )">
                 <template v-slot:activator="{ on }">
                     <v-btn icon color="primary" v-on="on"  @click="electronOpenDir(item, $event)">
-                        <v-icon small >$archive
+                        <v-icon medium >$archive
                         </v-icon>
                     </v-btn>
                 </template>
@@ -63,6 +70,20 @@
                 >
                    
                 </v-select>
+                <v-alert class="text-caption" v-if="item.optionValue && item.optionValue.warning" 
+                dense 
+                border="bottom"
+                colored-border
+                type="info"
+                elevation="2"
+                
+                >
+                    <v-icon  small >$exclamation
+                    </v-icon>
+                    {{item.optionValue.warning}}
+                </v-alert>
+             
+                
                 <component
                     :is="factory[item.optionValue.element]"
                     v-if="item.element !== 'render'"
@@ -73,6 +94,7 @@
                     @updateValue="updateValue($event, false, item, index, item.name)"
                     >
                 </component>
+                
              </div>
             <div v-else >
                 <component
@@ -95,6 +117,18 @@
                     </template>
                     View Visualization in Browser. Ensure that the service is running first!
                 </v-tooltip>  
+                <v-alert class="text-caption" v-if="item && item.warning" 
+                dense 
+                border="bottom"
+                colored-border
+                type="info"
+                elevation="2"
+                
+                >
+                    <v-icon  small >$exclamation
+                    </v-icon>
+                    {{item.warning}}
+                </v-alert>
             </div>
         </template>
         <template v-slot:item.bind="{ item, index }">

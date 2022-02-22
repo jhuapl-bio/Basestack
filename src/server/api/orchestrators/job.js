@@ -87,7 +87,7 @@ export  class Job {
     async setVariable(value, variable, target){
         return new Promise ((resolve, reject)=>{
             let data = {}
-            data[target] = value
+            data[target] = value 
             let obj = this.configuration.variables[variable]
             this.setValueVariable(data, obj, variable)
             let variables = this.configuration.variables
@@ -348,7 +348,8 @@ export  class Job {
         for (let i = 0; i < $this.services.length; i++){
             $this.services[i].status.complete = false
         }
-        for (let i = 0; i < $this.services.length; i++){
+        let end = false
+        for (let i = 0; !end && i < $this.services.length; i++){
             let service = $this.services[i]
             if (service.config.orchestrator){
                 logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
@@ -356,15 +357,17 @@ export  class Job {
                 try{
                     let skip
                     skip = await service.check_then_start({ variables: $this.variables}, true)
-                    if (skip){
+                    if (skip){ 
                         cancelled_or_skip = skip
-                        i = $this.services.length
+                        end = true
+                        // i = $this.services.length
                     }
                 } catch(err){
                     logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
                     // if (!$this.configuration.skipError){
                     //     i = $this.services.length
                     // }
+                    end = true
                     cancelled_or_skip = true
                     $this.status.error = err
                 }

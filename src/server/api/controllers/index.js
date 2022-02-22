@@ -1,17 +1,17 @@
 
-// import Docker from 'dockerode';
+// import Docker from 'dockerode'; 
 import path  from "path"
 const { store }  = require("../../config/store/index.js")
-var  logger  = store.logger
+var  logger  = store.logger      
 const { checkFileExist, reformatResponseVideo }  = require("./validate.js")
 const { init_base_modules, init_dind, init_base_procedures, init_base_services } = require("./init.js")
 const {  writeFile, ammendJSON, readFile, get, set } = require("./IO.js") 
-
-
-const {  listImages, fetch_external_config, set_stored } = require("./fetch.js")
+        
  
-
-const { docker_init } = require("./init.js")
+const {  listImages, fetch_external_config, set_stored } = require("./fetch.js")
+  
+  
+const { docker_init } = require("./init.js") 
 const lodash = require("lodash") 
 
  
@@ -29,13 +29,13 @@ export async function init(){
 	fetch_external_config('modules').then((modules)=>{
 		if (module){
 			set_stored(module.name, modules)
+			console.log(store.remotes,"<")
 		} else {
 			store.logger.info("No modules found at remote location")
 		}
 	}).catch((err)=>{
 		store.logger.error("Could not get modules externally, check connections %o", err)
 	})
-	
 	console.log("finished initializing")
 }
 

@@ -209,12 +209,13 @@ class FileService {
   fetchRemoteAll(name){
     return Api().get(`${baseEndpoint.get()}/remote/get/${name}`)
   }
-  removeCatalog(params){
+  removeCatalog(params){ 
     return Api().post(`${baseEndpoint.get()}/catalog/remove`, params)
   }
   deleteProcedureDependencies(params){
     return Api().post(`${baseEndpoint.get()}/procedure/dependencies/remove`, params)
   }
+  
   removeProcedureDependency(params){
     return Api().post(`${baseEndpoint.get()}/procedure/remove/dependency`, params)
   }

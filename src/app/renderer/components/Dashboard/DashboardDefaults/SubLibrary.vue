@@ -63,7 +63,7 @@
             </template>
             Unload or Remove the Module (Custom or Remote)
         </v-tooltip>
-        <v-badge  class="mt-5" v-if="selectedProcedure.status" overlap x-small :color="(selectedProcedure.status  && selectedProcedure.status.fully_installed ? 'green' : 'orange darken-2')">
+        <v-badge   class="mt-5" v-if="selectedProcedure.status" overlap x-small :color="(selectedProcedure.status  && selectedProcedure.status.fully_installed ? 'green' : 'orange darken-2')">
             <template v-slot:badge>
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
@@ -147,6 +147,7 @@
             centered
             class="elevation-1 "			
             small dense
+            v-if="dependencies && dependencies.length > 0"
             :footer-props="{
             showFirstLastPage: true,
                 prevIcon: '$arrow-alt-circle-left',
@@ -324,20 +325,6 @@ export default {
                 return 0
             }
         },
-        // procedureLogs(){
-        //     let logs = []
-        //     if (this.selectedProcedure.status && this.selectedProcedure.status.buildStream){
-        //         // logs = this.selectedProcedure.buildStream
-        //         this.selectedProcedure.status.buildStream.forEach((entry, i)=>{
-        //             logs.push(entry)
-        //         })
-
-        //     }
-        //     console.log("logs,change")
-
-        //     return logs
-
-        // },
         moduleIdx(){
             if (this.selectedModule && this.selectedModule.idx >= 0 ){
                 return this.selectedModule.idx
@@ -485,14 +472,14 @@ export default {
                 if (res.value) {
                     this.$swal({
                         title: "Procedure Deletion Initiated",
-                        text: "Please wait.. this may take some time",
+                        text: "Please wait.. this may take some time", 
                         icon: 'info',
                         showConfirmButton: true,
                         allowOutsideClick: true
                     });
                     // let variantIdx  = this.selectedModule.idx
                     // let procedureIdx  = this.selectedModule.procedures.findIndex(data => data === this.selectedProcedure)
-                    FileService.deleteProcedure({
+                    FileService.removeProcedureDependency({
                         module: $this.moduleIdx,
                         catalog: $this.catalog.name,
                         procedure: procedureIdx,
@@ -622,9 +609,6 @@ export default {
                     d.idx = i
                 })
                 
-                // if (!this.stored[this.catalog.name]){
-                //     this.stored[this.catalog.name] = []
-                // }
                 if (!this.selectedModule.name || this.selectedModule.name !== this.catalog.name){
                     this.selectedModule = this.catalog.modules[0]
                     this.selectedProcedure = {}
@@ -639,7 +623,8 @@ export default {
                     procedures: this.procedures
                 }
                 this.$set(this.selectedProcedure , 'dependencies', this.procedures[this.selectedProcedure.idx].dependencies)
-                
+                this.$set(this.selectedProcedure , 'status', this.procedures[this.selectedProcedure.idx].status)
+
                 if (this.selectedProcedure.status && this.selectedProcedure.status.buildStream){
                     // logs = this.selectedProcedure.buildStream
                     this.selectedProcedure.status.buildStream.forEach((entry, i)=>{
@@ -653,9 +638,13 @@ export default {
                 } catch(err){
                     console.log(err)
                 }
+                if (!this.procedures){
+                    clearInterval(this.interval)
+                }
                 
             } catch(err){
                 this.initial=false
+                this.selectedModule.idx=0
                 console.error(`${err} error in getting status`)
             } finally {
                 this.intervalChecking = false
@@ -750,12 +739,12 @@ export default {
 	mounted() {
         this.getStatus()
         const $this  = this
-        setInterval(()=>{
+        this.interval = setInterval(()=>{
             $this.getStatus()
         }, 3000)
     },
 	beforeDestroy: function() {
-        
+        clearInterval(this.interval)
     }
 };
 </script>

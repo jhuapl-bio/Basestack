@@ -26,6 +26,7 @@ const extract = require('extract-zip')
 const clone = require('git-clone');
 const tar = require("tar")
 import glob from "glob"
+const  gunzip = require('gunzip-file');
 
 export function set(attribute, value, obj, type) {
     var depth_attributes = attribute.split('.');
@@ -457,13 +458,14 @@ export async function decompress_file(file, outpath){
 					reject(err)
 				} else {
 					store.logger.info("Decompressed .tgz file: %s ", file)
-					resolve()
+					resolve() 
 				} 
 			});
 		} else if (ext == '.zip' || file.endsWith(".zip") ){
 			store.logger.info("Decompress file .zip: %s to: %s", file, outpath)
 			extract(file, { dir: outpath }, (err, stream)=>{
 				if(err) {
+					store.logger.error(err)
 					reject(err)
 				} else { 
 					store.logger.info("Decompressed .zip file: %s ", file)
@@ -474,8 +476,20 @@ export async function decompress_file(file, outpath){
 				reject(err) 
 
 			})
+			
+		} else if (ext == '.gzip' || file.endsWith(".gz") ) {
+			store.logger.info("Decompress file .gz: %s to: %s", file, outpath)
+			gunzip(file, path.join( outpath, path.parse(file).name) , (err, stream) => {
+				if(err) {
+					store.logger.error(err)
+					reject(err)
+				} else { 
+					store.logger.info("Decompressed .gz file: %s ", file)
+					resolve() 
+				} 
+			})
 		} else {
-			store.logger.error("Not proper format: tgz or .tar.gz")
+			store.logger.error("Not proper format: tgz or .tar.gz ")
 			// reject()
 			reject("Not proper format: tgz or .tar.gz")
 		}

@@ -1,6 +1,6 @@
 - name: minimap2
   title: "Minimap2"
-  icon: "highlighter"
+  icon: "magic"
   version: 1.0
   basestack_released: 2.0
   module: True
@@ -12,7 +12,7 @@
   procedures:
     - name: minimap2 #Top level is the left-hand selection of the menu and the major module to install 
       title: "Minimap2"
-      icon: "highlighter"
+      icon: "magic"
       module: True
       init: false 
       dependencies:

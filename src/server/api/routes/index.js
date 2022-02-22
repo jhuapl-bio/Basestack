@@ -120,7 +120,7 @@ router.get("/docker/status/get", (req,res,next)=>{
 
 
 router.post("/container/cancel", (req,res,next)=>{
-	try {
+	try {  
 		cancel_container(req.body.module).then((response)=>{
 			res.status(200).json({status: 200, message: response.message });
 		}).catch((err)=>{
@@ -129,7 +129,7 @@ router.post("/container/cancel", (req,res,next)=>{
 	} catch(err){
 		logger.error("%s %s", "Cancel rampart error", err.message)
 		res.status(409).json({status: 409, message:  error_alert(err)});
-	}
+	} 
 })
 
 router.get("/log/system", (req,res,next)=>{
@@ -308,9 +308,10 @@ router.get("/catalog/all/get", (req,res,next)=>{ // build workflow according to 
 	try {
 		let catalog = store.catalog
 		let data = [] 
-
+		let seen = {}
 		for (let [name, value] of Object.entries(cloneDeep(catalog))){
 			delete value['interval'] 
+			seen[name] = 1
 			let { modules, ...returnable } = value;
 			if (store.remotes[name]){
 				returnable.remotes = store.remotes[name].map((d,i)=>{
@@ -329,6 +330,17 @@ router.get("/catalog/all/get", (req,res,next)=>{ // build workflow according to 
 			returnable.modules = module_config
 			data.push(returnable)
 		}
+		for (let [name, value] of Object.entries(cloneDeep(store.remotes))){
+			if (!seen[name]){
+				seen[name] = 1
+				let returnable = cloneDeep(value[0])
+				returnable.remotes = cloneDeep(value)
+				returnable.modules=[]
+				data.push(returnable)
+			}
+		}
+
+
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
 	} catch(err2){
 		logger.error("%s %s", "Error in loading module to library", err2)
@@ -986,13 +998,17 @@ router.post("/procedure/stop", (req,res,next)=>{ // build workflow according to 
 router.post("/remote/save/modules", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){ 
 		try {
-			let remote_module = store.remotes[req.body.catalog][req.body.module]
-			
+			let remote_module = store.remotes[req.body.catalog][(req.body.module ? req.body.module : 0 )]
 			let savePath = remote_module.path
+			if (!savePath){
+				let basename = `${remote_module.name}_${remote_module.version}.yml`
+
+				savePath = path.join(store.system.remotes.modules, basename) 
+			}
 
 			await writeFile(savePath, YAML.stringify([remote_module]))
 
-			console.log(savePath, store.catalog[req.body.catalog].modules[req.body.module].config)
+			console.log(savePath)
 			let data = []
 			logger.info("%s cache %o", req.body.catalog, data.length)
 			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
@@ -1000,14 +1016,14 @@ router.post("/remote/save/modules", (req,res,next)=>{ // build workflow accordin
 		} catch(err2){
 			logger.error( "Error  %o in getting config target remotely %s", err2, req.params.target)
 			res.status(419).send({status: 419, message: error_alert(err2)});
-		}	
+		}	 
 	})()
 })
 
 router.post("/remote/set/modules", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
-			let remote_module = store.remotes[req.body.catalog][req.body.module]
+			let remote_module = store.remotes[req.body.catalog][(req.body.module ? req.body.module : 0 )]
 			save_remote_module(remote_module)
 			let data = []
 			logger.info("%s cache %o", req.body.catalog, data.length)

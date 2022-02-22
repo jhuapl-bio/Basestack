@@ -673,7 +673,7 @@ export class Procedure {
                                         decompress_file(dependency_obj.decompress.source, path.dirname(dependency_obj.target)).then(()=>{
                                             dependency_obj.status.building = false
                                         }).catch((err) =>{
-                                            store.logger.error("Error in decompressing file: %o", dependency_obj.source)
+                                            store.logger.error("Error in decompressing file: %o %o", dependency_obj.source, err)
                                             dependency_obj.status.building = false
                                         } )                                       
                                     } else {

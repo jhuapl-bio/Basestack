@@ -48,7 +48,7 @@
               <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item)">
                 <v-icon 
                   class="" color="primary" 
-                  small>$archive
+                  medium>$archive
                 </v-icon>
               </v-btn>
               
@@ -61,7 +61,7 @@
               <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item, true)">
                 <v-icon 
                   class="" color="primary" 
-                  small>$file
+                  medium>$file
                 </v-icon>
               </v-btn>
             </template>

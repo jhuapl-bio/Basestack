@@ -1,0 +1,65 @@
+- name: fastqc
+  title: "FastQC"
+  icon: "bolt"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tooltip: "Run QC on your fastq run directory"
+  procedures: 
+    - name: fastqc #Top level is the left-hand selection of the menu and the major module to install 
+      title: "FastQC"
+      icon: "bolt"
+      module: True
+      init: false 
+      dependencies:
+        - target: "staphb/fastqc"
+          label: "staphb/fastqc"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "Quality Check"
+        - "Sequencing"
+      tooltip: "Run quality checking and stats on a sequencing data directory"
+      variables:
+        dir:
+          label: "Run Directory"
+          hint: "Select your fastq output directory"
+          bind_parent_dir: false
+          element: "dir"
+          bind: 
+            from: "%{variables.dir.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "%{variables.dir.bind.to}/"
+        outvis:
+          label: "Output report"
+          hint: "Select your fastq output directory"
+          output: true        
+          element: "file"  
+          openSelf: true       
+          class: "wb-100  p-3 mb-1"
+          source: "%{variables.dir.source}/fastqc/full_fastqc.html"
+          # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
+          target: "%{variables.file.bind.to}/full_fastqc.html"
+        outdata:
+          label: "Output zipped data"
+          element: "file"  
+          hint: "zipped raw data from output"
+          output: true   
+          openSelf: true       
+          class: "wb-100  p-3 mb-1"
+          source: "%{variables.dir.source}/fastqc/full_fastqc.zip" 
+          # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
+          target: "%{variables.file.bind.to}/full_fastqc.zip"
+      services:
+        - name: fastqc
+          label: "FastQC"
+          image: "staphb/fastqc"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "cat ${dir}/* > /tmp/full.fastq; mkdir -p ${dir}/fastqc; fastqc /tmp/full.fastq -o ${dir}/fastqc"]
+    

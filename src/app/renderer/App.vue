@@ -32,12 +32,20 @@
 						@change="selected = 'procedures'"
 					>
 						<v-list-item-action>
-							<v-tooltip top>
-							<template v-slot:activator="{ on }">
-								<v-icon  :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
-							</template>
-							{{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
-							</v-tooltip>
+              <v-badge   dot left v-if="!entry.status.latest_installed " color="orange darken-2">
+                <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-icon  :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
+                </template>
+                {{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
+                </v-tooltip>
+              </v-badge>
+              <v-tooltip top v-else>
+              <template v-slot:activator="{ on }">
+                <v-icon  :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
+              </template>
+              {{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
+              </v-tooltip>
 						</v-list-item-action>
 
 						<v-list-item-content>
@@ -164,6 +172,7 @@
           :is="'Module'" 
           v-if="catalog && selected == 'procedures' && catalog[(tabProcedure >=0 ? tabProcedure : 0)]"
           :module="catalog[tabProcedure]"
+          :latest="catalog[tabProcedure].status.latest_available"
           :key="catalog[tabProcedure].idx"
           @updateSelected="updateSelected"
           :moduleIndex="tabProcedure"
@@ -370,22 +379,26 @@ export default {
 			tabProcedure: null , 
 			sel: 0,
 			selected: 'defaults',
-			colorList: [
-				"rgb(70, 240,240",
-				"rgb(128,0,0",
-				"rgb(128,128,0",
-				"rgb(255,165,0",
-				"rgb(255,255,0",
-				"rgb(0,128,0",
-				"rgb(128,0,128",
-				"rgb(255,0,255",
-				"rgb(255,0,0",
-				"rgb(0,255,0",
-				"rgb(0,128,128", 
-				"rgb(0,255,255",
-				"rgb(0,0,255",
-				"rgb(0,0,128",
-			],
+      colorList: [
+        "rgb(43, 88, 185",
+        "rgb(96, 125, 139", 
+      ],
+			// colorList: [
+			// 	"rgb(70, 240,240",
+			// 	"rgb(128,0,0",
+			// 	"rgb(128,128,0",
+			// 	"rgb(255,165,0",
+			// 	"rgb(255,255,0",
+			// 	"rgb(0,128,0",
+			// 	"rgb(128,0,128",
+			// 	"rgb(255,0,255",
+			// 	"rgb(255,0,0",
+			// 	"rgb(0,255,0",
+			// 	"rgb(0,128,128", 
+			// 	"rgb(0,255,255",
+			// 	"rgb(0,0,255",
+			// 	"rgb(0,0,128",
+			// ],
 			modulesInner: [],
 			collapsed: false,
 			isHovered: -1,
@@ -507,10 +520,16 @@ export default {
 			// var randomElement = this.colorList[Math.floor(Math.random()*this.colorList.length)];
 
 			if (!(this.colorList.length % key+1)){
-				return `${ this.colorList[0] }, ${opacity})`
+				return `${ this.colorList[1] }, ${opacity})`
+        
 			} else {
-				let color = `${this.colorList[this.colorList.length % key+1]}, ${opacity})`
-				return color
+				// let color = `${this.colorList[this.colorList.length % key+1]}, ${opacity})`
+        if ( (key + 1 ) % 2 == 0){
+          return `${ this.colorList[0] }, ${opacity})`
+        } else {
+          return `${ this.colorList[1] }, ${opacity})`
+        }
+				  
 			}
 		},
     open (link) {

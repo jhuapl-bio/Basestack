@@ -101,12 +101,13 @@
         db:
           label: "Classifier database"
           class: "wb-100 p-3 mb-1"
-          option: 1
+          option: 0
           options:
             - element: null
               name: "Minikraken2"
               source: "${writePath}/modules/mytax/minikraken2_v2_8GB_201904_UPDATE"
               target: "/opt/databases/minikraken2"
+              warning: "Requires roughly 7.5 GB of free RAM to load. If limited in RAM available, try to change Memory Mapping below to classify on the local filesystem. If your input file is large, however, this can take a long time"
               bind:  
                 from: "%{variables.db.source}"
                 to: "/opt/databases" #This ${} is converted into the variable attribute of selected option only!
