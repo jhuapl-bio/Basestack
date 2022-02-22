@@ -144,6 +144,7 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
+      console.log("Starting job", $this.module, $this.moduleIdx)
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,

@@ -9,6 +9,10 @@
         "Binds": [
         ],
         "PortBindings": { 
+        },
+        "RestartPolicy": {
+            "Name": "no",
+            "MaximumRetryCount": 0
         }
     },
     "Volumes": {

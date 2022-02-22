@@ -645,7 +645,7 @@ export class Procedure {
                         overwrite_idx = true
                     }
                 }   
-                if (Array.isArray(overwrite) && overwrite[i]){
+                if (Array.isArray(overwrite) && overwrite[i]){ 
                     overwrite_idx = overwrite[i]
                 }
                 if (dependency_obj.type == 'docker' && !dependency_obj.build && !dependency_obj.local ){

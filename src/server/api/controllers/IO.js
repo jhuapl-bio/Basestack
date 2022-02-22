@@ -458,7 +458,7 @@ export async function decompress_file(file, outpath){
 					reject(err)
 				} else {
 					store.logger.info("Decompressed .tgz file: %s ", file)
-					resolve() 
+					resolve()  
 				} 
 			});
 		} else if (ext == '.zip' || file.endsWith(".zip") ){

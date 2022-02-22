@@ -212,6 +212,7 @@ export class Service {
         return new Promise(function(resolve,reject){
             ( async ()=>{
                 let name = $this.name;
+                store.logger.info(`starting container..${name}`)
                 let exists = await check_container($this.name)
                 if ( ( exists.exists && $this.config.force_restart) ||  exists.exists ){
                     store.logger.info("Force restarting")
@@ -400,7 +401,7 @@ export class Service {
         this.status.cancelled = false
         return new Promise(function(resolve,reject){
             let options = cloneDeep($this.options)
-            
+            store.logger.info("Starting.. %s", $this.name)
             let env = []
             if (!params){
                 params = {}
@@ -542,11 +543,11 @@ export class Service {
             options.Env = [...options.Env, ...env] 
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...bind]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
-            Promise.all(promises).then((response)=>{
-                logger.info("Finished all promises") 
-            }).catch((err)=>{ 
-                reject(err)
-            })
+            // Promise.all(promises).then((response)=>{
+            //     logger.info("Finished all promises") 
+            // }).catch((err)=>{ 
+            //     reject(err)
+            // })
             logger.info("%o ______", options)
             // logger.info(`starting the container ${options.name} `)
             $this.status.stream.info.push(JSON.stringify(options, null, 4))
@@ -611,11 +612,13 @@ export class Service {
                             })
                         })
                     } 
+                    store.logger.info("Attaching stream %s", $this.name)
                     container.attach({stream: true, stdout: true, stdin:true, stderr: true}, function (err, stream){
                         $this.log = spawnLog(stream, $this.logger)
                         $this.status.stream =  $this.log
                         $this.stream = stream 
                         container.start(function (err, data) {
+                            store.logger.info("Starting... %s", $this.name)
                             if (err){  
                                 logger.error("%o  error in container name: %s", err, $this.name)
                                 if (err.json && err.json.message){
@@ -648,6 +651,10 @@ export class Service {
                                 },1000)
                                 // }
                             } 
+                            stream.on("close",()=>{ 
+                                store.logger.info("Stream Closed!")
+                                
+                            })
                             stream.on("error",(err)=>{ 
                                 $this.status.error  = err
                                 reject()
@@ -655,7 +662,7 @@ export class Service {
                         })
                     })
                 } catch(err){
-                    store.logger.error(err)
+                    store.logger.error("Error in running container: %s %o", $this.name, err)
                     $this.status.running = false
                     // $this.status.error = err
                     $this.status.success= false

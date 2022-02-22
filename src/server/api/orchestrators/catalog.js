@@ -83,7 +83,7 @@ export class Catalog {
                 $this.latest_index = latest_key
                 let filtered = store.config.modules.filter((f)=>{
                     return f.name == $this.name 
-                }) 
+                })   
                 if (store.remotes && store.remotes[$this.name]){
                     store.remotes[$this.name].map((v)=>{
                         filtered.push(v)

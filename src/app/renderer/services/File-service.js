@@ -109,6 +109,7 @@ class FileService {
     return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.module}/${params.procedure}`)    
   }
   startJob(params){
+    console.log("Starting job with params", params)
     return Api().post(`${baseEndpoint.get()}/job/start`, params)    
   }
   cancelJob(params){

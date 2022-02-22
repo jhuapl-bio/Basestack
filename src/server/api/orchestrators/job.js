@@ -338,42 +338,56 @@ export  class Job {
         $this.status.running = true
         $this.status.complete = false
         let promises = [];
+        store.logger.info("%s setting variables", $this.name)
         this.configuration.setVariables()
+        store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{
             if (service && service.streamObj){
                 service.streamObj.close()
             }
         })
+        store.logger.info("%s setting every complete status to false", $this.name)
+
         let cancelled_or_skip = false
         for (let i = 0; i < $this.services.length; i++){
             $this.services[i].status.complete = false
         }
         let end = false
-        for (let i = 0; !end && i < $this.services.length; i++){
-            let service = $this.services[i]
-            if (service.config.orchestrator){
-                logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
-            } else{
-                try{
-                    let skip
-                    skip = await service.check_then_start({ variables: $this.variables}, true)
-                    if (skip){ 
-                        cancelled_or_skip = skip
+        store.logger.info("Job starting: %s", $this.name)
+        try{
+            for (let i = 0; !end && i < $this.services.length; i++){
+                let service = $this.services[i]
+                if (service.config.orchestrator){
+                    logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
+                } else{
+                    try{
+                        let skip
+                        store.logger.info("I: %s, Starting a new job service %s", i, service.name)
+                        skip = await service.check_then_start({ variables: $this.variables}, true)
+                        if (skip){ 
+                            store.logger.info("skip %s", skip)
+                            cancelled_or_skip = skip
+                            end = true
+                            // i = $this.services.length
+                        }
+                    } catch(err){
+                        logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
+                        // if (!$this.configuration.skipError){
+                        //     i = $this.services.length
+                        // }
                         end = true
-                        // i = $this.services.length
+                        cancelled_or_skip = true
+                        $this.status.error = err
                     }
-                } catch(err){
-                    logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
-                    // if (!$this.configuration.skipError){
-                    //     i = $this.services.length
-                    // }
-                    end = true
-                    cancelled_or_skip = true
-                    $this.status.error = err
                 }
             }
+            store.logger.info("Job completed or skipped/exited")
+            return cancelled_or_skip
+        } catch(err){
+            store.logger.error("Err in starting job %o", err)
+            throw err
         }
-        return cancelled_or_skip
+        
     }
     
     
