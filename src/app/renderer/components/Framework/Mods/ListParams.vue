@@ -26,6 +26,10 @@
                 
             </v-toolbar>
         </template>
+        <template v-slot:item.element="{ item, index }">
+            {{ ( item.optional ? 'Optional ' : "Required " )  }}{{item.element}}
+
+        </template>
         <template v-slot:item.label="{ item, index }">
             <v-tooltip  bottom>
                 <template v-slot:activator="{ on }">
@@ -179,7 +183,7 @@
   </div>
 </template>
 <script>
-
+import Number from '@/components/Framework/Mods/Number.vue';
 import String from '@/components/Framework/Mods/String.vue';
 import Checkbox from '@/components/Framework/Mods/Checkbox.vue';
 import Exists from '@/components/Framework/Mods/Exists.vue';
@@ -198,6 +202,7 @@ export default {
 	name: 'multi-select',
     components: {
         File,
+        Number,
         Dir,
         String,
         Exists,
@@ -347,6 +352,7 @@ export default {
             factory: {
 
                 'string': "String",
+                "number": "Number",
                 "checkbox": "Checkbox",
                 "exists": "Exists",
                 "file": "File",

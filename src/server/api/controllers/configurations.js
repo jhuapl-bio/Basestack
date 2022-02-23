@@ -3,7 +3,7 @@ const { store  } = require("../../config/store/index.js")
 const { parseConfigVariables } = require("../../../shared/definitions.js")
 const { set_stored } = require("./fetch.js")
 const { Job } = require("../orchestrators/job")
-const { getFolders, readFile, getFiles} = require("./IO.js")
+const { getFolders, readFile, getFiles} = require("./IO.js") 
 import path from "path" 
 const YAML = require("yaml")   
 
