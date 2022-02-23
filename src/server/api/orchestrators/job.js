@@ -4,7 +4,7 @@ import { mapVariables } from '../controllers/mapper.js';
  const { Configuration }  = require("./configuration.js")
  const { Service }  = require("./service.js")
 const { module_status }  = require("../controllers/watcher.js")
-const { readFile, removeFile, removeFolder } = require("../controllers/IO.js")
+const { readFile, removeFile, removeFolder, checkExists } = require("../controllers/IO.js")
 const { store }  = require("../../config/store/index.js")
    
 var logger = store.logger
@@ -87,7 +87,7 @@ export  class Job {
     async setVariable(value, variable, target){
         return new Promise ((resolve, reject)=>{
             let data = {}
-            data[target] = value
+            data[target] = value 
             let obj = this.configuration.variables[variable]
             this.setValueVariable(data, obj, variable)
             let variables = this.configuration.variables
@@ -97,6 +97,22 @@ export  class Job {
                     if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
                         let update_on = vari.update_on
                         let action  = update_on.action
+                        if (action == 'exists'){
+                            let returnedVari = {
+                                key: key, 
+                                value: null
+                            }
+                            promises.push(
+                                checkExists(update_on.source, true).then((f)=>{
+                                    vari.source = f
+                                    returnedVari.value = vari
+                                    return returnedVari
+                                }).catch((err)=>{
+                                    store.logger.error(err)
+                                    return vari
+                                })
+                            )
+                        }
                         if (action == 'read'){
                             promises.push(
                                 readFile(update_on.source, true).then((f)=>{
@@ -159,7 +175,6 @@ export  class Job {
             if (dependency >= 0 || dependency){
                 console.log("Single remove!")
                 let watch = $this.status.watches[dependency]
-                console.log(watch)
                 if (typeof watch.source == 'string'){
                     promises.push(removeFile(watch.source))
                 } else {
@@ -168,7 +183,6 @@ export  class Job {
                     })
                 }
             } else {
-                console.log("Multiple all")
                 if ($this.configuration.removal_override){
                     let type = $this.configuration.removal_override
                     if (!type){
@@ -317,6 +331,44 @@ export  class Job {
         let response = await Promise.allSettled(promises)
         return
     }
+    async loopServices(){
+        const $this  = this
+        let cancelled_or_skip = false
+        let end = false
+        try{
+            for (let i = 0; !end && i < $this.services.length; i++){
+                let service = $this.services[i]
+                if (service.config.orchestrator){
+                    logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
+                } else{
+                    try{
+                        let skip
+                        store.logger.info("I: %s, Starting a new job service %s", i, service.name)
+                        skip = await service.check_then_start({ variables: $this.variables}, true)
+                        if (skip){ 
+                            store.logger.info("skip %s", skip)
+                            cancelled_or_skip = skip
+                            end = true
+                            // i = $this.services.length
+                        }
+                    } catch(err){
+                        logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
+                        // if (!$this.configuration.skipError){
+                        //     i = $this.services.length
+                        // }
+                        end = true
+                        cancelled_or_skip = true
+                        $this.status.error = err
+                    }
+                }
+            }
+            store.logger.info("Job completed or skipped/exited")
+            return cancelled_or_skip
+        } catch(err){
+            store.logger.error("Err in starting job %o", err)
+            throw err
+        }
+    }
     async start(){
         const $this = this
         let services;
@@ -324,39 +376,30 @@ export  class Job {
         $this.status.running = true
         $this.status.complete = false
         let promises = [];
+        store.logger.info("%s setting variables", $this.name)
         this.configuration.setVariables()
+        store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{
             if (service && service.streamObj){
                 service.streamObj.close()
             }
         })
-        let cancelled_or_skip = false
+        store.logger.info("%s setting every complete status to false", $this.name)
+
+
         for (let i = 0; i < $this.services.length; i++){
             $this.services[i].status.complete = false
         }
-        for (let i = 0; i < $this.services.length; i++){
-            let service = $this.services[i]
-            if (service.config.orchestrator){
-                logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
-            } else{
-                try{
-                    let skip
-                    skip = await service.check_then_start({ variables: $this.variables}, true)
-                    if (skip){
-                        cancelled_or_skip = skip
-                        i = $this.services.length
-                    }
-                } catch(err){
-                    logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
-                    // if (!$this.configuration.skipError){
-                    //     i = $this.services.length
-                    // }
-                    cancelled_or_skip = true
-                    $this.status.error = err
-                }
-            }
+        
+        store.logger.info("Job starting: %s", $this.name)
+        try{
+            this.loopServices()
+            return 
+        } catch (err){
+            store.logger.error(err)
+            throw err
         }
-        return cancelled_or_skip
+        
     }
     
     

@@ -8,12 +8,24 @@
   -->
 <template>
   
-    <v-row  style="height: 50vh" >
+    <v-row   >
 		  <v-col cols="12"  >
-			<v-card >
-      <v-toolbar class="my-5 "> 
+      <v-toolbar absolute width="100%" class="my-2 "> 
         <v-toolbar-title>{{selected.title}}</v-toolbar-title>
+        <div v-if="selected.version != latest">
+          <v-tooltip bottom class="" >
+            <template v-slot:activator="{ on }">
+              <v-icon class="ml-3" v-on="on" color="warning" medium> $exclamation-triangle
+              </v-icon>
+            </template>
+            View the Library to install version {{latest}} or select from the drop-down if already loaded
+          </v-tooltip>
+          {{ ( latest ? 'A newer version is available' : 'Could not fetch latest version' ) }}
+        </div>
+        
         <v-spacer></v-spacer>
+        
+
         <v-select
             v-model="selected"  v-if="selected"
             :items="modules"
@@ -173,26 +185,26 @@
       ></v-progress-linear>
         
       </v-toolbar>
-       <v-spacer></v-spacer>
+      <v-spacer></v-spacer>
         
       
-        <v-divider></v-divider>
-            <component 
-              :is="'Job'"
-              v-if="selected.idx || selected.idx == 0"
-              :module="module.name"
-              ref="job"
-              :title="module.title"
-              :watches="(job ? job.watches : [])"
-              :status="( job ? job.services : {})"
-              :procedureIdx="selectedProcedure.idx"
-              :jobStatus="job"
-              class="fill-width fill-height"
-              :moduleIdx="selected.idx"
-            >            	
-            </component>
-
-    </v-card>
+      <v-divider></v-divider>
+      <v-card style="height: 3vh">
+          <component 
+            :is="'Job'"
+            v-if="selected.idx || selected.idx == 0"
+            :module="module.name"
+            ref="job"
+            :title="module.title"
+            :watches="(job ? job.watches : [])"
+            :status="( job ? job.services : {})"
+            :procedureIdx="selectedProcedure.idx"
+            :jobStatus="job"
+            class="fill-width fill-height"
+            :moduleIdx="selected.idx"
+          >            	
+          </component>
+      </v-card>
     </v-col>
   </v-row  >
 </template>
@@ -246,16 +258,15 @@ export default {
         this.intervalChecking = false
       }
     },
-    async cancel_procedure(procedureKey){
+    cancel_procedure(procedureKey){
       let ref  = this.$refs['job']
       ref.cancel_procedure()
     },
-    async start_procedure(){
+    start_procedure(){
       let ref  = this.$refs['job']
       ref.start_procedure()
 
     },
-    
     async rmCustomModule(selected){
       if (selected.custom){
         await FileService.rmModule({
@@ -384,7 +395,7 @@ export default {
       tabService: 0,
     }
   },
-  props: [ "module", "variant", "moduleIndex" ],
+  props: [ "module", "variant", "moduleIndex", "latest" ],
   watch: {
     module(newValue, oldValue){
       if (!this.selected && newValue){
@@ -405,6 +416,18 @@ export default {
 
   },
   computed: {
+    // latest() {
+    //   let latest  = null
+    //   let maxVersion = 1
+    //   if (this.module){
+    //     let version = this.modules.map((f)=>{
+    //       return f.version
+    //     })
+    //     maxVersion = Math.max(version)
+    //   }
+    //   return maxVersion
+
+    // },
     computed_services(){
       let values = []
       for (let [key, value] of Object.entries(this.services)){

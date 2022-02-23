@@ -53,6 +53,7 @@
         gamma:
           watch: True
           output: True
+          openSelf: True
           label: "GAMMA file"
           hint: ".gamma file containing AMR calls in consensus genome compared to used DB"
           element: "file"

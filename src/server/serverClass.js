@@ -19,7 +19,7 @@ export  class Server {
                     ( process.env.REDIS_HOST ? process.env.REDIS_HOST : 'host-redis')
                 )
                 this.cache = response
-
+                console.log("Creating init cache in server class function")
                 if (process.env.NODE_ENV == 'development' || process.env.serveProduction == 'true' ){
                     // let obj = { my: "Special", variable: 42 };
                     let obj = this.defineCache('development')
@@ -27,7 +27,7 @@ export  class Server {
                 }
                 resolve()
             })().catch((err)=>{
-                console.error(err, "error in starting cacher redis server")
+                console.error(err, "error in starting cache service for server")
                 reject(err)
             });	
         })

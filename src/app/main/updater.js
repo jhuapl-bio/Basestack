@@ -18,14 +18,18 @@ export class Updater {
     }
     checkUpdates(){
         console.log("check updates")
-        if(process.env.NODE_ENV == 'production'){
-            this.releaseNotes.version = 0
-            this.releaseNotes.releaseNotes = "Fetching..."
-            console.log("Check for Basestack updates and notify")
-            this.autoUpdater.checkForUpdatesAndNotify()   
-        } else {
-            console.log(`Development mode enabled, skipping check for updates`)
-            this.autoUpdater.checkForUpdatesAndNotify()   
+        try{
+            if(process.env.NODE_ENV == 'production'){
+                this.releaseNotes.version = 0
+                this.releaseNotes.releaseNotes = "Fetching..."
+                console.log("Check for Basestack updates and notify")
+                this.autoUpdater.checkForUpdatesAndNotify()   
+            } else {
+                console.log(`Development mode enabled, skipping check for updates`)
+                this.autoUpdater.checkForUpdatesAndNotify()   
+            }
+        } catch (error) {
+            console.error(error)
         }
     }
     defineUpdater(){
@@ -37,40 +41,44 @@ export class Updater {
             // sendStatusToWindow('Error in auto-updater. ' + err);
         })
         this.autoUpdater.on('update-available', (info) => {
-            console.log(info)
-            console.log("update available")
-            let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
-            const options = {
-                type: 'question',
-                buttons: ['Install', 'Skip'],
-                defaultId: 0,
-                title: 'Update Available from https://github.com/jhuapl-bio/Basestack/releases',
-                message: message,
-                detail: '',
-                checkboxLabel: 'Auto-restart after download?',
-                checkboxChecked: true,
-            };
-            $this.releaseNotes  = info
-            $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
-            console.log($this.dialog)
-            $this.dialog.showMessageBox(null, options).then((response) => { 
-              console.log("%s update choice -> %s", response)
-              if (response.response == 0){
-                 $this.autoUpdater.downloadUpdate()
-                 console.log("downloading Update")
-                 $this.mainWindow.webContents.send('mainNotification', {
-                   icon: '',
-                   loading: true,
-                   message: `Downloading Update`,
-                   disable_popup: true
-                 })
-                 if (response.checkboxChecked ){
-                   $this.quitUpdateInstall = true;
-                 }
-              } else {
-                  console.log("Skipping update")
-              }
-            });
+            try{
+                console.log(info)
+                console.log("update available")
+                let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
+                const options = {
+                    type: 'question',
+                    buttons: ['Install', 'Skip'],
+                    defaultId: 0,
+                    title: 'Update Available from https://github.com/jhuapl-bio/Basestack/releases',
+                    message: message,
+                    detail: '',
+                    checkboxLabel: 'Auto-restart after download?',
+                    checkboxChecked: true,
+                };
+                $this.releaseNotes  = info
+                $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
+                console.log($this.dialog)
+                $this.dialog.showMessageBox(null, options).then((response) => { 
+                console.log("%s update choice -> %s", response)
+                if (response.response == 0){
+                    $this.autoUpdater.downloadUpdate()
+                    console.log("downloading Update")
+                    $this.mainWindow.webContents.send('mainNotification', {
+                    icon: '',
+                    loading: true,
+                    message: `Downloading Update`,
+                    disable_popup: true
+                    })
+                    if (response.checkboxChecked ){
+                    $this.quitUpdateInstall = true;
+                    }
+                } else {
+                    console.log("Skipping update")
+                }
+                });
+            } catch (error) {
+                console.error(error)
+            }
         })
         this.autoUpdater.on('update-downloaded', (info, err) => {
             console.log("Update Downloaded")
@@ -98,22 +106,30 @@ export class Updater {
             if (err){
                 console.log(`${err} err in update not available messaging`)
             }
-            console.log('Basestack update not available.');
-            $this.releaseNotes=info
-            console.log(`${JSON.stringify(info)}`)
-            $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
+            try{
+                console.log('Basestack update not available.');
+                $this.releaseNotes=info
+                console.log(`${JSON.stringify(info)}`)
+                $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
+            } catch (error) {
+                console.error(error)
+            }
         })     
         $this.autoUpdater.on('download-progress', (progressObj) => {
-            let log_message = "Download speed: " + progressObj.bytesPerSecond;
-            log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-            log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-            console.log("%s <-- Update Download progress", log_message)
-            // sendStatusToWindow(log_message);
-            $this.mainWindow.webContents.send('mainNotification', {
-               type: 'info',
-               message: log_message,
-               disable_popup: true
-            })
+            try{
+                let log_message = "Download speed: " + progressObj.bytesPerSecond;
+                log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+                log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+                console.log("%s <-- Update Download progress", log_message)
+                // sendStatusToWindow(log_message);
+                $this.mainWindow.webContents.send('mainNotification', {
+                type: 'info',
+                message: log_message,
+                disable_popup: true
+                })
+            } catch (error) {
+                console.error(error)
+            }
         })     
     }
    

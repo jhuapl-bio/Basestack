@@ -3,7 +3,9 @@
     <v-data-table
         small 
         :headers="headers"
-        :items="items" 
+        :items="items.filter((d)=>{
+            return !d.hidden
+        })" 
         v-if="items && items.length  > 0"
         dense
         :items-per-page="10"
@@ -33,10 +35,22 @@
                 {{item.hint}}
             </v-tooltip>
             {{item.label}}
-            <v-btn icon color="primary" v-if=" ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )" @click="electronOpenDir(item, $event)">
-                <v-icon small >$archive
-                </v-icon>
-            </v-btn>
+            <!-- <v-tooltip  bottom v-if="item.warning">
+                <template v-slot:activator="{ on }">
+                        <v-icon color="primary" v-if="item && item.warning " v-on="on" small >$exclamation
+                        </v-icon>
+                </template>
+                {{item.warning}}
+            </v-tooltip> -->
+            <v-tooltip bottom v-if="(item.element == 'file' || item.element == 'dir') &&  ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )">
+                <template v-slot:activator="{ on }">
+                    <v-btn icon color="primary" v-on="on"  @click="electronOpenDir(item, $event)">
+                        <v-icon medium >$archive
+                        </v-icon>
+                    </v-btn>
+                </template>
+                {{  ( item.source ? item.source : item.options[item.option].source  )     }}
+            </v-tooltip>
             
         </template>
         
@@ -56,6 +70,20 @@
                 >
                    
                 </v-select>
+                <v-alert class="text-caption" v-if="item.optionValue && item.optionValue.warning" 
+                dense 
+                border="bottom"
+                colored-border
+                type="info"
+                elevation="2"
+                
+                >
+                    <v-icon  small >$exclamation
+                    </v-icon>
+                    {{item.optionValue.warning}}
+                </v-alert>
+             
+                
                 <component
                     :is="factory[item.optionValue.element]"
                     v-if="item.element !== 'render'"
@@ -66,6 +94,7 @@
                     @updateValue="updateValue($event, false, item, index, item.name)"
                     >
                 </component>
+                
              </div>
             <div v-else >
                 <component
@@ -88,6 +117,18 @@
                     </template>
                     View Visualization in Browser. Ensure that the service is running first!
                 </v-tooltip>  
+                <v-alert class="text-caption" v-if="item && item.warning" 
+                dense 
+                border="bottom"
+                colored-border
+                type="info"
+                elevation="2"
+                
+                >
+                    <v-icon  small >$exclamation
+                    </v-icon>
+                    {{item.warning}}
+                </v-alert>
             </div>
         </template>
         <template v-slot:item.bind="{ item, index }">
@@ -140,12 +181,18 @@
 <script>
 
 import String from '@/components/Framework/Mods/String.vue';
+import Checkbox from '@/components/Framework/Mods/Checkbox.vue';
+import Exists from '@/components/Framework/Mods/Exists.vue';
 import File from '@/components/Framework/Mods/File.vue';
 import Dir from '@/components/Framework/Mods/Dir.vue';
 import List  from '@/components/Framework/Mods/List.vue';
 import ConfigurationFile from '@/components/Framework/Mods/ConfigurationFile.vue';
 import Render from '@/components/Framework/Mods/Render.vue';
 import Multiselect from 'vue-multiselect'
+
+
+
+
 const path  = require("path")
 export default {
 	name: 'multi-select',
@@ -153,11 +200,14 @@ export default {
         File,
         Dir,
         String,
+        Exists,
+        Checkbox,
         Render,
         List,
         ConfigurationFile,
         Multiselect,
     },
+    
     computed: {
         defaultItem(){
             let item = {}
@@ -297,6 +347,8 @@ export default {
             factory: {
 
                 'string': "String",
+                "checkbox": "Checkbox",
+                "exists": "Exists",
                 "file": "File",
                 "render": "Render",
                 "configuration-file": "ConfigurationFile",

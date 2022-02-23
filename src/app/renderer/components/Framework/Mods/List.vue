@@ -1,19 +1,5 @@
 <template>
-  <div id="list" >
-    <!-- <v-tooltip >
-        <template v-slot:activator="{ on }">
-            <v-btn v-on:click="addManifestRow(0)"  v-on="on"
-            class="ml-0 pl-0" small color="primary">
-            <v-icon
-                right class="mr-2"
-                dark x-small
-            >
-                $plus
-            </v-icon>Add
-            </v-btn>
-        </template>
-        Add row to the list
-    </v-tooltip> -->
+  <v-layout id="list" >
     <v-data-table
         small
         :headers="headers"
@@ -108,18 +94,36 @@
        
         
     </v-data-table>
+    <v-tooltip bottom v-if="!$v.values.minLength">
+        <template v-slot:activator="{ on }">
+          <v-icon class="mt-5 ml-1" v-on="on" small color="warning lighten-1" >$exclamation-triangle
+          </v-icon>
+        </template>
+        Must have 1 or more rows!
+    </v-tooltip>
    
-  </div>
+  </v-layout>
 </template>
 <script>
 
 import draggable from 'vuedraggable'
+import { required, requiredIf, minLength, between } from 'vuelidate/lib/validators'
 
 
 export default {
 	name: 'multi-select',
     components: {
         draggable
+    },
+    validations (){
+        return{
+            values: {
+                required: requiredIf((value)=>{
+                    return value && !this.source.optional
+                }),
+                minLength: minLength(1)
+            },
+        }
     },
     computed: {
         
@@ -132,6 +136,9 @@ export default {
                 
             }
             return item
+        },
+        values(){
+            return this.source.source
         },
         headers(){
             if (this.defaultHeaders){
@@ -173,10 +180,10 @@ export default {
           }
 
       },
-      values(newVal){
-          console.log(newVal,)
-          this.$emit("updateValue", newVal )
-      }
+    //   values(newVal){
+    //       console.log(newVal,)
+    //       this.$emit("updateValue", newVal )
+    //   }
     },
 	methods: {
         save () {
@@ -237,7 +244,7 @@ export default {
     props: ['source', 'status', 'service', "variable", "defaultHeaders", 'title'],
     data (){
         return {
-            values: [],
+            // values: [],
             dialog: false,
             editedIndex: -1,
             editedItem: {},

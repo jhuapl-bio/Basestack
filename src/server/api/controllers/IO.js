@@ -25,7 +25,8 @@ var Client = require('ftp');
 const extract = require('extract-zip')
 const clone = require('git-clone');
 const tar = require("tar")
-
+import glob from "glob"
+const  gunzip = require('gunzip-file');
 
 export function set(attribute, value, obj, type) {
     var depth_attributes = attribute.split('.');
@@ -177,41 +178,62 @@ export async function readTableFile(filepath, delimeter, header){
 						dataFull.push(data)
 						//perform the operation
 					}
-					catch(err) {
-						reject(err)
+					catch(err) { 
+						reject(err)  
 						//error handler
 					}
 				})
 				.on('end',function(){
-					resolve(dataFull)
+					resolve(dataFull) 
 				})
 				.on("error", function(err){
 					store.logger.error(err)
-				});  
+				});   
 			} else {
 				resolve(dataFull)
 			}
 		})
 	})
 }
-export async function checkExists(path){
+export async function checkExists(location, globSet){
 	return new Promise((resolve, reject)=>{
-		fs.stat(path, function(err, exists){
+		if (!globSet){
+			fs.stat(location, function(err, exists){
 				
-			if (err){
-				resolve(false)
-			}
-			if(exists){
-				// let size = 0
-				// if (exists.size){
-				// 	size = bytesToSize(exists.size)
-				// 	console.log(size, path)
-				// }
-				resolve(true)
-			} else {
-				resolve(false)
-			}
-		})
+				if (err){
+					resolve(false) 
+				}
+				if(exists){
+					// let size = 0 
+					// if (exists.size){
+					// 	size = bytesToSize(exists.size)
+					// 	console.log(size, path)
+					// }
+					resolve(true)
+				} else {
+					resolve(false)
+				}
+			})
+		} else { 
+			glob(
+			path.basename(location),
+				{ cwd: path.dirname(location) },  // you want to search in parent directory
+				(err, files) => {
+					if (err) {
+					resolve(false)
+					}
+					console.log(path.basename(location), path.dirname(location))
+				
+					if (files && files.length) {
+						console.log(files,"<<<<<")
+					resolve(true)
+					} else {
+					resolve(false)
+					}
+				}
+			);
+		}
+		
 	})
 }
 
@@ -436,13 +458,14 @@ export async function decompress_file(file, outpath){
 					reject(err)
 				} else {
 					store.logger.info("Decompressed .tgz file: %s ", file)
-					resolve()
+					resolve()  
 				} 
 			});
 		} else if (ext == '.zip' || file.endsWith(".zip") ){
 			store.logger.info("Decompress file .zip: %s to: %s", file, outpath)
 			extract(file, { dir: outpath }, (err, stream)=>{
 				if(err) {
+					store.logger.error(err)
 					reject(err)
 				} else { 
 					store.logger.info("Decompressed .zip file: %s ", file)
@@ -453,8 +476,20 @@ export async function decompress_file(file, outpath){
 				reject(err) 
 
 			})
+			
+		} else if (ext == '.gzip' || file.endsWith(".gz") ) {
+			store.logger.info("Decompress file .gz: %s to: %s", file, outpath)
+			gunzip(file, path.join( outpath, path.parse(file).name) , (err, stream) => {
+				if(err) {
+					store.logger.error(err)
+					reject(err)
+				} else { 
+					store.logger.info("Decompressed .gz file: %s ", file)
+					resolve() 
+				} 
+			})
 		} else {
-			store.logger.error("Not proper format: tgz or .tar.gz")
+			store.logger.error("Not proper format: tgz or .tar.gz ")
 			// reject()
 			reject("Not proper format: tgz or .tar.gz")
 		}

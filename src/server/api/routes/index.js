@@ -120,7 +120,7 @@ router.get("/docker/status/get", (req,res,next)=>{
 
 
 router.post("/container/cancel", (req,res,next)=>{
-	try {
+	try {  
 		cancel_container(req.body.module).then((response)=>{
 			res.status(200).json({status: 200, message: response.message });
 		}).catch((err)=>{
@@ -129,7 +129,7 @@ router.post("/container/cancel", (req,res,next)=>{
 	} catch(err){
 		logger.error("%s %s", "Cancel rampart error", err.message)
 		res.status(409).json({status: 409, message:  error_alert(err)});
-	}
+	} 
 })
 
 router.get("/log/system", (req,res,next)=>{
@@ -308,9 +308,10 @@ router.get("/catalog/all/get", (req,res,next)=>{ // build workflow according to 
 	try {
 		let catalog = store.catalog
 		let data = [] 
-
+		let seen = {}
 		for (let [name, value] of Object.entries(cloneDeep(catalog))){
 			delete value['interval'] 
+			seen[name] = 1
 			let { modules, ...returnable } = value;
 			if (store.remotes[name]){
 				returnable.remotes = store.remotes[name].map((d,i)=>{
@@ -329,6 +330,17 @@ router.get("/catalog/all/get", (req,res,next)=>{ // build workflow according to 
 			returnable.modules = module_config
 			data.push(returnable)
 		}
+		for (let [name, value] of Object.entries(cloneDeep(store.remotes))){
+			if (!seen[name]){
+				seen[name] = 1
+				let returnable = cloneDeep(value[0])
+				returnable.remotes = cloneDeep(value)
+				returnable.modules=[]
+				data.push(returnable)
+			}
+		}
+
+
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
 	} catch(err2){
 		logger.error("%s %s", "Error in loading module to library", err2)
@@ -407,7 +419,7 @@ router.get("/modules/get/:catalog", (req,res,next)=>{ // build workflow accordin
 				status: module.status,
 				procedures:procedures
 			}
-			try{
+			try{ 
 				let procedures_config = module.procedures.map((d)=>{
 					return d.config
 				})
@@ -459,12 +471,14 @@ router.get("/procedures/get/:catalog/:module/:token", (req,res,next)=>{ // build
 				returnable.cached_variables = cached_variables
 				data.push(returnable)
 			} 
+			
 			catch (err){
 				store.logger.error("Could not get procedure build loaded for... %o %o", data, err)
 			}
 		})
+		
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
-	} catch(err2){
+	} catch(err2){ 
 		logger.error("%s %s", "Error in loading procedure to library", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	 
@@ -984,13 +998,17 @@ router.post("/procedure/stop", (req,res,next)=>{ // build workflow according to 
 router.post("/remote/save/modules", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){ 
 		try {
-			let remote_module = store.remotes[req.body.catalog][req.body.module]
-			
+			let remote_module = store.remotes[req.body.catalog][(req.body.module ? req.body.module : 0 )]
 			let savePath = remote_module.path
+			if (!savePath){
+				let basename = `${remote_module.name}_${remote_module.version}.yml`
+
+				savePath = path.join(store.system.remotes.modules, basename) 
+			}
 
 			await writeFile(savePath, YAML.stringify([remote_module]))
 
-			console.log(savePath, store.catalog[req.body.catalog].modules[req.body.module].config)
+			console.log(savePath)
 			let data = []
 			logger.info("%s cache %o", req.body.catalog, data.length)
 			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
@@ -998,14 +1016,14 @@ router.post("/remote/save/modules", (req,res,next)=>{ // build workflow accordin
 		} catch(err2){
 			logger.error( "Error  %o in getting config target remotely %s", err2, req.params.target)
 			res.status(419).send({status: 419, message: error_alert(err2)});
-		}	
+		}	 
 	})()
 })
 
 router.post("/remote/set/modules", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
-			let remote_module = store.remotes[req.body.catalog][req.body.module]
+			let remote_module = store.remotes[req.body.catalog][(req.body.module ? req.body.module : 0 )]
 			save_remote_module(remote_module)
 			let data = []
 			logger.info("%s cache %o", req.body.catalog, data.length)
@@ -1077,6 +1095,7 @@ router.post("/session/cache/create", (req,res,next)=>{ // build workflow accordi
 				}
 				var token = buffer.toString('hex');
 				let response;
+				console.log("Create session")
 				let cach = store.server.defineCache(token)
 				store.server.cache.set(token, cach)
 				// let response = await server.cache(req.body.variables, req.body.token)
@@ -1386,6 +1405,7 @@ router.post("/job/set", (req,res,next)=>{ //this method needs to be reworked for
 router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function() { 
 		try { 
+			store.logger.info("Init job start")
 			let module = store.catalog[req.body.catalog].modules[req.body.module]
 			let procedure = module.procedures[req.body.procedure]
 			let token = req.body.token  
@@ -1397,27 +1417,34 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			// nestedProperty.set(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}.variables`, req.body.variables)
 			// nestedProperty.set(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}.job`, job)
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`)
+			store.logger.info("found job, cleaning it up")
 			if (found){  
 				found.cleanup() 
 				delete store.jobs.catalog[req.body.catalog][req.body.module][req.body.procedure]
+				store.logger.info("found job, cleaned up")
 			}
-			
+			store.logger.info("Starting Job!")
 			let job = await create_job(procedure.config, req.body.variables, services, procedure)
 			// console.log("req body", job.configuration.variables.file.source, job.configuration.variables.file.bind.from)
+			store.logger.info("job created")
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
 			let skip = await job.start()
-			console.log("Done, ", skip)
+			store.logger.info("Completed or Exited Job!")
 			if (!skip){
-				res.status(200).json({status: 200, message: "Completed job " + procedure.name, skip: skip });
+				res.status(200).json({status: 200, message: "Initiated job " + procedure.name, skip: skip });
 			} else {
 				res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
 			}	
 			
 		} catch(err2){
-			logger.error("%s %s", "Error in staging job", err2)
+			logger.error("%s %s", "Error in starting job", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
 		}	
-	})()  
+	})()
+	.catch((err2)=>{
+		logger.error("%s %s", "Error in start job", err2)
+		res.status(419).send({status: 419, message: error_alert(err2) });
+	})
 }) 
 
 

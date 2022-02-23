@@ -1,8 +1,8 @@
 <template>
   <!-- <v-container fluid> -->
-    <v-row   height="10vh" >
-        <v-col sm="12">
-        <v-expansion-panels  style="text-align:left;"  v-model="panel">
+    <v-row   style="height: 10vh">
+        <v-col sm="12" height="10vh" >
+        <v-expansion-panels  height="10vh"  style="text-align:left;"  v-model="panel">
             <v-col  :sm="(isHovered.name !== catalog.name ? 4 : 4 )"   v-for="(catalog, key) in catalog" :key="catalog.name ">
                 <v-card dense class="configure mx-0 elevation-4 " >
                     <v-expansion-panel  v-model="panel" expand  @click="isHovered = catalog">
@@ -21,7 +21,7 @@
                                                         {{ ( catalog.status.latest_installed && catalog.status.latest_installed ? '$check' : '$exclamation' ) }}
                                                     </v-icon>
                                                 </template>
-                                                {{ catalog.status.latest_installed  ? 'Latest Installed' : 'Module not at the latest'  }}
+                                                {{ catalog.status.latest_installed  ? 'Latest Installed' : 'Module not at the latest or not fully installed'  }}
                                             </v-tooltip>
                                         </template>
                                     </v-badge>
@@ -57,13 +57,13 @@
                                                     v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
                                                     >
                                                     {{tag}}
-                                                    </v-chip>
+                                                    </v-chip>  
                                                 </v-list-item-subtitle>
                                             
                                             </v-list-item-content>
                                             <v-list-item-action>
                                                 <v-subheader v-if="item.loaded">Installed</v-subheader>
-                                                <v-tooltip v-if="!item.loaded" bottom>
+                                                <v-tooltip  bottom>
                                                     <template v-slot:activator="{ on }">    
                                                         <v-icon v-on="on" small color="light " v-on:click="loadRemoteModule(item)"   style="text-align:right" class="configure ml-2">$download</v-icon>
                                                     </template>
@@ -90,11 +90,11 @@
                 </v-card>
             </v-col>
         </v-expansion-panels>
-        <v-col sm="12">
+        <v-col sm="12" height="10vh" >
             <SubLibrary
                 :catalog="isHovered"
                 :latest="isHovered.latest_version"
-                v-if="selectedModule.name"
+                v-if="selectedModule && selectedModule.name "
             >
             </SubLibrary>
             <Docker/>
@@ -176,7 +176,9 @@
                 }               
             },
             selectedModule(newValue){
-                this.stored[newValue.name] = newValue
+                if (newValue){
+                    this.stored[newValue.name] = newValue
+                }
             }
 
 	    },
@@ -195,6 +197,7 @@
                 }
             },
             async loadRemoteModule(item){
+                console.log(item)
                 FileService.setRemoteModule({
                     module: item.idx,
                     catalog: this.isHovered.name,

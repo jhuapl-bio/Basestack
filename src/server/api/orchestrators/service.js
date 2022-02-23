@@ -212,6 +212,7 @@ export class Service {
         return new Promise(function(resolve,reject){
             ( async ()=>{
                 let name = $this.name;
+                store.logger.info(`starting container..${name}`)
                 let exists = await check_container($this.name)
                 if ( ( exists.exists && $this.config.force_restart) ||  exists.exists ){
                     store.logger.info("Force restarting")
@@ -399,8 +400,8 @@ export class Service {
         this.status.running = true
         this.status.cancelled = false
         return new Promise(function(resolve,reject){
-            let options = JSON.parse(JSON.stringify($this.options))
-            
+            let options = cloneDeep($this.options)
+            store.logger.info("Starting.. %s", $this.name)
             let env = []
             if (!params){
                 params = {}
@@ -423,7 +424,7 @@ export class Service {
             let promises = []; 
             let promisesInside = []
             let values = []
-            options = $this.updateConfig(options)
+            options = cloneDeep($this.updateConfig(options))
             /////////////////////////////////////////////////
             let custom_variables = params.variables
             let defaultVariables = {}
@@ -431,7 +432,7 @@ export class Service {
             defaultVariables = $this.config.variables
             if ($this.config.serve ){ 
                 let variable_port = defaultVariables[$this.config.serve]
-                options = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`], options)
+                options = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options)
             }   
             // $this.config.variables = defaultVariables
             if (defaultVariables &&  typeof defaultVariables == 'object'){
@@ -496,16 +497,32 @@ export class Service {
                         }
                     } else {  
                         env.push(`${name}=${( selected_option.target ? selected_option.target : selected_option.source)}`)
-                    }        
+                    }     
+                    if (selected_option.define){
+                        for( let [key, value] of Object.entries(selected_option.define)){
+                            env.push(`${key}=${value}`)
+                        }
+                    }   
                     // Define the command additions if needed  
-                    if (selected_option.append && cmd ){ 
+                    if (selected_option.append){
+                        console.log("APPEND!")
+                    }
+                    if (selected_option.append && cmd && ( !selected_option.element ||  selected_option.source ) ){ 
                         let serviceFound = selected_option.append.services.findIndex(data => data == $this.serviceIdx)
                         if (serviceFound >= 0){ 
                             let service = selected_option.append
                             if (service.placement || service.placement == 0){
-                                options.Cmd[service.placement] =  options.Cmd[service.placement]  +  selected_option.append.command + " "
+                                if (selected_option.append.position == 'start'){
+                                    options.Cmd[service.placement] =  selected_option.append.command + " " + options.Cmd[service.placement]  +  " "
+                                }else {
+                                    options.Cmd[service.placement] =  options.Cmd[service.placement]  +  selected_option.append.command + " "
+                                }
                             } else{
-                                options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
+                                if (selected_option.append.position == 'start'){
+                                    options.Cmd[options.Cmd.length - 1] =  selected_option.append.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
+                                } else {
+                                    options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
+                                }
                             }
  
                         } 
@@ -514,146 +531,153 @@ export class Service {
                 }  
             }
             if ($this.config.image){
-                options.Image = $this.config.image
+                options.Image = $this.config.image  
             }
-            if (! options.Image ){
+            if (! options.Image ){ 
                 throw new Error("No Image available")
-            }
-            
-            if (typeof options.Cmd == "string"){
+            } 
+               
+            if (typeof options.Cmd == "string"){  
                 options.Cmd = ['bash', '-c', options.Cmd]
-            }
-            options.Env = [...options.Env, ...env]
+            }   
+            options.Env = [...options.Env, ...env] 
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...bind]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
             Promise.all(promises).then((response)=>{
-                logger.info("Finished all promises")
-            }).catch((err)=>{
-                reject(err)
-            })
-            logger.info("%o ______", options)
-            // logger.info(`starting the container ${options.name} `)
-            $this.status.stream.info.push(JSON.stringify(options, null, 4))
-            $this.status.success = false 
-            $this.status.error = false 
-            $this.status.complete = false
-            // resolve()
-            store.docker.createContainer(options,  function (err, container) {
-                $this.container = container
-                if (err ){
-                    logger.error("%s %s %o","Error in creating the docker container for: ", options.name , err)
-                    // if (err.reason && err.reason == 'no such container'){
-                    //     store.docker.pull(options.Image)
-                    // }
-                    $this.status.running = false
-                    // $this.status.error = err
-                    if (err.json && err.json.message){
-                        $this.status.error = err.json.message
-                    } else {
-                        $this.status.error = err
+                logger.info("%o ______", options)
+                // logger.info(`starting the container ${options.name} `)
+                $this.status.stream.info.push(JSON.stringify(options, null, 4))
+                $this.status.success = false 
+                $this.status.error = false 
+                $this.status.complete = false
+                store.docker.createContainer(options,  function (err, container) {
+                    $this.container = container
+                    if (err ){
+                        logger.error("%s %s %o","Error in creating the docker container for: ", options.name , err)
+                        // if (err.reason && err.reason == 'no such container'){
+                        //     store.docker.pull(options.Image)
+                        // }
+                        $this.status.running = false
+                        // $this.status.error = err
+                        if (err.json && err.json.message){
+                            $this.status.error = err.json.message
+                        } else {
+                            $this.status.error = err
+                        }
+                        $this.status.success= false
+                        $this.status.stream.info.push(err)
+                        reject(err)
                     }
-                    $this.status.success= false
-                    $this.status.stream.info.push(err)
-                    reject(err)
-                }
-                try{
-                    function inspect(container){
-                        return new Promise((resolve, reject)=>{
-                            container.inspect((err, inspection)=>{
-                                try{
-                                    if (err){
-                                        logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
-                                        $this.status.error  = err
-                                    } else if (!inspection){
-                                        $this.status.complete= true
-                                        $this.status.running = false
-                                    } else if (inspection.State.exited) {
-                                        logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
-                                        if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 137 ) || inspection.State.ExitCode == 1 ){
-                                            $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}`
-                                            $this.status.success = false
-                                        } else {
-                                            $this.status.success = true
+                    try{
+                        function inspect(container){
+                            return new Promise((resolve, reject)=>{
+                                container.inspect((err, inspection)=>{
+                                    try{
+                                        if (err){
+                                            logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
+                                            $this.status.error  = err
+                                        } else if (!inspection){
+                                            $this.status.complete= true
+                                            $this.status.running = false
+                                        } else if (inspection.State.exited) {
+                                            logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
+                                            if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 137 ) || inspection.State.ExitCode == 1 ){
+                                                $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}`
+                                                $this.status.success = false
+                                            } else { 
+                                                $this.status.success = true
+                                            }
+                                            $this.status.complete = true
+                                            $this.status.running = false
+                                            $this.status.exit_code = inspection.State.ExitCode
+                                        } else {  
+                                            $this.status.running = true
+                                            $this.status.complete = false
                                         }
-                                        $this.status.complete = true
-                                        $this.status.running = false
-                                        $this.status.exit_code = inspection.State.ExitCode
-                                    } else {
-                                        $this.status.running = true
-                                        $this.status.complete = false
-                                    }
-                                } catch(err2){
-                                    logger.error("%o error in inspecting container on end", err2)
-                                } finally{
-                                    if(inspection){
-                                        resolve(inspection.State.Running)
-                                    } else {
-                                        resolve(false)
-                                    }
-                                } 
-
-                            })
-                        })
-                    }
-                    container.attach({stream: true, stdout: true, stdin:true, stderr: true}, function (err, stream){
-                        $this.log = spawnLog(stream, $this.logger)
-                        $this.status.stream =  $this.log
-                        $this.stream = stream 
-                        container.start(function (err, data) {
-                            if (err){  
-                                logger.error("%o  error in container name: %s", err, $this.name)
-                                if (err.json && err.json.message){
-                                    $this.status.error = err.json.message
-                                } else {
-                                    $this.status.error = err
-                                }
-                                reject(err)
-                            } 
-                            if (!wait || $this.config.continuous){
-                                resolve( false )
-                            } else { 
-                                
-                                // if (process.platform == 'win32'){
-                                let ended = false
-                                $this.jobInterval = setInterval(()=>{
-                                    if (ended){
-                                        clearInterval($this.jobInterval)
-                                    }
-                                    if ($this.status.complete){
-                                        ended = true
-                                        clearInterval($this.jobInterval)
-                                        if ($this.status.error){
-                                            resolve(true)
+                                    } catch(err2){
+                                        logger.error("%o error in inspecting container on end", err2)
+                                    } finally{
+                                        if(inspection){
+                                            resolve(inspection.State.Running)
                                         } else {
                                             resolve(false)
-
                                         }
+                                    } 
+
+                                })
+                            })
+                        } 
+                        store.logger.info("Attaching stream %s", $this.name)
+                        container.attach({stream: true, stdout: true, stdin:true, stderr: true}, function (err, stream){
+                            $this.log = spawnLog(stream, $this.logger)
+                            $this.status.stream =  $this.log
+                            $this.stream = stream 
+                            container.start(function (err, data) {
+                                store.logger.info("Starting... %s", $this.name)
+                                if (err){  
+                                    logger.error("%o  error in container name: %s", err, $this.name)
+                                    if (err.json && err.json.message){
+                                        $this.status.error = err.json.message
+                                    } else {
+                                        $this.status.error = err
                                     }
-                                },1000)
-                                // }
-                            } 
-                            stream.on("error",(err)=>{ 
-                                $this.status.error  = err
-                                resolve(false)
+                                    reject(err)
+                                } 
+                                if (!wait || $this.config.continuous){
+                                    resolve( false )
+                                } else { 
+                                    
+                                    // if (process.platform == 'win32'){
+                                    let ended = false
+                                    $this.jobInterval = setInterval(()=>{
+                                        if (ended){
+                                            clearInterval($this.jobInterval)
+                                        }
+                                        if ($this.status.complete){
+                                            ended = true
+                                            clearInterval($this.jobInterval)
+                                            if ($this.status.error){
+                                                resolve(true)
+                                            } else {
+                                                resolve(false)
+
+                                            }
+                                        }
+                                    },1000)
+                                    // }
+                                } 
+                                stream.on("close",()=>{ 
+                                    store.logger.info("Stream Closed!")
+                                    
+                                })
+                                stream.on("error",(err)=>{ 
+                                    $this.status.error  = err
+                                    reject()
+                                })
                             })
                         })
-                    })
-                } catch(err){
-                    store.logger.error(err)
-                    console.log("_______________________________")
-                    $this.status.running = false
-                    // $this.status.error = err
-                    $this.status.success= false
-                    $this.status.complete = true 
-                    if (err.json && err.json.message){
-                        $this.status.stream.info.push(err.json.message)
-                    } else {
-                        $this.status.stream.info.push(err)
+                    } catch(err){
+                        store.logger.error("Error in running container: %s %o", $this.name, err)
+                        $this.status.running = false
+                        // $this.status.error = err
+                        $this.status.success= false
+                        $this.status.complete = true 
+                        if (err.json && err.json.message){
+                            $this.status.stream.info.push(err.json.message)
+                        } else {
+                            $this.status.stream.info.push(err)
+                        }
+                        
+                        reject()
                     }
-                    
-                    reject()
-                }
-            } )
+                })
+            }).catch((err)=>{ 
+                store.logger.error(err)
+                reject(err)
+            })
+            
+            // resolve()
+            
         });
 	}
 }

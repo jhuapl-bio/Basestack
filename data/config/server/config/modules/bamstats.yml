@@ -1,0 +1,57 @@
+- name: bamstats
+  title: "Bamstats"
+  icon: "broom"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tooltip: "Run Stats on a single BAM file"
+  procedures: 
+    - name: bamstats #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Bamstats"
+      icon: "broom"
+      module: True
+      init: false 
+      dependencies:
+        - target: collaboratory/dockstore-tool-bamstats
+          label: collaboratory/dockstore-tool-bamstats
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "Quality Check"
+        - "Stats"
+        - "BAM"
+        - "Alignment Stats"
+      tooltip: "Run stats report on a BAM file"
+      variables:
+        bam:
+          label: "BAM file"
+          hint: "Select your BAM file"
+          bind_parent_dir: true
+          element: "file"
+          bind: 
+            from: "%{variables.bam.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "%{variables.bam.bind.to}/"
+        outdata:
+          label: "Output bamstats zipped data"
+          element: "file"  
+          hint: "zipped raw data from output of bamstats"
+          output: true   
+          openSelf: true       
+          class: "wb-100  p-3 mb-1"
+          source: "%{variables.bam.source}bamstats_report.zip" 
+          # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
+          target: "%{variables.bam.source}bamstats_report.zip"
+      services:
+        - name: bamstats
+          label: "Bamstats"
+          image: "collaboratory/dockstore-tool-bamstats"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "/usr/local/bin/bamstats 4 ${bam} "]
+    

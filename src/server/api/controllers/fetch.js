@@ -174,23 +174,23 @@ export async function fetch_videos_meta(){
 		const key = keys[i]
 		const sections = meta[key].sections
 		for(let j = 0; j < sections.length; j++){
-			const section =  sections[j];
+			const section =  sections[j];  
 			meta[key].sections[j].fullpath = videoAddress +"/"+section.video
-			if (section.script){
+			if (section.script){ 
 				meta[key].sections[j].script =  resourceAddress + "/" +section.script
-			} 
-			if (section.pptx){
+			}  
+			if (section.pptx){ 
 				meta[key].sections[j].pptx = resourceAddress + "/" +section.pptx
-			} 
+			}   
 			if (section.pdf){
 				meta[key].sections[j].pdf = resourceAddress + "/" +section.pdf	
 			}
 		}
 	} 
-		
+		 
 	return meta
 	
-}
+} 
 
 export function save_remote_module(config){
 	try{
@@ -324,8 +324,8 @@ export async function getRemoteConfigurations(url){
 		return json
 	} catch(err){
 		logger.error(`${err} error in fetching external url`)
-		throw err 
-	} 
+		throw err  
+	}  
 }
  
 
@@ -345,7 +345,6 @@ export async function fetch_external_dockers(key){
 		store.images[key].fetching_available_images.status = true
 		let json =  await axios.get(url)
 		let latest = null;
-		console.log(json,"<")
 		latest = json.data
 		store.images[key].latest_digest = latest.images[0].digest
 		return store.images[key]

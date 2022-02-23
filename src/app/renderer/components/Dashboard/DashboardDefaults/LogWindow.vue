@@ -54,6 +54,11 @@ export default {
 		}
 	},
     props: ['info',' link'],
+  watch: {
+    // info(newValue){
+    //   console.log("new Value", newValue)
+    // }
+  },
 	methods:{
 		open (link) {
           try{        

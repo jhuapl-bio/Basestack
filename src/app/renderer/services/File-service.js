@@ -12,10 +12,10 @@ import Api from './Api.js'
 let baseEndpoint = {
   get () {
     if (process.env.NODE_ENV == 'production'){
-     return `http://localhost:${process.env.PORT_SERVER}`
+     return `http://localhost:${( process.env.PORT_SERVER ? process.env.PORT_SERVER : 5003)}`
     } else {
       //  return 'api'
-      return `http://localhost:${process.env.PORT_SERVER}`
+      return `http://localhost:${( process.env.PORT_SERVER ? process.env.PORT_SERVER : 5003)}`
     }
   }
 };
@@ -109,6 +109,7 @@ class FileService {
     return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.module}/${params.procedure}`)    
   }
   startJob(params){
+    console.log("Starting job with params", params)
     return Api().post(`${baseEndpoint.get()}/job/start`, params)    
   }
   cancelJob(params){
@@ -209,12 +210,13 @@ class FileService {
   fetchRemoteAll(name){
     return Api().get(`${baseEndpoint.get()}/remote/get/${name}`)
   }
-  removeCatalog(params){
+  removeCatalog(params){ 
     return Api().post(`${baseEndpoint.get()}/catalog/remove`, params)
   }
   deleteProcedureDependencies(params){
     return Api().post(`${baseEndpoint.get()}/procedure/dependencies/remove`, params)
   }
+  
   removeProcedureDependency(params){
     return Api().post(`${baseEndpoint.get()}/procedure/remove/dependency`, params)
   }

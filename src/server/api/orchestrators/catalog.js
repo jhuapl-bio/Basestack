@@ -1,23 +1,24 @@
 
-const path = require("path") 
-var  { store }  = require("../../config/store/index.js")
-
-export class Catalog {
-    constructor(config){
+const path = require("path")  
+var  { store }  = require("../../config/store/index.js") 
+  
+export class Catalog { 
+    constructor(config){  
         this.icon = (config.icon ? config.icon : 'cog'),
-        this.title = config.title
-        this.name = config.name
+        this.title = config.title      
+        this.name = config.name  
         this.tags = []
-        this.modules = []
+        this.modules = []  
         this.interval = {
-            checking: false,
-            interval: this.create_interval()
-        }
-        this.status =  { 
+            checking: false, 
+            interval: this.create_interval() 
+        }    
+        this.status =  {    
             installed: false, // At least one module is installed in this catalog specification
-            latest: null,
-            building: false,
-            latest_installed: false,
+            latest: null,    
+            building: false,  
+            latest_installed: false, 
+            latest_available: null,  
             version:null,
         }
         this.latest_version = 0
@@ -37,6 +38,7 @@ export class Catalog {
                 let latest = null
                 let latest_key = 0
                 let building = false
+                let latest_installed = false
                 $this.modules.forEach((module, key)=>{
                     let step = null;
                     if (module.status.error){
@@ -54,38 +56,48 @@ export class Catalog {
                     }
                     if (!latest){
                         latest = module.config
+                        latest_installed = module.status.fully_installed
                         latest_version = ( latest.version ? latest.version : 0)
                     }
                     if (module.config.version >= 0 && module.config.version > latest_version){
                         latest = module.config
+                        latest_installed = module.status.fully_installed
                         latest_version = module.config.version
                         latest_key = key
                     }
                     if ($this.name == 'agave'){
                         // console.log(module.status)
+                    } 
+                    if (module.status.building){ 
+                        building = true 
                     }
-                    if (module.status.building){
-                        building = true
-                    }
+  
 
-
-                    
+                     
                     
 
                 } )
-                $this.latest = latest
-                $this.status.building = building
+                $this.latest = latest   
+                $this.status.building = building 
                 $this.latest_version  = latest_version
                 $this.latest_index = latest_key
                 let filtered = store.config.modules.filter((f)=>{
                     return f.name == $this.name 
-                }) 
+                })   
+                if (store.remotes && store.remotes[$this.name]){
+                    store.remotes[$this.name].map((v)=>{
+                        filtered.push(v)
+                    })
+                }  
                 latest = 0
                 latest = Math.max.apply(Math, filtered.map(function(o) { return ( o.version ? o.version : 0 ); }))
-                  
-                if (latest_version >= latest){ 
-                    $this.status.latest_installed = true
+                if (!latest_version || latest_version < latest ){ 
+                    $this.status.latest_installed = false
+                } else {
+                    $this.status.latest_installed = latest_installed  
                 }
+                
+                $this.status.latest_available = latest
  
                 
                 $this.status.running = running 
@@ -106,11 +118,11 @@ export class Catalog {
                     $this.interval.checking = false
                 }) 
             }
-        }, 1500)
+        }, 1500)   
 
 
         return interval
-
+ 
     }
 
 }

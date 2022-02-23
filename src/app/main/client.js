@@ -143,7 +143,11 @@ export class  Client {
 
         ipcMain.on("checkUpdates", (event, arg) => {
           console.log("Checking updates")
-          $this.updater.checkUpdates() 
+          try{
+            $this.updater.checkUpdates() 
+          } catch (err){
+            console.error(err)
+          }
         })
         ipcMain.on("mainN", (event, arg) => {
           // console.log(event)

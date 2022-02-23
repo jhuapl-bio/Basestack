@@ -144,23 +144,26 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
-      await FileService.startJob({
+      console.log("Starting job", $this.module, $this.moduleIdx)
+      FileService.startJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
         catalog: $this.module,
         token: $this.$store.token,
         variables: $this.procedure.variables
-      }).then((response)=>{
-        if (!response.data.skip){
+      })
+      .then((response)=>{
+        if (response.data.skip){
             this.$swal.fire({
                 position: 'center',
-                icon: 'success',
+                icon: 'warning',
                 showConfirmButton:true,
                 title:  response.data.message
             })
 
         }
-      }).catch((error)=>{
+      })
+      .catch((error)=>{
         console.error("-----------------", error)
         this.$swal.fire({
           position: 'center',
@@ -328,6 +331,7 @@ export default {
                 }
             }
         }
+        console.log(ta,"<<<")
         return ta
             
     }

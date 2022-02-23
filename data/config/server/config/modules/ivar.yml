@@ -1,0 +1,145 @@
+- name: ivar
+  title: "IVAR"
+  icon: "eye-dropper"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tooltip: "Viral and consensuses for viral reads"
+  procedures:
+    - name: ivar #Top level is the left-hand selection of the menu and the major module to install 
+      title: "ivar"
+      icon: "eye-dropper" 
+      module: True
+      init: false 
+      tooltip: "Viral and consensuses for viral reads"
+      tags: 
+        - "variants"
+        - "vrial"
+        - "staphb"
+        - "consensus"
+      dependencies: 
+        - target: "staphb/ivar"
+          label: "staphb/ivar"
+          type: "docker"
+          format: "docker"
+        - target: "staphb/samtools"
+          label: "staphb/samtools"
+          type: "docker"
+          format: "docker"
+        - source: 
+            url: "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/009/858/895/GCF_009858895.2_ASM985889v3/GCF_009858895.2_ASM985889v3_genomic.gff.gz"
+            type: "file"
+            user: anonymous 
+            protocol: "https"
+            remove: true
+            target: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff.gz"
+          label: "GFF Coding regions for SARS-CoV-2"
+          type: "download" 
+          format: "dir"
+          decompress: 
+            format: "gz"
+            source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff.gz"
+          target: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
+          overwrite: true
+        - type: "download" 
+          format: "file"
+          label: "SARS-CoV-2 Reference FASTA - MN908947.3"
+          target: "${writePath}/workflows/ivar/reference.fasta"
+          overwrite: true 
+          source: 
+            url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=MN908947.3&rettype=fasta"
+            type: "file"
+            remove: true
+            target: "${writePath}/workflows/ivar/reference.fasta"
+          
+      variables:
+        bam:
+          label: "Bam File"
+          element: "file"
+          hint: "Bam alignment file"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.bam.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1" 
+          source: null
+        gff:
+          label: "Reference GFF3"
+          class: "wb-100 p-3 mb-1"
+          hint: "Contains Coding regions and annotations"
+          option: 0
+          options:
+            - name: "SARS-CoV-2 GFF Reference"
+              element: null
+              hint: "Coding regions for SARS-CoV-2"
+              bind_parent_dir: true
+              source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
+              target: "/opt/gff"
+              bind: 
+                from: "%{variables.gff.source}"
+                to: "/opt/gff"
+              append:
+                command: " -g ${gff} "
+                placement: 2
+                services: 
+                  - 0
+              class: "wb-100  p-3 mb-1" 
+            - element: "file"
+              name: "Custom GFF3"
+              source: null
+              target: null
+              append:
+                command: " -g ${gff} "
+                placement: 2
+                services: 
+                  - 0
+              bind: 
+                from: "%{variables.gff.source}"
+                to: "/opt/gff" 
+        output:
+          label: "Output TSV"
+          element: "file"
+          output: True
+          openSelf: True
+          hint: "TSV file containing variants called against Reference and optional GFF"
+          bind_parent_dir: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+          target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+          define:
+            outputName: <<basename,trim(%{variables.bam.source})>>.ivar
+        reference:
+          label: "Reference FASTA"
+          class: "wb-100 p-3 mb-1"
+          option: 0
+          options:
+            - name: "SARS-CoV-2 FASTA Reference File MN908947.3"
+              element: null
+              hint: "FASTA File used as a reference for alignment steps"
+              bind_parent_dir: true
+              source: "${writePath}/workflows/ivar/reference.fasta"
+              target: "/opt/reference/"
+              bind: 
+                from: "%{variables.reference.source}"
+                to: "/opt/reference"
+              class: "wb-100  p-3 mb-1" 
+            - element: "file"
+              name: "Custom Reference"
+              source: null
+              target: null
+              bind: 
+                from: "%{variables.reference.source}"
+                to: "/opt/reference" 
+      services:
+        - name: staphb_ivar
+          image: "staphb/ivar"
+          orchestrated: false #orchestrated means it r
+          init: false
+          hideStatus: false
+          label: "ivar"
+          force_restart: true
+          # command: ["bash","-c", "head ${gff}; samtools mpileup -aa -A -d 0 -B -Q 0 ${bam}   " ]
+          command: ["bash","-c", "samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam} | ivar variants -p ${outputName}  -r ${reference}  " ]
+          workingdir: "/opt/data"
+            
+          

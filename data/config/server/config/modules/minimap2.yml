@@ -1,6 +1,6 @@
 - name: minimap2
   title: "Minimap2"
-  icon: "highlighter"
+  icon: "magic"
   version: 1.0
   basestack_released: 2.0
   module: True
@@ -12,7 +12,7 @@
   procedures:
     - name: minimap2 #Top level is the left-hand selection of the menu and the major module to install 
       title: "Minimap2"
-      icon: "highlighter"
+      icon: "magic"
       module: True
       init: false 
       dependencies:
@@ -37,6 +37,7 @@
         ref:
           label: "Reference to align against"
           class: "wb-100 p-3 mb-1"
+          hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
           element: "file" 
           bind_parent_dir: true
           bind: 
@@ -49,6 +50,7 @@
           hint: "Alignment file to be used in downstream analysis"
           watch: True
           output: True
+          openSelf: True
           element: "file"
           source: "%{variables.file.source}.sam" 
       

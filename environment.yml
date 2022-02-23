@@ -6,7 +6,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - nodejs
+  - nodejs==15.3.0
   - pip
   - make
   - git
