@@ -1109,7 +1109,7 @@ router.post("/session/cache/create", (req,res,next)=>{ // build workflow accordi
 	})()
 })
 
-
+ 
 router.get("/service/cache/get/:service/:token", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
@@ -1404,27 +1404,27 @@ router.post("/job/set", (req,res,next)=>{ //this method needs to be reworked for
 
 router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function() { 
-		try { 
+		try {   
 			store.logger.info("Init job start")
 			let module = store.catalog[req.body.catalog].modules[req.body.module]
 			let procedure = module.procedures[req.body.procedure]
-			let token = req.body.token  
-			if (!token){    
-				token = 'development'
-			}
-			let services = req.body.services 
+			let token = req.body.token    
+			if (!token){      
+				token = 'development'    
+			} 
+			let services = req.body.services   
 			// let tokenVals = store.server.cache.get(token)  
-			// nestedProperty.set(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}.variables`, req.body.variables)
+			// nestedProperty.set(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.pro    cedure}.variables`, req.body.variables)
 			// nestedProperty.set(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}.job`, job)
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`)
-			store.logger.info("found job, cleaning it up")
-			if (found){  
-				found.cleanup() 
+			store.logger.info("found job, cleaning it up") 
+			if (found){   
+				found.cleanup()    
 				delete store.jobs.catalog[req.body.catalog][req.body.module][req.body.procedure]
 				store.logger.info("found job, cleaned up")
 			}
-			store.logger.info("Starting Job!")
-			let job = await create_job(procedure.config, req.body.variables, services, procedure)
+			store.logger.info("Starting Job!")  
+  			let job = await create_job(procedure.config, req.body.variables, services, procedure)
 			// console.log("req body", job.configuration.variables.file.source, job.configuration.variables.file.bind.from)
 			store.logger.info("job created")
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
@@ -1434,7 +1434,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 				res.status(200).json({status: 200, message: "Initiated job " + procedure.name, skip: skip });
 			} else {
 				res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
-			}	
+			}	    
 			
 		} catch(err2){
 			logger.error("%s %s", "Error in starting job", err2)

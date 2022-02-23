@@ -7,9 +7,10 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="string" > 
+  <div id="number" > 
   	<v-text-field
         v-model="value"
+        type="number"
         :label="(source.hint ? source.hint : '' )"
     >
     </v-text-field>
@@ -28,13 +29,19 @@ import { required, requiredIf, minLength, between, helpers } from 'vuelidate/lib
 const optional = (optional) => (value) => {  return !optional && !value }
 
 export default {
-	name: 'string',
+	name: 'number',
     data() {
         return {
             value: null,
             test: "placeholder"
         }
     },
+    computed: {
+        
+    },
+	methods: {
+	
+	},
     validations (){
         return{
             value: {
@@ -44,12 +51,6 @@ export default {
             },
         }
     },
-    computed: {
-        
-    },
-	methods: {
-	
-	},
 	props: ['source', 'status', 'service', 'variable'],
     mounted(){
         this.value = this.source.source

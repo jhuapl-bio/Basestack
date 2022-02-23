@@ -174,7 +174,7 @@ export class Procedure {
                             dependency.status.latest = response.latest_digest
                         } else {
                             dependency.status.latest  = null
-                        }
+                        } 
                     }).catch((err)=>{
                         store.logger.error(err)
                     })
@@ -530,18 +530,19 @@ export class Procedure {
                 } else{
                     store.logger.info(`Skipping dependency install: ${dependency.source.target} due to it existing`) 
                     resolve()
-                }
+                }  
             }) 
                
         })
     }
-	buildImage(dependency){
+	async buildImage(dependency){
 		const $this = this  
         return new Promise(function(resolve,reject){ 
-            if (dependency.streamObj){
-                dependency.streamObj.destroy() 
-            }
-
+            if (dependency.streamObj){ 
+                dependency.streamObj.destroy()   
+            } 
+            console.log(1)
+ 
 			let conf = {  
 				context: path.dirname(dependency.build.path),
 				src: [dependency.build.file], 
@@ -549,39 +550,47 @@ export class Procedure {
 				AttachStderr: true,
 				Tty:false
 			}
-			store.docker.buildImage(conf,
-			{
-				t: dependency.target
-			}).then((stream, error)=>{
-                dependency.status.downloading = true
-                dependency.status.building = true
-                if (error){
-                    dependency.status.error = error
-                }
-                dependency.status.stream  = spawnLog(stream, $this.logger)
-                dependency.streamObj = stream
-                stream.on("close", (err, data)=>{
-                    dependency.status.downloading = false
-                    dependency.status.building = false
-                    if (err){
+            console.log(2)
+            try{
+                store.docker.buildImage(conf,
+                {
+                    t: dependency.target
+                }, (err, stream)=>{
+                    if (err){  
+                        store.logger.error("%s %s %o","Error in building docker image for: ", dependency.target , err)
+                        dependency.status.downloading = false
+                        dependency.status.building = false
                         dependency.status.error = err
+                        reject(err)
                     }
-                })
+                    console.log("3")
+                    dependency.status.downloading = true
+                    dependency.status.building = true
+                    
+                    dependency.status.stream  = spawnLog(stream, $this.logger)
+                    dependency.streamObj = stream
+                    stream.on("close", (err, data)=>{
+                        dependency.status.downloading = false  
+                        dependency.status.building = false
+                        if (err){
+                            dependency.status.error = err
+                        }
+                    }) 
 
-                $this.buildlog = spawnLog(stream,store.logger)   
-                resolve() 
-            }).catch((err)=>{ 
-                store.logger.error("%s %s %o","Error in building docker image for: ", dependency.target , err)
-                dependency.status.downloading = false
-                dependency.status.building = false
-                dependency.status.error = err
-                reject(err)
-            }) 
+                    $this.buildlog = spawnLog(stream,store.logger)   
+                    resolve()  
+                
+                }) 
+            } catch(err){        
+                store.logger.info("Error in build image")
+                store.logger.error(err)
+                reject(err)    
+            }
         })
-    } 
+    }   
 	
  
-    async cancel_build(dependencyIdx){ 
+    async cancel_build(dependencyIdx){  
         const $this = this; 
         return new Promise(function(resolve,reject){ 
             try{
@@ -601,7 +610,7 @@ export class Procedure {
                             dependency.streamObj.destroy()
                             // promises.push(dependency.streamObj.destroy())
                         } else if(dependency.type == 'orchestration'){
-                            dependency.streamObj.destroy()
+                            dependency.streamObj.destroy() 
                             // dependency.streamObj.remove({force:true})
                         } else{
                             // promises.push(dependency.streamObj.end())

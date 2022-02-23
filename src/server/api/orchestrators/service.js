@@ -437,98 +437,105 @@ export class Service {
             // $this.config.variables = defaultVariables
             if (defaultVariables &&  typeof defaultVariables == 'object'){
                 for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                    // let targetBinding = (selected_option.create ? selected_option.create : selected_option)
-                    let targetBinding = selected_option
-                    if (selected_option.options && selected_option.option >=0){
-                        selected_option= selected_option.options[selected_option.option]
-                    }
-                    if (selected_option.framework){
-                        let validated_framework = validateFramework(selected_option.framework, defaultVariables)
-                        selected_option.source = validated_framework
-                    }
-                    if (selected_option.copy){
-                        let filepath = ( selected_option.copy.basename ?
-                            path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
-                            selected_option.copy.to
-                        )
-                        promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
-                            logger.error(err) 
-                        }))
-
-                    }
-                    if (selected_option.create){
-                        if (selected_option.create.type !== 'object'){
-                            let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline)
-                            promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
-                                logger.error(err)  
+                    if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
+                        // let targetBinding = (selected_option.create ? selected_option.create : selected_option)
+                        let targetBinding = selected_option
+                        let full_item = cloneDeep(selected_option)
+                        if (selected_option.options && selected_option.option >=0){
+                            selected_option= selected_option.options[selected_option.option]
+                        }
+                        if (selected_option.framework){
+                            let validated_framework = validateFramework(selected_option.framework, defaultVariables)
+                            selected_option.source = validated_framework
+                        }
+                        if (selected_option.copy){
+                            let filepath = ( selected_option.copy.basename ?
+                                path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
+                                selected_option.copy.to
+                            )
+                            promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
+                                logger.error(err) 
                             }))
 
-                        } else { 
-                            promises.push(writeFile(selected_option.create.to, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
-                                logger.error(err)
-                            })) 
                         }
-                    } 
+                        if (selected_option.create){
+                            if (selected_option.create.type !== 'object'){
+                                let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline)
+                                promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
+                                    logger.error(err)  
+                                }))
 
-                    if (selected_option.bind){
-                        let from = selected_option.bind.from
-                        let to = selected_option.bind.to
-                        
-                        try{
-
-                            if (selected_option.bind_parent_dir){
-                                env.push(`${name}=${to}/${path.basename(from)}`)
-                                if (from && to && seenTargetTos.indexOf(to) == -1){
-                                    bind.push(`${path.dirname(from)}:${to}`)
-                                    seenTargetTos.push(to)
-                                } 
-                            } else {
-                                if (!selected_option.port ){
-                                    env.push(`${name}=${to}`)
- 
-                                    if (from && to && seenTargetTos.indexOf(to) == -1){
-                                        bind.push(`${from}:${to}`) 
-                                        seenTargetTos.push(to)
-                                    }
-                                } 
-                            }    
-                        } catch(err){ 
-                            store.logger.error("%o, with variable %s", err, name)
-                        }
-                    } else {  
-                        env.push(`${name}=${( selected_option.target ? selected_option.target : selected_option.source)}`)
-                    }     
-                    if (selected_option.define){
-                        for( let [key, value] of Object.entries(selected_option.define)){
-                            env.push(`${key}=${value}`)
-                        }
-                    }   
-                    // Define the command additions if needed  
-                    if (selected_option.append){
-                        console.log("APPEND!")
-                    }
-                    if (selected_option.append && cmd && ( !selected_option.element ||  selected_option.source ) ){ 
-                        let serviceFound = selected_option.append.services.findIndex(data => data == $this.serviceIdx)
-                        if (serviceFound >= 0){ 
-                            let service = selected_option.append
-                            if (service.placement || service.placement == 0){
-                                if (selected_option.append.position == 'start'){
-                                    options.Cmd[service.placement] =  selected_option.append.command + " " + options.Cmd[service.placement]  +  " "
-                                }else {
-                                    options.Cmd[service.placement] =  options.Cmd[service.placement]  +  selected_option.append.command + " "
-                                }
-                            } else{
-                                if (selected_option.append.position == 'start'){
-                                    options.Cmd[options.Cmd.length - 1] =  selected_option.append.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
-                                } else {
-                                    options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
-                                }
+                            } else { 
+                                promises.push(writeFile(selected_option.create.to, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
+                                    logger.error(err)
+                                })) 
                             }
- 
                         } 
+
+                        if (selected_option.bind){
+                            let from = selected_option.bind.from
+                            let to = selected_option.bind.to
                             
-                    } 
-                }  
+                            try{
+
+                                if (selected_option.bind_parent_dir){
+                                    env.push(`${name}=${to}/${path.basename(from)}`)
+                                    if (from && to && seenTargetTos.indexOf(to) == -1){
+                                        bind.push(`${path.dirname(from)}:${to}`)
+                                        seenTargetTos.push(to)
+                                    } 
+                                } else {
+                                    if (!selected_option.port ){
+                                        env.push(`${name}=${to}`)
+    
+                                        if (from && to && seenTargetTos.indexOf(to) == -1){
+                                            bind.push(`${from}:${to}`) 
+                                            seenTargetTos.push(to)
+                                        }
+                                    } 
+                                }    
+                            } catch(err){ 
+                                store.logger.error("%o, with variable %s", err, name)
+                            }
+                        } else {  
+                            if (typeof selected_option == 'object'){
+                                env.push(`${name}=${( selected_option.target ? selected_option.target : selected_option.source)}`)
+                            } else{
+                                env.push(`${name}=${selected_option}`)
+                            }
+                        }     
+                        if (full_item.define){
+                            for( let [key, value] of Object.entries(full_item.define)){
+                                env.push(`${key}=${value}`)
+                            }
+                        }   
+                        // Define the command additions if needed  
+                        if (selected_option.append){
+                            console.log("APPEND!")
+                        }
+                        if (selected_option.append && cmd && ( !selected_option.element ||  selected_option.source ) ){ 
+                            let serviceFound = selected_option.append.services.findIndex(data => data == $this.serviceIdx)
+                            if (serviceFound >= 0){ 
+                                let service = selected_option.append
+                                if (service.placement || service.placement == 0){
+                                    if (selected_option.append.position == 'start'){
+                                        options.Cmd[service.placement] =  selected_option.append.command + " " + options.Cmd[service.placement]  +  " "
+                                    }else {
+                                        options.Cmd[service.placement] =  options.Cmd[service.placement]  +  selected_option.append.command + " "
+                                    }
+                                } else{
+                                    if (selected_option.append.position == 'start'){
+                                        options.Cmd[options.Cmd.length - 1] =  selected_option.append.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
+                                    } else {
+                                        options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
+                                    }
+                                }
+    
+                            } 
+                                
+                        } 
+                    }  
+                }
             }
             if ($this.config.image){
                 options.Image = $this.config.image  
@@ -543,9 +550,11 @@ export class Service {
             options.Env = [...options.Env, ...env] 
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...bind]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
+            logger.info("%o ______", options)
+            logger.info(`starting the container ${options.name} `)
+            // resolve()
             Promise.all(promises).then((response)=>{
-                logger.info("%o ______", options)
-                // logger.info(`starting the container ${options.name} `)
+                
                 $this.status.stream.info.push(JSON.stringify(options, null, 4))
                 $this.status.success = false 
                 $this.status.error = false 
@@ -632,7 +641,7 @@ export class Service {
                                     $this.jobInterval = setInterval(()=>{
                                         if (ended){
                                             clearInterval($this.jobInterval)
-                                        }
+                                        } 
                                         if ($this.status.complete){
                                             ended = true
                                             clearInterval($this.jobInterval)
@@ -675,8 +684,6 @@ export class Service {
                 store.logger.error(err)
                 reject(err)
             })
-            
-            // resolve()
             
         });
 	}

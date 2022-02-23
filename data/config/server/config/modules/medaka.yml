@@ -1,0 +1,127 @@
+- name: medaka
+  title: "Medaka"
+  icon: "mountain"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tags: 
+    - "consensus"
+    - "SARS-CoV-2"
+  tooltip: "Phylogenetic Analysis of SARS-CoV-2"
+  procedures:
+    - name: medaka #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Medaka"
+      icon: "mountain"
+      module: True
+      init: false 
+      dependencies:
+        - target: "jhuaplbio/basestack_consensus"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "consensus"
+        - "SARS-CoV-2"
+      variables:
+        sequencing_summary:
+          label: "Sequencing Summary File"
+          hint: Generated at the end of basecalling in the directory
+          element: "file"
+          optional: true
+          bind_parent_dir: true
+          openSelf: true
+          bind: 
+            from: "%{variables.sequencing_summary.source}"
+            to: "/opt/summary_sequencing"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          append:
+            command: " --sequencing-summary ${sequencing_summary}"
+            placement: 2
+            services: 
+              - 0
+        model:
+          label: "Medaka Model Configuration"
+          element: null
+          hint: "Medaka models to choose from"
+          option: 0
+          class: "wb-50 p-3 mb-1"
+          options:
+            - "r941_min_high_g360"
+            - "r941_min_fast_g303"
+        normalise:
+          label: "Normalise coverage"
+          element: number
+          warning: " Normalise down to moderate coverage to save runtime"
+          class: "wb-50 p-3 mb-1"
+          source: 1000000 
+          target: null
+        primers:
+          label: "Primer Configuration"
+          element: null
+          hint: "Default Primer Scheme to use for medaka"
+          option: 0
+          options:
+            - "nCoV-2019/3"
+            - "nCoV-2019/4"
+            - "nCoV-2019/2"
+            - "nCoV-2019/1"
+          define:
+            organism: "<<directory(%{variables.primers.source})>>"
+            scheme_version: "<<basename(%{variables.primers.source})>>"
+        fastq_dir:
+          label: "FASTQ Dir"
+          element: "dir"
+          hint: "Directory containing your fastq files"
+          warning: All fastq files will be included, make sure demux has taken place before inputting
+          bind:
+            from: "%{variables.fastq_dir.source}"
+            to: /opt/data
+          define:
+            out_prefix: consensus_medaka
+        bamfile:
+          label: "BAM file"
+          element: "file"
+          output: true
+          openSelf: True
+          bind_parent_dir: false
+          source: "%{variables.fastq_dir.source}/consensus_medaka/consensus_medaka.sorted.bam"
+          target: "%{variables.fastq_dir.bind.to}/consensus_medaka/consensus_medaka.sorted.bam"
+        vcfs:
+          label: "Variants"
+          element: "file"
+          output: true
+          openSelf: True
+          bind_parent_dir: false
+          source: "%{variables.fastq_dir.source}/consensus_medaka/consensus_medaka.merged.vcf"
+          target: "%{variables.fastq_dir.bind.to}/consensus_medaka/consensus_medaka.merged.vcf"
+        consensuses:
+          label: "Consensus"
+          element: "file"
+          output: true
+          openSelf: True
+          bind_parent_dir: false
+          source: "%{variables.fastq_dir.source}/consensus_medaka/consensus_medaka.consensus.fasta"
+          target: "%{variables.fastq_dir.bind.to}/consensus_medaka/consensus_medaka.consensus.fasta"
+      services:
+        - name: medaka
+          label: "Medaka"
+          image: "jhuaplbio/basestack_consensus"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", 
+            "source $(conda info --base)/etc/profile.d/conda.sh && 
+            conda activate artic-ncov2019 && mkdir -p consensus_medaka && 
+            cd consensus_medaka 
+            && find ${fastq_dir}  -name \"*.fastq\" -o -name \"*.fastq\"  | while read line; do cat $line; done > /opt/fastq_full.fq && 
+            artic minion --medaka 
+            --medaka-model $model 
+            --normalise $normalise
+            --read-file /opt/fastq_full.fq
+            --scheme-directory /opt/basestack_consensus/primer_schemes
+            --scheme-version $scheme_version
+            $organism $out_prefix" ]
+            
+      
