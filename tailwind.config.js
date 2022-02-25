@@ -1,5 +1,9 @@
 module.exports = {
-  content: ["./src/app/renderer/**/*.{html,js,ejs,vue}"],
+  content: [
+    "./src/app/renderer/**/*.{html,js,ejs,vue}",
+    "./src/**/*.stories.mdx", 
+    "./src/**/*.stories.@(js|jsx|ts|tsx)"
+  ],
   theme: {
     colors: {
       transparent: 'transparent',
