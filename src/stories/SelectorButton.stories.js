@@ -1,16 +1,16 @@
-import RegularButton from '../app/renderer/components/ui/buttons/RegularButton.vue'
+import SelectorButton from '../app/renderer/components/ui/buttons/SelectorButton.vue'
 
 export default {
-  title: 'Button',
-  component: RegularButton,
+  title: 'Buttons/Selector Button',
+  component: SelectorButton,
   argTypes: {
     label: {
       control: {type: 'text'},
       defaultValue: 'Button',
     },
-    color: {
+    action: {
       control: { type: 'select' },
-      options: ['blue', 'black', 'white', 'light', 'dark'],
+      options: ['primary', 'secondary', 'neutral', 'accent', 'success', 'danger'],
     },
     size: {
       control: { type: 'select' },
@@ -25,15 +25,15 @@ export default {
 
 const Template = (args, { argTypes }) => ({
   props: Object.keys(argTypes),
-  components: {RegularButton},
-  template: `<regular-button v-bind="$props"></regular-button>`
+  components: {SelectorButton},
+  template: `<selector-button v-bind="$props"></selector-button>`
 });
 
-export const Regular = Template.bind({})
-Regular.args = {
-  color: 'blue',
+export const Selector = Template.bind({})
+Selector.args = {
+  action: 'primary',
   size: 'base',
-  label: 'Regular'
+  label: 'Button'
 }
 // export const Selected = Template.bind({})
 // Selected.args = {

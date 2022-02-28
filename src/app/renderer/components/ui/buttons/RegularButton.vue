@@ -1,15 +1,15 @@
 <template>
     <button 
         :class="`${actionClasses} ${sizeClasses}`"
-        class="inline-flex font-semibold duration-300 divide-x-2 divide-white rounded-sm font-display"
+        class="inline-flex font-semibold duration-300 rounded-sm font-display"
     >
-        <div>
+        <span v-if="label">
             {{label}}
-        </div>
+        </span>
 
-        <div>
-            <font-awesome-icon :icon="['fas', 'plus']" />
-        </div>
+        <span v-if="icon">
+            {{icon}}
+        </span>
     </button>
 </template>
 
