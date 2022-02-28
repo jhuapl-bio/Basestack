@@ -31,6 +31,7 @@ module.exports = {
       },
       secondary: {
         green: 'hsl(138, 67%, 45%, 100)',
+        darkgreen: 'hsl(154, 52%, 37%)',
         mint: 'hsl(175, 43%, 49%, 100)',
         orange: 'hsl(34, 71%, 49%, 100)',
         pink: 'hsl(304, 51%, 60%, 100)',
