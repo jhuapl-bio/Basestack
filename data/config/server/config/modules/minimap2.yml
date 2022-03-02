@@ -30,7 +30,7 @@
           from: "%{variables.bam.source}"
           to: "/opt/data"
         class: "wb-100  p-3 mb-1"
-        source: "<<directory(%{variables.sam.bind.from})>>/<<basename,trim(%{variables.sam.source})>>.bam"
+        source: "%{variables.file.source}.bam"
         target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.sam.source})>>.bam"
       bai:
         label: "BAI File"
@@ -38,7 +38,7 @@
         watch: True
         output: True
         element: "file"
-        source: "<<directory(%{variables.bam.bind.from})>>/<<basename(%{variables.bam.source})>>.bai"
+        source: "%{variables.file.source}.bam.bai"
         target: "%{variables.bam.bind.to}/<<basename(%{variables.bam.source})>>.bai"
   procedures:
     - name: minimap2 #Top level is the left-hand selection of the menu and the major module to install 

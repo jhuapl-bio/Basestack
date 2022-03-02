@@ -1383,7 +1383,7 @@ router.post("/job/set", (req,res,next)=>{ //this method needs to be reworked for
 			if (!found){ 
 				job = await create_job(procedure.config, req.body.variables, services)
 				nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
-			} else {    
+			} else {     
 				job = found      
 			}          
 			job.setVariables(req.body.variables) 

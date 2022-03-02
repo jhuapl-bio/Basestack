@@ -39,11 +39,11 @@
           element: "file"  
           hint: "zipped raw data from output of bamstats"
           output: true   
-          openSelf: true       
+          openSelf: false       
           class: "wb-100  p-3 mb-1"
-          source: "%{variables.bam.source}bamstats_report.zip" 
+          source: "<<directory(%{variables.bam.source})>>/bamstats_report.zip" 
           # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
-          target: "%{variables.bam.source}bamstats_report.zip"
+          target: "<<directory(%{variables.bam.source})>>/bamstats_report.zip"
       services:
         - name: bamstats
           label: "Bamstats"
