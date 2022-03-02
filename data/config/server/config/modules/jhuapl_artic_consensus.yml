@@ -30,6 +30,17 @@
           element: "string"
           class: "wb-50  p-3 mb-1"
           source: "Test"
+        dir:
+          label: "Input Long-Reads Full Run Directory"
+          hint: "Directory that contains your fastq_pass, fast5_pass, and sequencing summary.txt file. Output directory from a Oxford Nanopore run"
+          element: "dir"
+          optional: false
+          bind_parent_dir: false
+          source: null
+          bind: 
+            from: "%{variables.dir.source}"
+            to: "/opt/data"
+          class: "wb-50  p-3 mb-1"
         fast5:
           label: "Fast5 Pass Folder"
           hint: "Required for nanopolish mode (consensus portion). Contains your FAST5 files. Folder must be named fast5_pass"
@@ -53,32 +64,31 @@
             action: "exists"
             source: "%{variables.dir.source}/sequencing_summary*.txt"
           target: "%{variables.file.bind.to}/"
-        dir:
-          label: "Input Long-Reads Full Run Directory"
-          hint: "Directory that contains your fastq_pass, fast5_pass, and sequencing summary.txt file. Output directory from a Oxford Nanopore run"
-          element: "dir"
-          optional: false
-          bind_parent_dir: false
-          source: null
-          bind: 
-            from: "%{variables.dir.source}"
-            to: "/opt/data"
-          class: "wb-50  p-3 mb-1"
         fastq_pass:
           label: "Input Long-Reads FASTQ Directory"
           hint: "Folder that contains 1 or more fastq files in UNCOMPRESSED format"
-          element: "dir"
-          bind_parent_dir: false
           class: "wb-50  p-3 mb-1"
           warning: "Ensure that all fastq files you want to analyze are decompressed"
+          # element: "exists"
+          # hidden: false
+          # name: "fastq_pass"
+          # update_on: 
+          #   depends:
+          #     - dir
+          #   action: "exists"
+          #   source: "%{variables.dir.source}/fastq_pass"
+          # target: "%{variables.file.bind.to}/"
           options:
-            - element: "dir"
-              hidden: true
+            - element: "exists"
+              hidden: false
               name: "fastq_pass"
-              source: "%{variables.dir.source}/fastq_pass" 
-              bind: 
-                from: "%{variables.fastq_pass.source}"
-                to: "%{variables.dir.bind.to}/fastq_pass" 
+              update_on: 
+                depends:
+                  - dir
+                action: "exists"
+                source: "%{variables.dir.source}/fastq_pass"
+              target: "%{variables.file.bind.to}/"
+              source: null
             - element: "dir"
               name: "Custom Fastq Pass Directory"
               source: null
@@ -188,13 +198,9 @@
           element: "file"
           hidden: true
           sep: "tab"
+          optional: true
           bind_parent_dir: false
           tooltip: "Long format config for primer, barcoding, basecalling"
-          # update_on: 
-          #   depends:
-          #     - dir
-          #   action: "read"
-          #   source: "%{variables.dir.source}/run_config.txt"
           create:
             target: "%{variables.dir.source}/run_config.txt"
             sep: "tab"
@@ -230,7 +236,6 @@
           type: files
           pattern: ".complete"
           total:  
-            # target: "<<length(${variables.manifest.source})>>"
             target: "<<length(&{variables.manifest.source})>>" 
           source: "%{variables.dir.source}/artic-pipeline/2-length-filter"
           target: "%{variables.dir.bind.to}/artic-pipeline/2-length-filter"
@@ -274,7 +279,6 @@
           init: false
           force_restart: false 
           force_init: false
-          # command: ["bash","-c", "echo Starting consensus pipeline... "]
           command: ["bash","-c", "echo Starting consensus pipeline...   && artic-module1-barcode-demux.sh  -i ${dir}"]
       dependencies:
         - target: "jhuaplbio/basestack_consensus"

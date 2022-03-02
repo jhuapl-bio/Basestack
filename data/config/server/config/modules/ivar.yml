@@ -51,7 +51,6 @@
             type: "file"
             remove: true
             target: "${writePath}/workflows/ivar/reference.fasta"
-          
       variables:
         bam:
           label: "Bam File"
@@ -86,6 +85,7 @@
               class: "wb-100  p-3 mb-1" 
             - element: "file"
               name: "Custom GFF3"
+              bind_parent_dir: true
               source: null
               target: null
               append:
@@ -126,6 +126,7 @@
             - element: "file"
               name: "Custom Reference"
               source: null
+              bind_parent_dir: true
               target: null
               bind: 
                 from: "%{variables.reference.source}"
@@ -139,6 +140,7 @@
           label: "ivar"
           force_restart: true
           # command: ["bash","-c", "head ${gff}; samtools mpileup -aa -A -d 0 -B -Q 0 ${bam}   " ]
+          # command: ["bash","-c", " samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam}  " ]
           command: ["bash","-c", "samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam} | ivar variants -p ${outputName}  -r ${reference}  " ]
           workingdir: "/opt/data"
             

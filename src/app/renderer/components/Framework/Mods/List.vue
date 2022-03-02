@@ -1,107 +1,107 @@
 <template>
   <v-layout id="list" >
-    <v-data-table
-        small
-        :headers="headers"
-        :items="source.source"
-        :items-per-page="6"
-        class="elevation-1"					        
-    >	
-        <template v-slot:top>
-            <v-toolbar
-                flat
-            >
-                <v-toolbar-title>{{ ( title ? title : 'List Table' )  }}</v-toolbar-title>
-                <v-divider
-                    class="mx-4"
-                    inset
-                    vertical
-                ></v-divider>
-                <v-spacer></v-spacer>
-                <v-dialog
-                    v-model="dialog"
-                    max-width="500px"
-                    >
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn
-                        color="primary"
-                        dark
-                        class="mb-2"
-                        v-bind="attrs"
-                        v-on="on"
+        <v-tooltip bottom v-if="length <= 0" >
+            <template v-slot:activator="{ on }">
+                <v-icon medium :if="length <= 0" class="mr-2" color="warning" v-on="on"  >$exclamation-triangle
+                </v-icon>
+            </template>
+            List must be more than 1 entry
+        </v-tooltip>  
+        <v-data-table
+            small
+            :headers="headers"
+            :items="source.source"
+            :items-per-page="6"
+            class="elevation-1"					        
+        >	
+            <template v-slot:top>
+                <v-toolbar
+                    flat
+                >
+                    <v-toolbar-title>{{ ( title ? title : 'List Table' )  }}</v-toolbar-title>
+                    <v-divider
+                        class="mx-4"
+                        inset
+                        vertical
+                    ></v-divider>
+                    <v-spacer></v-spacer>
+                    <v-dialog
+                        v-model="dialog"
+                        max-width="500px"
                         >
-                        New Item
-                        </v-btn>
-                    </template>
-                    <v-card>
-                        <v-card-title>
-                        <span class="text-h5">Row Item Add</span>
-                        </v-card-title>
-                        <v-card-text>
-                            <v-container>
-                                <v-col
-                                    cols="12"
-                                    sm="6"
-                                    md="4"
+                        <template v-slot:activator="{ on, attrs }">
+                            <v-btn
+                            color="primary"
+                            dark
+                            class="mb-2"
+                            v-bind="attrs"
+                            v-on="on"
+                            >
+                            New Item
+                            </v-btn>
+                            
+                        </template>
+                        <v-card>
+                            <v-card-title>
+                            <span class="text-h5">Row Item Add</span>
+                            </v-card-title>
+                            <v-card-text>
+                                <v-container>
+                                    <v-col
+                                        cols="12"
+                                        sm="6"
+                                        md="4"
 
-                                >
-                                    <v-container v-for="head in headers" :key="head.value + head.index">
-                                            <v-text-field v-if="head.value !== 'actions'"
-                                                v-model="editedItem[head.value]"
-                                                :label="head.text"
-                                            ></v-text-field>
-                                    </v-container>
-                                    
-                                </v-col>
-                            </v-container>
-                        </v-card-text>
-                        <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn
-                            color="blue darken-1"
-                            text
-                            @click="close"
-                        >
-                            Cancel
-                        </v-btn>
-                        <v-btn
-                            color="blue darken-1"
-                            text
-                            @click="save"
-                        >
-                            Save
-                        </v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
-            </v-toolbar>
-        </template>
-        <template v-slot:item.actions="{ item, index }">
-            <v-icon
-                x-small
-                class="mr-2" color="light"
-                @click="editItem(item)"
-            >
-                $edit
-            </v-icon>
-            <v-icon
-                x-small color="orange"
-                @click="deleteItem(item, index)"
-            >
-                $minus
-            </v-icon>
-        </template>
-       
+                                    >
+                                        <v-container v-for="head in headers" :key="head.value + head.index">
+                                                <v-text-field v-if="head.value !== 'actions'"
+                                                    v-model="editedItem[head.value]"
+                                                    :label="head.text"
+                                                ></v-text-field>
+                                        </v-container>
+                                        
+                                    </v-col>
+                                </v-container>
+                            </v-card-text>
+                            <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn
+                                color="blue darken-1"
+                                text
+                                @click="close"
+                            >
+                                Cancel
+                            </v-btn>
+                            <v-btn
+                                color="blue darken-1"
+                                text
+                                @click="save"
+                            >
+                                Save
+                            </v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
+                </v-toolbar>
+            </template>
+            <template v-slot:item.actions="{ item, index }">
+                <v-icon
+                    x-small
+                    class="mr-2" color="light"
+                    @click="editItem(item)"
+                >
+                    $edit
+                </v-icon>
+                <v-icon
+                    x-small color="orange"
+                    @click="deleteItem(item, index)"
+                >
+                    $minus
+                </v-icon>
+            </template>
         
-    </v-data-table>
-    <v-tooltip bottom v-if="!$v.values.minLength">
-        <template v-slot:activator="{ on }">
-          <v-icon class="mt-5 ml-1" v-on="on" small color="warning lighten-1" >$exclamation-triangle
-          </v-icon>
-        </template>
-        Must have 1 or more rows!
-    </v-tooltip>
-   
+            
+        </v-data-table>
   </v-layout>
 </template>
 <script>
@@ -117,16 +117,21 @@ export default {
     },
     validations (){
         return{
+            length : {
+                minLength: minLength(1),
+                required
+            },
             values: {
                 required: requiredIf((value)=>{
                     return value && !this.source.optional
                 }),
-                minLength: minLength(1)
             },
         }
     },
     computed: {
-        
+        length(){
+            return this.source.source.length
+        },
         defaultItem(){
             let item = {}
             if (this.headers){
@@ -136,9 +141,6 @@ export default {
                 
             }
             return item
-        },
-        values(){
-            return this.source.source
         },
         headers(){
             if (this.defaultHeaders){
@@ -177,13 +179,10 @@ export default {
           deep: true,
           handler(newValue){
               console.log("source changed!!!!", newValue)
+              this.values = newValue.source
           }
 
       },
-    //   values(newVal){
-    //       console.log(newVal,)
-    //       this.$emit("updateValue", newVal )
-    //   }
     },
 	methods: {
         save () {
@@ -244,7 +243,7 @@ export default {
     props: ['source', 'status', 'service', "variable", "defaultHeaders", 'title'],
     data (){
         return {
-            // values: [],
+            values: [],
             dialog: false,
             editedIndex: -1,
             editedItem: {},

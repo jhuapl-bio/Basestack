@@ -12,7 +12,234 @@
     - "vcf"
     - "variant"
   hint: "View Variant Exploration of vcf calls"
+  shared:
+    services:
+      agave_create_report:
+        name: agave_create_report
+        label: "Create Report JSON for AGAVE Visualization"
+        image: "jhuaplbio/agave"
+        workingdir: "/opt/app/AGAVE"
+        orchestrated: false
+        init: false
+        force_restart: false
+        force_init: false
+        # command: ["bash", "-c", "python3 -m http.server"]
+        command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate AGAVE && python3 controllers/src/vcfs_to_json.py              
+          -i ${variant} 
+          -o ${json}
+          --filetype ${filetype}
+          -cad ALT_DP 
+          -crd REF_DP 
+          --gb ${gbs}
+          --get_gb ${dir}
+          --email ${email} 
+          --depth_type ${depthType}
+          "
+        ]
+      agave_visualization:
+        init: true
+        hideStatus: true
+        name: agave_visualization
+        label: "Visualization"
+        force_restart: false
+        config: null
+        image: "jhuaplbio/agave"
+        workingdir: "/AGAVE"
+        continuous: true
+        # serve: "port"
+        ports: 
+          - 8083:80
+        command: ["bash", "-c", "/etc/init.d/nginx restart; cp ${json} /AGAVE/data/default.json;  python3 -m http.server"]
+    variables:
+      email: 
+        label: "Email"
+        element: "string"
+        source: ""
+        target: null
+      port:
+        element: "render"
+        column: 12
+        port: true
+        output: true
+        label: "Rendered Dashboard"
+        hint: "Dashboard to display in a web browser"
+        suburl: "/AGAVE/"
+        bind:
+          from: "80"
+          to: "8083"
+      gbs:
+        label: "Genbank Files"
+        hint: ".gb files used for referencing sequences"
+        option: 0
+        # class: "wb-100 p-3 mb-1"
+        options:
+          - element: null
+            name: "H3n2, nCoV2, H1N1 Default"
+            label: ""
+            target: "/opt/app/AGAVE/data/proteins" 
+            source: true
+          - element: "dir"
+            name: "Custom"
+            target: null 
+            source: null
+            bind: 
+              from: "%{variables.gbs.source}"
+              to: "/opt/app/AGAVE/data/proteins" #This ${} is converted into the variable attribute of selected option only!
+      json: 
+        element: "file"
+        output: true
+        openSelf: True
+        label: "JSON Visualization File"
+        hint: "Custom JSON generated from the AGAVE report pipeline"
+        source: "<<directory(%{variables.variant.bind.from})>>/variants.json"
+        target: "%{variables.variant.bind.to}/variants.json"
   procedures:
+    - name: "agave_and_ivar"
+      icon: "dna"
+      title: "AGAVE and IVAR"
+      tooltip: "View Variant Exploration of vcf calls"
+      services: 
+        - name: staphb_ivar
+          image: "staphb/ivar"
+          orchestrated: false #orchestrated means it r
+          init: false
+          hideStatus: false
+          label: "ivar"
+          force_restart: true
+          # command: ["bash","-c", "head ${gff}; samtools mpileup -aa -A -d 0 -B -Q 0 ${bam}   " ]
+          command: ["bash","-c", " samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam} | ivar variants -p ${outputName}  -r ${reference}  " ]
+          workingdir: "/opt/data"
+        - "%{shared.services.agave_create_report}"
+        - "%{shared.services.agave_visualization}"
+      variables:
+        bam:
+          label: "Bam File"
+          element: "file"
+          hint: "Bam alignment file"
+          bind_parent_dir: true
+          bind: 
+            from: "%{variables.bam.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1" 
+          source: null
+        gff:
+          label: "Reference GFF3"
+          class: "wb-100 p-3 mb-1"
+          hint: "Contains Coding regions and annotations"
+          option: 0
+          options:
+            - name: "SARS-CoV-2 GFF Reference"
+              element: null
+              hint: "Coding regions for SARS-CoV-2"
+              bind_parent_dir: true
+              source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
+              target: "/opt/gff"
+              bind: 
+                from: "%{variables.gff.source}"
+                to: "/opt/gff"
+              append:
+                command: " -g ${gff} "
+                placement: 2
+                services: 
+                  - 0
+              class: "wb-100  p-3 mb-1" 
+            - element: "file"
+              name: "Custom GFF3"
+              source: null
+              target: null
+              append:
+                command: " -g ${gff} "
+                placement: 2
+                services: 
+                  - 0
+              bind: 
+                from: "%{variables.gff.source}"
+                to: "/opt/gff" 
+        output:
+          label: "Output TSV"
+          element: "file"
+          output: True
+          openSelf: True
+          hint: "TSV file containing variants called against Reference and optional GFF"
+          bind_parent_dir: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+          target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+          define:
+            outputName: <<basename,trim(%{variables.bam.source})>>.ivar
+            variant: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+            filetype: "tsv"
+            json: "%{variables.bam.bind.to}/variants.json"
+            depthType: variant
+        reference:
+          label: "Reference FASTA"
+          class: "wb-100 p-3 mb-1"
+          option: 0
+          options:
+            - name: "SARS-CoV-2 FASTA Reference File MN908947.3"
+              element: null
+              hint: "FASTA File used as a reference for alignment steps"
+              bind_parent_dir: true
+              source: "${writePath}/workflows/agave/reference.fasta"
+              target: "/opt/reference/"
+              bind: 
+                from: "%{variables.reference.source}"
+                to: "/opt/reference"
+              class: "wb-100  p-3 mb-1" 
+            - element: "file"
+              name: "Custom Reference"
+              source: null
+              target: null
+              bind: 
+                from: "%{variables.reference.source}"
+                to: "/opt/reference" 
+        email:
+          shared: True
+          target: "%{shared.variables.email}"
+        gbs:
+          shared: True
+          target: "%{shared.variables.gbs}"
+        port:
+          shared: True
+          target: "%{shared.variables.port}"
+      dependencies:
+        - target: "jhuaplbio/agave"
+          label: "jhuaplbio/agave"
+          type: "docker"
+          format: "docker"
+        - target: "staphb/ivar"
+          label: "staphb/ivar"
+          type: "docker"
+          format: "docker"
+        - target: "staphb/samtools"
+          label: "staphb/samtools"
+          type: "docker"
+          format: "docker"
+        - source: 
+            url: "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/009/858/895/GCF_009858895.2_ASM985889v3/GCF_009858895.2_ASM985889v3_genomic.gff.gz"
+            type: "file"
+            user: anonymous 
+            protocol: "https"
+            remove: true
+            target: "${writePath}/workflows/agave/GCF_009858895.2_ASM985889v3_genomic.gff.gz"
+          label: "GFF Coding regions for SARS-CoV-2"
+          type: "download" 
+          format: "dir"
+          decompress: 
+            format: "gz"
+            source: "${writePath}/workflows/agave/GCF_009858895.2_ASM985889v3_genomic.gff.gz"
+          target: "${writePath}/workflows/agave/GCF_009858895.2_ASM985889v3_genomic.gff"
+          overwrite: true
+        - type: "download" 
+          format: "file"
+          label: "SARS-CoV-2 Reference FASTA - MN908947.3"
+          target: "${writePath}/workflows/agave/reference.fasta"
+          overwrite: true 
+          source: 
+            url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=MN908947.3&rettype=fasta"
+            type: "file"
+            remove: true
+            target: "${writePath}/workflows/agave/reference.fasta"
     - name: "agave"
       icon: "dna"
       title: "AGAVE"
@@ -23,17 +250,7 @@
           type: "docker"
           format: "docker"
       variables:
-        json: 
-          element: "file"
-          output: true
-          openSelf: True
-          label: "JSON Visualization File"
-          hint: "Custom JSON generated from the AGAVE report pipeline"
-          source: "<<directory(%{variables.variant.bind.from})>>/variants.json"
-          target: "%{variables.variant.bind.to}/variants.json"
-          # bind: 
-          #   from: "%{variables.variant.source}"
-          #   to: "/data"
+        
         variant: 
           label: "VCF or TSV file/folder "
           hint: "Variant file or a folder containing variant called information (VCF, ivar TSV) for input to AGAVE"
@@ -59,11 +276,22 @@
                 to: "/opt/data/variant"
               class: "wb-100  p-3 mb-1"
           source: null
+        json: 
+          target: "%{shared.variables.json}"
+          shared: true
         depth: 
           label: "Depth file(s)"
           hint: "One or more files to be used as referencing the depth from the sample run"
           option: 0
+          optional: true
           options:
+            - element: null
+              bind_parent_dir: false
+              name: "Use Variant Depth from TSV file"
+              warning: "Must be in .tsv format from ivar pipeline"
+              source: "variant"
+              define:
+                depthType: variant
             - element: "file"
               bind_parent_dir: true
               name: "Depth.txt file"
@@ -71,6 +299,13 @@
                 from: "%{variables.depth.source}"
                 to: "/opt/data/depth"
               class: "wb-100  p-3 mb-1"
+              define:
+                depthType: full
+              append:
+                command: "  --depth ${depth}"
+                placement: 2
+                services: 
+                  - 0
             - element: "dir"
               name: "Folder of depth.txts"
               bind_parent_dir: false
@@ -78,89 +313,49 @@
                 from: "%{variables.depth.source}"
                 to: "/opt/data/depth"
               class: "wb-100  p-3 mb-1"
+              define:
+                depthType: full
               append:
-                command: "--dir_depth"
+                command: " --dir_depth --depth_type 'full' --depth ${depth}"
                 placement: 2
                 services: 
                   - 0
-        email: 
-          label: "Email"
-          element: "string"
-          source: ""
-          target: null
+        email:
+          shared: True
+          target: "%{shared.variables.email}"
         gbs:
-          label: "Genbank Files"
-          hint: ".gb files used for referencing sequences"
-          option: 0
-          # class: "wb-100 p-3 mb-1"
-          options:
-            - element: null
-              name: "H3n2, nCoV2, H1N1 Default"
-              label: ""
-              target: "/opt/app/AGAVE/data/proteins" 
-            - element: "dir"
-              name: "Custom"
-              target: null 
-              bind: 
-                from: "%{variables.gbs.source}"
-                to: "/opt/app/AGAVE/data/proteins" #This ${} is converted into the variable attribute of selected option only!
+          shared: True
+          target: "%{shared.variables.gbs}"
+        port:
+          shared: True
+          target: "%{shared.variables.port}"
         filetype:
           label: "Filetype of variant calling pipeline"
           hint: "When variants are generated, they are in the .vcf or .tsv (ivar pipeline) format"
           # class: "wb-100 p-3 mb-1"
-          option: 0
+          option: 1
           options:
             - element: null
               name: "vcf"
               target: "vcf" 
+              source: true
+              append:
+                command: " --filetype vcf "
+                placement: 2
+                services: 
+                  - 0
             - element: null
               name: "tsv"
               target: "tsv" 
-        port:
-          element: "render"
-          column: 12
-          port: true
-          output: false
-          label: "Rendered Dashboard"
-          hint: "Dashboard to display in a web browser"
-          suburl: "/AGAVE/"
-          bind:
-            from: "80"
-            to: "8083"
+              source: true
+              append:
+                command: " --filetype tsv "
+                placement: 2
+                services: 
+                  - 0
       services:
-        - name: "agave_create_report"
-          label: "Create Report JSON for AGAVE Visualization"
-          image: "jhuaplbio/agave"
-          workingdir: "/opt/app/AGAVE"
-          orchestrated: false
-          init: false
-          force_restart: false
-          force_init: false
-          # command: ["bash", "-c", "python3 -m http.server"]
-          command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate AGAVE && python3 controllers/src/vcfs_to_json.py              
-            -i ${variant} 
-            -o ${json}
-            --filetype ${filetype}
-            -cad ALT_DP 
-            -crd REF_DP 
-            --gb ${gbs}
-            --get_gb ${dir}
-            --depth_type 'full'
-            --email ${email} 
-            --depth ${depth}
-            "
-          ]
-        - name: agave_visualization
-          init: true
-          hideStatus: true
-          label: "Visualization"
-          force_restart: false
-          config: null
-          image: "jhuaplbio/agave"
-          workingdir: "/AGAVE"
-          continuous: true
-          serve: "port"
-          ports: 
-            - 8083:80
-          command: ["bash", "-c", "/etc/init.d/nginx restart; cp ${json} /AGAVE/data/default.json;  python3 -m http.server"]
+        - "%{shared.services.agave_create_report}"
+        - "%{shared.services.agave_visualization}"
+    
+        
           

@@ -16,8 +16,10 @@ export  class Job {
         this.configurations = null
         this.services = []
         this.variables = {}
+        
         this.status = { 
             exists: false, 
+            services_used: [],
             fully_installed: true,
             procedure: procedure.status,
             dependencies: procedure.dependencies.map((f)=>{
@@ -57,24 +59,24 @@ export  class Job {
             }
         }, 1500)
         return 
-    }
+    }    
     defineConfiguration (config) {
-        let configuration = new Configuration(config)
-        configuration.defineMapping();
-        this.configuration = configuration
-        return 
-    }
-    setValueVariable(value, obj, key){
+        let configuration = new Configuration(config) 
+        configuration.defineMapping(); 
+        this.configuration = configuration 
+        return  
+    } 
+    setValueVariable(value, obj, key){ 
         const $this = this;
-        if (value.source){
+        // if (value.source){
             let getter = Object.getOwnPropertyDescriptor(obj, 'source');
             if (getter && getter.get){
                 obj = value.source
 
             } else {
                 $this.configuration.variables[key].source = value.source
-            }
-        } 
+            } 
+        // } 
         if (value.option || value.option == 0){
             let getter = Object.getOwnPropertyDescriptor(obj, 'option');
             if (getter && getter.get){
@@ -82,6 +84,7 @@ export  class Job {
             } else {
                 $this.configuration.variables[key].option = value.option
             }
+        
         }
     } 
     async setVariable(value, variable, target){
@@ -94,6 +97,9 @@ export  class Job {
             let promises = []
             if (variables){
                 for (let [key, vari] of Object.entries(variables)){
+                    if (vari.options && vari.option >=0 ){
+                        vari = vari.optionValue
+                    }
                     if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
                         let update_on = vari.update_on
                         let action  = update_on.action
@@ -208,10 +214,9 @@ export  class Job {
                             })
                         }
                     }
-                }
+                } 
             }
             Promise.allSettled(promises).then((respo)=>{
-                console.log(respo)
                 resolve()
             }).catch((err)=>{
                 reject(err)
@@ -221,6 +226,7 @@ export  class Job {
     setVariables(variables){
         this.variables = variables
         const $this = this
+        
         for(let [key, value] of Object.entries(variables)){
             let obj = $this.configuration.variables[key]
             this.setValueVariable(value, obj, key)
@@ -238,6 +244,7 @@ export  class Job {
             await service.setOptions()
             this.services.push(service)
         }  
+        this.status.services_used = services
         this.create_interval()
         return 
     }
@@ -305,13 +312,14 @@ export  class Job {
                 let complete = $this.services.every((d)=>{
                     return d.status.complete
                 })
-                $this.status.stream = $this.services.map((d)=>{
-                    return d.status.stream
-                })
+                $this.status.stream = [].concat.apply([], $this.services.map((d)=>{
+                    return d.status.stream.info
+                }))
                 let cancelled = $this.services.some((d)=>{
                     return d.status.cancelled
                 })
                 $this.status.fully_installed = $this.status.procedure.fully_installed
+                $this.status.stream = $this.status.stream.splice(-350)
                 $this.status.success = success 
                 $this.status.complete = complete
                 $this.status.running = running
@@ -385,7 +393,6 @@ export  class Job {
             }
         })
         store.logger.info("%s setting every complete status to false", $this.name)
-
 
         for (let i = 0; i < $this.services.length; i++){
             $this.services[i].status.complete = false

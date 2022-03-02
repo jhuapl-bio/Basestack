@@ -1,0 +1,141 @@
+- name: mash
+  title: "MASH"
+  icon: "book"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tooltip: "Run Pairwise distance estimation on 2 genomes"
+  procedures: 
+    - name: mash #Top level is the left-hand selection of the menu and the major module to install 
+      title: "MASH"
+      icon: "book"
+      module: True
+      init: false 
+      dependencies:
+        - target: "staphb/mash"
+          label: "staphb/mash"
+          type: "docker"
+          format: "docker"
+        - type: "download" 
+          format: "file"
+          label: "pre-sketched RefSeq archive"
+          target: "${writePath}/workflows/mash/refseq.genomes.k21s1000.msh"
+          overwrite: true 
+          source: 
+            url: "https://obj.umiacs.umd.edu/marbl_publications/mash/refseq.genomes.k21s1000.msh"
+            type: "file"
+            remove: true
+            target: "${writePath}/workflows/mash/refseq.genomes.k21s1000.msh"
+      tags: 
+        - "Pairwise Estimation"
+        - "Genome Distance"
+      variables:
+        genome1:
+          label: "Genome 1"
+          hint: "Select your first genome (FASTA) file"
+          bind_parent_dir: true
+          element: "file"
+          bind: 
+            from: "%{variables.genome1.source}"
+            to: "/opt/data"
+          class: "wb-100  p-3 mb-1"
+          source: null
+        genome2:
+          label: "Genome 2"
+          hint: "Select your second genome (FASTA) file"
+          options:
+            - element: null
+              name: "Refseq 1000 genomes"
+              source: "${writePath}/workflows/mash/refseq.genomes.k21s1000.msh"
+              target: "/opt/data2/refseq.genomes.k21s1000.msh"
+              bind_parent_dir: true
+              bind:  
+                from: "%{variables.genome2.source}"
+                to: "/opt/data2" #This ${} is converted into the variable attribute of selected option only!
+            - bind_parent_dir: true
+              element: "file"
+              name: "Second File"
+              bind: 
+                from: "%{variables.genome2.source}"
+                to: "/opt/data"
+              class: "wb-100  p-3 mb-1"
+              source: null
+        sketch1:
+          label: "Sketch first FASTA file beforehand"
+          element: "checkbox"
+          source: true
+          define: 
+            sketch1_flag: true
+          # hint: "Mapped alignment file from anonymised SARS-CoV-2 sequence"
+          optional: true
+          append:
+            command: " mash sketch ${genome1}; "
+            placement: 2
+            position: "start"
+            services: 
+              - 0
+        sketch2:
+          label: "Sketch second FASTA file beforehand"
+          element: "checkbox"
+          hint: "This is the reference that is compared against from genome file 1"
+          optional: true
+          source: false
+          define: 
+            sketch2_flag: true
+          # hint: "Mapped alignment file from anonymised SARS-CoV-2 sequence"
+          append:
+            command: "  mash sketch ${genome2}; "
+            placement: 2
+            position: "start"
+            services: 
+              - 0
+        winner_take_all:
+          label: "Employ Winner-Take-All to remove redundancy"
+          element: "checkbox"
+          optional: true
+          source: false
+          define:
+            winner: " -w "
+        outdata:
+          label: "Output distance metrics"
+          element: "file"  
+          output: true   
+          openSelf: true       
+          class: "wb-100  p-3 mb-1"
+          source: "%{variables.genome1.source}/mash.dist.tsv" 
+          target: "%{variables.genome1.bind.to}/mash.dist.tsv"
+        outscreen:
+          label: "Output screen metrics"
+          element: "file"  
+          output: true   
+          openSelf: true       
+          class: "wb-100  p-3 mb-1"
+          source: "%{variables.genome1.source}/mash.screen.tsv" 
+          target: "%{variables.genome1.bind.to}/mash.screen.tsv"
+      services:
+        - name: mash
+          label: "MASH"
+          image: "staphb/mash"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "
+
+            if [[ $sketch2 == 'true' ]] ; then
+                genome2=${genome2}.msh;
+            fi;
+
+            mash screen ${winner} ${genome2} ${genome1} | sort -gr > ${outscreen};
+
+
+            if [[ $sketch1 == 'true' ]] ; then
+              genome1=${genome1}.msh;
+            fi;
+            
+            mash dist ${genome2} ${genome1} > ${outdata};
+            
+            
+          "]
+    

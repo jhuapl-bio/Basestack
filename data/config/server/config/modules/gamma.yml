@@ -1,6 +1,6 @@
 - name: staphb_gamma
   title: "Gamma"
-  icon: "book"
+  icon: "capsules"
   version: 1.0
   basestack_released: 2.0
   module: True
@@ -8,7 +8,7 @@
   procedures:
     - name: staphb_gamma #Top level is the left-hand selection of the menu and the major module to install 
       title: "Gamma"
-      icon: "book" 
+      icon: "capsules" 
       module: True
       init: false 
       tooltip: "Gene Allele Mutation Microbial Assessment"

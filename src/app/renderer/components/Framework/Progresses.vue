@@ -7,10 +7,9 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="progresses" >
-    <v-subheader></v-subheader>
+  <v-card id="progresses" >
     <v-toolbar
-      dark dense
+      dark dense class="elevation-6" style="width: 100%"
     >
       <v-toolbar-title>Output Locations</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -41,32 +40,43 @@
         :items-per-page="5"
         class="elevation-1"					        
     >	
-      
+        <template v-slot:item.access="{ item }">
+            <v-tooltip bottom v-if="item.element == 'render'">
+                <template v-slot:activator="{ on }">
+                    <v-btn icon-and-text v-on="on" class="configure mt-5 mb-5 mr-5 ml-5" @click="open_link(item, $event)" color="info" medium>
+                        <v-icon   >$external-link-alt
+                        </v-icon>
+                        Click Me! 
+                    </v-btn>
+                </template>
+                View Visualization in Browser. Ensure that the service is running first!
+            </v-tooltip> 
+            <v-tooltip bottom v-else> 
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item)">
+                  <v-icon 
+                    class="" color="primary" 
+                    medium>$archive
+                  </v-icon>
+                </v-btn>
+                
+              </template>
+              {{item.source}}
+            </v-tooltip>
+            <v-tooltip bottom v-if="item.openSelf">
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item, true)">
+                  <v-icon 
+                    class="" color="primary" 
+                    medium>$file
+                  </v-icon>
+                </v-btn>
+              </template>
+              {{item.source}}
+            </v-tooltip>
+        </template>
         <template v-slot:item.label="{ item }">
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item)">
-                <v-icon 
-                  class="" color="primary" 
-                  medium>$archive
-                </v-icon>
-              </v-btn>
-              
-            </template>
-            {{item.source}}
-          </v-tooltip>
           {{item.label}}
-          <v-tooltip bottom v-if="item.openSelf">
-            <template v-slot:activator="{ on }">
-              <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item, true)">
-                <v-icon 
-                  class="" color="primary" 
-                  medium>$file
-                </v-icon>
-              </v-btn>
-            </template>
-            {{item.source}}
-          </v-tooltip>
           <v-tooltip top v-if="item.hint">
             <template v-slot:activator="{ on }">
               <v-icon 
@@ -88,7 +98,7 @@
         <template v-slot:item.element="{ item }">
             <v-icon 
                 v-if="item.type == 'files'"
-                small> {{item.complete}} / {{item.total}}
+                small> {{item.complete}} {{ ( item.total ? ` / ${item.total}` : '' ) }}
             </v-icon>
             <v-icon 
                 v-else-if="item.total > item.complete" 
@@ -99,13 +109,13 @@
             <v-icon 
                 v-else
                 small> 
-                {{item.complete}} / {{item.total}}
+                {{item.complete}} {{ ( item.total ? ` / ${item.total}` : '' ) }}
             </v-icon>
         </template>
        
         
     </v-data-table>
-  </div>
+  </v-card>
 </template>
 
 <script>
@@ -131,6 +141,20 @@ export default {
         
     },
 	methods: {
+        open_link (link, e) {
+          e.stopPropagation()
+          // this.$electron.shell.openExternal(this.getUrl(link.to))
+          // console.log(this.$electron.dialog.open(this.getUrl(link.to)))
+          window.open(this.getUrl(link), "browser", 'top=500,left=200,frame=true,nodeIntegration=no')
+      	},
+        getUrl(link){ 
+        //   let url  = `http://localhost:8080`
+            let url  = `http://localhost:${link.bind.to}`
+            if (link.suburl){
+                url = url +link.suburl
+            }
+            return url
+        },
         determineOpen(item, self){
           console.log(item,"open")
           if (item.element != 'file'){

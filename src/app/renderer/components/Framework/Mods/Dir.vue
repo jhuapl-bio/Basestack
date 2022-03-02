@@ -7,44 +7,36 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="dir" class="wv-50 p-1" @drop.prevent="addDropFiles" @dragover.prevent >
-    <v-layout  style="border: 1px solid grey">
-        <v-btn
-            @click="electronOpenDir('data')"
-            color="light"
-            disabled
+  <v-card >
+      
+      <v-sheet  elevation="1" 
+          height="50"
+          max-width="600" class="px-8 pt-4"
+          style="" @drop.prevent="addDropFiles" @dragover.prevent >
             
-            variant="secondary"
-            append-icon="$archive"
-            x-small
-            class="mt-5 mb-5"
-            style="cursor:pointer"
-        >Drag Folder here 
-          <v-icon
-           small class="ml-2"
-          > $archive
-          </v-icon>
-        </v-btn>
-        <br><br>
-        <v-spacer></v-spacer>
-        <v-subheader  style="word-wrap: anywhere;" class="entry-label" v-if="directory" >{{directory}} </v-subheader>
-        <v-tooltip bottom v-if="!$v.directory.required">
-          <template v-slot:activator="{ on }">
-            <v-icon class=" " v-on="on" small color="warning lighten-1" >$exclamation-triangle
+            <v-icon
+            small class="mr-2 "
+            > $upload
             </v-icon>
-          </template>
-          Valid Directory required
-      </v-tooltip>
-    </v-layout>
-   
-    
-  </div>
+            Drag Folder here
+            <v-icon  v-if="directory" class="text--caption configure ml-5" @click="directory = null" color="grey" small>$times-circle
+            </v-icon>
+           
+      </v-sheet>
+      
+      <small class="text-caption" v-if="directory">
+        {{directory}}
+        
+      </small>
+      
+      
+      
+  </v-card>
 </template>
 
 <script>
 const path = require("path")
 
-import { required, requiredIf, minLength, between } from 'vuelidate/lib/validators'
 
 export default {
 	name: 'file',
@@ -59,22 +51,13 @@ export default {
   computed: {
       
   },
-  validations (){
-    return{
-        directory: {
-            required: requiredIf((value)=>{
-              return value && !this.source.optional
-            })
-        },
-    }
-  },
+  
 	methods: {
     addDropFiles(e) {
       this.value = Array.from(e.dataTransfer.files);
       this.directory = this.value[0].path
     },
     formatNames(files) {
-      console.log(files)
       return files.length === 1 ? `Selected` : `${files.length} files selected`
     },
     electronOpenDir(key){

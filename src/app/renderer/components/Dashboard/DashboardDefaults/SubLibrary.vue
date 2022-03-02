@@ -109,6 +109,7 @@
             </v-autocomplete>
             
         </v-badge>
+        
         <v-spacer>
         </v-spacer>
         <v-tooltip bottom>
@@ -134,6 +135,16 @@
                 <v-icon v-on="on"  color="orange darken-2"    medium v-on:click="deleteModule(selectedModule.name)" style="" class="configure ml-4 mr-3">$trash-alt</v-icon>
             </template>
             Delete Entire Module and its dependencies 
+        </v-tooltip>
+        <v-spacer>
+        </v-spacer>
+        <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+                <v-btn icon-and-text small color="primary" @click="pruneImages()" v-on="on">
+                    <v-icon medium  class=" mr-3 ml-3 " >$recycle</v-icon>Prune Images
+                </v-btn>
+            </template>
+            Removes unused Docker images, frees up space
         </v-tooltip>
     </v-toolbar>
     <div style="text-align:center; "
@@ -408,14 +419,7 @@ export default {
 	},
     props: [ 'catalog', 'module' , 'latest'],
     watch: {
-        // moduleIdx(newValue){
-        //     if ( this.stored[this.module.name] && this.stored[this.module.name][newValue]){
-        //         this.selectedProcedure = this.stored[this.module.name][newValue].selected
-        //         this.procedures  = this.stored[this.module.name][newValue].procedures
-        //     } else {
-        //         this.selectedProcedure = {}
-        //     }
-        // },
+       
         selectedModule(newValue){
             this.selectedProcedure = {}
             this.procedures = []
@@ -443,6 +447,63 @@ export default {
         }
     },
 	methods:{
+        async error_alert(err, title){
+            let text;
+            text = err
+            console.log("error", err, title)
+            this.$swal.fire({
+                position: 'center',
+                icon: 'error',
+                showConfirmButton:true,
+                title:  title,
+                text:  text
+            })
+        },
+        async pruneImages(){
+            const $this = this
+            this.$swal.fire({
+                title: "Are you sure?",
+                text: "You will remove any and ALL dangling images. This is useful for removing unfinished or unneeded images no longer used by your system",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: 'Yes, I am sure!',
+                cancelButtonText: "No!"
+            })
+            .then(function(isConfirm) {
+                if (isConfirm.dismiss != 'cancel') {
+                FileService.pruneImages().then((message, error)=>{
+                    if (error){
+                        $this.error_alert(error.response.data.message, "Error in pruning dockers")
+                    } else{
+                        function bytesToSize(bytes) {
+                            var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                            if (bytes == 0) return '0 Byte';
+                            var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+                            return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+                        }
+                        $this.$swal.fire({
+                            position: 'center',
+                            icon: 'success',
+                            showConfirmButton:true,
+                            title:  "Pruned Dangling Docker Images",
+                            html: `Space Reclaimed: ${bytesToSize(message.data.data.SpaceReclaimed)}`
+                        })
+                    }
+                }).catch((err)=>{
+                    $this.error_alert(err.response.data.message, "Failed to prune docker images")
+                })
+                $this.$swal.fire({
+                    position: 'center',
+                    icon: 'info',
+                    showConfirmButton:true,
+                    title:  "Pruning images, this may take a moment.... This process will operate in the background*"
+                }) 
+                } else {
+                return false
+                }
+            })
+        },
         async removeCatalog(){
             FileService.removeCatalog({
                 catalog: this.selectedModule.name,

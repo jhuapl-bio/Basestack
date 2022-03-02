@@ -13,7 +13,7 @@ const cloneDeep = require("lodash.clonedeep");
 var Docker = require('dockerode');   
 const path = require("path")    
 var  { store }  = require("../../config/store/index.js")
-const { readFile, checkExists, removeFile, downloadSource, decompress_file  } = require("../controllers/IO.js")
+const { readFile, checkExists, removeFile, downloadSource, decompress_file, itemType  } = require("../controllers/IO.js")
 const { remove_images, pullImage, loadImage } = require("../controllers/post-installation.js")
 const { list_module_statuses }  = require("../controllers/watcher.js")
 const { check_container, getExternalSource, check_image, fetch_external_dockers } = require("../controllers/fetch.js")
@@ -24,12 +24,20 @@ var logger = store.logger
 // var docker = new Docker();   
 const fs = require("file-system")    
 let dockerObj;    
-  
+   
 export class Procedure { 
 	constructor(procedure){
-		this.name = procedure.name  
+		this.name = procedure.name   
         this.type = 'procedure'
         this.config = procedure  
+        if (procedure.shared && procedure.shared.variables){
+            
+            for (let [key, value] of Object.entries(procedure.variables)){
+                if (value.shared){
+                    this.config.variables[key]= procedure.shared.variables[key]
+                }
+            }
+        }        
         this.i =0
         this.dependencies  = cloneDeep(procedure.dependencies).map((d)=>{ 
             d.streamObj = null
@@ -59,13 +67,13 @@ export class Procedure {
         this.orchestrator = null; 
         this.status = {
             error: null, 
-            stream: null,
+            stream: null, 
             buildStream: [],
             running: false,
             building: false,
-            fully_installed: false,
+            fully_installed: false, 
             partial_install: false
-        }
+        } 
         this.interval = {
             checking: false, 
             interval: this.create_interval() 
@@ -81,8 +89,15 @@ export class Procedure {
                     value.option = 0
                 } 
                 value.optionValue = value.options[value.option]
+                if (!value.optionValue.source && !value.optionValue.element && typeof value.optionValue != "string"   ){
+                    value.optionValue.source = true
+                }
                 if (!value.options[value.option].source){
-                    value.source = value.optionValue
+                    if (typeof value.optionValue == 'string'){
+                        value.source = value.optionValue
+                    }else {
+                        value.source = value.optionValue.source
+                    }
                 }
             }
             if (value.load){
@@ -473,25 +488,35 @@ export class Procedure {
             dependency.status.downloading = true
             dependency.status.error = null
             
-            
-            service.setOptions()
-            service.check_then_start({}, null).catch((err)=>{
+              
+            service.setOptions().then((f)=>{
+                service.check_then_start({}, null).catch((err)=>{
+                    store.logger.error(err) 
+                    dependency.status.building = false
+                    dependency.status.downloading= false
+                    dependency.status.error = err 
+                }).then((stream)=>{
+                    dependency.streamObj = service.stream
+                    let log = spawnLog(service.stream, $this.logger)
+                    dependency.status.stream =  log
+                    try{
+                        dependency.streamObj.on("end", (response)=>{
+                            console.log("closed")
+                            dependency.status.building = false
+                            dependency.status.downloading= false
+                            dependency.status.error = null
+                        })
+                    } catch(err){
+                        store.logger.error(err)
+                    }
+                })
+            }).catch((err)=>{
                 store.logger.error(err)
                 dependency.status.building = false
                 dependency.status.downloading= false
                 dependency.status.error = err 
-            }).then((stream)=>{
-                dependency.streamObj = stream
-                try{
-                    dependency.streamObj.on("close", (response)=>{
-                        dependency.status.building = false
-                        dependency.status.downloading= false
-                        dependency.status.error = null
-                    })
-                } catch(err){
-                    store.logger.error(err)
-                }
             })
+                
             resolve()
            
         })
@@ -610,6 +635,9 @@ export class Procedure {
                             dependency.streamObj.destroy()
                             // promises.push(dependency.streamObj.destroy())
                         } else if(dependency.type == 'orchestration'){
+                            dependency.streamObj.end() 
+                            dependency.status.downloading = false
+                            dependency.status.building = false
                             dependency.streamObj.destroy() 
                             // dependency.streamObj.remove({force:true})
                         } else{

@@ -120,8 +120,11 @@ export  var module_status = async function(params, key){
 					
 					let count = 0;
 					for (let j = 0; j < files.length; j++){
-						if(files[j].includes(params.pattern)){
-							count +=1
+						// if(files[j].includes(params.pattern)){
+						var re = new RegExp( params.pattern, 'g' );
+						if (files[j].match(re)){
+						// if(files[j].match(params.pattern)){
+								count +=1
 							files_complete.push(files[j])
 						}
 					}

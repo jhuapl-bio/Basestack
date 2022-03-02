@@ -8,142 +8,85 @@
   -->
 <template>
   
-    <v-row   >
-		  <v-col cols="12"  >
-      <v-toolbar absolute width="100%" class="my-2 "> 
-        <v-toolbar-title>{{selected.title}}</v-toolbar-title>
-        <div v-if="selected.version != latest">
-          <v-tooltip bottom class="" >
-            <template v-slot:activator="{ on }">
-              <v-icon class="ml-3" v-on="on" color="warning" medium> $exclamation-triangle
-              </v-icon>
-            </template>
-            View the Library to install version {{latest}} or select from the drop-down if already loaded
-          </v-tooltip>
-          {{ ( latest ? 'A newer version is available' : 'Could not fetch latest version' ) }}
-        </div>
-        
-        <v-spacer></v-spacer>
-        
-
-        <v-select
-            v-model="selected"  v-if="selected"
-            :items="modules"
-            icon-color="primary"
-            :hint="'Version select'"
-            item-text="version"
-            item-value="version"
-            class="mx-auto pr-4"
-            style="max-width: 15%;"
-            persistent-hint
-            return-object
-        >
-          <template v-slot:prepend>
-            <v-icon color="indigo">{{ ( selected.icon  ? '$'+selected.icon : '$cog' ) }}</v-icon>
+  <v-row>
+    <v-col sm="12">
+    <v-toolbar   width="100%" class="my-0  elevation-12 "> 
+      <v-toolbar-title>{{selected.title}}</v-toolbar-title>
+      <div v-if="selected.version != latest">
+        <v-tooltip bottom class="" >
+          <template v-slot:activator="{ on }">
+            <v-icon class="ml-3" v-on="on" color="warning" medium> $exclamation-triangle
+            </v-icon>
           </template>
-          <template v-slot:item="{ item }" >
-            <v-list-item-avatar left>
-              <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
-            </v-list-item-avatar>
-            
-            <v-list-item-content outlined>
-              <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
-              <v-list-item-subtitle>
-                <v-chip
-                  x-small
-                  v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
-                >
-                {{tag}}
-                </v-chip>
-              </v-list-item-subtitle>
-              
-            </v-list-item-content>
-          </template>
-        </v-select>
-        
-        <v-divider vertical inset></v-divider>
-        <v-select
-            v-model="selectedProcedure"
-            :items="selected.procedures"
-            :prepend-icon="( selectedProcedure.icon  ? '$'+selectedProcedure.icon : '$cog')"
-            :hint="'Procedure select'"
-            item-text="title"
-            item-name="name"
-            item-value="idx"
-            class="mx-auto pl-4 pr-2"
-            style="max-width: 33%;"
-            label="Select Procedure"
-            persistent-hint
-            :return-object="true"
-            single-line
-        >
-          <template v-slot:prepend>
-            <v-icon color="primary">{{ ( selectedProcedure.icon  ? '$'+selectedProcedure.icon : '$cog' ) }}</v-icon>
-          </template>
-          <template v-slot:item="{ item, index }">
-            <v-icon v-if="item.icon" color="primary" class="mx-2" x-small>{{ '$' + item.icon }}</v-icon>
-            {{item.title}}
-          </template>
-        </v-select>
-        
-        <v-divider vertical inset></v-divider>
-        <!-- <v-menu
-          :close-on-content-click="false"
-          :nudge-width="400"
-          offset-x
-        >
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              icon
-              v-bind="attrs"
-              v-on="on"
-            >
-              <v-icon medium>$bars</v-icon>
-            </v-btn>
-          </template>
-           
-          <v-card>
-            <v-list>
-              <v-subheader>Select Services to Run for Job</v-subheader>
-              <v-list-item-group
-                v-model="services_selected"
-                multiple
-              >
-                
-                <v-list-item
-                  v-for="(entry, key ) in selectedProcedure.services"
-                  centered
-                  v-bind:key="entry.name"
-                >
-                  <template v-slot:default="{ active, item }">
-                    <v-list-item-action>
-                      <v-checkbox
-                        :input-value="active"
-                        on-icon="$check-square"
-                        off-icon="$square"
-                        color="primary"
-                      ></v-checkbox>
-                    </v-list-item-action>
-
-                    <v-list-item-content>
-                      <v-list-item-title>Notifications</v-list-item-title>
-                      <v-list-item-subtitle>Allow notifications</v-list-item-subtitle>
-                    </v-list-item-content>
-                  </template>
-                  <v-tooltip left>
-                    <template v-slot:activator="{ on }">
-                      <v-tab v-on="on" class="" style="" >
-                        <span class="tabSideItemText">{{parseInt(key)+1}}. {{ ( entry.label  ? entry.label : key  ) }}</span>
-                      </v-tab>
-                    </template>
-                    <span>{{ ( !entry.tooltip ? entry.title : entry.tooltip )}}</span>
-                  </v-tooltip>
-                </v-list-item>
-              </v-list-item-group>
-            </v-list>
-          </v-card>
-			</v-menu> -->
+          View the Library to install version {{latest}} or select from the drop-down if already loaded
+        </v-tooltip>
+        {{ ( latest ? 'A newer version is available' : 'Could not fetch latest version' ) }}
+      </div>
       
+      <v-spacer></v-spacer>
+      
+
+      <v-select
+          v-model="selected"  v-if="selected"
+          :items="modules"
+          icon-color="primary"
+          :hint="'Version select'"
+          item-text="version"
+          item-value="version"
+          class="mx-auto pr-4"
+          style="max-width: 22%;"
+          persistent-hint
+          return-object
+      >
+        <template v-slot:prepend>
+          <v-icon color="indigo">{{ ( selected.icon  ? '$'+selected.icon : '$cog' ) }}</v-icon>
+        </template>
+        <template v-slot:item="{ item }" >
+          <v-list-item-avatar left>
+            <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
+          </v-list-item-avatar>
+          
+          <v-list-item-content outlined>
+            <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
+            <v-list-item-subtitle>
+              <v-chip
+                x-small
+                v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
+              >
+              {{tag}}
+              </v-chip>
+            </v-list-item-subtitle>
+            
+          </v-list-item-content>
+        </template>
+      </v-select>
+      
+      <v-divider vertical inset></v-divider>
+      <v-select
+          v-model="selectedProcedure"
+          :items="selected.procedures"
+          :prepend-icon="( selectedProcedure.icon  ? '$'+selectedProcedure.icon : '$cog')"
+          :hint="'Procedure select'"
+          item-text="title"
+          item-name="name"
+          item-value="idx"
+          class="mx-auto pl-4 pr-2"
+          style="max-width: 33%;"
+          label="Select Procedure"
+          persistent-hint
+          :return-object="true"
+          single-line
+      >
+        <template v-slot:prepend>
+          <v-icon color="primary">{{ ( selectedProcedure.icon  ? '$'+selectedProcedure.icon : '$cog' ) }}</v-icon>
+        </template>
+        <template v-slot:item="{ item, index }">
+          <v-icon v-if="item.icon" color="primary" class="mx-2" x-small>{{ '$' + item.icon }}</v-icon>
+          {{item.title}}
+        </template>
+      </v-select>
+      
+      <v-divider vertical inset></v-divider>
       <v-tooltip top class="ml-2" v-if="selected.custom">
         <template v-slot:activator="{ on }">
           <v-btn @click="rmCustomModule(selected)" v-on="on" icon >
@@ -183,30 +126,24 @@
           height="25"
           color="primary"
       ></v-progress-linear>
-        
-      </v-toolbar>
-      <v-spacer></v-spacer>
-        
-      
-      <v-divider></v-divider>
-      <v-card style="height: 3vh">
-          <component 
-            :is="'Job'"
-            v-if="selected.idx || selected.idx == 0"
-            :module="module.name"
-            ref="job"
-            :title="module.title"
-            :watches="(job ? job.watches : [])"
-            :status="( job ? job.services : {})"
-            :procedureIdx="selectedProcedure.idx"
-            :jobStatus="job"
-            class="fill-width fill-height"
-            :moduleIdx="selected.idx"
-          >            	
-          </component>
-      </v-card>
+    </v-toolbar>
     </v-col>
-  </v-row  >
+    <v-col sm="12">
+      <component 
+        :is="'Job'"
+        v-if="selected.idx || selected.idx == 0"
+        :module="module.name"
+        ref="job"
+        :title="module.title"
+        :watches="(job ? job.watches : [])"
+        :status="( job ? job.services : {})"
+        :procedureIdx="selectedProcedure.idx"
+        :jobStatus="job"
+        :moduleIdx="selected.idx"
+      >            	
+      </component>
+    </v-col>
+  </v-row>
 </template>
 
 <script>

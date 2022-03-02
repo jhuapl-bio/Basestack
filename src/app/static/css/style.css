@@ -34,7 +34,12 @@ body {
   padding: 0px;
   overflow: auto;
 }
-
+.scroll{
+  overflow-y:auto
+}
+.noscroll{
+  overflow-y:hidden
+}
 
 .card-header,  .mb-1 {
   border: none

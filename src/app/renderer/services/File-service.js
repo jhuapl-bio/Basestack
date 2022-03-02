@@ -92,7 +92,7 @@ class FileService {
   removeModuleDependency(params){
     return Api().post(`${baseEndpoint.get()}/module/build/remove/dependency`, params)    
   }
-  cancelModuleDependency(params){
+  cancelModuleDependency(params){ 
     return Api().post(`${baseEndpoint.get()}/module/build/cancel/dependency`, params)    
   }
   getServices(){
@@ -296,7 +296,7 @@ class FileService {
     return Api().post(`${baseEndpoint.get()}/install/cancelInstallImage`, {imageName: imageName})        
   }
   pruneImages(){
-    return Api().post(`${baseEndpoint.get()}/install/pruneImages`)        
+    return Api().post(`${baseEndpoint.get()}/images/prune`)         
   }
   validateRunDirContents(params){
     return Api().post(`${baseEndpoint.get()}/validate/validateRunDirContents`, params)        

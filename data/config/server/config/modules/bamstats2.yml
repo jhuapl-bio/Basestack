@@ -16,7 +16,7 @@
 #           label: jhuaplbio/basestack_orchestrator
 #           type: "docker-local"
 #           build: 
-#             path: ${configPath}/dmodules/orchestrator/Dockerfile
+#             path: ${configPath}/server/modules/orchestrator/Dockerfile
 #             file: Dockerfile
 #           format: "dockerfile"
 #       tags: 

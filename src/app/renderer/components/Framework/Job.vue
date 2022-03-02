@@ -8,7 +8,7 @@
   - # **********************************************************************
   -->
 <template>
-  <v-card id="job"  >
+  <v-card  fluid id="job" class=" noscroll mt-0 mb-0"  >
     <v-stepper  v-model="el" v-if="services" >
         <v-stepper-header
             class="configure"
@@ -18,6 +18,7 @@
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
                     :key="key+'-entry'"
+                    :disabled="true"
                     complete-icon="$check"
                     :rules="[()=>{
                         return (status[key] && status[key].error ? !status[key].error : true) 
@@ -26,23 +27,46 @@
                     @click="el = key+1"
                     :step="key+1"
                 >
+                    
                     {{ ( entry.label ? entry.label : entry.name ) }} 
-                    <v-tooltip top v-if="status && status[key] && status[key].error">
-                        <template v-slot:activator="{ on }">
-                            <v-icon v-on="on" class="ml-2"  small color="orange darken-2">
-                                $exclamation-triangle
-                            </v-icon>
-                        </template>
-                        {{status[key].error}}
-                    </v-tooltip>
-                    <v-tooltip top v-else-if="status && status[key] && status[key].cancelled">
-                        <template v-slot:activator="{ on }">
-                            <v-icon v-on="on"  class="ml-2" small color="orange darken-2">
-                                $slash
-                            </v-icon>
-                        </template>
-                        Cancelled!
-                    </v-tooltip>
+                    <small class="">{{ services_to_use[key] >= 1 || !services_to_use[key] == null ? 'Enabled' : "Disabled" }}
+                      <v-tooltip top  :key="key+'-entryDi'" v-if="services_to_use[key] >= 1 || !services_to_use[key] == null" >
+                          <template v-slot:activator="{ on }">
+                              <v-icon v-on="on"  class="ml-2" small color="primary lighten-2" @click="services_to_use[key] = 0">
+                                  $check
+                              </v-icon>
+                          </template>
+                          Click to Disable
+                      </v-tooltip>
+                      <v-tooltip top :key="key+'-entryDi'" v-else >
+                          <template v-slot:activator="{ on }">
+                              <v-icon v-on="on"  class="ml-2" small color="warning lighten-1" @click="services_to_use[key] = 1">
+                                  $slash
+                              </v-icon>
+                          </template>
+                          Click to Enable
+                      </v-tooltip>
+                      <v-tooltip top v-if="status && status[key] && status[key].error">
+                          <template v-slot:activator="{ on }">
+                              <v-icon v-on="on" class="ml-2"  small color="orange darken-2">
+                                  $exclamation-triangle
+                              </v-icon>
+                          </template>
+                          {{status[key].error}}
+                      </v-tooltip>
+                      <v-tooltip top v-else-if="status && status[key] && status[key].cancelled">
+                          <template v-slot:activator="{ on }">
+                              <v-icon v-on="on"  class="ml-2" small color="orange darken-2">
+                                  $ban
+                              </v-icon>
+                          </template>
+                          Cancelled!
+                      </v-tooltip>
+                    </small>
+                    
+                    
+                    
+
                 </v-stepper-step>
                 <v-divider
                     v-if="key !== services.length - 1"
@@ -53,36 +77,36 @@
         <v-alert type="warning" icon="$exclamation" shaped
           text v-if="jobStatus && !jobStatus.fully_installed ">All dependencies are not installed. Check the Library to see missing components
         </v-alert>
-        <v-card v-if="procedure && procedure.variables">
-          <ListParams
-              :items="additionals"
-              v-if="additionals.length > 0"
-              :defaultHeaders="headers"
-              @updateValue="updateValue"
-
-          >
-          </ListParams>
-          <Progresses
-              :progresses="watches"
-              v-if="headers.length > 0 && procedure "
-              :status="status"
-              :job="jobStatus"
-              :catalog="module"
-              :module="moduleIdx"
-              :procedure="procedureIdx"
-              :defaultHeaders="outputHeaders"
-          >
-          </Progresses>
-      </v-card>
-        <v-stepper-items v-if="services">
-            <v-stepper-content
-                v-for="(entry, key) in services" :key="entry.name+`content`" 
-                :step="key+1"
+        <v-row >
+          <v-col sm="6" v-if="procedure && procedure.variables" >
+            <ListParams
+                :items="additionals"
+                v-if="additionals.length > 0"
+                :defaultHeaders="headers"
+                @updateValue="updateValue"
             >
-                
-                <LogWindow  v-if="status && status[key]" :info="status[key].stream.info" :key="entry.name"></LogWindow> 
-            </v-stepper-content>
-        </v-stepper-items>
+            </ListParams>
+            
+          </v-col>
+          <v-col sm="6" v-if="headers.length > 0 && procedure "  >
+            <v-card height="70vh" class="scroll fill-height">
+              <Progresses
+                  :progresses="watches"
+                  
+                  :status="status"
+                  :job="jobStatus"
+                  :catalog="module"
+                  :module="moduleIdx"
+                  :procedure="procedureIdx"
+                  :defaultHeaders="outputHeaders"
+              >
+              </Progresses>
+              <LogWindow  v-if="jobStatus && jobStatus.stream  " :info="jobStatus.stream" ></LogWindow> 
+             
+            </v-card>
+          </v-col>
+        </v-row>
+        
     </v-stepper>    
     
 
@@ -109,8 +133,8 @@ export default {
    LoopingRhombusesSpinner,
    FulfillingBouncingCircleSpinner
   },
+  
   methods: {
-      
     async cancel_procedure(procedureKey){
       const $this = this
       console.log("cancel job")
@@ -144,12 +168,17 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
-      console.log("Starting job")
+
+      let services = Object.keys(this.services_to_use).filter((key, i)=>{
+        return this.services_to_use[parseInt(key)] == 1
+      })
+      console.log("Starting job using services",services)
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
         catalog: $this.module,
         token: $this.$store.token,
+        services: services,
         variables: $this.procedure.variables
       }).then((response)=>{
         if (!response.data.skip){
@@ -191,7 +220,13 @@ export default {
         }).then((response)=>{
             if (response.data.data && Array.isArray(response.data.data)){
                 response.data.data.map((resp)=>{
-                    $this.$set($this.procedure.variables[resp.key], 'source' , resp.value.source)
+                    if (resp){
+                      $this.$set($this.procedure.variables[resp.key], 'source' , resp.value.source)
+                      if ($this.procedure.variables[resp.key].optionValue){
+                        $this.$set($this.procedure.variables[resp.key], 'optionValue', resp.value)
+                      }
+                    }
+                    
                 })
             }
         })
@@ -211,7 +246,11 @@ export default {
         })
         this.procedure = response.data.data
         this.services = this.procedure.services
-        // this.el = 1
+        if (Object.keys(this.services_to_use).length == 0){
+          for (let [key, value] of Object.entries(this.services)){
+              this.$set(this.services_to_use, key, 1)
+          }
+        }
       } catch(err){
         this.initial=false
         console.error(`${err} error in getting status`)
@@ -223,19 +262,27 @@ export default {
   data(){
     return{
         el: 1,
+        full_services: null,
         services: null,
         procedure: null,
+        services_to_use: {},
         outputHeaders: [
             {
-                text: "label",
+                text: "Label",
                 value: "label",
                 sortable: true,
                 align:"center"
             },
             {
-                text: "Status",
+              text: "Access",
+              value: "access",
+              align:"center",
+              sortable: false
+            },
+            {
+                text: "Completed",
                 value: "element",
-                sortable: false,
+                sortable: true,
                 align:"center"
             },
             {
@@ -244,13 +291,10 @@ export default {
                 sortable: false,
                 align:"center"
             }
+            
         ],
         headers: [
-            // {
-            //   text: "Actions",
-            //   value: "actions",
-            //   sortable: true
-            // },
+            
             {
                 text: "Param",
                 value: "label",
@@ -292,32 +336,16 @@ export default {
   props: [ 'module', 'moduleIdx', 'procedureIdx', 'title', 'status' ,'watches', "jobStatus" ],
   watch: {
     procedureIdx(newValue){
-        console.log("new procedure")
+        this.services_to_use = {}
         this.getProcedure()
     },
-    job(newValue){
-        console.log(newValue, "<<<")
-    }
+    
   },
   computed: {
     statuses(){
         return this.status.services
     },
-    // watches(){
-    //     let ta= []
-    //     if (this.status && this.status.watches){
-    //         this.status.watches.forEach((value)=>{
-    //             if (value.output){
-    //                 // value.name = key
-    //                 ta.push(value)
-
-    //             }
-
-    //         })
-    //     }
-    //     console.log(this.status,"status")
-    //     return ta
-    // },
+    
     additionals(){
         let ta= []
         if (this.procedure && this.procedure.variables){
@@ -329,7 +357,6 @@ export default {
                 }
             }
         }
-        console.log(ta,"<<<")
         return ta
             
     }
