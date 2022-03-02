@@ -9,6 +9,23 @@
     - "kraken2"
     - "metagenomic"
     - metagenome
+  shared:
+    variables:
+      json:
+          element: "file"
+          output: true
+          label: "JSON Visualization File"
+          hint: ".json file, to be uploaded to the Mytax Visualization Service"
+          source: "<<directory(%{variables.file.bind.from})>>/<<basename,trim(%{variables.file.source})>>.report.json"
+          target: "%{variables.file.bind.to}/<<basename,trim(%{variables.file.source})>>.report.json"
+      report: 
+          label: "Report From classification, in kraken-style"
+          element: "file"
+          output: true 
+          openSelf: true         
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report"
+          target: "%{variables.file.bind.to}/<<basename,trim(%{variables.file.source})>>.report"
   procedures:
     - name: "mytax_kraken2_report"
       title: "Kraken2 Mytax2"
@@ -73,14 +90,6 @@
                 placement: 2
                 services: 
                   - 0
-        report: 
-          label: "Report From classification, in kraken-style"
-          element: "file"
-          output: true          
-          class: "wb-100  p-3 mb-1"
-          source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report"
-          # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
-          target: "%{variables.file.bind.to}/<<basename,trim(%{variables.file.source})>>.report"
         nodes:
           label: "Nodes.dmp file, gathered from ncbi taxonomy"
           # class: "wb-100 p-3 mb-1"
@@ -89,6 +98,10 @@
             - element: null
               name: "default"
               target: "/taxdump/nodes.dmp" #This ${} is converted into the variable attribute of selected option only!
+            - element: null
+              name: "Flu 2021"
+              target: "/opt/databases/flukraken2/taxonomy/nodes.dmp"
+              source: "/opt/databases/flukraken2/taxonomy/nodes.dmp"
             - name: file
               label: "Report From classification, in kraken-style"
               element: "file"
@@ -116,7 +129,7 @@
               target: "/opt/databases/flukraken2" 
               source: "/opt/databases/flukraken2" 
               # cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken2"
-              # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index.
+              # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index. 
             - element: null
               name: "Marine Mitogenome"
               target: "/opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629"
@@ -130,13 +143,13 @@
               bind: 
                 from: "%{variables.db.source}"
                 to: "/opt/databases" 
-        json:
-          element: "file"
-          output: true
-          label: "JSON Visualization File"
-          hint: ".json file, to be uploaded to the Mytax Visualization Service"
-          source: "<<directory(%{variables.file.bind.from})>>/<<basename,trim(%{variables.file.source})>>.report.json"
-          target: "%{variables.file.bind.to}/<<basename,trim(%{variables.file.source})>>.report.json"
+        report: 
+          target: "%{shared.variables.report}"
+          shared: true
+        json: 
+          target: "%{shared.variables.json}"
+          shared: true 
+        
       services: 
         - name: "mytax_kraken2_report"
           label: "Kraken2 Report"
@@ -147,7 +160,7 @@
           force_restart: false
           force_init: false
           command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && 
-            export KRAKEN2_DEFAULT_DB=${db} && kraken2  --output ${report}.out  --report ${report}  ${file}
+            export KRAKEN2_DEFAULT_DB=${db} && ls -lht $file; kraken2  --output ${report}.out  --report ${report}  ${file}
             "
           ]
         - name: "mytax_create_json"
@@ -178,11 +191,12 @@
       force_restart: false
       config: null  
       variables:
+
         port:
           element: "render"
           label: "Mytax Sunburst Service"
           column: 12
-          output: false
+          output: true
           target: "localhost:8086"
           port: true
           bind:

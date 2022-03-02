@@ -7,30 +7,12 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="procedure"  >
-    <v-sheet class="fill-height"  height="auto">
-    
+    <v-card class="fill-height"  >
 			<v-container
 				fluid  
 				class="d-flex  align-start pa-0 align-stretch"
 			>
       <v-card height="100%" width="100%">
-        <!-- <Service  
-          :ref="selectedService.name"
-          :key="selectedService.name"
-          @sendStatus="sendStatus" 
-          v-if="selectedService.name"
-          @updateValue="updateValue" 
-          :serviceIdx="selectedService.idx"
-          :service="selectedService"
-          :module="moduleIdx"
-          :catalog="module"
-          :procedure="selectedProcedure.idx"
-          :status="selectedService.status"
-          :label="( selectedProcedure.title  ? selectedProcedure.title : ''  )"
-            
-          >
-        </Service> -->
         <Job>
         </Job>
       </v-card>
@@ -272,10 +254,9 @@
         </v-carousel-item>
       </v-carousel> -->
       </v-container>
-    </v-sheet>
+  </v-card>
      
 
-  </div>
 </template>
 
 <script>

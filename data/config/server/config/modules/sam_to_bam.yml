@@ -72,7 +72,6 @@
           force_restart: false
           force_init: false
           command: ["bash","-c", "samtools index ${bam}"]
-          variables:
             
         
           

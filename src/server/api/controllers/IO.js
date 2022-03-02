@@ -383,18 +383,22 @@ export async function downloadSource(url, target, params)  {
 					let fnct = https
 					if (url.startsWith("http:")){
 						fnct  = http
-					} 
+					}  
 					let request = fnct.get(url).on("response", (response)=>{
 						var len = parseInt(response.headers['content-length'], 10);
 						response.on('data', function(chunk) {
-							downloaded += chunk.length;
-							if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
-								let percent= (100 * downloaded/len ).toFixed(0)
-								store.logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
-					 			seen.start =  .02 + downloaded/len   
-								seen.end =  seen.end + .02  
-								writer.status = percent  
-							} 
+							if(chunk){
+								downloaded += chunk.length;
+								if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
+									let percent= (100 * downloaded/len ).toFixed(0)
+									store.logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
+									 seen.start =  .02 + downloaded/len   
+									seen.end =  seen.end + .02  
+									writer.status = percent
+								} 
+							}
+
+							
 							// reset timeout 
 							clearTimeout( timeoutId );  
 							timeoutId = setTimeout( fn, timeout );  

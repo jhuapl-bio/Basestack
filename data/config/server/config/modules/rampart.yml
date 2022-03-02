@@ -23,6 +23,7 @@
           column: 12
           element: "render"
           port: true
+          output: true
           bind:
             from: "3000"
             to: "3000"

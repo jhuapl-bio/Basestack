@@ -95,14 +95,15 @@ export  class Module {
         }) 
 	}
     async initProcedures(){
-        let promises = []
+        let promises = []   
         const $this = this;
         cloneDeep(this.config.procedures).forEach((procedure, idx)=>{
             promises.push(this.defineProcedure(procedure, idx))
-        })
+        }) 
         Promise.allSettled(promises).then((response)=>{
             response.forEach((item, i)=>{
                 if (item.status == 'fulfilled'){
+                    
                     $this.procedures.push(item.value)
                 } else {
                     store.logger.error("Error in initiating procedure... %o %s" , item, $this.config.procedures[i].name)
@@ -111,8 +112,11 @@ export  class Module {
         })
     }
     async defineProcedure(procedure, procedureIdx){
+        procedure.shared = this.config.shared
         let proce = new Procedure(procedure, this.catalog, this.module, procedureIdx )
+        
         await proce.init() 
+        
         return proce
     }
     async fetchVersion(dependency){

@@ -27,6 +27,7 @@
         file:
           label: "FASTA File"
           element: "file"
+          hint: "Consensus FASTA file that you need to determine lineage from"
           bind_parent_dir: true
           bind: 
             from: "%{variables.file.source}"

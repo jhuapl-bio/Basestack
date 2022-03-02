@@ -229,7 +229,7 @@ export function set_stored(key, items){
 				if (!store.remotes[item.name]){
 					store.remotes[item.name] = []
 				} 
-				
+				 
 				
 				let g = item
 				Object.defineProperty(g, 'loaded', {
@@ -397,7 +397,7 @@ async function check_image_promise(image){
 				status: false
 			})
 		}
-
+ 
 	})
 
 }
@@ -410,11 +410,10 @@ export async function check_container(container_name){
 			let complete = false
 			let success = false
 			let running = false
-
 			let returnable = {
 				complete: false,
 				exists: false,
-				running: false, 
+				running: false,  
 				msg: null,
 				success:false
 			}

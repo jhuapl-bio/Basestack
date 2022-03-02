@@ -853,15 +853,15 @@ router.post("/service/run", (req,res,next)=>{ // build workflow according to nam
 					if (variable.source){
 						cacheParams(token, {
 							...bb,
-							value: variable.source,
+							value: variable.source, 
 							variable:key,
-							target: "source"
-						})
+							target: "source"  
+						})    
 					}
 					if (variable.option || variable.option == 0){
 						cacheParams(token, {
 							...bb,
-							variable: key,
+							variable: key,  
 							value: variable.option,
 							target: "option"
 						})
@@ -1267,19 +1267,19 @@ router.post("/module/build/cancel/dependency", (req,res,next)=>{ //this method n
 			let response = await procedure.cancel_build(req.body.dependency)
 			logger.info(`Success in cancelling dependency build: ${req.body.dependency}`)
 			res.status(200).json({status: 200, message: "Removed process for install dependency for this module", data: response });
-		} catch(err2){
+		} catch(err2){ 
 			logger.error("%s %s", "Error in cancelling module dependency build", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
 		}	
-	})()
-})
+	})()  
+}) 
 
-
+ 
 router.post("/images/prune", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function() {
 		try {
 			await prune_images(req.body).then((response)=>{
-				logger.info("Success in pruning all images")
+				logger.info("Success in pruning all images") 
 					res.status(200).json({status: 200, message: "Completed full pruning of dangling images", data: response });
 				}).catch((err)=>{
 					logger.error("%s %s", "Error in pruning images", err)
@@ -1290,7 +1290,7 @@ router.post("/images/prune", (req,res,next)=>{ //this method needs to be reworke
 			res.status(419).send({status: 419, message: error_alert(err2) });
 		}	
 	})()  
-}) 
+})  
  
 
 router.get("/job/stage/:catalog/:module/:procedure", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
@@ -1327,36 +1327,30 @@ router.get("/job/status/:catalog/:module/:procedure", (req,res,next)=>{ //this m
 				}) 
 				let job = await create_job(procedure.config, {}, services, procedure)
 				found = job
-				// let dep_status = procedure.dependencies.map((f)=>{
-				// 	return f.status
-				// })
-				// found.status.dependencies = dep_status
 				nestedProperty.set(store, `jobs.catalog.${req.params.catalog}.${req.params.module}.${req.params.procedure}`, job)
 			}
-			// console.log("getjob", found.status)
-			
 			res.status(200).json({status: 200, message: "Completed job setting", data: found.status });
 		} catch(err2){
 			logger.error("%s %s", "Error in setting job", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
 		}	
-	})()  
-}) 
+	})()   
+})  
 
 router.post("/job/set/variable", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
-	(async function() {
-		try { 
+	(async function() {   
+		try {      
 			let module = store.catalog[req.body.catalog].modules[req.body.module]
-			let procedure = module.procedures[req.body.procedure]
+			let procedure = module.procedures[req.body.procedure] 
 			let token = req.body.token
-			if (!token){ 
-				token = 'development'
+			if (!token){     
+				token = 'development' 
 			}
 			
 			// let tokenVals = store.server.cache.get(token)  
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`)
 			let job;
-			
+			 
 			if (!found){
 				let services = req.body.services
 				job = await create_job(procedure.config, req.body.variables, services, procedure)
@@ -1365,9 +1359,8 @@ router.post("/job/set/variable", (req,res,next)=>{ //this method needs to be rew
 				job = found 
 			}
 			let changed_variables = await job.setVariable(req.body.value, req.body.variable, req.body.target )
-			console.log(changed_variables,"final changed")
-			res.status(200).json({status: 200, message: "Completed job setting", data: changed_variables });
-		} catch(err2){ 
+ 			res.status(200).json({status: 200, message: "Completed job setting", data: changed_variables });
+		} catch(err2){  
 			logger.error("%s %s", "Error in setting job", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
 		}	
@@ -1387,46 +1380,46 @@ router.post("/job/set", (req,res,next)=>{ //this method needs to be reworked for
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`)
 			let job;
 			
-			if (!found){
+			if (!found){ 
 				job = await create_job(procedure.config, req.body.variables, services)
 				nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
-			} else {
-				job = found 
-			}
-			job.setVariables(req.body.variables)
+			} else {    
+				job = found      
+			}          
+			job.setVariables(req.body.variables) 
 			res.status(200).json({status: 200, message: "Completed job setting", data: job.configuration });
-		} catch(err2){ 
+		} catch(err2){    
 			logger.error("%s %s", "Error in setting job", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
-		}	
-	})()  
+		}	   
+	})()     
 }) 
 
 router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
-	(async function() { 
-		try {   
-			store.logger.info("Init job start")
+	(async function() {     
+		try {     
+			store.logger.info("Init job start") 
 			let module = store.catalog[req.body.catalog].modules[req.body.module]
 			let procedure = module.procedures[req.body.procedure]
 			let token = req.body.token    
-			if (!token){      
-				token = 'development'    
-			} 
-			let services = req.body.services   
-			// let tokenVals = store.server.cache.get(token)  
+			if (!token){         
+				token = 'development'     
+			}      
+			let services = req.body.services    
+			// let tokenVals = store.server.cache.get(token)   
 			// nestedProperty.set(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.pro    cedure}.variables`, req.body.variables)
 			// nestedProperty.set(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}.job`, job)
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`)
-			store.logger.info("found job, cleaning it up") 
-			if (found){   
-				found.cleanup()    
+			if (found){        
+				store.logger.info("found job, cleaning it up") 
+				found.cleanup()      
 				delete store.jobs.catalog[req.body.catalog][req.body.module][req.body.procedure]
-				store.logger.info("found job, cleaned up")
-			}
+				store.logger.info("found job, cleaned up")  
+			} 
 			store.logger.info("Starting Job!")  
   			let job = await create_job(procedure.config, req.body.variables, services, procedure)
 			// console.log("req body", job.configuration.variables.file.source, job.configuration.variables.file.bind.from)
-			store.logger.info("job created")
+			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
 			let skip = await job.start()
 			store.logger.info("Completed or Exited Job!")

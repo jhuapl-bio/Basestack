@@ -28,6 +28,7 @@
           column: 12
           element: "render"
           port: true
+          output: true
           bind:
             from: "80"
             to: "8087"

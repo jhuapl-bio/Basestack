@@ -5,55 +5,55 @@ const { set_stored } = require("./fetch.js")
 const { Job } = require("../orchestrators/job")
 const { getFolders, readFile, getFiles} = require("./IO.js") 
 import path from "path" 
-const YAML = require("yaml")   
-
+const YAML = require("yaml")    
+ 
 export function bytesToSize(bytes) {
    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-   if (bytes == 0) return '0 Byte';
+   if (bytes == 0) return '0 Byte'; 
    var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
    return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
-}
+} 
 export async function create_job(config, variables, services, procedure){
     let job = new Job(procedure)
-    job.defineConfiguration(config)
-    if (!services){
-        services = config.services.map((d,i)=>{
-            return i
-        })
-        
-    }
-    await job.defineServices(services)
-    if (variables){ 
-        job.setVariables(variables)
-    }
-    return job
-}
+    job.defineConfiguration(config)   
+    if (!services){  
+        services = config.services.map((d,i)=>{ 
+            return i  
+        }) 
+                  
+    }  
+    await job.defineServices(services) 
+    if (variables){       
+        job.setVariables(variables)      
+    }      
+    return job   
+}           
 
-
-async function import_cfgs(module, type){
-    try{
-        let promises_files = []
-        let promises_folders = [] 
-        let files_marked = []
-        if (module.format == 'single' ){
-            promises_files.push(readFile(module.path))
+   
+async function import_cfgs(module, type){ 
+    try{   
+        let promises_files = [] 
+        let promises_folders = []   
+        let files_marked = []   
+        if (module.format == 'single' ){   
+            promises_files.push(readFile(module.path)) 
             files_marked.push(module.path)
-        } else if (module.format == 'files') {
-            promises_folders.push(getFiles(module.path))
+        } else if (module.format ==  'files') {  
+            promises_folders.push(getFiles(module.path))  
         } else { 
-            promises_folders.push(getFolders(module.path)) 
-        }
-        if (promises_folders.length > 0){    
+            promises_folders.push(getFolders(module.path))   
+        }   
+        if (promises_folders.length > 0 ){     
             let results = await Promise.allSettled(promises_folders)
             results.forEach((result, i)=>{ 
-                let inner_file_read = []  
-                result.value.forEach((dir)=>{
+                let inner_file_read = []    
+                result.value.forEach((dir)=>{  
                     try{  
-                        
-                        if  (module.format == 'dir'){
+                         
+                        if  (module.format == 'dir'){ 
                             promises_files.push(readFile(path.join( dir.path,  module.filename )    )     )
                             files_marked.push(path.join( dir.path,  module.filename )    )
-                        } else { 
+                        } else {  
                             promises_files.push(readFile(dir )     )
                             files_marked.push(( dir  ))
                         }
@@ -62,7 +62,7 @@ async function import_cfgs(module, type){
                     }
                 })
             })
-        }
+        } 
         let results = await Promise.allSettled(promises_files)
         let return_data = []
         results.forEach((result, i)=>{

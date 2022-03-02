@@ -105,7 +105,9 @@ export function create_service(key, service){
 export  function create_module(module, key){
 	try{    
 		let modl = new Module(module, module.name, key)
+		
 		modl.initProcedures()
+		
 		if (!store.catalog[module.name]){
 			store.catalog[module.name] = new Catalog(module)
 			Object.defineProperty(store.catalog[module.name], 'tags', {
@@ -121,13 +123,14 @@ export  function create_module(module, key){
 					reducedAllTags = [... new Set(reducedAllTags)]
 					return reducedAllTags
 
-
+ 
 				}
 			})
 				 
-
+ 
 			// })
-		}
+		} 
+		 
 		return modl
 	} catch(err){
 		logger.error("%s %o", "error in init module", err)  
@@ -152,13 +155,12 @@ export async function create_procedure(procedures_default){
 	} catch(err){ 
 		logger.error("%s %o", "error in init procedures", err)  
 		throw err 
-	}  
-} 
-export async function init_base_services(){    
-	console.log(store.config.services) 
+	}      
+}    
+export async function init_base_services(){      
 		for (let [key, service] of store.config.services.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
-			try{ 
-				console.log(key,"llll")
+			try{   
+				console.log(key,"llll")  
 			} catch(err){   
 				logger.error("%o error in defining service %s", err, key)
 			}
@@ -172,8 +174,11 @@ export async function init_base_modules(){
 		for (let [key, module] of store.config.modules.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
             let staged_module = []	 
 			let modl = create_module(module, key)
+			
 			store.catalog[module.name].modules.push(modl)
+			
 		}
+		 
 		return 
 	} catch(err){
 		logger.error("%s %o", "error in init modules", err)

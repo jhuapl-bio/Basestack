@@ -12,16 +12,15 @@
         v-model="value"
         :label="(source.hint ? source.hint : '')" 
         show-size  
-        counter
+        counter dense
     > 
+      <template v-slot:append-outer>
+         <v-icon  v-if="value" class="text--caption configure" @click="value = null" color="grey" small>$times-circle
+        </v-icon>
+      </template>
     </v-file-input >
-    <v-tooltip bottom v-if="!$v.value.required">
-        <template v-slot:activator="{ on }">
-          <v-icon class="mt-5 ml-1" v-on="on" small color="warning lighten-1" >$exclamation-triangle
-          </v-icon>
-        </template>
-        Valid File required
-    </v-tooltip>
+   
+   
   	
     
   </v-layout>
@@ -39,15 +38,6 @@ export default {
           value: null,
           cached: false
       }
-  },
-  validations (){
-    return{
-        value: {
-            required: requiredIf((value)=>{
-              return value && !this.source.optional
-            })
-        },
-    }
   },
   computed: {
     
@@ -73,8 +63,10 @@ export default {
   },
   watch: {
         value(newValue, oldValue){
-            
-            if (newValue.path && newValue.path !== ""){
+            if (!newValue){
+              this.$emit("updateValue", newValue )
+            }
+            else if (newValue.path && newValue.path !== ""){
               this.$emit("updateValue", newValue.path )
               this.cached = false
             } else {

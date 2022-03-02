@@ -8,18 +8,17 @@
   -->
 <template>
   <v-layout id="exists" class="mt-2 " > 
-  	<v-icon color="green" small v-if="value">$check-circle
-      </v-icon>
-  	<v-icon color="warning" small v-else>$exclamation
+  	<!-- <v-icon color="green" small v-if="value">$check-circle
     </v-icon>
-    <v-tooltip bottom v-if="!$v.value.required">
+
+    <v-tooltip bottom v-else>
         <template v-slot:activator="{ on }">
           <v-icon class="" v-on="on" small color="warning lighten-1" >$exclamation-triangle
           </v-icon>
         </template>
         Must Exist!
-    </v-tooltip>
-  </v-layout>
+    </v-tooltip> -->
+  </v-layout> 
 </template>
 
 <script>
@@ -47,13 +46,14 @@ export default {
                 })
             },
         }
-    },
+    }, 
     watch: {
         source: {
             deep: true,
             handler(newValue){
-                console.log("new value", newValue)
+                console.log("newValue exists", newValue)
                 this.value = newValue.source
+                this.$set(this, 'value', newValue.source)
             }
         }
     },

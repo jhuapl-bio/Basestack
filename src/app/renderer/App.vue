@@ -17,7 +17,6 @@
 				mini-variant-width="64"
 				permanent  
 			>
-			<!-- <v-layout column fill-height height="20px" style="overflow-y:auto"> -->
 				<v-list
 					dense class="procedure-list"
 				>
@@ -56,7 +55,6 @@
 					
 					</v-list-item-group>
 				</v-list>
-			<!-- </v-layout>			 -->
 			<template v-slot:append>
 				<v-divider></v-divider> 
 				<v-list-item-group  v-if="defaults"
@@ -160,128 +158,50 @@
     </v-app-bar>
 		<v-main >
 			<v-container fluid >
-          <v-card  height="100vh" v-if="!runningServer">
-            <v-alert type="warning" shaped icon="$exclamation-triangle"
-              text > Server is not Running at specified port: {{selectedPort}}
-            </v-alert>
-             <Dashboard/>
-            
-          </v-card>
-         
-        <component 
-          :is="'Module'" 
-          v-if="catalog && selected == 'procedures' && catalog[(tabProcedure >=0 ? tabProcedure : 0)]"
-          :module="catalog[tabProcedure]"
-          :latest="catalog[tabProcedure].status.latest_available"
-          :key="catalog[tabProcedure].idx"
-          @updateSelected="updateSelected"
-          :moduleIndex="tabProcedure"
-        >       
-        </component>
-        <component 
-          :is="defaults[tab].component"
-          :defaults="defaults"  v-else-if="defaults && selected=='defaults' && defaults[(tab >=0 ? tab : 0)]"
-          :key="defaults[tab].name"
+        <v-row  v-if="!runningServer">
+          <v-alert type="warning" shaped icon="$exclamation-triangle"
+            text > Server is not Running at specified port: {{selectedPort}}
+          </v-alert>
+            <Dashboard/>
           
-          :defaultModule="defaults[tab]"
-          >            	
-        </component>
-        <!-- <v-tab-items
-          v-model="tab"
-
-        :is="default.component"
-          :defaults="defaults" 
-          v-else
-          :defaultModule="default"
-
-
-          v-else
-        >
-          <v-tab-item>
-             
-          </v-tab-item>
-          <v-tab-item  v-for="[key, entry] in Object.entries(defaults)"
-              v-bind:key="entry.name">
+        </v-row>
+        <v-row   v-if="catalog && selected == 'procedures' && catalog[(tabProcedure >=0 ? tabProcedure : 0)]">
+          <v-col sm="12" >
             <component 
-              :is="entry.component"
-              :defaults="defaults"
-              :defaultModule="entry"
+              :is="'Module'" 
+              
+              :module="catalog[tabProcedure]"
+              :latest="catalog[tabProcedure].status.latest_available"
+              :key="catalog[tabProcedure].idx"
+              @updateSelected="updateSelected"
+              :moduleIndex="tabProcedure"
+            >       
+            </component>
+          </v-col>
+        </v-row>
+        <v-row  v-else-if="defaults && selected=='defaults' && defaults[(tab >=0 ? tab : 0)]">
+          <v-col sm="12">
+            <component 
+              :is="defaults[tab].component"
+              :defaults="defaults" 
+              :key="defaults[tab].name"
+              
+              :defaultModule="defaults[tab]"
               >            	
             </component>
-          </v-tab-item>
-        </v-tab-items> -->
-				<!-- <v-carousel
-					v-model="tab" 
-					:show-arrows="false"
-					hide-delimiters
-					vertical  
-          class="car"
-					v-if="selected == 'procedures'"
-					delimiter-icon="$circle"
-					>
-					<template v-slot:prev="{ on,  }"  >
-						<v-icon  small v-on="on">
-							$arrow-alt-circle-left
-						</v-icon>
-					</template>
-					<template v-slot:next="{ on,  }">
-						<v-icon small v-on="on">
-							$arrow-alt-circle-right
-						</v-icon>
-					</template>
-					<v-carousel-item
-						:transition="false" class=""   v-for="( entry, key) in catalog"
-						v-bind:key="key" 
-					>
-						<component 
-							:is="'Module'"
-							:module="entry"
-							@updateSelected="updateSelected"
-							:moduleIndex="key"
-						>            	
-						</component>
-						
-					</v-carousel-item>
-					</v-carousel>
-					<v-carousel
-						v-model="tab"
-						:show-arrows="false"
-						hide-delimiters 
-						vertical 
-						v-if="selected == 'defaults'"
-						delimiter-icon="$circle"
-					>
-						<v-carousel-item 
-							class="car" 
-						>  -->
-					
-<!-- 							
-						</v-carousel-item>
-						<v-carousel-item v-for="[key, entry] in Object.entries(defaults)"
-						
-						v-bind:key="entry.name"> 
-							<component 
-								:is="entry.component"
-								:defaults="defaults"
-								:defaultModule="entry"
-								>            	
-							</component>
-							
-						</v-carousel-item>
-					</v-carousel>
-					
-				</v-carousel> -->
+          </v-col>
+        </v-row>
+       
 			</v-container>
 		</v-main>
 		<v-footer
 			 absolute inset app
+       class=""
 			>
 			<v-card
-				flat
-				tile
 				width="100%"
 				color="primary"
-				class="lighten-1 text-center"
+				class="lighten-1 text-center "
 			>
 				<v-card-text class="white--text">
 				{{  version  }} — <strong>Basestack</strong>
@@ -376,29 +296,13 @@ export default {
 			mini:true,
       defaultModule: {},
 			drawer:false,
-			tabProcedure: null , 
+			tabProcedure: null, 
 			sel: 0,
 			selected: 'defaults',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 
       ],
-			// colorList: [
-			// 	"rgb(70, 240,240",
-			// 	"rgb(128,0,0",
-			// 	"rgb(128,128,0",
-			// 	"rgb(255,165,0",
-			// 	"rgb(255,255,0",
-			// 	"rgb(0,128,0",
-			// 	"rgb(128,0,128",
-			// 	"rgb(255,0,255",
-			// 	"rgb(255,0,0",
-			// 	"rgb(0,255,0",
-			// 	"rgb(0,128,128", 
-			// 	"rgb(0,255,255",
-			// 	"rgb(0,0,255",
-			// 	"rgb(0,0,128",
-			// ],
 			modulesInner: [],
 			collapsed: false,
 			isHovered: -1,
@@ -418,7 +322,7 @@ export default {
       services: false,
       procedures: false,
       defaults: [],
-      runningServer: false,
+      runningServer: false, 
       running: false
     }
   },

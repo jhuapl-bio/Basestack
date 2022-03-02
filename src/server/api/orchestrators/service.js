@@ -29,15 +29,15 @@ export class Service {
 		this.name = service.name
         this.serviceIdx = serviceIdx
         this.type = "service"
-        this.config = service 
+        this.config = service  
         this.orchestrated = orchestrated
         this.dependencies = [], 
         this.interval = {
-            checking: false,
+            checking: false, 
             interval: this.create_interval()
         }
         this.status = { 
-            exists: false,
+            exists: false, 
             exit_code: -1,
             error: null,
             success: null,
@@ -50,9 +50,9 @@ export class Service {
         };
         this.jobInterval = null
         let depends = this.config.depends
+        this.options = null
         this.defineDependencies()
         this.readVariables()
-        this.options = null
         // this.config = this.mapConfigurations()
 
 	}
@@ -92,6 +92,7 @@ export class Service {
                     checking = false
                 })
             }
+            $this.status.stream.info = $this.status.stream.info.splice(-150)
         }, 5000)
     //     return interval
     }
@@ -187,14 +188,23 @@ export class Service {
             
             if ($this.config.orchestrated){
                 let process = $this.pid
-                let contr  = $this.orchestratorContainer
-                if (contr){
-                    resolve()
-                } else {
-                    resolve("Already dead...")
-                }
+                let container = store.docker.getContainer(container_name).remove({force:true}, function(err,data){
+                    if (err){
+                        logger.error("%s %s %o", "Error in stopping docker container: ",container_name, err)
+                        reject(`Module does not exist: ${container_name}`)
+                    } else {
+                        logger.info("%s %s", "Success in removing container: ", container_name)
+                        resolve(`Success in stop module: ${container_name}`)
+                    }
+                })
+                // let contr  = $this.orchestratorContainer
+                // if (contr){
+                //     resolve()
+                // } else {
+                //     resolve("Already dead...")
+                // }
             } else { 
-                var container = store.docker.getContainer(container_name).remove({force:true}, function(err,data){
+                let container = store.docker.getContainer(container_name).remove({force:true}, function(err,data){
                     if (err){
                         logger.error("%s %s %o", "Error in stopping docker container: ",container_name, err)
                         reject(`Module does not exist: ${container_name}`)
@@ -214,9 +224,13 @@ export class Service {
                 let name = $this.name;
                 store.logger.info(`starting container..${name}`)
                 let exists = await check_container($this.name)
-                if ( ( exists.exists && $this.config.force_restart) ||  exists.exists ){
-                    store.logger.info("Force restarting")
-                    await $this.stop()
+                if ( (  $this.config.force_restart) ||  exists.exists ){
+                    store.logger.info("Force restarting______________")
+                    try{
+                        await $this.stop()
+                    } catch(err){
+                        store.logger.error("Err in stopping container %o", err)
+                    }
                 }
                 $this.container = null
                 let skip = false
@@ -382,11 +396,11 @@ export class Service {
                 // full = d
 
             }  else {
-                full = d
+                full = d 
             }
             return full.join( ( sep == 'tab' ? "\t" : sep )  )
 
-        }).join('\n')
+        }).join('\n') 
         if (newline){
             tsv_file_content = tsv_file_content + "\n"
         }
@@ -394,7 +408,7 @@ export class Service {
     }
     
 
-    start(params, wait){ 
+    start(params, wait){  
 		const $this = this
         this.status.error = null
         this.status.running = true
@@ -408,22 +422,31 @@ export class Service {
             }
             let bind = []
             if ($this.config.bind){
-                $this.config.bind.forEach((b)=>{
-                    bind.push(b)
-                })
+                if (Array.isArray($this.config.bind)){                    
+                    $this.config.bind.forEach((b)=>{
+                        if (typeof b == 'object'){
+                            bind.push(`${b.from}:${b.to}`)
+                        } else {
+                            bind.push(b)
+                        }
+                    })
+                } else {
+                    let b  = $this.config.bind
+                    bind.push(`${b.from}:${b.to}`)
+                }
             }
             if (params.bind){
                 params.bind.forEach((b)=>{
                     bind.push(b)
                 })
             }
-            let cmd = $this.config.command
-            if (cmd){
+            let cmd = $this.config.command 
+            if (cmd){  
                 options.Cmd = $this.config.command
-            }
+            } 
             let promises = []; 
             let promisesInside = []
-            let values = []
+            let values = [] 
             options = cloneDeep($this.updateConfig(options))
             /////////////////////////////////////////////////
             let custom_variables = params.variables
@@ -435,8 +458,10 @@ export class Service {
                 options = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options)
             }   
             // $this.config.variables = defaultVariables
+            let envs = {}
             if (defaultVariables &&  typeof defaultVariables == 'object'){
                 for (let [name, selected_option ] of Object.entries(defaultVariables)){
+ 
                     if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
                         // let targetBinding = (selected_option.create ? selected_option.create : selected_option)
                         let targetBinding = selected_option
@@ -504,50 +529,79 @@ export class Service {
                                 env.push(`${name}=${selected_option}`)
                             }
                         }     
-                        if (full_item.define){
+                        if (full_item.define && full_item.source){
                             for( let [key, value] of Object.entries(full_item.define)){
                                 env.push(`${key}=${value}`)
                             }
                         }   
-                        // Define the command additions if needed  
-                        if (selected_option.append){
-                            console.log("APPEND!")
-                        }
-                        if (selected_option.append && cmd && ( !selected_option.element ||  selected_option.source ) ){ 
-                            let serviceFound = selected_option.append.services.findIndex(data => data == $this.serviceIdx)
+                        if (selected_option.define && full_item.source){
+                            for( let [key, value] of Object.entries(selected_option.define)){
+                                env.push(`${key}=${value}`)
+                            }
+                        }   
+                        function append_commands(appendable){
+                            let serviceFound = appendable.services.findIndex(data => data == $this.serviceIdx)
                             if (serviceFound >= 0){ 
-                                let service = selected_option.append
-                                if (service.placement || service.placement == 0){
-                                    if (selected_option.append.position == 'start'){
-                                        options.Cmd[service.placement] =  selected_option.append.command + " " + options.Cmd[service.placement]  +  " "
+                                let service = appendable
+                                console.log(appendable,"<<")
+                                if (service.placement >= 0){
+                                    if (appendable.position == 'start'){
+                                        options.Cmd[service.placement] =  appendable.command + " " + options.Cmd[service.placement]  +  " "
                                     }else {
-                                        options.Cmd[service.placement] =  options.Cmd[service.placement]  +  selected_option.append.command + " "
+                                        options.Cmd[service.placement] =  options.Cmd[service.placement]  +  appendable.command + " "
                                     }
                                 } else{
-                                    if (selected_option.append.position == 'start'){
-                                        options.Cmd[options.Cmd.length - 1] =  selected_option.append.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
+                                    if (appendable.position == 'start'){
+                                        options.Cmd[options.Cmd.length - 1] =  appendable.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
                                     } else {
-                                        options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   selected_option.append.command
+                                        options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   appendable.append.command
                                     }
                                 }
     
                             } 
+                        }
+                        // Define the command additions if needed  
+                        if (selected_option.append && cmd && ( !selected_option.element ||  full_item.source ) ){ 
+                            
+                            if (!Array.isArray(selected_option.append)) {
+                                append_commands(selected_option.append)
+                            } else{
+                                selected_option.append.forEach((appendable)=>{
+                                    append_commands(appendable)
+                                })
+                            }
                                 
                         } 
                     }  
                 }
             }
+            let append = $this.config.append
+            if (append){
+                if (append.placement || append.placement == 0){
+                    if (append.position == 'start'){
+                        options.Cmd[append.placement] =  append.command + " " + options.Cmd[append.placement]  +  " "
+                    }else {
+                        options.Cmd[append.placement] =  options.Cmd[append.placement]  +  append.command + " "
+                    }
+                } else{
+                    if (append.position == 'start'){
+                        options.Cmd[options.Cmd.length - 1] =  append.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
+                    } else {
+                        options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   append.command
+                    }  
+                }
+            }
             if ($this.config.image){
                 options.Image = $this.config.image  
-            }
+            } 
             if (! options.Image ){ 
                 throw new Error("No Image available")
-            } 
+            }  
                
             if (typeof options.Cmd == "string"){  
                 options.Cmd = ['bash', '-c', options.Cmd]
-            }   
-            options.Env = [...options.Env, ...env] 
+            }    
+            options.Env = [...options.Env, ...env]  
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...bind]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
             logger.info("%o ______", options)
@@ -558,7 +612,7 @@ export class Service {
                 $this.status.stream.info.push(JSON.stringify(options, null, 4))
                 $this.status.success = false 
                 $this.status.error = false 
-                $this.status.complete = false
+                $this.status.complete = false 
                 store.docker.createContainer(options,  function (err, container) {
                     $this.container = container
                     if (err ){
@@ -576,7 +630,7 @@ export class Service {
                         $this.status.success= false
                         $this.status.stream.info.push(err)
                         reject(err)
-                    }
+                    } 
                     try{
                         function inspect(container){
                             return new Promise((resolve, reject)=>{
@@ -620,6 +674,8 @@ export class Service {
                         container.attach({stream: true, stdout: true, stdin:true, stderr: true}, function (err, stream){
                             $this.log = spawnLog(stream, $this.logger)
                             $this.status.stream =  $this.log
+                            $this.status.stream.info.push("%s", JSON.stringify(options, null, 4))
+                            $this.status.stream.info.push(`starting the container ${options.name} `)
                             $this.stream = stream 
                             container.start(function (err, data) {
                                 store.logger.info("Starting... %s", $this.name)

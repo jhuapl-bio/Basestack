@@ -6,19 +6,19 @@ var  logger  = store.logger
 const { checkFileExist, reformatResponseVideo }  = require("./validate.js")
 const { init_base_modules, init_dind, init_base_procedures, init_base_services } = require("./init.js")
 const {  writeFile, ammendJSON, readFile, get, set } = require("./IO.js") 
-        
- 
+         
+  
 const {  listImages, fetch_external_config, set_stored } = require("./fetch.js")
+    
   
-  
-const { docker_init } = require("./init.js") 
-const lodash = require("lodash") 
+const { docker_init } = require("./init.js")   
+const lodash = require("lodash")  
 
+    
  
-
-export async function init(){    
-	store.ready = true
-	// Initiating the Docker Class   
+export async function init(){     
+	store.ready = true  
+	// Initiating the Docker Class    
 	store.docker = await docker_init();  
 	// //Initiating the Status Class of Modules 
 	let response_orchestrator = await init_dind()
@@ -29,7 +29,6 @@ export async function init(){
 	fetch_external_config('modules').then((modules)=>{
 		if (module){
 			set_stored(module.name, modules)
-			console.log(store.remotes,"<")
 		} else {
 			store.logger.info("No modules found at remote location")
 		}
