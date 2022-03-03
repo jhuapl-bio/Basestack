@@ -23,7 +23,7 @@ module.exports = {
       primary: {
           blue: {
             // @todo: we should add jhu blues to this as well
-            'light': 'hsl(209, 100%, 95%, 100)', // <-- check w/ caleb... this is so gray...
+            'light': 'hsl(206, 84%, 88%, 100)', // <-- check w/ caleb... this is so gray...
             DEFAULT: 'hsl(209, 100%, 36%, 100)',
             'dark': 'hsl(209, 87%, 30%, 100)',
             'rich': 'hsl(206, 79%, 57%, 100)'
