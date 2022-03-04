@@ -1,0 +1,77 @@
+@layer components {
+
+    .button {
+        @apply inline-grid items-center font-semibold duration-300 rounded-sm markup-h5 font-display; 
+    }
+
+    .button > div {
+        @apply px-5 py-3;
+    }
+
+    /* actions */
+    .button.primary {
+        @apply text-white bg-blue-extradark hover:bg-blue-ultradark;
+    }
+
+    .button.secondary {
+        @apply bg-blue-extralight hover:bg-blue-lightest text-blue-darkest;
+    }
+
+    .button.accent {
+        @apply bg-white border-2 text-blue-extradark border-blue-light hover:bg-blue-extralight;
+    }
+
+    .button.neutral {
+        @apply text-white bg-gray-darkest hover:bg-black;
+    }
+
+    .button.success {
+        @apply bg-darkgreen text-white hover:ring-4 ring-darkgreen/50
+    }
+
+    .button.danger {
+        @apply bg-red text-white hover:ring-4 ring-red/50
+    }
+
+
+    /* selector */
+    .button.selector {
+        @apply grid-cols-3 divide-x-2;
+    }
+
+    .button.selector.primary {
+        @apply divide-blue;
+    }
+
+    .button.selector.secondary {
+        @apply divide-blue-lightest
+    }
+
+    .button.selector.accent {
+        @apply divide-blue-extralight;
+    }
+    
+    .button.selector.neutral {
+        @apply divide-black hover:divide-gray-darkest;
+    }
+
+    .button.selector.success,
+    .button.selector.danger {
+        @apply divide-white/50
+    }
+
+
+    /* small */
+    .button.small {
+        @apply rounded;
+    }
+
+    .button.small > div {
+        @apply px-2 py-1;
+    }
+
+    /* circle */
+    .button.circle {
+        @apply text-lg rounded-full bg-gray-light text-gray-darker w-[45px] h-[45px] hover:text-white hover:bg-blue-light;
+    }
+}

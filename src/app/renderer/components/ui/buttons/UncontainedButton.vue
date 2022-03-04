@@ -1,5 +1,5 @@
 <template>
-    <button :class="`button ${action} ${size}`">
+    <button :class="`button small bg-white text-blue-extradark hover:bg-blue-extralight`">
         <div v-if="label">
             {{label}}
         </div>
@@ -14,8 +14,6 @@
 export default {
     props: {
         label: {type: String},
-        action: {type: String, default: 'primary'},
-        size: {type: String, default: ''},
         icon: {type: String, default: 'false'}
     },
 }

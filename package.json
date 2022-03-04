@@ -157,6 +157,7 @@
         "nested-property": "^4.0.0",
         "node-cache": "^5.1.2",
         "node-fetch": "^2.6.6",
+        "postcss-import": "^14.0.2",
         "rimraf": "^3.0.2",
         "simple-git": "^2.48.0",
         "sweetalert2": "^9.10.9",

@@ -1,7 +1,8 @@
 <template>
-    <button class="inline-flex font-semibold duration-300 rounded-full font-display" >
-        <span v-if="icon">
-            {{icon}}
+    <button class="button circle">
+        <span>
+            +
+            <!-- {{icon}} -->
         </span>
     </button>
 </template>

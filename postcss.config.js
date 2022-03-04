@@ -1,6 +1,11 @@
 module.exports = {
     plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
+        'postcss-import': {
+            filter: (result) => {
+                return result.includes('assets/styles')
+            }
+        },
+        tailwindcss: {},
+        autoprefixer: {},
     }
-  }
+}

@@ -24,10 +24,10 @@
 				<br> 
 				<v-input
 					disabled
-					label="Backend Port" class="pr-5 pl-5"
+					label="Backend Port" class="pl-5 pr-5"
 				>
 				</v-input>
-					<v-text-field class="pr-5 pl-5"
+					<v-text-field class="pl-5 pr-5"
 						hint="Only change if the default port (5003) is in use"
 						label="Change the backend server port to connect to"
 						v-model="port" type="number"

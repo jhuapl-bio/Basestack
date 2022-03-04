@@ -1,7 +1,7 @@
 import SelectorButton from '../app/renderer/components/ui/buttons/SelectorButton.vue'
 
 export default {
-  title: 'Buttons/Selector Button',
+  title: 'Buttons/Selector',
   component: SelectorButton,
   argTypes: {
     label: {
@@ -11,10 +11,6 @@ export default {
     action: {
       control: { type: 'select' },
       options: ['primary', 'secondary', 'neutral', 'accent', 'success', 'danger'],
-    },
-    size: {
-      control: { type: 'select' },
-      options: ['base', 'small'],
     },
     icon: {
       control: { type: 'text' },
@@ -32,12 +28,5 @@ const Template = (args, { argTypes }) => ({
 export const Selector = Template.bind({})
 Selector.args = {
   action: 'primary',
-  size: 'base',
-  label: 'Button'
+  label: 'Button' 
 }
-// export const Selected = Template.bind({})
-// Selected.args = {
-//   color: 'blue',
-//   size: 'base',
-//   label: 'Regular'
-// }

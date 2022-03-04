@@ -1,7 +1,7 @@
 import RegularButton from '../app/renderer/components/ui/buttons/RegularButton.vue'
 
 export default {
-  title: 'Buttons/Regular Button',
+  title: 'Buttons/Regular',
   component: RegularButton,
   argTypes: {
     label: {
@@ -13,8 +13,9 @@ export default {
       options: ['primary', 'secondary', 'neutral', 'accent', 'success', 'danger'],
     },
     size: {
-      control: { type: 'select' },
+      control: { type: 'radio' },
       options: ['base', 'small'],
+      defaultValue: 'base',
     },
     icon: {
       control: { type: 'text' },
@@ -35,9 +36,3 @@ Regular.args = {
   size: 'base',
   label: 'Button'
 }
-// export const Selected = Template.bind({})
-// Selected.args = {
-//   color: 'blue',
-//   size: 'base',
-//   label: 'Regular'
-// }
