@@ -1,8 +1,8 @@
-import Label from '../app/renderer/components/ui/forms/Label.vue'
+import FormLabel from '../app/renderer/components/ui/forms/FormLabel.vue'
 
 export default {
   title: 'Form/Label',
-  component: Label,
+  component: FormLabel,
   argTypes: {
     text: {
       control: {type: 'text'},
@@ -13,8 +13,8 @@ export default {
 
 const Template = (args, { argTypes }) => ({
   props: Object.keys(argTypes),
-  components: {Label},
-  template: `<label v-bind="$props">{{text}}</label>`
+  components: {FormLabel},
+  template: `<form-label v-bind="$props">{{text}}</form-label>`
 });
 
 export const Default = Template.bind({})
