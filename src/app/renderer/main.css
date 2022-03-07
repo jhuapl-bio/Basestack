@@ -1,8 +1,9 @@
 @import 'assets/fonts/dm-sans/dm-sans.css';
 @import 'assets/fonts/source-sans-pro/source-sans-pro.css';
 @import 'assets/fonts/dm-mono/dm-mono.css';
-@import 'assets/styles/markup.css';
 @import 'assets/styles/buttons.css';
+@import 'assets/styles/card.css';
+@import 'assets/styles/markup.css';
 
 @tailwind base;
 @tailwind components;
