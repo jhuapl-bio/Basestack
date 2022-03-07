@@ -74,4 +74,8 @@
     .button.circle {
         @apply text-lg rounded-full bg-gray-light text-gray-darker w-[45px] h-[45px] hover:text-white hover:bg-blue-light;
     }
+
+    .button.circle.uncontained {
+        @apply bg-transparent hover:bg-gray-lighter text-gray-dark
+    }
 }

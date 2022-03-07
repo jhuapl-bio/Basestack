@@ -14,7 +14,7 @@ export default {
     },
     icon: {
       control: { type: 'text' },
-      defaultValue: '',
+      defaultValue: 'plus',
     }
   },
 };

@@ -1,11 +1,8 @@
 <template>
     <button :class="`button ${action} ${size}`">
-        <div v-if="label">
-            {{label}}
-        </div>
-
-        <div v-if="icon">
-            {{icon}}
+        <div class="flex items-center space-x-2">
+            <span>{{label}}</span>
+            <font-awesome-icon v-if="icon" :icon="icon" />
         </div>
     </button>
 </template>
@@ -16,7 +13,7 @@ export default {
         label: {type: String},
         action: {type: String, default: 'primary'},
         size: {type: String, default: ''},
-        icon: {type: String, default: 'false'}
+        icon: {type: String}
     },
 }
 </script>

@@ -4,9 +4,8 @@
             {{label}}
         </div>
 
-        <div class="flex items-center justify-center h-full leading-none">
-            <!-- <font-awesome-icon :icon="['fas', 'plus']" /> @todo: get font awesome working -->
-            +
+        <div class="h-full">
+            <font-awesome-icon :icon="icon" />
         </div>
     </button>
 </template>
@@ -16,7 +15,7 @@ export default {
     props: {
         label: {type: String},
         action: {type: String, default: 'primary'},
-        icon: {type: String, default: 'false'}
+        icon: {type: String, default: 'plus'}
     },
 }
 </script>

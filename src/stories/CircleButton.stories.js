@@ -6,7 +6,7 @@ export default {
   argTypes: {
     icon: {
       control: { type: 'text' },
-      defaultValue: '',
+      defaultValue: 'plus',
     }
   },
 };

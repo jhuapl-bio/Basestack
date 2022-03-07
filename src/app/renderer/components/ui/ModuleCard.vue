@@ -8,9 +8,7 @@
                 <font-awesome-icon icon="cube" class="text-lg text-blue-darker" />
             </div>
             
-            <div v-if="isNotCompact">
-                <font-awesome-icon icon="ellipsis-v" class="text-lg text-gray-dark" />
-            </div>
+            <circle-button v-if="isNotCompact" icon="ellipsis-v" class="uncontained" />
         </div>
 
         <div>
@@ -36,7 +34,9 @@
 </template>
 
 <script>
+import CircleButton from './buttons/CircleButton.vue'
 export default {
+    components: {'circle-button': CircleButton},
     props: ['moduleName', 'version', 'hasUpdateAvailable', 'description', 'compactView', 'link'],
     computed: {
         isNotCompact: (props) => {
