@@ -4,14 +4,25 @@ export default {
   title: 'Cards/Module Card',
   component: ModuleCard,
   argTypes: {
-    value: {
+    moduleName: {
         control: {type: 'text'},
-        defaultValue: '',
+        defaultValue: 'Module Name',
     },
-
-    placeholder: {
+    description: {
         control: {type: 'text'},
-        defaultValue: 'Text goes here…',
+        defaultValue: 'Mauris vestibulu, lorem a aliquet imperdiet turpis mi vehicula turpi, quis…',
+    },
+    version: {
+        control: {type: 'text'},
+        defaultValue: '2.356',
+    },
+    hasUpdateAvailable: {
+        control: {type: 'boolean'},
+        defaultValue: false,
+    },
+    compactView: {
+        control: {type: 'boolean'},
+        defaultValue: false,
     },
   },
 };
@@ -25,7 +36,10 @@ const Template = (args, { argTypes }) => ({
 });
 
 export const Default = Template.bind({})
-Default.args = {
-  value: '',
-  placeholder: 'Text goes here...'
-}
+Default.args = {}
+
+export const Compact = Template.bind({})
+Compact.args = {
+
+    compactView: true,
+  }
