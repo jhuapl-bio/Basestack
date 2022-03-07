@@ -1,8 +1,8 @@
-import ModuleCard from '../app/renderer/components/ui/ModuleCard.vue'
+import ModuleLibraryCard from '../app/renderer/components/ui/ModuleLibraryCard.vue'
 
 export default {
-  title: 'Cards/Module Card',
-  component: ModuleCard,
+  title: 'Cards/Module Library',
+  component: ModuleLibraryCard,
   argTypes: {
     moduleName: {
         control: {type: 'text'},
@@ -29,9 +29,9 @@ export default {
 
 const Template = (args, { argTypes }) => ({
   props: Object.keys(argTypes),
-  components: {ModuleCard},
+  components: {ModuleLibraryCard},
   template: `
-    <module-card v-bind="$props" />
+    <module-library-card v-bind="$props" />
     `
 });
 
@@ -40,6 +40,5 @@ Default.args = {}
 
 export const Compact = Template.bind({})
 Compact.args = {
-
     compactView: true,
   }
