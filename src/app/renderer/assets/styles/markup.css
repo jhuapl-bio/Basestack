@@ -46,7 +46,7 @@
     }
 
     .markup-label-sm {
-        @apply font-light;
+        @apply font-light text-2xs;
     }
 
     /* header styles */
