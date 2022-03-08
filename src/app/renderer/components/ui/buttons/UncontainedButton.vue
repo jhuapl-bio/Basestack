@@ -1,11 +1,11 @@
 <template>
-    <button :class="`button small bg-white text-blue-extradark hover:bg-blue-extralight`">
+    <button class="flex items-center bg-white button small text-blue-extradark hover:bg-blue-extralight">
         <div v-if="label">
             {{label}}
         </div>
 
         <div v-if="icon">
-            {{icon}}
+            <font-awesome-icon :icon="icon" />
         </div>
     </button>
 </template>
