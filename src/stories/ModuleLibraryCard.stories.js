@@ -41,4 +41,9 @@ Default.args = {}
 export const Compact = Template.bind({})
 Compact.args = {
     compactView: true,
-  }
+}
+
+export const HasUpdate = Template.bind({})
+HasUpdate.args = {
+    hasUpdateAvailable: true,
+}
