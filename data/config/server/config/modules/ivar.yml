@@ -5,6 +5,79 @@
   basestack_released: 2.0
   module: True
   tooltip: "Viral and consensuses for viral reads"
+  shared:
+    variables:
+      reference:
+        label: "Reference FASTA"
+        class: "wb-100 p-3 mb-1"
+        option: 0
+        options:
+          - name: "SARS-CoV-2 FASTA Reference File MN908947.3"
+            element: null
+            hint: "FASTA File used as a reference for alignment steps"
+            bind_parent_dir: true
+            source: "${writePath}/workflows/ivar/reference.fasta"
+            target: "/opt/reference/"
+            bind: 
+              from: "%{variables.reference.source}"
+              to: "/opt/reference"
+            class: "wb-100  p-3 mb-1" 
+          - element: "file"
+            name: "Custom Reference"
+            source: null
+            bind_parent_dir: true
+            target: null
+            bind: 
+              from: "%{variables.reference.source}"
+              to: "/opt/reference" 
+      bam:
+        label: "Bam File"
+        element: "file"
+        hint: "Bam alignment file"
+        bind_parent_dir: true
+        bind: 
+          from: "%{variables.bam.source}"
+          to: "/opt/data"
+        class: "wb-100  p-3 mb-1" 
+        source: null
+      outputNameConsensusFile:
+        label: "Output Consensus FASTA"
+        element: "file"
+        output: True
+        openSelf: True
+        hint: "FASTA file containing your iVar Consensus"
+        bind_parent_dir: true
+        class: "wb-100  p-3 mb-1"
+        source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.consensus.ivar.fa"
+        target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.consensus.ivar.fa"
+        define:
+          outputNameConsensus: "<<basename,trim(%{variables.bam.source})>>.consensus.ivar"
+      output:
+        label: "Output TSV"
+        element: "file"
+        output: True
+        openSelf: True
+        hint: "TSV file containing variants called against Reference and optional GFF"
+        bind_parent_dir: true
+        class: "wb-100  p-3 mb-1"
+        source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+        target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+        define:
+          outputName: "<<basename,trim(%{variables.bam.source})>>.ivar"
+    services:
+      consensus:
+        name: "consensus"
+        image: "staphb/ivar"
+        orchestrated: false #orchestrated means it r
+        init: false
+        hideStatus: false
+        label: "iVar Consensus"
+        force_restart: true
+        # command: ["bash","-c", "head ${gff}; samtools mpileup -aa -A -d 0 -B -Q 0 ${bam}   " ]
+        # command: ["bash","-c", " samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam}  " ]
+        command: ["bash","-c", "samtools faidx ${reference}; samtools mpileup -d ${depth_max} -A -Q 0 --reference ${reference} ${bam} | ivar consensus -p ${outputNameConsensus} -q ${quality_filter} -t ${freq_threshold}   " ]
+        workingdir: "/opt/data"
+
   procedures:
     - name: ivar #Top level is the left-hand selection of the menu and the major module to install 
       title: "ivar"
@@ -52,16 +125,39 @@
             remove: true
             target: "${writePath}/workflows/ivar/reference.fasta"
       variables:
-        bam:
-          label: "Bam File"
-          element: "file"
-          hint: "Bam alignment file"
-          bind_parent_dir: true
-          bind: 
-            from: "%{variables.bam.source}"
-            to: "/opt/data"
-          class: "wb-100  p-3 mb-1" 
-          source: null
+        bam: 
+          target: "%{shared.variables.bam}"
+          shared: true
+        reference: 
+          target: "%{shared.variables.reference}"
+          shared: true
+        depth_max:
+          label: "Max Depth"
+          element: number
+          hint: "Max depth per file to avoid excessive memory usage "
+          class: "wb-50 p-3 mb-1"
+          source: 10000 
+          target: null
+        freq_threshold:
+          label: "Quality Minimum"
+          element: number
+          hint: "Minimum frequency threshold(0 - 1) to call consensus. (Default: 0)"
+          class: "wb-50 p-3 mb-1"
+          source: 0 
+          target: null
+        quality_filter:
+          label: "Quality Minimum"
+          element: number
+          hint: "Minimum per-base quality"
+          class: "wb-50 p-3 mb-1"
+          source: 20 
+          target: null
+        output: 
+          target: "%{shared.variables.output}"
+          shared: true
+        outputNameConsensusFile: 
+          target: "%{shared.variables.outputNameConsensusFile}"
+          shared: true
         gff:
           label: "Reference GFF3"
           class: "wb-100 p-3 mb-1"
@@ -81,7 +177,7 @@
                 command: " -g ${gff} "
                 placement: 2
                 services: 
-                  - 0
+                  - 1
               class: "wb-100  p-3 mb-1" 
             - element: "file"
               name: "Custom GFF3"
@@ -96,52 +192,19 @@
               bind: 
                 from: "%{variables.gff.source}"
                 to: "/opt/gff" 
-        output:
-          label: "Output TSV"
-          element: "file"
-          output: True
-          openSelf: True
-          hint: "TSV file containing variants called against Reference and optional GFF"
-          bind_parent_dir: true
-          class: "wb-100  p-3 mb-1"
-          source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
-          target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
-          define:
-            outputName: <<basename,trim(%{variables.bam.source})>>.ivar
-        reference:
-          label: "Reference FASTA"
-          class: "wb-100 p-3 mb-1"
-          option: 0
-          options:
-            - name: "SARS-CoV-2 FASTA Reference File MN908947.3"
-              element: null
-              hint: "FASTA File used as a reference for alignment steps"
-              bind_parent_dir: true
-              source: "${writePath}/workflows/ivar/reference.fasta"
-              target: "/opt/reference/"
-              bind: 
-                from: "%{variables.reference.source}"
-                to: "/opt/reference"
-              class: "wb-100  p-3 mb-1" 
-            - element: "file"
-              name: "Custom Reference"
-              source: null
-              bind_parent_dir: true
-              target: null
-              bind: 
-                from: "%{variables.reference.source}"
-                to: "/opt/reference" 
+        
       services:
+        - "%{shared.services.consensus}"
         - name: staphb_ivar
           image: "staphb/ivar"
           orchestrated: false #orchestrated means it r
           init: false
           hideStatus: false
-          label: "ivar"
+          label: "iVar Variant"
           force_restart: true
           # command: ["bash","-c", "head ${gff}; samtools mpileup -aa -A -d 0 -B -Q 0 ${bam}   " ]
           # command: ["bash","-c", " samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam}  " ]
-          command: ["bash","-c", "samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam} | ivar variants -p ${outputName}  -r ${reference}  " ]
+          command: ["bash","-c", "samtools faidx ${reference}; samtools mpileup -aa -A -d ${depth_max} -B -Q 0 --reference ${reference} ${bam} | ivar variants -p ${outputName}  -r ${reference}  " ]
           workingdir: "/opt/data"
             
           

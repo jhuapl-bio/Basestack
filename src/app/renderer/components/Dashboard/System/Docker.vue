@@ -7,7 +7,6 @@
           text v-else>Docker is running 
         </v-alert>
         <v-list-item
-         
           v-for="entry in fields_docker"
           :key="entry.key"
           class="entry"
@@ -18,6 +17,22 @@
               <v-list-item-subtitle v-else v-text="docker[entry.key]  " ></v-list-item-subtitle>
             </v-list-item-content>
         </v-list-item>
+        <v-text-field
+          label="Docker Socket" 
+          v-model="dockerSocket" dense
+          persistent-hint solo
+          hint="Adjust docker socket location, used in Linux Rootless Deployment"
+        >
+          <template v-slot:append-outer>
+            <v-tooltip left  >
+              <template v-slot:activator="{ on }">
+                <v-icon  v-on="on"  class="configure" small @click="updateSocket()">$upload
+                </v-icon>
+              </template>
+              Submit new socket designation
+            </v-tooltip>
+          </template>
+        </v-text-field>
       </v-list>
       
     
@@ -59,6 +74,10 @@
             label: 'Data'
           },
           {
+            key: 'Socket',
+            label: 'Socket'
+          },
+          {
             key: 'MemTotal',
             label: 'MemAvailable (GB)'
           }
@@ -84,7 +103,7 @@
 
         ],
         port: null,
-        dockerSocket: '',
+        dockerSocket: null,
         advanced: true,
         docker : {},
         checkingDocker: false,
@@ -101,11 +120,25 @@
       }, 3000)
     },
     methods: {
+      async updateSocket(){
+        FileService.updateSocket(this.dockerSocket).catch((err)=>{
+          console.error(err)
+          this.$swal.fire({
+            position: 'center',
+            icon: 'error',
+            showConfirmButton:true,
+            title:  err.response.data.message
+          })
+        })
+      },
       async getDockerStats(){
         const $this = this
         FileService.getDockerStats().then((status)=>{
           $this.docker = status.data.data
           $this.checkingDocker= false
+          // if (!this.dockerSocket && response.data.data.Socket){
+          //   $this.dockerSocket = response.data.data.Socket
+          // }
           return 
         }).catch((err)=>{
           $this.checkingDocker = false

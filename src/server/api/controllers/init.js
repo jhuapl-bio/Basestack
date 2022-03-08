@@ -5,13 +5,14 @@ import path from "path"
 const { Module } = require("../orchestrators/module.js")
 const { Catalog } = require("../orchestrators/catalog.js")
 const { Procedure } = require("../orchestrators/procedure.js")
-const { Service } = require("../orchestrators/service.js")
+const { Service } = require("../orchestrators/service.js") 
 const { createNetworks, createVolumes } = require("./post-installation.js")
 const Docker = require("dockerode")
-const { getFolders, readFile } = require("./IO.js")
+const { getFolders, readFile } = require("./IO.js")  
  
 export async function docker_init(params){
 	let config = null 
+	 
 	const meta  = store.dockerConfig
 	let dockerObj;
 	if (params){
@@ -70,7 +71,17 @@ export async function define_procedure(name, procedure){
 		}).catch((err)=>{
 			reject(err)
 		})
-	})  
+	})   
+}
+export async function import_configurations(){
+	try{
+		let data = await readFile(store.system.configurationFile)
+		data = JSON.parse(data)
+		return data
+	} catch (err){
+		store.logger.error("Could not import config file %o ", err) 
+		throw err
+	}
 }
  
 export async function init_base_procedures(){

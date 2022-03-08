@@ -1,14 +1,14 @@
 import nestedProperty from "nested-property"
 const cloneDeep = require("lodash.clonedeep"); 
 import { mapVariables } from '../controllers/mapper.js';
-const path = require("path")
+const path = require("path")   
 const { store }  = require("../../config/store/index.js")
-const lodash = require("lodash") 
-      
-export  class Configuration { 
-    constructor(config){         
-        this.variables = {} 
-        // this.config = config  
+const lodash = require("lodash")  
+       
+export  class Configuration {    
+    constructor(config){            
+        this.variables = {}  
+        // this.config = config   
         for(let[key, value] of Object.entries(config)){
             this[key] = value
         }

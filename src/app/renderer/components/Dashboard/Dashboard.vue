@@ -22,6 +22,7 @@
 				<v-divider></v-divider>
 				<v-card>
 				<br> 
+				
 				<v-input
 					disabled
 					label="Backend Port" class="pr-5 pl-5"
@@ -76,6 +77,7 @@ export default {
 	data(){
 		return{
 			status: {},
+			socket: null,
 			system: {},
 			port: ( process.env.PORT_SERVER ? process.env.PORT_SERVER : 5003),
 		}

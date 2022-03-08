@@ -4,29 +4,36 @@ import path  from "path"
 const { store }  = require("../../config/store/index.js")
 var  logger  = store.logger      
 const { checkFileExist, reformatResponseVideo }  = require("./validate.js")
-const { init_base_modules, init_dind, init_base_procedures, init_base_services } = require("./init.js")
-const {  writeFile, ammendJSON, readFile, get, set } = require("./IO.js") 
+const { init_base_modules, init_dind, init_base_procedures, import_configurations, init_base_services } = require("./init.js")
+const {  writeFile, ammendJSON, readFile, get, set, writeJSON } = require("./IO.js") 
          
   
 const {  listImages, fetch_external_config, set_stored } = require("./fetch.js")
-    
-  
+     
+   
 const { docker_init } = require("./init.js")   
-const lodash = require("lodash")  
+const lodash = require("lodash")   
 
-    
+     
  
 export async function init(){     
 	store.ready = true  
-	// Initiating the Docker Class    
-	store.docker = await docker_init();  
+	// Initiating the Docker Class     
+	try{
+		let data = await import_configurations()
+		store.configurations = data
+		console.log(store.configurations.socketPath)
+	} catch(err){
+		store.logger.error("%o, ------------------------error in import configurations", err)
+	}
+	store.docker = await docker_init( (store.configurations.socketPath ? {socketPath: store.configurations.socketPath } : null ) );  
 	// //Initiating the Status Class of Modules 
 	let response_orchestrator = await init_dind()
-	 
+	
 	let response_init = await init_base_modules()
 	// let response_init_services = await init_base_services()
-	 
-	fetch_external_config('modules').then((modules)=>{
+	  
+	fetch_external_config('modules').then((modules)=>{ 
 		if (module){
 			set_stored(module.name, modules)
 		} else {
@@ -38,6 +45,32 @@ export async function init(){
 	console.log("finished initializing")
 }
 
+export async function updateDockerSocket(socket){
+	try{
+		if (socket == ''){
+			socket = null
+		}
+		if (socket){
+			store.docker  = await docker_init({socketPath: socket})
+		} else {
+			store.docker  = await docker_init()
+		}
+		store.configurations.socketPath = socket
+		await writeJSON(store.system.configurationFile, store.configurations)
+		// await ammendJSON({
+		// 	value: socket,
+		// 	file: path.join(store.system.writePath, "system.yml"),
+		// 	attribute: 'dockerConfig.socketPath'
+		// }).catch((err)=>{
+		// 	logger.error(err)
+		// 	throw err
+		// })
+		return 
+	} catch(err){
+		logger.error(err)
+		throw err 
+	} 
+}
 
 // export async function initialize(params){
 // 	// logger.info("%s <------ initialize", store.meta)
@@ -177,30 +210,6 @@ export async function init(){
 // 	}
 // }
 
-// export async function updateDockerSocket(socket){
-// 	try{
-// 		if (socket == ''){
-// 			socket = null
-// 		}
-// 		if (socket){
-// 			store.docker  = new Docker({socketPath: socket})
-// 		} else {
-// 			store.docker  = new Docker() 
-// 		}
-// 		await ammendJSON({
-// 			value: socket,
-// 			file: path.join(store.system.writePath, "system.json"),
-// 			attribute: 'dockerConfig.socketPath'
-// 		}).catch((err)=>{
-// 			logger.error(err)
-// 			throw err
-// 		})
-// 		return 
-// 	} catch(err){
-// 		logger.error(err)
-// 		throw err 
-// 	} 
-// }
 
  
 // async function initialize_module_object(container_name){     
