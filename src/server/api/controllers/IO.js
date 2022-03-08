@@ -27,6 +27,7 @@ const clone = require('git-clone');
 const tar = require("tar")
 import glob from "glob"
 const  gunzip = require('gunzip-file');
+const YAML = require("yaml")    
 
 export function set(attribute, value, obj, type) {
     var depth_attributes = attribute.split('.');
@@ -73,6 +74,42 @@ export function get(attribute, obj, type) {
 		store.logger.error("Error in get attributes :%j", err)
 		throw err
 	}
+}
+
+export async function writeJSON(file, data){
+	// let exists = await fs.stat(file)
+	// console.log(file, exists)
+	return new Promise((resolve, reject)=>{
+		 fs.stat(file, function(err, exists){
+			 ( async ()=>{
+				if (err){
+					console.log("File Doesn't exist", err)
+					// await writeFile(file, "")
+				}
+				console.log("exists", data )
+				await writeFile(file, JSON.stringify(data,null,4) )
+				resolve()
+				// fs.readFile(obj.file, (err, data) => {
+				// 	if (err){
+				// 	store.logger.error("%s %s %s", "Error in reading file to ammend json: ", obj.file, err)
+				// 	reject(err)
+				// 	}
+				// 	let js = JSON.parse(data.toString())
+				// 	const depthAttribute = obj.attribute
+				// 	js = set(obj.attribute, obj.value, js, obj.type);
+				// 	// resolve()
+				// 	(async function(){
+				// 	await writeFile(obj.file, JSON.stringify(js,null,4))
+				// 	})().then(()=>{
+				// 		resolve(js)
+				// 	})
+				// });
+			 })().catch((err)=>{
+				 reject(err)
+			 })
+				
+		})
+	})
 }
 export async function ammendJSON(obj){
 	return new Promise((resolve, reject)=>{

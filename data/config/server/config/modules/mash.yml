@@ -102,7 +102,7 @@
           output: true   
           openSelf: true       
           class: "wb-100  p-3 mb-1"
-          source: "%{variables.genome1.source}/mash.dist.tsv" 
+          source: "<<directory(%{variables.genome1.source})>>/mash.dist.tsv" 
           target: "%{variables.genome1.bind.to}/mash.dist.tsv"
         outscreen:
           label: "Output screen metrics"
@@ -110,7 +110,7 @@
           output: true   
           openSelf: true       
           class: "wb-100  p-3 mb-1"
-          source: "%{variables.genome1.source}/mash.screen.tsv" 
+          source: "<<directory(%{variables.genome1.source})>>/mash.screen.tsv" 
           target: "%{variables.genome1.bind.to}/mash.screen.tsv"
       services:
         - name: mash

@@ -566,51 +566,57 @@ export class Procedure {
             if (dependency.streamObj){ 
                 dependency.streamObj.destroy()   
             } 
-            console.log(1)
- 
-			let conf = {  
-				context: path.dirname(dependency.build.path),
-				src: [dependency.build.file], 
-				AttachStdout: true, 
-				AttachStderr: true,
-				Tty:false
-			}
-            console.log(2)
-            try{
-                store.docker.buildImage(conf,
-                {
-                    t: dependency.target
-                }, (err, stream)=>{
-                    if (err){  
-                        store.logger.error("%s %s %o","Error in building docker image for: ", dependency.target , err)
-                        dependency.status.downloading = false
-                        dependency.status.building = false
-                        dependency.status.error = err
-                        reject(err)
+            fs.stat(dependency.build.path, (err, stat)=>{
+                console.log(err, stat)
+                if (err){
+                    store.logger.error("Could not build from Dockerfile %s %o", dependency.build.path, err)
+                    reject(err)
+                } else {
+                    let conf = {  
+                        context: path.dirname(dependency.build.path),
+                        src: [dependency.build.file], 
+                        AttachStdout: true, 
+                        AttachStderr: true,
+                        Tty:false
                     }
-                    console.log("3")
-                    dependency.status.downloading = true
-                    dependency.status.building = true
-                    
-                    dependency.status.stream  = spawnLog(stream, $this.logger)
-                    dependency.streamObj = stream
-                    stream.on("close", (err, data)=>{
-                        dependency.status.downloading = false  
-                        dependency.status.building = false
-                        if (err){
-                            dependency.status.error = err
-                        }
-                    }) 
-
-                    $this.buildlog = spawnLog(stream,store.logger)   
-                    resolve()  
+                    try{
+                        store.docker.buildImage(conf,
+                        {
+                            t: dependency.target
+                        }, (err, stream)=>{
+                            if (err){  
+                                store.logger.error("%s %s %o","Error in building docker image for: ", dependency.target , err)
+                                dependency.status.downloading = false
+                                dependency.status.building = false
+                                dependency.status.error = err
+                                reject(err)
+                            }
+                            dependency.status.downloading = true
+                            dependency.status.building = true
+                            
+                            dependency.status.stream  = spawnLog(stream, $this.logger)
+                            dependency.streamObj = stream
+                            stream.on("close", (err, data)=>{
+                                dependency.status.downloading = false  
+                                dependency.status.building = false
+                                if (err){
+                                    dependency.status.error = err
+                                }
+                            }) 
+        
+                            $this.buildlog = spawnLog(stream,store.logger)   
+                            resolve()  
+                        
+                        }) 
+                    } catch(err){        
+                        store.logger.info("Error in build image")
+                        store.logger.error(err)
+                        reject(err)    
+                    }
+                }
                 
-                }) 
-            } catch(err){        
-                store.logger.info("Error in build image")
-                store.logger.error(err)
-                reject(err)    
-            }
+            })
+			
         })
     }   
 	

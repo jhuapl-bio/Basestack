@@ -572,7 +572,7 @@ export async function fetch_histories(){
 }
 
 
-
+ 
 
 export async function fetch_resources(){
 	try{
@@ -592,6 +592,7 @@ export async function fetch_docker_stats(){
 		let docker_info  = await store.docker.info()
 		let docker = {
 			KernelVersion: docker_info.KernelVersion,  
+			Socket: store.docker.modem.socketPath,
 			Driver: docker_info.Driver,
 			ContainersRunning: docker_info.ContainersRunning,
 			ServerVersion: docker_info.ServerVersion,

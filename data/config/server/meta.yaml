@@ -3,6 +3,8 @@ logs:
   error: "${writePath}/logs/serverError.log"
   info:  "${writePath}/logs/server.log"
   docker: "${writePath}/logs/docker.log"
+configurationFile:
+  "${writePath}/system.yml"
 shared: 
   path: "${writePath}/data" 
   modules: "${writePath}/custom/modules/"

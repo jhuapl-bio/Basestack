@@ -276,9 +276,7 @@
                 to: "/opt/data/variant"
               class: "wb-100  p-3 mb-1"
           source: null
-        json: 
-          target: "%{shared.variables.json}"
-          shared: true
+        
         depth: 
           label: "Depth file(s)"
           hint: "One or more files to be used as referencing the depth from the sample run"
@@ -326,6 +324,14 @@
         gbs:
           shared: True
           target: "%{shared.variables.gbs}"
+        json: 
+          element: "file"
+          output: true
+          openSelf: True
+          label: "JSON Visualization File"
+          hint: "Custom JSON generated from the AGAVE report pipeline"
+          source: "<<directory(%{variables.variant.bind.from})>>/variants.json"
+          target: "%{variables.variant.bind.to}/variants.json"
         port:
           shared: True
           target: "%{shared.variables.port}"

@@ -10,7 +10,7 @@
   <v-layout id="file" @drop.prevent="addDropFile" @dragover.prevent >
     <v-file-input 
         v-model="value"
-        :label="(source.hint ? source.hint : '')" 
+        :hint="(source.hint ? source.hint : '')" 
         show-size  
         counter dense
     > 

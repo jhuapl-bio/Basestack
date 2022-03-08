@@ -43,7 +43,17 @@
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.bam.source})>>/bamstats_report.zip" 
           # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
-          target: "<<directory(%{variables.bam.source})>>/bamstats_report.zip"
+          target: "<<directory(%{variables.bam.bind.to})>>/bamstats_report.zip"
+        # outfile:
+        #   label: "Output bamstats unzipped report data"
+        #   element: "file"  
+        #   hint: "zipped raw data from output of bamstats"
+        #   output: true   
+        #   openSelf: false       
+        #   class: "wb-100  p-3 mb-1"
+        #   source: "<<directory(%{variables.bam.source})>>/bamstats_report/bamstats_report.html" 
+        #   # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
+        #   target: "<<directory(%{variables.bam.bind.to})>>/bamstats_report/bamstats_report.html"
       services:
         - name: bamstats
           label: "Bamstats"
@@ -53,5 +63,5 @@
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "/usr/local/bin/bamstats 4 ${bam} "]
+          command: ["bash","-c", "/usr/local/bin/bamstats 4 ${bam};  "]
     
