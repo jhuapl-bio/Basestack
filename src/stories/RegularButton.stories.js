@@ -30,9 +30,38 @@ const Template = (args, { argTypes }) => ({
   template: `<regular-button v-bind="$props"></regular-button>`
 });
 
-export const Regular = Template.bind({})
-Regular.args = {
+export const Primary = Template.bind({})
+Primary.args = {
   action: 'primary',
   size: 'base',
   label: 'Button'
 }
+
+export const Secondary = Template.bind({})
+Secondary.args = {
+    action: 'secondary',
+    size: 'base',
+    label: 'Button'
+  }
+
+  export const Accent = Template.bind({})
+  Accent.args = {
+    action: 'accent',
+    size: 'base',
+    label: 'Button'
+  }
+
+  export const Success = Template.bind({})
+  Success.args = {
+    action: 'success',
+    size: 'base',
+    label: 'Button'
+  }
+
+  export const Danger = Template.bind({})
+  Danger.args = {
+    action: 'danger',
+    size: 'base',
+    label: 'Button'
+  }
+  
