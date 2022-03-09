@@ -189,6 +189,9 @@
           init: false
           force_restart: false
           force_init: false
+          # command: ["bash","-c", "
+          #   python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes}"
+          # ]
           command: ["bash","-c", "
             python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes} &&
             bash krakenreport2json.sh -i ${report}.fullstring -o ${report}.json
