@@ -162,9 +162,9 @@ export class Service {
         let data = JSON.parse(await readFile(file))
         this.options = data
         return "Success in getting options"
-    }
+    } 
     async archive(source, destination){
-        const $this = this;
+        const $this = this; 
         return new Promise(function(resolve,reject){
             let promises = []
             if ($this.container){  
@@ -179,7 +179,7 @@ export class Service {
             }
         })
     }
-    async stop() {
+    async stop() { 
 		let container_name = this.name;
         const $this = this;
         $this.status.cancelled = true
@@ -727,13 +727,13 @@ export class Service {
                         // $this.status.error = err
                         $this.status.success= false
                         $this.status.complete = true 
-                        if (err.json && err.json.message){
+                        if (err.json && err.json.message){ 
                             $this.status.stream.info.push(err.json.message)
                         } else {
                             $this.status.stream.info.push(err)
-                        }
-                        
-                        reject()
+                        } 
+                               
+                        reject() 
                     }
                 })
             }).catch((err)=>{ 
