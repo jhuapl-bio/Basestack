@@ -1,6 +1,6 @@
 <template>
-    <button class="rounded shadow-lg inline-flex items-center w-[70px] h-[70px] p-1.5 bg-white group">
-        <div class="flex items-center justify-center w-full h-full duration-500 rounded bg-pink/25 group-hover:scale-105">
+    <button class="rounded shadow-lg inline-flex items-center w-[55px] h-[55px] p-1 bg-white hover:scale-125 duration-500">
+        <div class="flex items-center justify-center w-full h-full rounded bg-pink/25">
             <slot>
                 <span class="uppercase markup-h3 text-pink">
                     {{slotFallback}}
