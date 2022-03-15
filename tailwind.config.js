@@ -60,7 +60,11 @@ module.exports = {
         'lg': `0 0 12px 0 ${theme.colors.gray.DEFAULT}`,
         'xl': `0 0 38px 0 ${theme.colors.gray.dark}`,
     }),
-    extend: {},
+    extend: {
+        lineHeight: {
+            'zero': '0'
+        },
+    },
   },
   plugins: [],
 }

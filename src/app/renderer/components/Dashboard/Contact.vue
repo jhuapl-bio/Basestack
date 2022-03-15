@@ -3,17 +3,17 @@
     <div class="flex items-center mb-4">
       <font-awesome-icon
         icon="phone-alt"
-        class="text-lg text-blue-extradark mr-2"
+        class="mr-2 text-lg text-blue-extradark"
       />
       <div class="markup-h5 strong">Contact Us</div>
     </div>
-    <div class="border border-gray rounded">
-      <div class="p-4 grid grid-cols-2">
+    <div class="border rounded border-gray">
+      <div class="grid grid-cols-2 p-4">
         <div class="space-y-4">
           <h3 class="markup-h5 strong">Basestack Developers</h3>
-          <div>
-            <h4 class="markup-h5">Brian Merrit</h4>
-            <a href="" class="text-blue-ultradark markup-h6">
+          <div class="bg-gray-darkest">
+            <h4 class="leading-zero bg-blue markup-h5">Brian Merrit</h4>
+            <a href="" class="leading-zero bg-blue text-blue-ultradark markup-h6">
               brian.merrit@jhuapl.edu
             </a>
           </div>
@@ -27,13 +27,13 @@
         <div class="space-y-4">
           <h3 class="markup-h5 strong">Third Party Apps</h3>
           <div>
-            <a href="" class="text-blue-ultradark markup-h6 strong block">
+            <a href="" class="block text-blue-ultradark markup-h6 strong">
               Nextrain</a
             >
-            <a href="" class="text-blue-ultradark markup-h6 strong block">
+            <a href="" class="block text-blue-ultradark markup-h6 strong">
               Artic Network/RAMPART
             </a>
-            <a href="" class="text-blue-ultradark markup-h6 strong block">
+            <a href="" class="block text-blue-ultradark markup-h6 strong">
               IGV
             </a>
           </div>
