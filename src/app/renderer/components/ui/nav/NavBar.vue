@@ -31,8 +31,8 @@
             </div>
         </section>
 
-        <section class="row-span-1 mt-6 border-t border-gray h-[12.5%]">
-            <button>3</button>
+        <section class="flex items-center justify-center row-span-1 py-6 border-t border-gray">
+            <work-statuses />
         </section>
 
     </nav>
@@ -42,8 +42,9 @@
 import DashboardButton from './DashboardButton.vue'
 import ModuleButton from './ModuleButton.vue'
 import ViewButton from './ViewButton.vue'
+import WorkStatuses from './WorkStatuses.vue'
 export default {
-    components: { DashboardButton, ModuleButton, ViewButton },
+    components: { DashboardButton, ModuleButton, ViewButton, WorkStatuses },
     data(){
         return {
             showAllModules: false,
