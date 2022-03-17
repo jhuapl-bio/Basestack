@@ -28,26 +28,26 @@ cd $HOME/Downloads
 #Install grpc dev dependency in case it is not available on the system
 sudo apt-get install -y libgrpc-dev
 
-# wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
-# echo "deb http://mirror.oxfordnanoportal.com/apt xenial-stable non-free" | sudo tee /etc/apt/sources.list.d/nanoporetech.sources.list
-# sudo apt-get update
-# #sudo apt-get install -y ont-kingfisher-ui-promethion minion-nc
-# sudo apt-get install minknow-core-minit-offline ont-bream4-minit ont-configuration-customer-minit ont-kingfisher-ui-minit ont-remote-support ont-system-identification
-
 echo "Minknow installation is a work in progress with the update to ubuntu 18 for jetson or xavier devices"
-# wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
 
+## Option 1. Fails
 # wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
 # echo "deb http://mirror.oxfordnanoportal.com/apt $(lsb_release -c | awk '{print $2}')-stable non-free" | sudo tee /etc/apt/sources.list.d/nanoporetech.sources.list
 # sudo apt update
 # sudo apt install ont-minit-release
 # sudo apt-get install -y minion-nc
 
+## Option 2. Fails
+# wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
+# echo "deb http://mirror.oxfordnanoportal.com/apt xenial-stable non-free" | sudo tee /etc/apt/sources.list.d/nanoporetech.sources.list
+# sudo apt-get update
+# #sudo apt-get install -y ont-kingfisher-ui-promethion minion-nc
+# sudo apt-get install minknow-core-minit-offline ont-bream4-minit ont-configuration-customer-minit ont-kingfisher-ui-minit ont-remote-support ont-system-identification
+
 
 
 
 ## Install CUDA
-
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/sbsa/cuda-ubuntu1804.pin
 sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
 wget https://developer.download.nvidia.com/compute/cuda/11.6.1/local_installers/cuda-repo-ubuntu1804-11-6-local_11.6.1-510.47.03-1_arm64.deb
@@ -57,7 +57,6 @@ sudo apt-get update
 sudo apt-get -y install cuda -f
 
 ## Get Guppy Basecaller
-
 wget https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy_5.1.13_linuxaarch64_cuda10.tar.gz 
 tar -xvzf ont-guppy_5.1.13_linuxaarch64_cuda10.tar.gz
 find ont-guppy/bin/*  | while read line; do ln -fs $PWD/$line $HOME/bin/$(basename $line); done;
