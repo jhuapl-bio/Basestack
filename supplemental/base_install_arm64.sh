@@ -1,7 +1,6 @@
 #!/bin/bash
 
 mkdir $HOME/bin
-
 echo "export PATH=\"$HOME/bin:\$PATH\"" >> $HOME/.bashrc
 
 sudo apt-get update -y
@@ -12,6 +11,9 @@ curl -sSL https://get.docker.com/ | sh
 #sudo docker-compose --version
 
 
+echo "Get Visual studio code from: https://code.visualstudio.com/docs/?dv=linuxarmhf_deb"
+
+
 
 ## Install MinKNOW
 cd $HOME/Downloads
@@ -19,22 +21,23 @@ cd $HOME/Downloads
 
 
 #Install grpc dev dependency in case it is not available on the system
-sudo apt-get install libgrpc-dev
+sudo apt-get install -y libgrpc-dev
 
-wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
+# wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
 # echo "deb http://mirror.oxfordnanoportal.com/apt xenial-stable non-free" | sudo tee /etc/apt/sources.list.d/nanoporetech.sources.list
 # sudo apt-get update
 # #sudo apt-get install -y ont-kingfisher-ui-promethion minion-nc
 # sudo apt-get install minknow-core-minit-offline ont-bream4-minit ont-configuration-customer-minit ont-kingfisher-ui-minit ont-remote-support ont-system-identification
 
+echo "Minknow installation is a work in progress with the update to ubuntu 18 for jetson or xavier devices"
+# wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
 
 # wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
-echo "deb http://mirror.oxfordnanoportal.com/apt $(lsb_release -c | awk '{print $2}')-stable non-free" | sudo tee /etc/apt/sources.list.d/nanoporetech.sources.list
-
-wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
-sudo apt update
-sudo apt install ont-minit-release
+# echo "deb http://mirror.oxfordnanoportal.com/apt $(lsb_release -c | awk '{print $2}')-stable non-free" | sudo tee /etc/apt/sources.list.d/nanoporetech.sources.list
+# sudo apt update
+# sudo apt install ont-minit-release
 # sudo apt-get install -y minion-nc
+
 
 
 
