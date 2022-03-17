@@ -11,6 +11,11 @@ curl -sSL https://get.docker.com/ | sh
 #sudo docker-compose --version
 
 
+docker pull jhuaplbio/basestack_mytax:v1.1.2
+docker image tag jhuaplbio/basestack_mytax:v1.1.2 jhuaplbio/basestack_mytax:latest
+
+echo "You should now be able to use Mytax within Basestack!"
+
 echo "Get Visual studio code from: https://code.visualstudio.com/docs/?dv=linuxarmhf_deb"
 
 
