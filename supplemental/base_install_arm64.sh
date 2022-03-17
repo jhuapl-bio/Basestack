@@ -10,6 +10,22 @@ curl -sSL https://get.docker.com/ | sh
 #sudo pip3 install docker-compose
 #sudo docker-compose --version
 
+## Set up Docker permissions post-installation
+sudo groupadd docker
+
+sudo apt install -y jq
+sudo usermod -aG docker $USER
+sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subuid
+sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subgid
+
+if [[ -s "/etc/docker/daemon.json" ]]; then
+    cat "/etc/docker/daemon.json" | jq --arg USERNS $USER '."userns-remap" = $USERNS' > /tmp/daemon.json
+    sudo mv /tmp/daemon.json /etc/docker/daemon.json
+else
+    echo "{\"userns-remap\": \"$USER\"}"  | sudo tee -a /etc/docker/daemon.json
+fi
+
+
 
 docker pull jhuaplbio/basestack_mytax:v1.1.2
 docker image tag jhuaplbio/basestack_mytax:v1.1.2 jhuaplbio/basestack_mytax:latest
