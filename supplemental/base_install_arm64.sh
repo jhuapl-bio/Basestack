@@ -25,7 +25,7 @@ else
     echo "{\"userns-remap\": \"$USER\"}"  | sudo tee -a /etc/docker/daemon.json
 fi
 
-
+echo "Pulling docker image for mytax on arm, you may need to reboot if you get permission errors at this point"
 
 docker pull jhuaplbio/basestack_mytax:v1.1.2
 docker image tag jhuaplbio/basestack_mytax:v1.1.2 jhuaplbio/basestack_mytax:latest
@@ -34,6 +34,8 @@ echo "You should now be able to use Mytax within Basestack!"
 
 echo "Get Visual studio code from: https://code.visualstudio.com/docs/?dv=linuxarmhf_deb"
 
+## Get the ARM64 build of Basestack
+wget https://github.com/jhuapl-bio/Basestack/releases/download/arm64/Basestack.AppImage && chmod +x Basestack.AppImage
 
 
 ## Install MinKNOW
