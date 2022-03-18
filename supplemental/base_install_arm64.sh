@@ -10,6 +10,22 @@ curl -sSL https://get.docker.com/ | sh
 #sudo pip3 install docker-compose
 #sudo docker-compose --version
 
+## Set up Docker permissions post-installation
+sudo groupadd docker
+
+sudo apt install -y jq
+sudo usermod -aG docker $USER
+sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subuid
+sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subgid
+
+if [[ -s "/etc/docker/daemon.json" ]]; then
+    cat "/etc/docker/daemon.json" | jq --arg USERNS $USER '."userns-remap" = $USERNS' > /tmp/daemon.json
+    sudo mv /tmp/daemon.json /etc/docker/daemon.json
+else
+    echo "{\"userns-remap\": \"$USER\"}"  | sudo tee -a /etc/docker/daemon.json
+fi
+
+echo "Pulling docker image for mytax on arm, you may need to reboot if you get permission errors at this point"
 
 docker pull jhuaplbio/basestack_mytax:v1.1.2
 docker image tag jhuaplbio/basestack_mytax:v1.1.2 jhuaplbio/basestack_mytax:latest
@@ -18,6 +34,8 @@ echo "You should now be able to use Mytax within Basestack!"
 
 echo "Get Visual studio code from: https://code.visualstudio.com/docs/?dv=linuxarmhf_deb"
 
+## Get the ARM64 build of Basestack
+wget https://github.com/jhuapl-bio/Basestack/releases/download/arm64/Basestack.AppImage && chmod +x Basestack.AppImage
 
 
 ## Install MinKNOW
