@@ -34,10 +34,12 @@
         - name: ont_demo
           label: "ONT Demo"
           image: "jhuaplbio/oxford-demo"
-          workingdir: "/opt/data"
+          workingdir: "/opt/src"
           orchestrated: false #orchestrated means it r
           init: false
           force_restart: false
           force_init: false
           command: null
+          ports:  
+            - 8089:8089
     

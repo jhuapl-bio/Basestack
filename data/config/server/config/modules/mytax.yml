@@ -41,9 +41,8 @@
         - "metagenomic"
         - metagenome
       dependencies: 
-        - target: "jhuaplbio/basestack_mytax"
+        - target: "jhuaplbio/basestack_mytax:v1.1.2"
           type: "docker"
-          version: "latest"
           format: "docker"
         - source: 
             url: "https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz"
@@ -168,7 +167,7 @@
       services: 
         - name: "mytax_kraken2_report"
           label: "Kraken2 Report"
-          image: "jhuaplbio/basestack_mytax"
+          image: "jhuaplbio/basestack_mytax:v1.1.2"
           workingdir: "/opt/test-data"
           orchestrated: false #orchestrated means it r
           init: false
@@ -183,7 +182,7 @@
           depends: 
             - type: "module"
               id: "mytax"
-          image: "jhuaplbio/basestack_mytax"
+          image: "jhuaplbio/basestack_mytax:v1.1.2"
           workingdir: "/opt/test-data"
           orchestrated: false #orchestrated means it r
           init: false
@@ -221,9 +220,8 @@
             from: "8086"
             to: "8086"
       dependencies: 
-        - target: "jhuaplbio/basestack_mytax"
+        - target: "jhuaplbio/basestack_mytax:v1.1.2"
           type: "docker"
-          version: "latest"
           format: "docker"
       services: 
         - name: "mytax_visualization"
@@ -233,7 +231,7 @@
           label: "Visualization"
           force_restart: false
           config: null
-          image: "jhuaplbio/basestack_mytax"
+          image: "jhuaplbio/basestack_mytax:v1.1.2"
           workingdir: "/opt/software/mytax/sunburst"
           post-run-tab: "render"
           ports: 
