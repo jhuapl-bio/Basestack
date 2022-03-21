@@ -24,7 +24,7 @@
                 class="relative top-0 left-0 h-full duration-500"
                 :style="{width: progress + '%'}"
                 :class="{
-                    'bg-blue-extradark animate-pulse': status.value === 'active',
+                    'bg-blue-900 animate-pulse': status.value === 'active',
                     'bg-green': status.value === 'complete',
                 }"
             />

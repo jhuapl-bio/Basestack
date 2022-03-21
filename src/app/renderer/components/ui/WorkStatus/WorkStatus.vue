@@ -6,7 +6,7 @@
                     :icon="status.icon"
                     class="duration-200"
                     :class="{
-                        'text-blue-extradark animate-spin': status.value === 'active',
+                        'text-blue-900 animate-spin': status.value === 'active',
                         'text-green': status.value === 'complete',
                         'text-red': status.value === 'error',
                     }" 
@@ -22,7 +22,7 @@
 
                 <font-awesome-icon 
                     icon="info-circle" 
-                    class="text-blue" 
+                    class="text-blue-500" 
                 />
             </div>
 
@@ -39,7 +39,7 @@
                 class="relative top-0 left-0 h-full duration-500"
                 :style="{width: progress + '%'}"
                 :class="{
-                    'bg-blue-extradark animate-pulse': status.value === 'active',
+                    'bg-blue-900 animate-pulse': status.value === 'active',
                     'bg-green': status.value === 'complete',
                 }"
             />

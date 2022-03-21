@@ -1,5 +1,5 @@
 <template>
-    <button class="flex items-center bg-white button small text-blue-extradark hover:bg-blue-extralight">
+    <button class="flex items-center bg-white button small text-blue-900 hover:bg-blue-100">
         <div v-if="label">
             {{label}}
         </div>

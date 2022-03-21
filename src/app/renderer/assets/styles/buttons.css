@@ -10,15 +10,15 @@
 
     /* actions */
     .button.primary {
-        @apply text-white bg-blue-extradark hover:bg-blue-ultradark;
+        @apply text-white bg-blue-900 hover:bg-blue-1000;
     }
 
     .button.secondary {
-        @apply bg-blue-extralight hover:bg-blue-lightest text-blue-darkest;
+        @apply bg-blue-100 hover:bg-blue-200 text-blue-800;
     }
 
     .button.accent {
-        @apply bg-white border-2 text-blue-extradark border-blue-light hover:bg-blue-extralight;
+        @apply bg-white border-2 text-blue-900 border-blue-400 hover:bg-blue-100;
     }
 
     .button.neutral {
@@ -40,15 +40,15 @@
     }
 
     .button.selector.primary {
-        @apply divide-blue;
+        @apply divide-blue-500;
     }
 
     .button.selector.secondary {
-        @apply divide-blue-lightest
+        @apply divide-blue-200
     }
 
     .button.selector.accent {
-        @apply divide-blue-extralight;
+        @apply divide-blue-100;
     }
     
     .button.selector.neutral {
@@ -72,7 +72,7 @@
 
     /* circle */
     .button.circle {
-        @apply text-lg rounded-full bg-gray-300 text-gray-600 w-[45px] h-[45px] hover:text-white hover:bg-blue-light;
+        @apply text-lg rounded-full bg-gray-300 text-gray-600 w-[45px] h-[45px] hover:text-white hover:bg-blue-400;
     }
 
     .button.circle.uncontained {
