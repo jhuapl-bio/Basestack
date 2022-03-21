@@ -12,11 +12,11 @@
                     }" 
                 />
 
-                <h5 class="text-gray-darkest markup-h5 strong">
+                <h5 class="text-gray-700 markup-h5 strong">
                     {{label}}
                 </h5>
 
-                <div class="font-display text-gray-darker">
+                <div class="font-display text-gray-600">
                     ({{progress}}%)
                 </div>
 
@@ -33,7 +33,7 @@
 
         <div 
             class="relative w-full h-2 overflow-hidden rounded-full" 
-            :class="[error ? 'bg-red/10' : 'bg-gray']"
+            :class="[error ? 'bg-red/10' : 'bg-gray-500']"
         >
             <div
                 class="relative top-0 left-0 h-full duration-500"

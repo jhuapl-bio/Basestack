@@ -22,7 +22,7 @@
     }
 
     .button.neutral {
-        @apply text-white bg-gray-darkest hover:bg-black;
+        @apply text-white bg-gray-700 hover:bg-black;
     }
 
     .button.success {
@@ -52,7 +52,7 @@
     }
     
     .button.selector.neutral {
-        @apply divide-black hover:divide-gray-darkest;
+        @apply divide-black hover:divide-gray-700;
     }
 
     .button.selector.success,
@@ -72,10 +72,10 @@
 
     /* circle */
     .button.circle {
-        @apply text-lg rounded-full bg-gray-light text-gray-darker w-[45px] h-[45px] hover:text-white hover:bg-blue-light;
+        @apply text-lg rounded-full bg-gray-300 text-gray-600 w-[45px] h-[45px] hover:text-white hover:bg-blue-light;
     }
 
     .button.circle.uncontained {
-        @apply bg-transparent hover:bg-gray-lighter text-gray-dark
+        @apply bg-transparent hover:bg-gray-200 text-gray-500
     }
 }

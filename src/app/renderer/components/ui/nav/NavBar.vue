@@ -1,5 +1,5 @@
 <template>
-    <nav class="w-[123px] h-screen grid grid-cols-1 grid-rows-8 border-r border-l border-gray-light">
+    <nav class="w-[123px] h-screen grid grid-cols-1 grid-rows-8 border-r border-l border-gray-300">
 
         <section class="row-span-1 h-[12.5%]">
             <dashboard-button />
@@ -17,7 +17,7 @@
 
             <button 
                 @click="toggleShowingAllModules"
-                class="flex items-center mx-auto mt-6 text-center markup-h6 text-gray-darker"
+                class="flex items-center mx-auto mt-6 text-center markup-h6 text-gray-600"
                 :class="[showAllModules ? 'flex-col-reverse' : 'flex-col' ]"
             >
                 <div>{{ showAllModules ? 'Show Less' : 'Show More' }}</div>
@@ -25,13 +25,13 @@
             </button>
         </section>
 
-        <section class="mt-6 duration-500 origin-bottom border-t divide-y border-gray divide-gray" :class="[showAllModules ? 'opacity-0 scale-0 hidden' : 'opacity-100 row-span-3 scale-100']">
+        <section class="mt-6 duration-500 origin-bottom border-t border-gray-400 divide-y divide-gray-400" :class="[showAllModules ? 'opacity-0 scale-0 hidden' : 'opacity-100 row-span-3 scale-100']">
             <div v-for="(view, index) in views" :key="index" class="grid p-2 place-items-center">
                 <view-button :viewName="view.name" :icon="view.icon" class="w-full" />
             </div>
         </section>
 
-        <section class="flex items-center justify-center row-span-1 py-6 border-t border-gray">
+        <section class="flex items-center justify-center row-span-1 py-6 border-t border-gray-400">
             <work-statuses />
         </section>
 

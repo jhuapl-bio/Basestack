@@ -12,10 +12,10 @@
         </div>
 
         <div>
-            <h2 class="markup-h4 strong text-gray-darkest" :class="{'mt-4': isNotCompact}">{{moduleName}}</h2>
+            <h2 class="markup-h4 strong text-gray-700" :class="{'mt-4': isNotCompact}">{{moduleName}}</h2>
 
             <div v-if="isNotCompact" class="flex items-center justify-start space-x-2">
-                <span class="markup-label-sm text-gray-darker">{{`V${version}`}}</span>
+                <span class="markup-label-sm text-gray-600">{{`V${version}`}}</span>
 
                 <span 
                     v-if="hasUpdateAvailable" 
@@ -25,7 +25,7 @@
                 </span>
             </div>
 
-            <p class="text-left markup-body-sm text-gray-extradark" :class="{'mt-2': isNotCompact }">
+            <p class="text-left markup-body-sm text-gray-800" :class="{'mt-2': isNotCompact }">
                 {{description}}
             </p>
             <a v-if="isNotCompact" :href="link" class="font-bold markup-body-sm text-blue-extradark">Read more</a>
