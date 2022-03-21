@@ -7,7 +7,7 @@
                     class="duration-200"
                     :class="{
                         'text-blue-900 animate-spin': status.value === 'active',
-                        'text-green-100: status.value === 'complete',
+                        'text-green-100': status.value === 'complete',
                         'text-red': status.value === 'error',
                     }" 
                 />
@@ -16,7 +16,7 @@
                     {{label}}
                 </h5>
 
-                <div class="font-display text-gray-600">
+                <div class="text-gray-600 font-display">
                     ({{progress}}%)
                 </div>
 
@@ -40,7 +40,7 @@
                 :style="{width: progress + '%'}"
                 :class="{
                     'bg-blue-900 animate-pulse': status.value === 'active',
-                    'bg-green-100: status.value === 'complete',
+                    'bg-green-100': status.value === 'complete',
                 }"
             />
         </div>
