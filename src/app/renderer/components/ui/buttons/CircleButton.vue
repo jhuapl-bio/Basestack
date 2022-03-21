@@ -1,6 +1,6 @@
 <template>
     <button class="inline-flex items-center justify-center button circle">
-        <font-awesome-icon :icon="icon" class="text-lg" />
+        <font-awesome-icon :icon="icon" />
     </button>
 </template>
 
