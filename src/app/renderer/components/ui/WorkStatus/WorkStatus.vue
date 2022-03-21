@@ -7,7 +7,7 @@
                     class="duration-200"
                     :class="{
                         'text-blue-900 animate-spin': status.value === 'active',
-                        'text-green': status.value === 'complete',
+                        'text-green-100: status.value === 'complete',
                         'text-red': status.value === 'error',
                     }" 
                 />
@@ -40,7 +40,7 @@
                 :style="{width: progress + '%'}"
                 :class="{
                     'bg-blue-900 animate-pulse': status.value === 'active',
-                    'bg-green': status.value === 'complete',
+                    'bg-green-100: status.value === 'complete',
                 }"
             />
         </div>

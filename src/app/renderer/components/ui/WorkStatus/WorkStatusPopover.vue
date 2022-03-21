@@ -25,7 +25,7 @@
                 :style="{width: progress + '%'}"
                 :class="{
                     'bg-blue-900 animate-pulse': status.value === 'active',
-                    'bg-green': status.value === 'complete',
+                    'bg-green-100: status.value === 'complete',
                 }"
             />
         </div>

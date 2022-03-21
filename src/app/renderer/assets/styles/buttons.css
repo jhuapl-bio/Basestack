@@ -26,7 +26,7 @@
     }
 
     .button.success {
-        @apply bg-darkgreen text-white hover:ring-4 ring-darkgreen/50
+        @apply bg-green-200 text-white hover:ring-4 ring-green-200/50
     }
 
     .button.danger {
