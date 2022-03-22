@@ -253,7 +253,7 @@ export  class Job {
         }
         if (params.images){
             params.images.forEach((service)=>{ 
-                this.services[service.service].config.image = service.image
+                this.services[service.service].override.image = service.image
             })
         }
         this.services.forEach((service)=>{ 

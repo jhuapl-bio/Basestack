@@ -27,7 +27,7 @@ let dockerObj;
    
 export class Procedure { 
 	constructor(procedure){
-		this.name = procedure.name   
+		this.name = procedure.name    
         this.type = 'procedure'
         this.config = procedure  
         if (procedure.shared && procedure.shared.variables){
@@ -42,6 +42,13 @@ export class Procedure {
         this.dependencies  = cloneDeep(procedure.dependencies).map((d)=>{ 
             d.streamObj = null
             // this.fetchVersion(d) 
+            if (d.type == 'docker'){
+                if (d.version){
+                    d.fulltarget = `${d.target}:${d.version}`
+                } else {
+                    d.fulltarget = d.target
+                }
+            }
             let status = { 
                 downloading: false, 
                 decompressing: false, 
@@ -206,10 +213,16 @@ export class Procedure {
             let building=false
 			dependencies.forEach((dependency, index)=>{ 
 				if (dependency.type == "docker"){
-					promises.push(check_image(dependency.target))
+                    // let target = dependency.target
+                    // if (dependency.version){
+                    //     target = `${dependency.target}:${dependency.version}`
+                    // }
+                    let target = dependency.fulltarget
+					promises.push(check_image(target))
                     
 				} else if (dependency.type == "docker-local"){
-					promises.push(check_image(dependency.target))
+                    let target = dependency.fulltarget
+					promises.push(check_image(target))
 				}
                 else { 
                     promises.push(checkExists(dependency.target)) 
@@ -225,7 +238,6 @@ export class Procedure {
 				response.forEach((dependency, index)=>{
 					if (dependency.status == 'fulfilled'){
 						dependencies[index].status.exists = dependency.value
-                        
 						dependencies[index].status.version = dependency.value.version
 					} else { 
 						dependencies[index].status.exists = false
@@ -421,7 +433,12 @@ export class Procedure {
                     store.logger.error("error in destorying streamobj %o", err)
                 }
             }
-            pullImage(dependency.target, dependency).then((stream, error)=>{
+            let target = dependency.target
+            if (dependency.version){
+                target = `${dependency.target}:${dependency.version}`
+            }
+            console.log("pulling", target)
+            pullImage(target, dependency).then((stream, error)=>{
                 dependency.status.building = true
                 dependency.status.downloading = true
                 dependency.status.error = null
@@ -765,8 +782,9 @@ export class Procedure {
             // dependency_obj.status.downloading = true
             objs.push(dependency_obj) 
             if (dependency_obj.type == 'docker' || dependency_obj.type == 'docker-image'  ){
-                console.log("remove image")
-                promises.push(remove_images(dependency_obj.target)) 
+                let target = dependency_obj.fulltarget
+                console.log("remove image", target)
+                promises.push(remove_images(target)) 
             }
             else{
                 promises.push(removeFile(dependency_obj.target, dependency_obj.type, false) )

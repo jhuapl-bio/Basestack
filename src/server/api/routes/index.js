@@ -442,17 +442,26 @@ router.get("/procedures/get/:catalog/:module/:token", (req,res,next)=>{ // build
 		if (!req.params.token){
 			token = 'development'
 		}
+		
 		procedures.forEach((procedure,i)=>{
 			let { procedures, ...config } = procedure.config
 			let returnable =  {
 				status: procedure.status,
 				dependencies: [],
-				services: [],
+				services: [], 
 				...config
 			}
 			let dependencies = procedure.dependencies.map((d,i)=>{
 				let { streamObj, ...ret } = d
-				return ret 
+				if (d.type == 'docker'){
+					// console.log(store.images[d.target.split(":")[0] ],d.target.split(":")[0] )
+					if (store.images[d.target.split(":")[0] ]){
+						ret.tags = store.images[d.target.split(":")[0] ].all_tags
+					} else {
+						ret.tags = []
+					}
+				}
+				return ret  
 			})
 			returnable.dependencies = dependencies
 			returnable.services = []

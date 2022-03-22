@@ -168,7 +168,6 @@
             }"
             responsive
         >
-           
             <template v-slot:item.status.exists="{ item }">
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
@@ -232,7 +231,7 @@
                         >
                             $check
                         </v-icon>
-                        <v-icon v-on="on" x-small v-else-if="item.status.latest !== item.status.version && item.status.version" color="red darken-2">
+                        <v-icon v-on="on" x-small v-else-if="item.status.latest !== item.status.version && item.status.version" color="orange lighten-2">
                             $times-circle
                         </v-icon>
                         <v-icon v-on="on" x-small v-else color="teal darken-2">
@@ -251,7 +250,48 @@
                 </v-tooltip> 
             </template>                        
             <template v-slot:item.label="{ item }">
-                {{ ( item.label ? item.label : item.target   )}}
+                {{ ( item.label ? item.label : item.target   )}}{{ ( item.version ? ':'+item.version : '')  }}
+            </template>
+            <template v-slot:item.tags="{ item }">
+                <v-dialog v-if="item.type == 'docker' && item.tags && item.tags.length > 0"
+                    transition="dialog-bottom-transition"
+                    max-width="600"
+                    >
+                    <template v-slot:activator="{ on,attrs  }">                    
+                        <v-icon class="mr-3 configure" v-on="on" v-bind="attrs" small  color="primary lighten-2" >
+                            $cog 
+                        </v-icon>
+                    </template>
+                    <template v-slot:default="dialog">
+                        <v-card>
+                        <v-toolbar
+                            color="light"
+                            dark
+                        >All Tags available for {{item.target}}
+                        
+                        </v-toolbar>
+                        <v-card-text>
+                            <v-list dense>
+                                <v-list-item
+                                    v-for="(item, i) in item.tags"
+                                    :key="i"
+                                >
+                                    {{item}}
+                                </v-list-item>
+                            </v-list>
+                        </v-card-text>
+                        <v-card-actions class="justify-end">
+                            <v-btn
+                            text
+                            @click="dialog.value = false"
+                            >Close</v-btn>
+                        </v-card-actions>
+                        </v-card>
+                    </template>
+                </v-dialog>
+               
+                
+                    
             </template>
             <template v-slot:item.overwrite="{ item,index }">
                 
@@ -352,6 +392,7 @@ export default {
 	data(){
 		return {
             selectedProcedure: {},
+            custom_images: {},
             procedures: [],
             selectedModule: {},
             defaultProcedure:0,
@@ -406,6 +447,11 @@ export default {
                     value: 'status.latest',
                     align: "center",
                     text: 'Latest'
+                },
+                {
+                    value: 'tags',
+                    align: "center",
+                    text: 'Versions'
                 },
                 {
                     value: 'remove',
@@ -668,6 +714,15 @@ export default {
                 this.procedures = response.data.data
                 this.procedures.map((d,i)=>{
                     d.idx = i
+                    if (d.dependencies){
+                        d.dependencies.filter((f)=>{
+                            return f.type == 'docker'
+                        }).forEach((f)=>{
+                            if (!this.custom_images[f.label]){
+                                this.custom_images[f.label] = ( f.tag ? f.tag : 'latest')
+                            }
+                        })
+                    }
                 })
                 
                 if (!this.selectedModule.name || this.selectedModule.name !== this.catalog.name){
@@ -685,7 +740,7 @@ export default {
                 }
                 this.$set(this.selectedProcedure , 'dependencies', this.procedures[this.selectedProcedure.idx].dependencies)
                 this.$set(this.selectedProcedure , 'status', this.procedures[this.selectedProcedure.idx].status)
-
+                
                 if (this.selectedProcedure.status && this.selectedProcedure.status.buildStream){
                     // logs = this.selectedProcedure.buildStream
                     this.selectedProcedure.status.buildStream.forEach((entry, i)=>{

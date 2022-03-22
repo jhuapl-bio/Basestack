@@ -292,13 +292,13 @@ export default {
 	},
   data(){
     return {
-      tab: 1,
+      tab: 0,
 			mini:true,
       defaultModule: {},
 			drawer:false,
-			tabProcedure: 6, 
+			tabProcedure: null, 
 			sel: 0,
-			selected: 'procedures',
+			selected: 'defaults',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 

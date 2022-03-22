@@ -13,6 +13,14 @@ OR
 
 `npm run build`
 
+## You can also build the app for different OS types than your own. Ensure you have the necessary dependencies to do so:
+
+<code>
+npm run build:win; 
+npm run build:mac; 
+npm run build:linux
+</code>
+
 **note: target extensions will be based on your operating system (.dmg for OSX, .exe NSIS for Win, .AppImage for Linux)
 
 ## Our Official Documentation has moved to https://jhuapl-bio.github.io/Basestack/

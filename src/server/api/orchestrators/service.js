@@ -32,6 +32,7 @@ export class Service {
         this.config = service  
         this.orchestrated = orchestrated
         this.dependencies = [], 
+        this.override = {},
         this.interval = {
             checking: false, 
             interval: this.create_interval()
@@ -617,7 +618,10 @@ export class Service {
             if (!$this.config.command)
             {
                 options.Cmd = null
-            } 
+            }  
+            if ($this.override.image){
+                options.Image = $this.override.image
+            }
             options.Env = [...options.Env, ...env]  
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...bind]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))

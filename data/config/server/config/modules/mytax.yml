@@ -41,7 +41,8 @@
         - "metagenomic"
         - metagenome
       dependencies: 
-        - target: "jhuaplbio/basestack_mytax:v1.1.2"
+        - target: "jhuaplbio/basestack_mytax"
+          version: "v1.1.2" 
           type: "docker"
           format: "docker"
         - source: 
@@ -219,7 +220,8 @@
             from: "8086"
             to: "8086"
       dependencies: 
-        - target: "jhuaplbio/basestack_mytax:v1.1.2"
+        - target: "jhuaplbio/basestack_mytax"
+          version: "v1.1.2"
           type: "docker"
           format: "docker"
       services: 

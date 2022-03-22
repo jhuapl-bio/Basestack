@@ -12,9 +12,10 @@
       module: True
       init: false 
       dependencies:
-        - target: "nanozoo/nanoplot:1.38.1--e303519"
-          label: "nanozoo/nanoplot:1.38.1--e303519"
+        - target: "nanozoo/nanoplot"
+          label: "nanozoo/nanoplot"
           type: "docker"
+          version: "1.38.1--e303519"
           format: "docker"
         - source: 
             url: "https://raw.githubusercontent.com/wdecoster/NanoPlot/master/scripts/add_barcodes_to_summary.py"

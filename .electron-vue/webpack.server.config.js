@@ -91,10 +91,10 @@ if (process.env.NODE_ENV !== 'production'){
         verbose: false,
         ext: 'js,njk,json,yml,YAML,yaml',
         "PORT_SERVER": process.env.PORT_SERVER,
-        watch: [
-          path.join(__dirname, '../data/config/server/config/modules'),
-          path.join(__dirname, '../src/server/')
-        ]
+        // watch: [
+          // path.join(__dirname, '../data/config/server/config/modules'),
+          // path.join(__dirname, '../src/server/')
+        // ]
       }
     ) 
   )
