@@ -6,7 +6,7 @@
                     {{label}}
                 </h5>
 
-                <div class="font-display text-gray-600">
+                <div class="text-gray-600 font-display">
                     ({{progress}}%)
                 </div>
             </div>
@@ -25,7 +25,7 @@
                 :style="{width: progress + '%'}"
                 :class="{
                     'bg-blue-900 animate-pulse': status.value === 'active',
-                    'bg-green-100: status.value === 'complete',
+                    'bg-green-100': status.value === 'complete',
                 }"
             />
         </div>
