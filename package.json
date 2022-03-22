@@ -13,6 +13,8 @@
     "help:builder": "electron-builder --linux AppImage --help",
     "build": "node .electron-vue/build.js",
     "build:linux": "node .electron-vue/build.js && electron-builder --linux AppImage",
+    "build:linuxARM64": "node .electron-vue/build.js && electron-builder --arm64 --linux AppImage",
+    "buildOnly:linuxARM64": "electron-builder --arm64 --linux AppImage",
     "build:linuxOffline": "node .electron-vue/build.js && electron-builder --linux AppImage -p never",
     "buildOnly:linux": "electron-builder --linux AppImage",
     "build:mac-zip": "node .electron-vue/build.js && electron-builder --mac  zip",

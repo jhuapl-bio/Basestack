@@ -40,7 +40,6 @@
         })"     
         class="elevation-6 mx-0 my-0 pb-0"
         :key="`listVariables-${key}`">
-            
             <v-list-item-content >
                 <v-list-item-title v-text="item.label"></v-list-item-title>
                 <v-list-item-subtitle class="text-wrap" v-if="item.hint">
@@ -257,15 +256,13 @@ export default {
         setOption(event, index, item){            
             let idx = item.options.findIndex(data => data.name == event.name)
             item.option = idx
-            
-            if (!event.source){
                 if (typeof item.optionValue == 'string'){
                     item.source = item.optionValue
                 } else {
                     item.source = item.optionValue.source
                     
                 }
-            }
+            this.$emit("updateValue", { src: item.source, option: false, variable: item.name }   )
         },
        
         electronOpenDir(key){

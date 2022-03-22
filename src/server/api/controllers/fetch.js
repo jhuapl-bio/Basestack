@@ -495,15 +495,15 @@ export async function listImages(dind){
 			store.dind.listImages().then((images)=>{
 				console.log("images") 
 				resolve(images)
-
+ 
 			}) 
 		} else {
 			store.docker.listImages().then((images)=>{
 				console.log("images")
 				resolve(images)
 
-			})
-		}
+			}) 
+		}  
 	})
 }
 

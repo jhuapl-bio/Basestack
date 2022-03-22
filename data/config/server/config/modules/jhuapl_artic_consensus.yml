@@ -225,6 +225,7 @@
           hint: "Folder containing demulitplexed files from long-read run"
           element: file
           source: "%{variables.dir.source}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
+          path:  "%{variables.dir.source}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
           target: "%{variables.dir.bind.to}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
         length-filter:
           watch: True
@@ -233,6 +234,7 @@
           hint: "Folder containing all filtered length files (Step 2)"
           type: files
           pattern: ".complete"
+          path: "%{variables.dir.source}/artic-pipeline/2-length-filter"
           total:  
             target: "<<length(&{variables.manifest.source})>>" 
           source: "%{variables.dir.source}/artic-pipeline/2-length-filter"
@@ -243,6 +245,7 @@
           label: "Normalization"
           hint: "Files are normalized by depth"
           type: files
+          path: "%{variables.dir.source}/artic-pipeline/3-normalization"
           pattern: ".complete"
           total: 
             target: "<<length(&{variables.manifest.source})>>" 
@@ -257,6 +260,7 @@
           total: 
             target: "<<length(&{variables.manifest.source})>>" 
           pattern: ".complete"
+          path: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"
           source: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"
           target: "%{variables.dir.bind.to}/artic-pipeline/4-draft-consensus"
         report:

@@ -208,9 +208,9 @@ export class Procedure {
     async dependencyCheck(){ 
 		const $this = this; 
         let dependencies = this.dependencies 
-		return new Promise(function(resolve,reject){
-			let promises = []
-            let building=false
+		return new Promise(function(resolve,reject){ 
+			let promises = [] 
+            let building=false   
 			dependencies.forEach((dependency, index)=>{ 
 				if (dependency.type == "docker"){
                     // let target = dependency.target
@@ -220,7 +220,7 @@ export class Procedure {
                     let target = dependency.fulltarget
 					promises.push(check_image(target))
                      
-				} else if (dependency.type == "docker-local"){
+				} else if (dependency.type == "docker-local"){ 
                     let target = dependency.fulltarget
 					promises.push(check_image(target))
 				}
