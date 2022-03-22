@@ -42,7 +42,7 @@ export class Procedure {
         this.dependencies  = cloneDeep(procedure.dependencies).map((d)=>{ 
             d.streamObj = null
             // this.fetchVersion(d) 
-            if (d.type == 'docker'){
+            if (d.type == 'docker' || d.type == 'docker-local'){
                 if (d.version){
                     d.fulltarget = `${d.target}:${d.version}`
                 } else {
@@ -219,7 +219,7 @@ export class Procedure {
                     // }
                     let target = dependency.fulltarget
 					promises.push(check_image(target))
-                    
+                     
 				} else if (dependency.type == "docker-local"){
                     let target = dependency.fulltarget
 					promises.push(check_image(target))
