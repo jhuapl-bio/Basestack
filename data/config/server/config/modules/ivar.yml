@@ -169,7 +169,6 @@
               hint: "Coding regions for SARS-CoV-2"
               bind_parent_dir: true
               source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
-              target: "/opt/gff"
               bind: 
                 from: "%{variables.gff.source}"
                 to: "/opt/gff"

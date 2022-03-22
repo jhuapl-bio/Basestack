@@ -182,7 +182,7 @@ export class Procedure {
         if ($this.config.init){
             $this.start(services)
         }
-
+  
         return
     }
     async checkDependenciesVersion(){
