@@ -34,7 +34,6 @@
             to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.file.bind.to}/"
         gfa: 
           label: "Genome Graph Assembly File"
           element: "file"
@@ -93,7 +92,6 @@
             to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.file.bind.to}/"
         file2:
           label: "FASTQ 2nd File"
           element: "file"
@@ -104,7 +102,6 @@
             to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.file2.bind.to}/"
         assembly: 
           label: "Genome Assembly"
           element: "file"

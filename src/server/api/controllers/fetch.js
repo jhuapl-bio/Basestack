@@ -305,16 +305,16 @@ export async function fetch_external_config(key){
 export async function getExternalSource(url){
 	try{
 		logger.info("%s %s", "Getting url: ", url)
-		let json =  await axios.get(`${url}`)
+		let json =  await axios.get(`${url}`) 
 		logger.info("%s %o", "returned json: ", json.data)
-		return json
-	} catch(err){
+		return json 
+	} catch(err){ 
 		logger.error(`${err} error in fetching external url`)
 		throw err
 	} 
-}
+} 
   
- 
+  
 export async function getRemoteConfigurations(url){
 	var clone = require("git-clone/promise");
 	try{
@@ -332,21 +332,35 @@ export async function getRemoteConfigurations(url){
 
 
 export async function fetch_external_dockers(key){
-	let url = `https://registry.hub.docker.com/v2/repositories/${key}/tags/latest`
+	let url = `https://registry.hub.docker.com/v2/repositories/${key}/tags`
 	try{
+		key = key.split(":")[0]
 		if (! store.images[key] ){
 			store.images[key] = {
 				fetching_available_images: {},
 				latest_digest: {},
 			}
-		}
+		} 
 		const element = store.images[key]
 		store.images[key].fetching_available_images.errors = null
 		store.images[key].fetching_available_images.status = true
 		let json =  await axios.get(url)
-		let latest = null;
-		latest = json.data
-		store.images[key].latest_digest = latest.images[0].digest
+		let latest = null; 
+		let full_tags = json.data
+		let full_names = []
+		// latest = json.data
+		if (full_tags && Array.isArray(full_tags.results))
+		{
+			full_tags.results.forEach((f)=>{
+				if (f.name == "latest"){
+					store.images[key].latest_digest = f.images[0].digest
+				}
+				full_names.push(f.name)
+
+			})
+		}
+		store.images[key].all_tags = full_names
+			
 		return store.images[key]
 	} catch(err){
 		logger.error(`${err} error in fetching external dockers ${key}`)
@@ -481,15 +495,15 @@ export async function listImages(dind){
 			store.dind.listImages().then((images)=>{
 				console.log("images") 
 				resolve(images)
-
+ 
 			}) 
 		} else {
 			store.docker.listImages().then((images)=>{
 				console.log("images")
 				resolve(images)
 
-			})
-		}
+			}) 
+		}  
 	})
 }
 
@@ -502,13 +516,13 @@ export async function check_image(image){
 				let tags=[];
 				let digests = getImage.RepoDigests.map((d)=>{
 					return d.replace(image+"@", "")
-				})
+				}) 
 				for (const tag of getImage.RepoTags) {
-					if (tag.includes('latest')){
+					// if (tag.includes('latest')){
 						if(digests){
 							installed = digests[0]
 						}
-					}
+					// }
 				}
 				resolve({
 					version: installed

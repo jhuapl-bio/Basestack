@@ -6,9 +6,9 @@ var  logger  = store.logger
 const { checkFileExist, reformatResponseVideo }  = require("./validate.js")
 const { init_base_modules, init_dind, init_base_procedures, import_configurations, init_base_services } = require("./init.js")
 const {  writeFile, ammendJSON, readFile, get, set, writeJSON } = require("./IO.js") 
-         
-  
-const {  listImages, fetch_external_config, set_stored } = require("./fetch.js")
+            
+     
+const {  listImages, fetch_external_config, set_stored } = require("./fetch.js") 
      
    
 const { docker_init } = require("./init.js")   
@@ -32,7 +32,7 @@ export async function init(){
 	
 	let response_init = await init_base_modules()
 	// let response_init_services = await init_base_services()
-	  
+	   
 	fetch_external_config('modules').then((modules)=>{ 
 		if (module){
 			set_stored(module.name, modules)

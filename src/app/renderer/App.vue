@@ -262,10 +262,10 @@ export default {
     },
 	  hideSlider(){
 		  if (this.selected == 'procedures'){
-			  return false
+			  return false 
 		  } else {
 			  return true
-		  }
+		  } 
 	  },
     selectedPort(){
       return process.env.PORT_SERVER

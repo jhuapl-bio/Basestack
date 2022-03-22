@@ -97,7 +97,6 @@
             to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.fastq.bind.to}/%{variables.fastq.source}"
       tooltip: "View RAMPART"
       dependencies:
         - target: "jhuaplbio/basestack_consensus"

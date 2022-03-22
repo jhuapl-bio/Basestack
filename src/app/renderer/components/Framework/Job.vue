@@ -13,8 +13,72 @@
         <v-stepper-header
             class="configure"
         >
+            
+            
+            <v-dialog
+              transition="dialog-bottom-transition"
+              max-width="600"
+            >
+              <template v-slot:activator="{ on,attrs  }">
+               
+                <v-btn
+                  color="primary"
+                  class="text-caption"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  <v-icon class="mr-3" small color="primary lighten-2" >
+                      $cog 
+                  </v-icon>
+                Info</v-btn>
+              </template>
+              <template v-slot:default="dialog">
+                <v-card>
+                  <v-toolbar
+                    color="light"
+                    dark
+                  >Advanced Configuration Information for {{procedure.title}}
+                  <v-spacer>
+                  </v-spacer>
+                  
+                  </v-toolbar>
+                  <v-card-text>
+                    <v-checkbox
+                          v-model="dry"
+                          label="Perform Dry Run"
+                          hint="Check the logs for the configuration JSON for this procedure"
+                          on-icon="$check-square"
+                          class="align-center justify-center text-xs-center mx-4" 
+                          off-icon="$square"
+                          color="primary"
+                      >
+                      
+                    </v-checkbox> 
+                    <tree-view :data="services" height="300px" class=" mt-2 mb-3 pt-0 elevation-5 treeview " style="overflow-y:auto" 
+                            :options="{
+                                maxDepth: 3, 
+                                rootObjectKey: 'root',
+                                modifiable: false,
+                                limitRenderDepth: false
+                            }"
+                        >
+                    </tree-view>
+                  </v-card-text>
+                  <v-card-actions class="justify-end">
+                    <!-- <v-btn
+                      text
+                    >Update</v-btn> -->
+                    <v-btn
+                      text
+                      @click="dialog.value = false"
+                    >Close</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </template>
+            </v-dialog>
+            <!-- <v-divider class="mx-3" vertical>
+            </v-divider> -->
             <template v-for="(entry, key) in services"  >
-                
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
                     :key="key+'-entry'"
@@ -62,7 +126,46 @@
                           </template>
                           Cancelled!
                       </v-tooltip>
+                      <v-dialog
+                        transition="dialog-bottom-transition"
+                        max-width="600"
+                      >
+                        <template v-slot:activator="{ on,attrs }">                        
+                            <v-icon  v-bind="attrs" v-on="on" class="ml-2" small color="primary lighten-2" >
+                                $cog
+                            </v-icon>
+                        </template>
+                        <template v-slot:default="dialog">
+                          <v-card>
+                            <v-toolbar
+                              color="light"
+                              dark
+                            >Adjust Configuration for service: {{entry.label}}
+                            <v-spacer>
+                            </v-spacer>
+                            </v-toolbar>
+                            <v-card-text>
+                              <small>Default image: {{entry.image}}</small>
+                              <v-text-field
+                                label="Service Image to Use"
+                                v-model="custom_images[key]"
+                                single-line
+                              ></v-text-field>
+                              <v-btn
+                                text @click="custom_images[key]=entry.image"
+                              >Default</v-btn>
+                            </v-card-text>
+                            <v-card-actions class="justify-end">
+                              <v-btn
+                                text
+                                @click="dialog.value = false"
+                              >Close</v-btn>
+                            </v-card-actions>
+                          </v-card>
+                        </template>
+                      </v-dialog>
                     </small>
+                    
                     
                     
                     
@@ -135,6 +238,9 @@ export default {
   },
   
   methods: {
+    updateImage(index,val){
+      this.custom_images[index] = val
+    },
     async cancel_procedure(procedureKey){
       const $this = this
       console.log("cancel job")
@@ -172,12 +278,23 @@ export default {
       let services = Object.keys(this.services_to_use).filter((key, i)=>{
         return this.services_to_use[parseInt(key)] == 1
       })
-      console.log("Starting job using services",services)
+      let images  = []
+      if (this.custom_images ){
+        for (let [key, value] of Object.entries(this.custom_images) ){
+          images.push({
+            service: parseInt(key),
+            image: value
+          })
+        }
+      }
+      console.log("images", images)
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
         catalog: $this.module,
         token: $this.$store.token,
+        images: images,
+        dry: $this.dry,
         services: services,
         variables: $this.procedure.variables
       }).then((response)=>{
@@ -191,13 +308,13 @@ export default {
 
         }
       }).catch((error)=>{
-        console.error("-----------------", error)
-        this.$swal.fire({
-          position: 'center',
-          icon: 'error',
-          showConfirmButton:true,
-          title:  error.response.data.message
-		})
+          console.error("-----------------", error)
+          this.$swal.fire({
+            position: 'center',
+            icon: 'error',
+            showConfirmButton:true,
+            title:  error.response.data.message
+          })
       })
     },
     updateValue(value){
@@ -209,6 +326,7 @@ export default {
         variable.source  = src
       }
       const $this = this
+      console.log("vau updated")
       try{
         FileService.updateVariableJob({
           module: this.moduleIdx,
@@ -262,9 +380,11 @@ export default {
   data(){
     return{
         el: 1,
+        dry:false,
         full_services: null,
         services: null,
         procedure: null,
+        custom_images: {},
         services_to_use: {},
         outputHeaders: [
             {

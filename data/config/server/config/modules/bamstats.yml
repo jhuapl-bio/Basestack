@@ -33,7 +33,6 @@
             to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.bam.bind.to}/"
         outdata:
           label: "Output bamstats zipped data"
           element: "file"  
@@ -43,7 +42,7 @@
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.bam.source})>>/bamstats_report.zip" 
           # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
-          target: "<<directory(%{variables.bam.bind.to})>>/bamstats_report.zip"
+          target: "%{variables.bam.bind.to}/bamstats_report.zip"
         # outfile:
         #   label: "Output bamstats unzipped report data"
         #   element: "file"  

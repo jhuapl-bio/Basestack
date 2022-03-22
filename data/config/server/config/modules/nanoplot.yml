@@ -12,9 +12,10 @@
       module: True
       init: false 
       dependencies:
-        - target: "nanozoo/nanoplot:1.38.1--e303519"
-          label: "nanozoo/nanoplot:1.38.1--e303519"
+        - target: "nanozoo/nanoplot"
+          label: "nanozoo/nanoplot"
           type: "docker"
+          version: "1.38.1--e303519"
           format: "docker"
         - source: 
             url: "https://raw.githubusercontent.com/wdecoster/NanoPlot/master/scripts/add_barcodes_to_summary.py"
@@ -56,7 +57,7 @@
               bind_parent_dir: true
               bind:  
                 from: "%{variables.input.source}"
-                to: "/opt/databases"
+                to: "/opt/summary"
               source: null
               append:
                 command: " --summary ${input} "
@@ -146,7 +147,7 @@
           bind_parent_dir: true
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.input.source})>>/NanoPlot/NanoPlot-report.html"
-          target: "<<directory(%{variables.input.source})>>/NanoPlot/NanoPlot-report.html"
+          target: null
         barcoded:
           label: "Split plots by barcodes "
           bind_parent_dir: true

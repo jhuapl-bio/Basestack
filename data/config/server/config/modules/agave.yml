@@ -133,7 +133,7 @@
               hint: "Coding regions for SARS-CoV-2"
               bind_parent_dir: true
               source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
-              target: "/opt/gff"
+              target: "/opt/gff/GCF_009858895.2_ASM985889v3_genomic.gff"
               bind: 
                 from: "%{variables.gff.source}"
                 to: "/opt/gff"
@@ -181,7 +181,7 @@
               hint: "FASTA File used as a reference for alignment steps"
               bind_parent_dir: true
               source: "${writePath}/workflows/agave/reference.fasta"
-              target: "/opt/reference/"
+              target: "/opt/reference/reference.fasta"
               bind: 
                 from: "%{variables.reference.source}"
                 to: "/opt/reference"
@@ -189,7 +189,6 @@
             - element: "file"
               name: "Custom Reference"
               source: null
-              target: null
               bind: 
                 from: "%{variables.reference.source}"
                 to: "/opt/reference" 

@@ -1,0 +1,79 @@
+- name: irma
+  title: "IRMA"
+  icon: "eye-dropper"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tooltip: "FLU, COVID, and EBOLA consensus generation pipeline"
+  procedures:
+    - icon: "eye-dropper"
+      name: "IRMA_FLU"
+      title: "IRMA FLU"
+      module: True
+      init: false 
+      tooltip: "FLU Consensus from IRMA pipeline"
+      tags: 
+        - "variants"
+        - "consensus"
+        - "cdc"
+        - "consensus"
+      dependencies: 
+        - target: "jhuaplbio/irma"
+          label: "jhuaplbio/irma"
+          type: "docker-local"
+          build: 
+            path: ${configPath}/modules/irma/Dockerfile
+            file: Dockerfile
+          format: "dockerfile"
+      
+      variables:
+        
+        fastq:
+          label: "Input  FASTAQ"
+          class: "wb-100 p-3 mb-1"
+          option: 0
+          options:
+            - name: "Your input file"
+              element: "file"
+              hint: "FASTQ File used as input, from your own machine"
+              bind_parent_dir: true
+              source: null
+              target: null
+              bind: 
+                from: "%{variables.fastq.source}"
+                to: "/opt/data"
+              class: "wb-100  p-3 mb-1" 
+            - element: null
+              name: "Test File"
+              bind_parent_dir: false
+              source: "${writePath}/modules/irma/test2.fastq" 
+              target: "/opt/src/flu-amd/tests/test2.fastq"
+              bind:
+                from: "${writePath}/modules/irma"
+                to: "/opt/data"
+        output:
+          label: "Output Directory"
+          element: "dir"
+          output: True
+          openSelf: True
+          hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
+          bind_parent_dir: false
+          type: file
+          pattern: ".fasta"
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.fastq.source})>>/irma_output"
+          path: "<<directory(%{variables.fastq.source})>>/irma_output"
+          target: "%{variables.fastq.to}/irma_output"
+          define:
+            outputdir: "/opt/data/irma_output"
+      services:
+        - name: "consensus" 
+          image: "jhuaplbio/irma:latest"
+          orchestrated: false #orchestrated means it r
+          init: false
+          hideStatus: false
+          label: "IRMA Consensus"
+          force_restart: true
+          command: ["bash","-c", " rm -r irma_output; IRMA FLU ${fastq} irma_output " ]
+          workingdir: "/opt/data"
+    

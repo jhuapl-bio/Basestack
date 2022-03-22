@@ -61,5 +61,5 @@
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "cat ${dir}/* > /tmp/full.fastq; mkdir -p ${dir}/fastqc; fastqc /tmp/full.fastq -o ${dir}/fastqc"]
+          command: ["bash","-c", "cat ${dir}/*fq > /tmp/full.fastq; cat ${dir}/*.fastq >> /tmp/full.fastq; mkdir -p ${dir}/fastqc; fastqc /tmp/full.fastq -o ${dir}/fastqc"]
     

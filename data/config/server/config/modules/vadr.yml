@@ -57,7 +57,6 @@
             to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.file.bind.to}/"
         model:
           label: "Vadr Models"
           class: "wb-100 p-3 mb-1"

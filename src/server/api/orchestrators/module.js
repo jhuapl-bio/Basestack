@@ -94,7 +94,7 @@ export  class Module {
             // })
         }) 
 	}
-    async initProcedures(){
+    async initProcedures(){ 
         let promises = []   
         const $this = this;
         cloneDeep(this.config.procedures).forEach((procedure, idx)=>{
