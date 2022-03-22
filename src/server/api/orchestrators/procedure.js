@@ -406,18 +406,18 @@ export class Procedure {
         }) 
     }
 	async pullImage(dependency){
-		const $this = this  
+		const $this = this   
         return new Promise(function(resolve,reject){ 
-            if (dependency.streamObj){
-                try{
+            if (dependency.streamObj){ 
+                try{ 
                     
                     store.logger.info("Closing since it already exists as a stream obj %o", dependency.target)
                     dependency.streamObj.destroy()
                     // dependency.streamObj.close()
-                    // dependency.streamObj.end() 
+                    // dependency.streamObj.end()  
                     dependency.status.downloading = false
                     dependency.status.building = false
-                } catch(err){
+                } catch(err){ 
                     store.logger.error("error in destorying streamobj %o", err)
                 }
             }
@@ -576,7 +576,7 @@ export class Procedure {
                         context: path.dirname(dependency.build.path),
                         src: [dependency.build.file], 
                         AttachStdout: true, 
-                        AttachStderr: true,
+                        AttachStderr: true, 
                         Tty:false
                     }
                     try{

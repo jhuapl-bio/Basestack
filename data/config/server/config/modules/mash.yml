@@ -57,7 +57,7 @@
               name: "Second File"
               bind: 
                 from: "%{variables.genome2.source}"
-                to: "/opt/data"
+                to: "/opt/data2"
               class: "wb-100  p-3 mb-1"
               source: null
         sketch1:
@@ -126,7 +126,6 @@
             if [[ $sketch2 == 'true' ]] ; then
                 genome2=${genome2}.msh;
             fi;
-
             mash screen ${winner} ${genome2} ${genome1} | sort -gr > ${outscreen};
 
 

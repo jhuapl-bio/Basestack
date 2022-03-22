@@ -85,7 +85,6 @@
             to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.file.bind.to}/"
         memory_mapping: 
           label: "Memory Load Database"
           hint: "Do or Don't load the database into memory. Useful if you are limited in RAM"

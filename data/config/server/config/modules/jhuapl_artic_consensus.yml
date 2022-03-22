@@ -51,7 +51,6 @@
               - dir
             action: "exists"
             source: "%{variables.dir.source}/fast5_pass"
-          target: "%{variables.file.bind.to}/"
         summary:
           label: "Sequencing Summary File"
           warning: "Must be in the root (same level) of the run directory"
@@ -63,7 +62,6 @@
               - dir
             action: "exists"
             source: "%{variables.dir.source}/sequencing_summary*.txt"
-          target: "%{variables.file.bind.to}/"
         fastq_pass:
           label: "Input Long-Reads FASTQ Directory"
           hint: "Folder that contains 1 or more fastq files in UNCOMPRESSED format"

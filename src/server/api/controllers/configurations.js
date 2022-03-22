@@ -13,7 +13,7 @@ export function bytesToSize(bytes) {
    var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
    return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
 } 
-export async function create_job(config, variables, services, procedure){
+export async function create_job(config, params, services, procedure){
     let job = new Job(procedure)
     job.defineConfiguration(config)   
     if (!services){  
@@ -23,8 +23,8 @@ export async function create_job(config, variables, services, procedure){
                   
     }  
     await job.defineServices(services) 
-    if (variables){       
-        job.setVariables(variables)      
+    if (params){       
+        job.setParams(params)      
     }      
     return job   
 }           

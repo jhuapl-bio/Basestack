@@ -262,10 +262,10 @@ export default {
     },
 	  hideSlider(){
 		  if (this.selected == 'procedures'){
-			  return false
+			  return false 
 		  } else {
 			  return true
-		  }
+		  } 
 	  },
     selectedPort(){
       return process.env.PORT_SERVER
@@ -292,13 +292,13 @@ export default {
 	},
   data(){
     return {
-      tab: 0,
+      tab: 1,
 			mini:true,
       defaultModule: {},
 			drawer:false,
-			tabProcedure: null, 
+			tabProcedure: 6, 
 			sel: 0,
-			selected: 'defaults',
+			selected: 'procedures',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 

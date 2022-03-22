@@ -56,7 +56,7 @@
               bind_parent_dir: true
               bind:  
                 from: "%{variables.input.source}"
-                to: "/opt/databases"
+                to: "/opt/summary"
               source: null
               append:
                 command: " --summary ${input} "
@@ -146,7 +146,7 @@
           bind_parent_dir: true
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.input.source})>>/NanoPlot/NanoPlot-report.html"
-          target: "<<directory(%{variables.input.source})>>/NanoPlot/NanoPlot-report.html"
+          target: null
         barcoded:
           label: "Split plots by barcodes "
           bind_parent_dir: true

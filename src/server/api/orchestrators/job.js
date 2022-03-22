@@ -77,6 +77,30 @@ export  class Job {
                 $this.configuration.variables[key].source = value.source
             } 
         // } 
+        if (value.update || (value.optionValue && value.optionValue.update ) ){
+            console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+            if (value.update){
+                if (Array.isArray(value.update)){
+                    value.update.forEach((updating)=>{
+                        console.log("updating", updating.id, updating.value)
+                        nestedProperty.set(this.configuration, updating.id, updating.value)
+                    })
+                    console.log(this.configuration.variables)
+
+                }
+            } else {
+                console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")                
+                if (Array.isArray(value.optionValue.update)){
+                    value.optionValue.update.forEach((updating)=>{
+                        console.log("updating", updating.id, updating.value)
+                        nestedProperty.set(this.configuration, updating.id, updating.value)
+                    })
+                    console.log(this.configuration.variables)
+
+                }
+            }
+            console.log(this.configuration.variables.output.source)
+        }
         if (value.option || value.option == 0){
             let getter = Object.getOwnPropertyDescriptor(obj, 'option');
             if (getter && getter.get){
@@ -212,16 +236,31 @@ export  class Job {
                             watch.source.forEach((w)=>{
                                 promises.push(removeFile(w))
                             })
-                        }
+                        } 
                     }
                 } 
-            }
+            } 
             Promise.allSettled(promises).then((respo)=>{
-                resolve()
-            }).catch((err)=>{
-                reject(err)
+                resolve()  
+            }).catch((err)=>{  
+                reject(err)  
             })
         })
+    } 
+    setParams(params){
+        if (params.variables){
+            this.setVariables(params.variables)
+        }
+        if (params.images){
+            params.images.forEach((service)=>{ 
+                this.services[service.service].config.image = service.image
+            })
+        }
+        this.services.forEach((service)=>{ 
+            service.config.dry = params.dry
+        })
+
+
     }
     setVariables(variables){
         this.variables = variables
@@ -249,12 +288,12 @@ export  class Job {
         return 
     }
     async getProgress(){
-        const $this = this;
+        const $this = this; 
         return new Promise(function(resolve,reject){
             try{
                 let variables = $this.configuration.variables
-                let promises = []
-                if (variables ){
+                let promises = [] 
+                if (variables ){ 
                     let filtered_outputs = Object.values(variables).filter((value, key)=>{
                         return value.output
                     })
@@ -372,18 +411,18 @@ export  class Job {
             }
             store.logger.info("Job completed or skipped/exited")
             return cancelled_or_skip
-        } catch(err){
+        } catch(err){  
             store.logger.error("Err in starting job %o", err)
             throw err
         }
     }
-    async start(){
+    async start(){    
         const $this = this
         let services;
-        $this.status.error = null
+        $this.status.error = null 
         $this.status.running = true
         $this.status.complete = false
-        let promises = [];
+        let promises = []; 
         store.logger.info("%s setting variables", $this.name)
         this.configuration.setVariables()
         store.logger.info("%s closing existing streams if existent", $this.name)

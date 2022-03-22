@@ -25,24 +25,20 @@
             path: ${configPath}/modules/irma/Dockerfile
             file: Dockerfile
           format: "dockerfile"
+      
       variables:
         output:
           label: "Output Directory"
           element: "dir"
           output: True
-          type: files
-          pattern: ".fasta"
           openSelf: False
           hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
           bind_parent_dir: false
-          bind: 
-            from: "%{variables.output.source}"
-            to: "/opt/output"
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.fastq.source})>>/irma_output"
           target: "%{variables.fastq.to}/irma_output"
           define:
-            outputdir: "irma_output"
+            outputdir: "/opt/data/irma_output"
         fastq:
           label: "Input  FASTAQ"
           class: "wb-100 p-3 mb-1"
@@ -60,19 +56,22 @@
               class: "wb-100  p-3 mb-1" 
             - element: null
               name: "Test File"
-              source: "/opt/src/flu-amd/tests/test2.fastq"
+              bind_parent_dir: false
+              source: null 
+              type: files
+              pattern: ".fasta"
               target: "/opt/src/flu-amd/tests/test2.fastq"
-              update: 
-                - id: "variables.output.source"
-                  value: "${writePath}/modules/irma/irma_output"
+              bind:
+                from: "${writePath}/modules/irma"
+                to: "/opt/data"
       services:
-        - name: "irma_consensus"
+        - name: "consensus" 
           image: "jhuaplbio/irma:latest"
           orchestrated: false #orchestrated means it r
           init: false
           hideStatus: false
           label: "IRMA Consensus"
           force_restart: true
-          command: ["bash","-c", " IRMA FLU ${fastq} ${outputdir}; mv ${outputdir}/* /opt/output/" ]
-          workingdir: "/opt/src"
+          command: ["bash","-c", " rm -r irma_output; IRMA FLU ${fastq} irma_output " ]
+          workingdir: "/opt/data"
     

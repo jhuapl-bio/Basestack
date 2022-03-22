@@ -18,8 +18,8 @@
         output: True
         openSelf: True
         element: "file"
-        source: "%{variables.file.source}.sam" 
-        target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.sam.source})>>.sam"
+        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.sam"
+        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.sam"
       bam:
         label: "BAM File"
         element: "file"
@@ -30,16 +30,16 @@
           from: "%{variables.bam.source}"
           to: "/opt/data"
         class: "wb-100  p-3 mb-1"
-        source: "%{variables.file.source}.bam"
-        target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.sam.source})>>.bam"
+        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bam"
+        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bam"
       bai:
         label: "BAI File"
         hint: "BAI index file generated from an alignment and sorted"
         watch: True
         output: True
         element: "file"
-        source: "%{variables.file.source}.bam.bai"
-        target: "%{variables.bam.bind.to}/<<basename(%{variables.bam.source})>>.bai"
+        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bam.bai"
+        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bam.bai"
   procedures:
     - name: minimap2 #Top level is the left-hand selection of the menu and the major module to install 
       title: "Minimap2"
@@ -67,7 +67,7 @@
             to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.file.bind.to}/%{variables.file.source}"
+          target: null
         ref:
           label: "Reference to align against"
           class: "wb-100 p-3 mb-1"
@@ -78,7 +78,7 @@
             from: "%{variables.ref.source}"
             to: "/opt/ref"
           source: null
-          target: "%{variables.ref.bind.to}/%{variables.ref.source}"
+          target: "/opt/ref/<<basename(%{variables.ref.source})>>"
         bam: 
           target: "%{shared.variables.bam}"
           shared: true
@@ -98,7 +98,7 @@
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "minimap2   ${ref} ${file} -a -o ${file}.sam"]
+          command: ["bash","-c", "minimap2   ${ref} ${file} -a -o ${sam}"]
         - name: samtools_view_sam_to_bam_minimap2
           label: "Samtools BAM from SAM"
           image: "staphb/samtools"

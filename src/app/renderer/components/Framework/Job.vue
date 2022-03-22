@@ -13,8 +13,71 @@
         <v-stepper-header
             class="configure"
         >
+            
+            
+            <v-dialog
+              transition="dialog-bottom-transition"
+              max-width="600"
+            >
+              <template v-slot:activator="{ on,attrs  }">
+               
+                <v-btn
+                  color="primary"
+                  class="text-caption"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  <v-icon class="mr-3" small color="primary lighten-2" >
+                      $cog 
+                  </v-icon>
+                Info</v-btn>
+              </template>
+              <template v-slot:default="dialog">
+                <v-card>
+                  <v-toolbar
+                    color="light"
+                    dark
+                  >Advanced Configuration Information for {{procedure.title}}
+                  <v-spacer>
+                  </v-spacer>
+                  <v-checkbox
+                        v-model="dry"
+                        label="Dry Run"
+                        on-icon="$check-square"
+                        class="align-center justify-center text-xs-center mx-4" 
+                        off-icon="$square"
+                        color="primary"
+                    >
+                    
+                  </v-checkbox> 
+                  </v-toolbar>
+                  <v-card-text>
+
+                    <tree-view :data="services" height="300px" class=" mt-2 mb-3 pt-0 elevation-5 treeview " style="overflow-y:auto" 
+                            :options="{
+                                maxDepth: 3, 
+                                rootObjectKey: 'root',
+                                modifiable: false,
+                                limitRenderDepth: false
+                            }"
+                        >
+                    </tree-view>
+                  </v-card-text>
+                  <v-card-actions class="justify-end">
+                    <!-- <v-btn
+                      text
+                    >Update</v-btn> -->
+                    <v-btn
+                      text
+                      @click="dialog.value = false"
+                    >Close</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </template>
+            </v-dialog>
+            <!-- <v-divider class="mx-3" vertical>
+            </v-divider> -->
             <template v-for="(entry, key) in services"  >
-                
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
                     :key="key+'-entry'"
@@ -63,6 +126,7 @@
                           Cancelled!
                       </v-tooltip>
                     </small>
+                    
                     
                     
                     
@@ -172,12 +236,12 @@ export default {
       let services = Object.keys(this.services_to_use).filter((key, i)=>{
         return this.services_to_use[parseInt(key)] == 1
       })
-      console.log("Starting job using services",services)
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
         catalog: $this.module,
         token: $this.$store.token,
+        dry: $this.dry,
         services: services,
         variables: $this.procedure.variables
       }).then((response)=>{
@@ -209,6 +273,7 @@ export default {
         variable.source  = src
       }
       const $this = this
+      console.log("vau updated")
       try{
         FileService.updateVariableJob({
           module: this.moduleIdx,
@@ -262,6 +327,7 @@ export default {
   data(){
     return{
         el: 1,
+        dry:false,
         full_services: null,
         services: null,
         procedure: null,

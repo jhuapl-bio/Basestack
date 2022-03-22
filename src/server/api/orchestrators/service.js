@@ -404,15 +404,15 @@ export class Service {
         if (newline){
             tsv_file_content = tsv_file_content + "\n"
         }
-        return tsv_file_content 
-    }
+        return tsv_file_content  
+    } 
     
 
     start(params, wait){  
 		const $this = this
         this.status.error = null
         this.status.running = true
-        this.status.cancelled = false
+        this.status.cancelled = false 
         return new Promise(function(resolve,reject){
             let options = cloneDeep($this.options)
             store.logger.info("Starting.. %s", $this.name)
@@ -429,17 +429,17 @@ export class Service {
                         } else {
                             bind.push(b)
                         }
-                    })
+                    }) 
                 } else {
                     let b  = $this.config.bind
                     bind.push(`${b.from}:${b.to}`)
                 }
             }
-            if (params.bind){
+            if (params.bind){ 
                 params.bind.forEach((b)=>{
                     bind.push(b)
                 })
-            }
+            } 
             let cmd = $this.config.command 
             if (cmd){  
                 options.Cmd = $this.config.command
@@ -477,7 +477,7 @@ export class Service {
                             let filepath = ( selected_option.copy.basename ?
                                 path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
                                 selected_option.copy.to
-                            )
+                            ) 
                             promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
                                 logger.error(err) 
                             }))
@@ -493,38 +493,51 @@ export class Service {
                             } else { 
                                 promises.push(writeFile(selected_option.create.to, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
                                     logger.error(err)
-                                })) 
+                                }))  
                             }
                         } 
 
                         if (selected_option.bind){
                             let from = selected_option.bind.from
                             let to = selected_option.bind.to
-                            
-                            try{
 
-                                if (selected_option.bind_parent_dir){
-                                    env.push(`${name}=${to}/${path.basename(from)}`)
+ 
+                            try{ 
+                                // if (selected_option.port){
+                                //     ports.push(selected_option.bind.from)
+                                // }       
+                                if (selected_option.bind_parent_dir){ 
+                                    if (selected_option.target){ 
+                                        env.push(`${name}=${selected_option.target}`)
+                                    } else {
+                                        env.push(`${name}=${to}/${path.basename(from)}`)
+                                    } 
                                     if (from && to && seenTargetTos.indexOf(to) == -1){
                                         bind.push(`${path.dirname(from)}:${to}`)
                                         seenTargetTos.push(to)
-                                    } 
-                                } else {
-                                    if (!selected_option.port ){
+                                    }  
+                                } else if (!selected_option.port ){
+                                    if (selected_option.target){
+                                        env.push(`${name}=${selected_option.target}`)
+                                    } else {
                                         env.push(`${name}=${to}`)
-    
-                                        if (from && to && seenTargetTos.indexOf(to) == -1){
-                                            bind.push(`${from}:${to}`) 
-                                            seenTargetTos.push(to)
-                                        }
-                                    } 
+                                    }
+                                    if (from && to && seenTargetTos.indexOf(to) == -1){
+                                        bind.push(`${from}:${to}`) 
+                                        seenTargetTos.push(to)
+                                    }
                                 }    
                             } catch(err){ 
                                 store.logger.error("%o, with variable %s", err, name)
                             }
                         } else {  
                             if (typeof selected_option == 'object'){
-                                env.push(`${name}=${( selected_option.target ? selected_option.target : selected_option.source)}`)
+                                if (selected_option.output && !selected_option.target){
+                                    // env.push(`${name}=${path.dirname(selected_option.source)}/${path.basename(from)}`)
+                                    store.logger.info(`no defined target for variable: ${name}`) 
+                                } else {
+                                    env.push(`${name}=${( selected_option.target ? selected_option.target : selected_option.source)}`)
+                                }
                             } else{
                                 env.push(`${name}=${selected_option}`)
                             }
@@ -543,7 +556,6 @@ export class Service {
                             let serviceFound = appendable.services.findIndex(data => data == $this.serviceIdx)
                             if (serviceFound >= 0){ 
                                 let service = appendable
-                                console.log(appendable,"<<")
                                 if (service.placement >= 0){
                                     if (appendable.position == 'start'){
                                         options.Cmd[service.placement] =  appendable.command + " " + options.Cmd[service.placement]  +  " "
@@ -582,45 +594,51 @@ export class Service {
                         options.Cmd[append.placement] =  append.command + " " + options.Cmd[append.placement]  +  " "
                     }else {
                         options.Cmd[append.placement] =  options.Cmd[append.placement]  +  append.command + " "
-                    }
-                } else{
-                    if (append.position == 'start'){
+                    } 
+                } else{  
+                    if (append.position == 'start'){ 
                         options.Cmd[options.Cmd.length - 1] =  append.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
-                    } else {
+                    } else { 
                         options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   append.command
-                    }  
-                }
+                    }   
+                }  
             }
             if ($this.config.image){
-                options.Image = $this.config.image  
-            } 
+                let img = $this.config.image
+                options.Image = img  
+            }   
             if (! options.Image ){ 
                 throw new Error("No Image available")
-            }  
+            }   
                
             if (typeof options.Cmd == "string"){  
                 options.Cmd = ['bash', '-c', options.Cmd]
             }    
+            if (!$this.config.command)
+            {
+                options.Cmd = null
+            } 
             options.Env = [...options.Env, ...env]  
             options.HostConfig.Binds = [...options.HostConfig.Binds, ...bind]
             options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
-            logger.info("%o ______", options)
+            logger.info("%o ______okay", options)
             logger.info(`starting the container ${options.name} `)
-            // resolve()
-            Promise.all(promises).then((response)=>{
-                
+            if ($this.config.dry){
+                resolve()
+            } else {
+                Promise.all(promises).then((response)=>{
                 $this.status.stream.info.push(JSON.stringify(options, null, 4))
                 $this.status.success = false 
                 $this.status.error = false 
                 $this.status.complete = false 
                 store.docker.createContainer(options,  function (err, container) {
-                    $this.container = container
+                    $this.container = container 
                     if (err ){
                         logger.error("%s %s %o","Error in creating the docker container for: ", options.name , err)
                         // if (err.reason && err.reason == 'no such container'){
                         //     store.docker.pull(options.Image)
                         // }
-                        $this.status.running = false
+                        $this.status.running = false 
                         // $this.status.error = err
                         if (err.json && err.json.message){
                             $this.status.error = err.json.message
@@ -685,19 +703,19 @@ export class Service {
                                         $this.status.error = err.json.message
                                     } else {
                                         $this.status.error = err
-                                    }
-                                    reject(err)
-                                } 
+                                    } 
+                                    reject(err)  
+                                }  
                                 if (!wait || $this.config.continuous){
                                     resolve( false )
-                                } else { 
+                                } else {   
                                     
                                     // if (process.platform == 'win32'){
                                     let ended = false
                                     $this.jobInterval = setInterval(()=>{
                                         if (ended){
                                             clearInterval($this.jobInterval)
-                                        } 
+                                        }  
                                         if ($this.status.complete){
                                             ended = true
                                             clearInterval($this.jobInterval)
@@ -724,22 +742,25 @@ export class Service {
                     } catch(err){
                         store.logger.error("Error in running container: %s %o", $this.name, err)
                         $this.status.running = false
-                        // $this.status.error = err
-                        $this.status.success= false
+                        // $this.status.error = err 
+                        $this.status.success= false  
                         $this.status.complete = true 
                         if (err.json && err.json.message){ 
                             $this.status.stream.info.push(err.json.message)
                         } else {
                             $this.status.stream.info.push(err)
-                        } 
-                               
+                        }  
+                            
                         reject() 
-                    }
+                    } 
                 })
-            }).catch((err)=>{ 
-                store.logger.error(err)
-                reject(err)
-            })
+                }).catch((err)=>{ 
+                    store.logger.error(err)
+                    reject(err)
+                })
+            }
+           
+            
             
         });
 	}

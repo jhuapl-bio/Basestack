@@ -1417,7 +1417,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 				store.logger.info("found job, cleaned up")  
 			} 
 			store.logger.info("Starting Job!")  
-  			let job = await create_job(procedure.config, req.body.variables, services, procedure)
+  			let job = await create_job(procedure.config, req.body, services, procedure)
 			// console.log("req body", job.configuration.variables.file.source, job.configuration.variables.file.bind.from)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
