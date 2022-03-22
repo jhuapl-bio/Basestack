@@ -13,6 +13,7 @@ const { VueLoaderPlugin } = require('vue-loader')
 const nodeExternals = require('webpack-node-externals')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin')
+const WebpackWatchPlugin = require('webpack-watch-files-plugin').default
 
 
 /**
@@ -26,7 +27,7 @@ let whiteListedModules = ['express']
 let serverConfig = {
   target: 'node',
    entry: {
-     server: path.join(__dirname, '../src/server/index.server.js')
+     server: path.join(__dirname, '../src/server/index.server.js'),
    },
    devtool: 'source-map',
    mode: 'development',
@@ -48,7 +49,7 @@ let serverConfig = {
     // modules: [path.resolve(__dirname, '../node_modules')],
     extensions: [ 
         '.jsx', '.js',
-        '.yaml',
+        '.yaml', '.yml',
         '.json',
         '.html',
         '.css', '.styl', '.scss', '.sass' ]
@@ -78,11 +79,22 @@ let serverConfig = {
 
 if (process.env.NODE_ENV !== 'production'){
   serverConfig.devtool = 'eval-cheap-source-map'
+  // serverConfig.plugins.push(
+  //     new WebpackWatchPlugin({
+  //       files: path.join(__dirname, '../data/config/server/config/modules'),
+  //       verbose: true
+  //   })
+  // )
   serverConfig.plugins.push(
     new NodemonPlugin(
       {
-         verbose: true,
-        "PORT_SERVER": process.env.PORT_SERVER
+        verbose: false,
+        ext: 'js,njk,json,yml,YAML,yaml',
+        "PORT_SERVER": process.env.PORT_SERVER,
+        watch: [
+          path.join(__dirname, '../data/config/server/config/modules'),
+          path.join(__dirname, '../src/server/')
+        ]
       }
     ) 
   )

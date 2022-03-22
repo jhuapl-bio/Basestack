@@ -3,15 +3,12 @@
 
 install_bin()
 {  
-cat <<EOF 
 mkdir $HOME/bin
 echo "export PATH=\"$HOME/bin:\$PATH\"" >> $HOME/.bashrc
-EOF
 }
 
 install_docker()
 {  
-cat <<EOF 
 
 sudo apt-get update -y
 sudo apt-get upgrade -y
@@ -41,13 +38,11 @@ docker image tag jhuaplbio/basestack_mytax:v1.1.2 jhuaplbio/basestack_mytax:late
 
 echo "You should now be able to use Mytax within Basestack!"
 
-EOF
 }
 
 install_minknow(){
     arg=$1
     echo $arg
-cat <<EOF 
     ## Install MinKNOW
     # cd $HOME/Downloads  
     sudo echo "Installing minknow"
@@ -64,7 +59,6 @@ cat <<EOF
     fi 
     sudo /opt/ont/minknow/bin/config_editor --filename /opt/ont/minknow/conf/sys_conf --conf system --set on_acquisition_ping_failure=ignore
     sudo service minknow restart
-EOF
 }
 
 
@@ -73,7 +67,6 @@ install_CUDA_11_6()
 ## Install CUDA
 arg=$1
 echo $arg
-cat <<EOF 
 if [[ $args == 'arm64' ]]; then
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/sbsa/cuda-ubuntu1804.pin
     sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
@@ -91,7 +84,7 @@ else
     sudo apt-get update
     sudo apt-get -y install cuda
 fi 
-EOF
+
 }
 
 install_GUPPY() 
@@ -99,7 +92,6 @@ install_GUPPY()
 ## Install CUDA
 arg=$1
 echo $arg
-cat <<EOF 
 if [[ $args == 'arm64' ]]; then
     ## Get Guppy Basecaller
     wget https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy_5.1.13_linuxaarch64_cuda10.tar.gz 
@@ -111,13 +103,13 @@ else
     tar -xvzf ont-guppy_5.1.15_linux64.tar.gz
     find ont-guppy/bin/*  | while read line; do ln -fs $PWD/$line $HOME/bin/$(basename $line); done;
 fi 
-EOF
+
 }
 
 install_BASESTACK(){
 arg=$1
 echo $arg
-cat <<EOF 
+
 if [[ $args == 'arm64' ]]; then
     ## Get the ARM64 build of Basestack
     wget https://github.com/jhuapl-bio/Basestack/releases/download/arm64/Basestack.AppImage && chmod +x Basestack.AppImage
@@ -125,8 +117,7 @@ else
     wget https://github.com/jhuapl-bio/Basestack/releases/latest/download/Basestack.AppImage && chmod +x Basestack.AppImage
 fi 
 mv Basestack.AppImage $DESKTOP/
-    
-EOF
+
 }
 
 
@@ -205,14 +196,6 @@ case ${answer:0:1} in
 esac
 
 
-
-exit 1
-
-
-
-
-
-
 echo "Get Visual studio code from: https://code.visualstudio.com/docs/?dv=linuxarmhf_deb"
 
 
@@ -222,9 +205,9 @@ echo "Get Visual studio code from: https://code.visualstudio.com/docs/?dv=linuxa
 
 
 #Install grpc dev dependency in case it is not available on the system
-sudo apt-get install -y libgrpc-dev
+# sudo apt-get install -y libgrpc-dev
 
-echo "Minknow installation is a work in progress with the update to ubuntu 18 for jetson or xavier devices"
+# echo "Minknow installation is a work in progress with the update to ubuntu 18 for jetson or xavier devices"
 
 ## Option 1. Fails
 # wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
