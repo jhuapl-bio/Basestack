@@ -6,23 +6,23 @@
                     :icon="status.icon"
                     class="duration-200"
                     :class="{
-                        'text-blue-extradark animate-spin': status.value === 'active',
-                        'text-green': status.value === 'complete',
+                        'text-blue-900 animate-spin': status.value === 'active',
+                        'text-green-100': status.value === 'complete',
                         'text-red': status.value === 'error',
                     }" 
                 />
 
-                <h5 class="text-gray-darkest markup-h5 strong">
+                <h5 class="text-gray-700 markup-h5 strong">
                     {{label}}
                 </h5>
 
-                <div class="font-display text-gray-darker">
+                <div class="text-gray-600 font-display">
                     ({{progress}}%)
                 </div>
 
                 <font-awesome-icon 
                     icon="info-circle" 
-                    class="text-blue" 
+                    class="text-blue-500" 
                 />
             </div>
 
@@ -33,14 +33,14 @@
 
         <div 
             class="relative w-full h-2 overflow-hidden rounded-full" 
-            :class="[error ? 'bg-red/10' : 'bg-gray']"
+            :class="[error ? 'bg-red/10' : 'bg-gray-500']"
         >
             <div
                 class="relative top-0 left-0 h-full duration-500"
                 :style="{width: progress + '%'}"
                 :class="{
-                    'bg-blue-extradark animate-pulse': status.value === 'active',
-                    'bg-green': status.value === 'complete',
+                    'bg-blue-900 animate-pulse': status.value === 'active',
+                    'bg-green-100': status.value === 'complete',
                 }"
             />
         </div>

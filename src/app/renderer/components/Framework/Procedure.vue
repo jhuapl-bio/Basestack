@@ -549,7 +549,7 @@ export default {
 }
 .caro-bottom .v-icon {
   /* left: 10% !important; */
-  background: "blue"
+  background: "blue-500"
 }
 
 
