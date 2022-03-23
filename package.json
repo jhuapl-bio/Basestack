@@ -18,6 +18,7 @@
     "buildOnly:linuxARM64": "electron-builder --arm64 --linux AppImage",
     "buildOnly:linux": "electron-builder --linux AppImage",
     "buildOnly:linuxAll": "electron-builder --arm64 --x64 --linux  AppImage",
+    "buildOnly:mac": "electron-builder --mac dmg",
     "build:linuxOffline": "node .electron-vue/build.js && electron-builder --linux AppImage -p never",
     "build:mac-zip": "node .electron-vue/build.js && electron-builder --mac  zip",
     "package:mac-zip": "electron-builder --mac zip",
@@ -108,7 +109,6 @@
         "dmg",
         "zip"
       ],
-      "arch": "universal",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlement.mac.plist",
