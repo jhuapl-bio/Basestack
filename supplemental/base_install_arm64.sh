@@ -68,13 +68,17 @@ install_CUDA_11_6()
 arg=$1
 echo $arg
 if [[ $args == 'arm64' ]]; then
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/sbsa/cuda-ubuntu1804.pin
-    sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
-    wget https://developer.download.nvidia.com/compute/cuda/11.6.1/local_installers/cuda-repo-ubuntu1804-11-6-local_11.6.1-510.47.03-1_arm64.deb
-    sudo dpkg -i cuda-repo-ubuntu1804-11-6-local_11.6.1-510.47.03-1_arm64.deb
-    sudo apt-key add /var/cuda-repo-ubuntu1804-11-6-local/7fa2af80.pub
-    sudo apt-get update
-    sudo apt-get -y install cuda -f
+
+    echo "Under development for CUDA 11. However, guppy on ARM64 still uses cuda 10"
+cat <<EOF    
+    # wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/sbsa/cuda-ubuntu1804.pin
+    # sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
+    # wget https://developer.download.nvidia.com/compute/cuda/11.6.1/local_installers/cuda-repo-ubuntu1804-11-6-local_11.6.1-510.47.03-1_arm64.deb
+    # sudo dpkg -i cuda-repo-ubuntu1804-11-6-local_11.6.1-510.47.03-1_arm64.deb
+    # sudo apt-key add /var/cuda-repo-ubuntu1804-11-6-local/7fa2af80.pub
+    # sudo apt-get update
+    # sudo apt-get -y install cuda -f
+EOF
 else 
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
     sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
@@ -112,11 +116,11 @@ echo $arg
 
 if [[ $args == 'arm64' ]]; then
     ## Get the ARM64 build of Basestack
-    wget https://github.com/jhuapl-bio/Basestack/releases/download/arm64/Basestack.AppImage && chmod +x Basestack.AppImage
+    wget https://github.com/jhuapl-bio/Basestack/releases/download/arm64/Basestack.arm64.AppImage && chmod +x Basestack.*AppImage
 else 
-    wget https://github.com/jhuapl-bio/Basestack/releases/latest/download/Basestack.AppImage && chmod +x Basestack.AppImage
+    wget https://github.com/jhuapl-bio/Basestack/releases/latest/download/Basestack.x86_64.AppImage && chmod +x Basestack.*AppImage
 fi 
-mv Basestack.AppImage $DESKTOP/
+mv Basestack.*AppImage $DESKTOP/
 
 }
 

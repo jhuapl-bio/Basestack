@@ -108,6 +108,7 @@
         "dmg",
         "zip"
       ],
+      "arch": "universal",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlement.mac.plist",
