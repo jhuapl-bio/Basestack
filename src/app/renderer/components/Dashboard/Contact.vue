@@ -11,14 +11,14 @@
       <div class="grid grid-cols-2 p-4">
         <div class="space-y-4">
           <h3 class="markup-h5 strong">Basestack Developers</h3>
-          <div class="bg-gray-darkest">
-            <h4 class="leading-zero bg-blue markup-h5">Brian Merrit</h4>
-            <a href="" class="leading-zero bg-blue text-blue-ultradark markup-h6">
+          <div>
+            <h4 class="leading-3 markup-h5">Brian Merrit</h4>
+            <a href="" class="leading-zero text-blue-ultradark markup-h6">
               brian.merrit@jhuapl.edu
             </a>
           </div>
           <div>
-            <h4 class="markup-h5">Thomas Mehoke</h4>
+            <h4 class="leading-3 markup-h5">Thomas Mehoke</h4>
             <a href="" class="text-blue-ultradark markup-h6">
               thomas.mehoke@jhuapl.edu
             </a>
@@ -44,6 +44,9 @@
 </template>
 
 <script>
+/**
+ * Displays contact information for Basestack
+ */
 export default {
   name: "Contact",
 };

@@ -56,6 +56,9 @@
 import DataLabel from "../../ui/DataLabel.vue";
 import UncontainedButton from "../../ui/buttons/UncontainedButton.vue";
 
+/**
+ * Displays System Summary information. Makes use of DataLabel components to display system data.
+ */
 export default {
   name: "SystemSummary",
   components: {
