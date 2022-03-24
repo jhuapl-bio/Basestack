@@ -102,9 +102,9 @@ install_minknow(){
         sudo apt install -y python-pip   
         wget https://raw.githubusercontent.com/sirselim/jetson_nanopore_sequencing/main/setup-guide-mk1c.txt -O $HOME/Desktop/setup-guide-mk1c.txt
         bash $HOME/Desktop/setup-guide-mk1c.txt
-        sudo apt install minknow-core-minion-1c-offline ont-bream4-mk1c \
-            ont-configuration-customer-mk1c ont-kingfisher-ui-mk1c \
-            ont-vbz-hdf-plugin ont-minion1c-fpga
+        # sudo apt install minknow-core-minion-1c-offline ont-bream4-mk1c \
+        #     ont-configuration-customer-mk1c ont-kingfisher-ui-mk1c \
+        #     ont-vbz-hdf-plugin ont-minion1c-fpga
 
     else 
         wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
