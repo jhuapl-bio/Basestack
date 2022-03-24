@@ -9,6 +9,22 @@ mkdir $HOME/bin
 echo "export PATH=\"$HOME/bin:\$PATH\"" >> $HOME/.bashrc
 }
 
+
+get_miniconda3(){
+    echo "Get miniconda  "
+    if [[ $(uname -m) == 'aarch64' ]] ||  [[ $(uname -m) == 'armhf' ]]; then
+        wget https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-aarch64.sh $HOME/Downloads/Miniconda3-py37_4.9.2-Linux-aarch64.sh; 
+        bash $HOME/Downloads/Miniconda3-py37_4.9.2-Linux-aarch64.sh -b -p $HOME/miniconda
+        if   grep -q "source \"$HOME/miniconda/etc/profile.d/conda.sh\"" "$HOME/.bashrc"; then
+            echo "Source line already found for miniconda in your $HOME/.bashrc, skipping"
+        else 
+            echo "source \"$HOME/miniconda/etc/profile.d/conda.sh\"" >> $HOME/.bashrc
+        fi 
+    else
+        echo "skipping for non arm builds"
+    fi 
+}
+
 install_docker()
 {  
 
@@ -74,16 +90,17 @@ echo "You should now be able to use Mytax within Basestack!"
 }
 
 install_minknow(){
-    arg=$1
-    echo $arg
     ## Install MinKNOW
     # cd $HOME/Downloads  
     sudo echo "Installing minknow"
-    if [[ $args == 'arm64' ]]; then
-        wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
-        echo "deb http://mirror.oxfordnanoportal.com/apt xenial-stable-minit non-free" > /etc/apt/sources.list.d/nanoporetech.list
-        sudo apt update && apt upgrade
-        sudo apt install minknow-core-minit-offline ont-bream4-minit ont-configuration-customer-minit ont-minknow-frontend-minit ont-minknow-static-frontend
+    if [[ $(uname -m) == 'aarch64' ]] || [[ $(uname -m) == 'armhf' ]]; then     
+        sudo apt install -y python-pip   
+        wget https://raw.githubusercontent.com/sirselim/jetson_nanopore_sequencing/main/setup-guide-mk1c.txt -O $HOME/Desktop/setup-guide-mk1c.txt
+        bash $HOME/Desktop/setup-guide-mk1c.txt
+        # sudo apt install minknow-core-minion-1c-offline ont-bream4-mk1c \
+        #     ont-configuration-customer-mk1c ont-kingfisher-ui-mk1c \
+        #     ont-vbz-hdf-plugin ont-minion1c-fpga
+
     else 
         wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
         echo "deb http://mirror.oxfordnanoportal.com/apt $(lsb_release -c | awk '{print $2}')-stable non-free" | sudo tee /etc/apt/sources.list.d/nanoporetech.sources.list
@@ -98,9 +115,7 @@ install_minknow(){
 install_CUDA_11_6() 
 {
 ## Install CUDA
-arg=$1
-echo $arg
-if [[ $args == 'arm64' ]]; then
+if [[ $(uname -m) == 'aarch64' ]] ||  [[ $(uname -m) == 'armhf' ]]; then
 
     echo "Under development for CUDA 11. However, guppy on ARM64 still uses cuda 10"
 cat <<EOF    
@@ -114,6 +129,11 @@ cat <<EOF
 
 
     Try this link https://dev.to/ajeetraina/install-cuda-on-jetson-nano-2b06
+
+
+    sudo apt install ont-kingfisher-ui-minion
+
+
 EOF
 else 
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
@@ -130,9 +150,7 @@ fi
 install_GUPPY() 
 {
 ## Install CUDA
-arg=$1
-echo $arg
-if [[ $args == 'arm64' ]]; then
+if [[ $(uname -m) == 'aarch64' ]] ||  [[ $(uname -m) == 'armhf' ]]; then
     ## Get Guppy Basecaller
     wget https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy_5.1.13_linuxaarch64_cuda10.tar.gz 
     tar -xvzf ont-guppy_5.1.13_linuxaarch64_cuda10.tar.gz
@@ -147,19 +165,37 @@ fi
 }
 
 install_BASESTACK(){
-arg=$1
-echo $arg
 
-if [[ $args == 'arm64' ]]; then
+if [[ $(uname -m) == 'aarch64' ]] ||  [[ $(uname -m) == 'armhf' ]]; then
     ## Get the ARM64 build of Basestack
     wget https://github.com/jhuapl-bio/Basestack/releases/download/arm64/Basestack.arm64.AppImage && chmod +x Basestack.*AppImage
 else 
     wget https://github.com/jhuapl-bio/Basestack/releases/latest/download/Basestack.x86_64.AppImage && chmod +x Basestack.*AppImage
 fi 
-mv Basestack.*AppImage $DESKTOP/
+mv Basestack.*AppImage $HOME/DESKTOP/
 
 }
 
+get_test_data(){
+
+source $HOME/miniconda/etc/profile.d/conda.sh ; conda activate;  pip install gdown;  gdown 1zrgwheJxhMTvd7zu0fuRhVYYM0aGY5XS -O $HOME/Downloads/test-data.zip
+unzip $HOME/Downloads/test-data.zip
+if [[ -d "/data/minknow/" ]]; then
+    sudo cp -r ./test-data2 "/data/minknow/"
+    sudo chmod -R 777 '/data/minknow/test-data2'
+    sudo chown -R minit:minit '/data/minknow/test-data2'
+fi
+if [[ -d "/var/lib/minknow/data" ]]; then
+    sudo cp -r ./test-data2 "/var/lib/minknow/data/"
+    sudo chmod -R 777 "/var/lib/minknow/data/test-data2"
+    sudo chown -R minknow:minknow "/var/lib/minknow/data/test-data2"
+fi
+
+
+
+
+
+}
 
 read -p "Setup your $HOME/bin path in \$PATH (y/n)? " answer
 case ${answer:0:1} in
@@ -173,6 +209,16 @@ case ${answer:0:1} in
     ;;
 esac
 
+read -p "Setup your miniconda in \$HOME/miniconda (y/n)? " answer
+case ${answer:0:1} in
+    y|Y )
+        get_miniconda3
+    ;;
+    * )
+        echo "skipping $HOME/miniconda setup"
+    ;;
+esac
+
 read -p "Setup docker for linux (arm64 or amd64 is supported) (y/n)? " answer
 case ${answer:0:1} in
     y|Y )
@@ -183,52 +229,40 @@ case ${answer:0:1} in
     ;;
 esac
 
-read -p "Setup minknow UI (CPU basecalling only) r (arm64) / d (amd64) / n)? " answer
+read -p "Setup minknow UI (CPU basecalling only) ( y / n )? " answer
 case ${answer:0:1} in
-    r|R )
-        install_minknow "arm64"
-    ;;
-    d|D )
-        install_minknow "amd64"
+    y|Y )
+        install_minknow 
     ;;
     * )
         echo "skipping MinKNOW setup"
     ;;
 esac
 
-read -p "Setup CUDA: r (arm64) / d (amd64) / n)? " answer
+read -p "Setup CUDA: ( y / n )? " answer
 case ${answer:0:1} in
-    r|R )
-        install_CUDA_11_6 "arm64"
-    ;;
-    d|D )
-        install_CUDA_11_6 "amd64"
+    y|Y )
+        install_CUDA_11_6 
     ;;
     * )
         echo "skipping MinKNOW setup"
     ;;
 esac
 
-read -p "Setup GUPPY for the user: r (arm64) / d (amd64) / n)? " answer
+read -p "Setup GUPPY for the user: ( y / n )? " answer
 case ${answer:0:1} in
-    r|R )
+    Y|y )
         install_GUPPY "arm64"
-    ;;
-    d|D )
-        install_GUPPY "amd64"
     ;;
     * )
         echo "skipping Guppy setup"
     ;;
 esac
 
-read -p "Setup Basestack for the user: r (arm64) / d (amd64) / n)? " answer
+read -p "Setup Basestack for the user: ( y / n )? " answer
 case ${answer:0:1} in
-    r|R )
-        install_BASESTACK "arm64"
-    ;;
-    d|D )
-        install_BASESTACK "amd64"
+    y|Y )
+        install_BASESTACK 
     ;;
     * )
         echo "skipping basestack setup"
@@ -236,10 +270,18 @@ case ${answer:0:1} in
 esac
 
 
-echo "Get Visual studio code from: https://code.visualstudio.com/docs/?dv=linuxarmhf_deb"
 
+read -p "Get test data? Output to $HOME/Downloads/test-data2: ( y / n )? " answer
+case ${answer:0:1} in
+    y|Y )
+        get_test_data 
+    ;;
+    * )
+        echo "skipping test-data download"
+    ;;
+esac
 
-
+echo "Get arm64 Visual studio code from: https://code.visualstudio.com/docs/?dv=linuxarmhf_deb"
 
 
 
