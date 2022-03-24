@@ -10,25 +10,44 @@ echo "export PATH=\"$HOME/bin:\$PATH\"" >> $HOME/.bashrc
 install_docker()
 {  
 
-sudo apt-get update -y
-sudo apt-get upgrade -y
-sudo apt-get install curl python3-pip libffi-dev python-openssl libssl-dev zlib1g-dev gcc g++ make -y
-curl -sSL https://get.docker.com/ | sh
+
+if hash docker 2>/dev/null; then
+    read -p "Docker Already exists on this system. Install anyway?: ( y / n)? " answer
+    case ${answer:0:1} in
+        y|Y )
+            curl -sSL https://get.docker.com/ | sh
+            sudo apt-get update -y
+            sudo apt-get upgrade -y
+            sudo apt-get install curl python3-pip libffi-dev python-openssl libssl-dev zlib1g-dev gcc g++ make -y
+        ;;
+        n|N )
+            echo "skipping Install setup"
+        ;;
+        * )
+            echo "skipping Install setup"
+        ;;
+    esac
+else
+    sudo apt-get update -y
+    sudo apt-get upgrade -y
+    sudo apt-get install curl python3-pip libffi-dev python-openssl libssl-dev zlib1g-dev gcc g++ make -y
+    curl -sSL https://get.docker.com/ | sh 
+fi
 
 ## Set up Docker permissions post-installation
 sudo groupadd docker
 
 sudo apt install -y jq
-sudo usermod -aG docker $USER
-sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subuid
-sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subgid
+    sudo usermod -aG docker $USER
+    sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subuid
+    sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subgid
 
-if [[ -s "/etc/docker/daemon.json" ]]; then
-    cat "/etc/docker/daemon.json" | jq --arg USERNS $USER '."userns-remap" = $USERNS' > /tmp/daemon.json
-    sudo mv /tmp/daemon.json /etc/docker/daemon.json
-else
-    echo "{\"userns-remap\": \"$USER\"}"  | sudo tee -a /etc/docker/daemon.json
-fi
+    if [[ -s "/etc/docker/daemon.json" ]]; then
+        cat "/etc/docker/daemon.json" | jq --arg USERNS $USER '."userns-remap" = $USERNS' > /tmp/daemon.json
+        sudo mv /tmp/daemon.json /etc/docker/daemon.json
+    else
+        echo "{\"userns-remap\": \"$USER\"}"  | sudo tee -a /etc/docker/daemon.json
+    fi
 
 
 echo "Pulling docker image for mytax on arm, you may need to reboot if you get permission errors at this point"
@@ -78,6 +97,9 @@ cat <<EOF
     # sudo apt-key add /var/cuda-repo-ubuntu1804-11-6-local/7fa2af80.pub
     # sudo apt-get update
     # sudo apt-get -y install cuda -f
+
+
+    Try this link https://dev.to/ajeetraina/install-cuda-on-jetson-nano-2b06
 EOF
 else 
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
