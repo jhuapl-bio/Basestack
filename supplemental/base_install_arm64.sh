@@ -1,6 +1,8 @@
 #!/bin/bash
 
 
+
+
 install_bin()
 {  
 mkdir $HOME/bin
@@ -39,8 +41,20 @@ sudo groupadd docker
 
 sudo apt install -y jq
     sudo usermod -aG docker $USER
-    sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subuid
-    sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subgid
+    if   grep -q "$USER:$(id -u):1" "/etc/subgid"; then
+        echo "found correct mapping in /etc/subgid, skipping..."
+    else
+        echo "not found subgid mapping, appending...";
+        sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subgid
+    fi
+
+    if   grep -q "$USER:$(id -u):1" "/etc/subuid"; then
+        echo "found correct mapping in /etc/subuid, skipping...";
+    else
+        echo "not found subuid mapping, appending...";
+        sudo sed -i "1s/^/$USER:$(id -u):1\n/" /etc/subuid
+    fi
+
 
     if [[ -s "/etc/docker/daemon.json" ]]; then
         cat "/etc/docker/daemon.json" | jq --arg USERNS $USER '."userns-remap" = $USERNS' > /tmp/daemon.json
