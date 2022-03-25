@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+source_path=$(dirname $0)
 
 
 install_bin()
@@ -94,14 +94,32 @@ install_minknow(){
     # cd $HOME/Downloads  
     sudo echo "Installing minknow"
     if [[ $(uname -m) == 'aarch64' ]] || [[ $(uname -m) == 'armhf' ]]; then     
-        wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
+        # wget -O- https://mirror.oxfordnanoportal.com/apt/ont-repo.pub | sudo apt-key add -
+        
+        # sudo apt install -y python-pip   
+        # wget https://raw.githubusercontent.com/sirselim/jetson_nanopore_sequencing/main/setup-guide-mk1c.txt -O $HOME/Desktop/setup-guide-mk1c.txt
+        # bash $HOME/Desktop/setup-guide-mk1c.txt
+        sudo /opt/ont/minknow/bin/config_editor --conf application --filename /opt/ont/minknow/conf/app_conf --set guppy.connection.use_tcp=1
+        read -p "CPU guppyd service or GPU (c/g)? " answer
+        case ${answer:0:1} in
+            G|g )
+                sudo cp $source_path/guppyd.gpu.service /lib/systemd/system/guppyd.service ;
+                sudo systemctl daemon-reload; sudo service guppyd restart; 
+            ;;
+            c|C )
+                sudo cp $source_path/guppyd.cpu.service /lib/systemd/system/guppyd.service ;
+                sudo systemctl daemon-reload; sudo service guppyd restart; 
+            ;;
+            * )
+                echo "skipping guppy service setup"
+            ;;
+        esac
+        
+        sudo service minknow restart
+        ## Minit installation - deprecated
         # echo "deb [trusted=yes] http://mirror.oxfordnanoportal.com/apt xenial-stable-minit non-free" | sudo tee /etc/apt/sources.list.d/nanoporetech.sources.list
         # sudo apt-get update 
         # sudo apt install -y minknow-core-minit-offline ont-bream4-minit ont-kingfisher-ui-minit ont-remote-support ont-system-identification ont-configuration-customer-minit
-
-        sudo apt install -y python-pip   
-        wget https://raw.githubusercontent.com/sirselim/jetson_nanopore_sequencing/main/setup-guide-mk1c.txt -O $HOME/Desktop/setup-guide-mk1c.txt
-        bash $HOME/Desktop/setup-guide-mk1c.txt
         # sudo apt install minknow-core-minion-1c-offline ont-bream4-mk1c \
         #     ont-configuration-customer-mk1c ont-kingfisher-ui-mk1c \
         #     ont-vbz-hdf-plugin ont-minion1c-fpga
