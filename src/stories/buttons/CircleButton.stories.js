@@ -1,4 +1,4 @@
-import CircleButton from '../app/renderer/components/ui/buttons/CircleButton.vue'
+import CircleButton from '../../app/renderer/components/ui/buttons/CircleButton.vue'
 
 export default {
   title: 'Buttons/Circle',

@@ -1,8 +1,8 @@
-import ViewButton from '../app/renderer/components/ui/nav/ViewButton.vue'
+import ModuleButton from '../../app/renderer/components/ui/nav/ModuleButton.vue'
 
 export default {
-  title: 'Nav/View Button',
-  component: ViewButton,
+  title: 'Nav/Module Button',
+  component: ModuleButton,
   argTypes: {
     moduleName: {
         control: {type: 'text'},
@@ -14,11 +14,11 @@ export default {
     },
     icon: {
         control: {type: 'text'},
-        defaultValue: 'book',
+        defaultValue: '',
     },
     slotFallback: {
         control: {type: 'text'},
-        defaultValue: 'Library',
+        defaultValue: null,
     },
     // color: {
     //     control: {type: 'select'},
@@ -28,11 +28,9 @@ export default {
 
 const Template = (args, { argTypes }) => ({
   props: Object.keys(argTypes),
-  components: {ViewButton},
+  components: {ModuleButton},
   template: `
-    <view-button v-bind="$props">
-        {{slotFallback}}
-    </view-button>
+    <module-button v-bind="$props">{{icon ?? slotFallback}}</module-button>
     `
 });
 

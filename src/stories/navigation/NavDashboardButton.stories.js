@@ -1,4 +1,4 @@
-import DashboardButton from '../app/renderer/components/ui/nav/DashboardButton.vue'
+import DashboardButton from '../../app/renderer/components/ui/nav/DashboardButton.vue'
 
 export default {
   title: 'Nav/Dashboard Button',

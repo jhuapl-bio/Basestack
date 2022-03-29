@@ -1,4 +1,4 @@
-import WorkStatuses from '../app/renderer/components/ui/nav/WorkStatuses.vue'
+import WorkStatuses from '../../app/renderer/components/ui/nav/WorkStatuses.vue'
 
 export default {
   title: 'Nav/Work Status Widget',
