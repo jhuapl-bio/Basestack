@@ -2,13 +2,13 @@
 import nestedProperty from "nested-property"
 
  const {promisify} = require("util"); 
-// const config = require('./config')
+// const config = require('./config') 
   
 var  { store }  = require("../../config/store/index.js")
-  
-export function cacheParams( token, params){
-    if (!token){  
-        token = 'development'    
+   
+export function cacheParams( token, params){ 
+    if (!token){   
+        token = 'development'       
     }   
     let tokenVals = store.server.cache.get(token)  
     nestedProperty.set(tokenVals, `catalog.${params.catalog}.${params.module}.${params.procedure}.${params.service}.${params.variable}.${(params.target)}`, params.value)

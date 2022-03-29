@@ -117,6 +117,10 @@ client.app.on('ready', () => {
       client.checkUpdates()
       client.logger.info("Creating menu ")
       client.createMenu(); 
+
+      
+
+
       try{
         (async () => {
           try{

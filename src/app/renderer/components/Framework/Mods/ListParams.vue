@@ -6,22 +6,22 @@
         <v-toolbar-title  >{{ ( title ? title : 'Inputs' )  }}</v-toolbar-title>
         <v-spacer>
         </v-spacer>
-        <v-app-bar-nav-icon dense v-if="$v.items.$invalid" > 
+        <!-- <v-app-bar-nav-icon dense v-if="$v.items.$invalid" > 
             <v-btn small  dense @mouseover="showErrors = true"  @mouseout="showErrors = false">
                 <v-icon color="red" small >$exclamation
                 </v-icon>
             </v-btn>
                 
-        </v-app-bar-nav-icon>
+        </v-app-bar-nav-icon> -->
     </v-toolbar>
     <v-snackbar
       v-model="showErrors" :timeout="-1"
       left shaped top vertical 
     >
       There are one or more errors:
-      <div v-for="(v, index) in $v.items.$each.$iter" :key="`iter-${index}`">
+      <div v-for="(v, index) in $v.items.$each" :key="`iter-${index}`">
         <small v-if="!v.source.required">Value for {{v.$model.label}} is required.</small>
-        <!-- <small v-if="!v.source.minLength">Must be more than one entry for {{v.$model.label}}</small> -->
+        <small v-if="!v.in_column">Value for {{v.$model.label}} is not valid, check hints.</small>
       </div>
       <template v-slot:action="{ attrs }">
         <v-btn
@@ -45,7 +45,14 @@
                 <v-list-item-subtitle class="text-wrap" v-if="item.hint">
                     {{item.hint}}
                 </v-list-item-subtitle>
-                <v-layout v-if="item.options"    width="10px">
+                <v-alert class="text-caption"  
+                    dense  dark type="error"
+                    elevation="2" v-if="!in_column(item)"
+                    text
+                >
+                    Invalid input
+                </v-alert>
+                <v-layout v-if="item.options"    width="1px">
                     <v-select
                         v-model="item.optionValue" 
                         :disabled="item.output"
@@ -53,7 +60,7 @@
                         :hint="`Select an item`"
                         @input="setOption($event,key, item)"
                         :items="item.options" 
-                        style="width: 200px"
+                        style="width: 40px"
                         label="Select"
                         item-text="name"
                         persistent-hint
@@ -85,6 +92,7 @@
                         @updateValue="updateValue($event, false, item, key, item.name)"
                         >
                     </component>
+                    
                     
                      
                                    
@@ -167,10 +175,40 @@ import List  from '@/components/Framework/Mods/List.vue';
 import ConfigurationFile from '@/components/Framework/Mods/ConfigurationFile.vue';
 import Render from '@/components/Framework/Mods/Render.vue';
 import Multiselect from 'vue-multiselect'
+import {  reactive, computed } from '@vue/composition-api'
 
-import { required, requiredIf, minLength, between, helpers } from 'vuelidate/lib/validators'
+import useVuelidate from '@vuelidate/core'
+import { required, email, requiredIf, minLength, between, helpers } from '@vuelidate/validators'
 const optional = (optional) => (value) => {  console.log(optional, ",",value); return !optional && !value }
-
+const in_column  = (value) => {
+    let returnable = true
+    if (value.validations){
+        value.validations.forEach((validation)=>{
+            if (validation.type == 'contains'){
+                if (validation.target.type == 'column'){
+                    console.log(validation)
+                    let source = value.source.map((f)=>{
+                        return f[validation.target.location]
+                    })
+                    let index = source.indexOf(validation.target.value)
+                    if (index <= -1){
+                        returnable = false
+                    }
+                } else {
+                    let index = value.source.includes(validation.target.value)
+                    if (index <= -1){
+                        returnable = false
+                    }
+                }
+            } else {
+                returnable = true
+            }
+        })
+        return returnable
+    } else {
+        return true
+    }
+}
 
 
 const path  = require("path")
@@ -188,34 +226,36 @@ export default {
         ConfigurationFile,
         Multiselect,
     },
+    setup: () => ({ $v: useVuelidate() }),
     validations (){      
         return{
             items: {
                 required,
-                $each: {
-                    source: {
-                    required: requiredIf((value)=>{
-                        if (value.options){
-                            if (value.optional){
-                                return !true
-                            } else {
-                                let optionValue = value.optionValue
-                                return !(value.option >= 0 && optionValue.source)
-                            }
-                        } else {
-                            if (value.optional){
-                                return !true
-                            } else {
-                                if (!value.source){
-                                    console.log("exists")
-                                }
-                                return !value.source 
-                            }
-                        }
-                        
-                    })
-                    }
-                }
+                // $each: {
+                //     source: {
+                //         in_column: in_column,
+                //         required: requiredIf((value)=>{
+                //             if (value.options){
+                //                 if (value.optional){
+                //                     return !true
+                //                 } else {
+                //                     let optionValue = value.optionValue
+                //                     return !(value.option >= 0 && optionValue.source)
+                //                 }
+                //             } else {
+                //                 if (value.optional){
+                //                     return !true
+                //                 } else {
+                //                     if (!value.source){
+                //                         console.log("exists")
+                //                     }
+                //                     return !value.source 
+                //                 }
+                //             }
+                            
+                //         })
+                //     }
+                // }
             }
         }
     },
@@ -241,6 +281,9 @@ export default {
     watch: {
       dialog (val) {
         val || this.close()
+      },
+      v(newValue){
+          console.log("newvalue", newValue)
       },
       items: {
           deep:true,
@@ -349,9 +392,16 @@ export default {
     data (){
         return {
             values: [],
+            firstName: '',
+            lastName: '',
+            contact: {
+                email: ''
+            },
             showErrors: false,
             dialog: false,
+            shippingAddress: null,
             editedIndex: -1,
+            in_column: in_column,
             editedItem: {},
             dialogDelete: false,
             intervalProgress: false,

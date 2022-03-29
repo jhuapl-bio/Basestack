@@ -12,6 +12,13 @@
             :headers="headers"
             :items="source.source"
             :items-per-page="6"
+            :footer-props="{
+            showFirstLastPage: true,
+                prevIcon: '$arrow-alt-circle-left',
+                nextIcon: '$arrow-alt-circle-right',
+                firstIcon: '$step-backward',
+                lastIcon: '$step-forward',
+            }"
             class="elevation-1"					        
         >	
             <template v-slot:top>

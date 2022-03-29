@@ -136,11 +136,15 @@
     }
   },
   "dependencies": {
+    "@vue/composition-api": "^1.4.9",
+    "@vuelidate/core": "^2.0.0-alpha.38",
+    "@vuelidate/validators": "^2.0.0-alpha.28",
     "axios": "^0.21.1",
     "cors": "^2.8.5",
     "csv-parser": "^2.3.3",
     "date-format": "^4.0.3",
     "dockerode": "^3.2.0",
+    "electron-dl": "^3.3.0",
     "electron-log": "^4.3.1",
     "electron-promise-ipc": "^2.1.0",
     "electron-updater": "^4.3.5",

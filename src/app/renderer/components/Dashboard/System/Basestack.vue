@@ -65,6 +65,7 @@
       </v-card>
     </v-dialog>
     <v-card-text v-if="releaseNotes.version !== version && releaseNotes.version > version">
+      
       <v-divider class="mb-4 mt-1"></v-divider>
       <v-icon
         

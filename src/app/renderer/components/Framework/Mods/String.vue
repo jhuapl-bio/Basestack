@@ -13,18 +13,18 @@
         :label="(source.hint ? source.hint : '' )"
     >
     </v-text-field>
-    <v-tooltip bottom v-if="!$v.value.required">
+    <!-- <v-tooltip bottom v-if="!$v.value.required">
         <template v-slot:activator="{ on }">
           <v-icon class="mt-5 ml-1" v-on="on" small color="warning lighten-1" >$exclamation-triangle
           </v-icon>
         </template>
         Valid File required
-    </v-tooltip>
+    </v-tooltip> -->
   </div>
 </template>
 
 <script>
-import { required, requiredIf, minLength, between, helpers } from 'vuelidate/lib/validators'
+// import { required, requiredIf, minLength, between, helpers } from 'vuelidate/lib/validators'
 const optional = (optional) => (value) => {  return !optional && !value }
 
 export default {
@@ -35,15 +35,15 @@ export default {
             test: "placeholder"
         }
     },
-    validations (){
-        return{
-            value: {
-                required: requiredIf((value)=>{
-                return value && !this.source.optional
-                })
-            },
-        }
-    },
+    // validations (){
+    //     return{
+    //         value: {
+    //             required: requiredIf((value)=>{
+    //             return value && !this.source.optional
+    //             })
+    //         },
+    //     }
+    // },
     computed: {
         
     },

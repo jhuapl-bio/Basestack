@@ -296,9 +296,9 @@ export default {
 			mini:true,
       defaultModule: {},
 			drawer:false,
-			tabProcedure: null, 
+			tabProcedure: 9, 
 			sel: 0,
-			selected: 'defaults',
+			selected: 'procedures',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 

@@ -173,7 +173,7 @@
         manifest:
           label: "Input Manifest"
           element: "list"
-          hint: "Mapping of your Barcodes to Sample IDs"
+          hint: "Mapping of your Barcodes to Sample IDs. You must have an NTC listed even if you haven't used one. You can list a NTC as NB00 to get it to run if you don't have one"
           columns: 2
           column: 12
           sep: "tab"
@@ -187,6 +187,12 @@
           create:
             target: "%{variables.dir.source}/manifest.txt"
             sep: "tab"
+          validations:
+            - type: "contains"
+              target: 
+                type: "column"
+                location: 'id'
+                value: "NTC"
           class: "wb-50  p-3 mb-1"
           source: []
           header: [ 'barcode', 'id']

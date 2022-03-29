@@ -148,8 +148,12 @@
               name: "Marine Mitogenome"
               target: "/opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629"
               source: "/opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629"
-              # cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken2"
-              # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index.  
+            - element: null
+              name: "Marine Mitogenome version 2"
+              source: "${writePath}/workflows/mytax/20210629-all-mitochondrion-20220323-taxa-plus-phil-seqs"
+              bind:  
+                from: "%{variables.db.source}"
+                to: "/opt/databases/mitogenome"
             - element: "dir"
               name: "Custom DB"
               source: null

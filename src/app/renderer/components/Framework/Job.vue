@@ -287,7 +287,6 @@ export default {
           })
         }
       }
-      console.log("images", images)
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
