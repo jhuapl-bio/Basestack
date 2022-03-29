@@ -8,7 +8,7 @@
 
         <section class="flex flex-col items-start w-full overflow-y-auto duration-500 hide-scrollbar" :class="[showAllModules ? 'row-span-6 h-full' : 'row-span-3 h-[50%]']">
             <div ref="modulesContainer" class="w-full px-4 pt-6 hide-scrollbar" :class="[showAllModules ? 'overflow-y-auto' : 'overflow-y-hidden']">
-                <div class="grid w-full grid-cols-1 gap-4 place-items-center">
+                <div class="grid w-full grid-cols-1 gap-2 place-items-center">
                     <div v-for="(module, index) in activeModules" :key="index">
                         <module-button :moduleName="module.name" />
                     </div> 
@@ -17,7 +17,7 @@
 
             <button 
                 @click="toggleShowingAllModules"
-                class="flex items-center mx-auto mt-6 text-center markup-h6 text-gray-600"
+                class="flex items-center mx-auto mt-6 text-center text-gray-600 markup-h6 bg-gradient-to-t from-white to-transparent"
                 :class="[showAllModules ? 'flex-col-reverse' : 'flex-col' ]"
             >
                 <div>{{ showAllModules ? 'Show Less' : 'Show More' }}</div>
@@ -75,9 +75,12 @@ export default {
 
     computed: {
         moduleContainerHeight: function() {
+            const modulesFullHeight = this.$refs.modulesContainer.offsetHeight
+            const moduleHeight = modulesFullHeight / this.activeModules.length
+            // console.log(modulesFullHeight)
             return this.showAllModules
                 ? '100%'
-                : 3 * (100 / this.activeModules.length) + '%'
+                : 3 * moduleHeight + 'px'
         },
     },
 
