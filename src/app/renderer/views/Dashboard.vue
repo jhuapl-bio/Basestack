@@ -32,12 +32,9 @@
 
 <script>
 import AppLayout from '@/components/AppLayout';
-import Sys from '@/components/Dashboard/System/Sys'
-import About from '@/components/Dashboard/DashboardDefaults/About'
-import Library from '@/components/Dashboard/DashboardDefaults/Library'
-import WorkStatuses from '../ui/WorkStatus/WorkStatuses.vue'
-import SystemSummary from './System/SystemSummary.vue'
-import RecentModules from './RecentModules.vue'
+import WorkStatuses from '@/components/ui/WorkStatus/WorkStatuses.vue'
+import SystemSummary from '@/components/Dashboard/System/SystemSummary.vue'
+import RecentModules from '@/components/Dashboard/RecentModules.vue'
 
 // import App from '../../App.vue';
 
@@ -78,24 +75,10 @@ export default {
             ],
 		}
 	},
-	created(){
-		
-	},
-	watch:{
-		
-	},
-	computed: {
-	  myProps() {
-	    	return { 
-	    		
-	    	}
-	  }
-	},
 	mounted(){
 		const $this = this				
 		
 	},
-
 	methods: {
       emitChange( data){
 		   this.$emit("emitChange", data)
@@ -104,23 +87,3 @@ export default {
 	}
 };
 </script>
-
-<!-- <style>
-.sidebox{
-	max-height: 95vh;
-	overflow:auto
-}
- 
-</style>
-<style lang="css">
-	@import '../../../static/css/style.css';
-</style>
-<style lang="css">
-	@import '../../../static/css/myriadpro.css';
-</style>
-<style lang="css">
-	@import '../../../static/css/revised_branding_banner.css';
-</style>
-<style>
-	@import '../../../static/css/tooltip.css';
-</style> -->
