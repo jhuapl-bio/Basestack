@@ -1,10 +1,10 @@
 <template>
-    <button :class="`button selector ${action}`">
-        <div class="col-span-2">
+    <button class="flex items-center bg-white button small text-blue-900 hover:bg-blue-100">
+        <div v-if="label">
             {{label}}
         </div>
 
-        <div class="h-full">
+        <div v-if="icon">
             <font-awesome-icon :icon="icon" />
         </div>
     </button>
@@ -14,8 +14,7 @@
 export default {
     props: {
         label: {type: String},
-        action: {type: String, default: 'primary'},
-        icon: {type: String, default: 'plus'}
+        icon: {type: String, default: 'false'}
     },
 }
 </script>

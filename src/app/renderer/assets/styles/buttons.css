@@ -1,0 +1,81 @@
+@layer components {
+
+    .button {
+        @apply inline-grid items-center font-semibold duration-300 rounded-sm markup-h5 font-display; 
+    }
+
+    .button > div {
+        @apply px-5 py-3;
+    }
+
+    /* actions */
+    .button.primary {
+        @apply text-white bg-blue-900 hover:bg-blue-1000;
+    }
+
+    .button.secondary {
+        @apply bg-blue-100 hover:bg-blue-200 text-blue-800;
+    }
+
+    .button.accent {
+        @apply bg-white border-2 text-blue-900 border-blue-400 hover:bg-blue-100;
+    }
+
+    .button.neutral {
+        @apply text-white bg-gray-700 hover:bg-black;
+    }
+
+    .button.success {
+        @apply bg-green-200 text-white hover:ring-4 ring-green-200/50
+    }
+
+    .button.danger {
+        @apply bg-red text-white hover:ring-4 ring-red/50
+    }
+
+
+    /* selector */
+    .button.selector {
+        @apply grid-cols-3 divide-x-2;
+    }
+
+    .button.selector.primary {
+        @apply divide-blue-500;
+    }
+
+    .button.selector.secondary {
+        @apply divide-blue-200
+    }
+
+    .button.selector.accent {
+        @apply divide-blue-100;
+    }
+    
+    .button.selector.neutral {
+        @apply divide-black hover:divide-gray-700;
+    }
+
+    .button.selector.success,
+    .button.selector.danger {
+        @apply divide-white/50
+    }
+
+
+    /* small */
+    .button.small {
+        @apply rounded;
+    }
+
+    .button.small > div {
+        @apply px-2 py-1;
+    }
+
+    /* circle */
+    .button.circle {
+        @apply text-lg rounded-full bg-gray-300 text-gray-600 w-[45px] h-[45px] hover:text-white hover:bg-blue-400;
+    }
+
+    .button.circle.uncontained {
+        @apply bg-transparent hover:bg-gray-200 text-gray-500
+    }
+}

@@ -11,13 +11,17 @@ import Vue from 'vue'
 import axios from 'axios'
  
 import App from './App'
+import './main.css'
 import router from './router'
 import store from './store'
 // import { BootstrapVue } from 'bootstrap-vue'
 import VueSweetalert2 from 'vue-sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css';
 import Vuex from 'vuex'
-
+// Font Awesome Icons
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faTerminal, faBorderAll, faClock, faChevronRight, faInfoCircle, faSpinner, faExclamationTriangle, faEllipsisV, faCube, faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
 
 import Vuelidate from 'vuelidate'
 import Multiselect from 'vue-multiselect'
@@ -31,6 +35,8 @@ import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
 // import { BootstrapVueIcons } from 'bootstrap-vue'
 // import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
  
+
+library.add( faTerminal, faBorderAll, faClock, faChevronRight, faInfoCircle, faSpinner, faExclamationTriangle, faEllipsisV, faCube, faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
 
 let config = process.env.logfile
 let configError = process.env.errorfile
@@ -53,6 +59,7 @@ Vue.use(Vuelidate)
 Vue.use(ToggleButton)
 Vue.use(Carousel);
 Vue.use(Slide);
+Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.component('Carousel', Carousel)
 Vue.component('Slide', Slide)
 Vue.use(require('vue-moment'));

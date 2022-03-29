@@ -1,0 +1,7 @@
+.card {
+    @apply px-6 py-4 duration-500 border-2 border-gray-500 rounded-lg;
+}
+
+.card.hoverable {
+    @apply hover:shadow-lg hover:shadow-gray-300
+}
