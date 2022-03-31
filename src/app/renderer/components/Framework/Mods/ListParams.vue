@@ -24,7 +24,7 @@
                 
             </v-toolbar>
         </template>
-        <template v-slot:item.label="{ item, index }">
+        <template v-slot:item.label="{ item }">
             <v-tooltip  bottom>
                 <template v-slot:activator="{ on }">
                         <v-icon v-if="item && item.hint " v-on="on" small >$question-circle
@@ -80,7 +80,7 @@
                 </component>
                 <v-tooltip bottom v-else>
                     <template v-slot:activator="{ on }">
-                        <v-btn icon-and-text v-on="on" class="configure mt-5 mb-5 mr-5 ml-5" @click="open_link(item, $event)" color="info" large>
+                        <v-btn icon-and-text v-on="on" class="mt-5 mb-5 ml-5 mr-5 configure" @click="open_link(item, $event)" color="info" large>
                             <v-icon align="end"  >$external-link-alt
                             </v-icon>
                             Click Me! 
@@ -90,7 +90,7 @@
                 </v-tooltip>  
             </div>
         </template>
-        <template v-slot:item.bind="{ item, index }">
+        <template v-slot:item.bind="{ item }">
             <v-list  dense v-if="item.bind">
                 <v-list-item
                 >

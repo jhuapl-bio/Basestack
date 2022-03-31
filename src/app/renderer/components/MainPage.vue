@@ -6,9 +6,6 @@
   - # For any other permission, please contact the Legal Office at JHU/APL.
   - # **********************************************************************
   -->
-<template>
-	
-</template>
 
 <script>
 

@@ -20,13 +20,10 @@
 
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow'
 import FileService from "@/services/File-service.js"
- 
-import Multiselect from 'vue-multiselect'
 
 export default {
 	name: 'logdashboard',
 	components:{
-		Multiselect,
 		LogWindow,
 	},
 	computed:{

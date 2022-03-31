@@ -12,7 +12,7 @@
     
 			<v-container
 				fluid  
-				class="d-flex  align-start pa-0 align-stretch"
+				class="d-flex align-start pa-0 align-stretch"
 			>
       <v-card height="100%" width="100%">
         <!-- <Service  
@@ -219,7 +219,7 @@
                           </v-btn>
                           
                     </template>
-                    <v-card   class="w-100 pr-2 pl-2 mt-2 mb-2">
+                    <v-card   class="pl-2 pr-2 mt-2 mb-2 w-100">
                       <p class="entry-label" style="font-size: 120%">Logs</p>
                       <LogWindow :info="status.stream"></LogWindow>
                     </v-card> 
@@ -280,18 +280,15 @@
 
 <script>
 
-import Service from '@/components/Framework/Service.vue';
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
 import Job from "@/components/Framework/Job.vue"
 import FileService from '@/services/File-service.js'
-import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
+import {FulfillingBouncingCircleSpinner } from 'epic-spinners'
 export default {
 	name: 'procedure',
   components:{
-    Service,
     LogWindow,
     Job,
-    LoopingRhombusesSpinner,
     FulfillingBouncingCircleSpinner,
   },
   watch: {
@@ -352,15 +349,13 @@ export default {
       // }
       
     },
-    getStatus(serviceIdx){
-      return this.statuses[serviceIdx] && this.statuses[serviceIdx].running
-    },
-		sendStatus(event){
+    sendStatus(event){
       // this.$set(this.procedure.services[event.service], 'running', event.status.running)
       // console.log(event, this.procedure.services[event.service].running)
       
     },
     async rm_procedure(procedureKey){
+        const $this = this
       await FileService.rmProcedure({
         procedure: $this.selectedProcedure.idx, 
         module: $this.moduleIdx,

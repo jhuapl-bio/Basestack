@@ -33,7 +33,7 @@
 					>
 						<v-list-item-action>
 							<v-tooltip top>
-							<template v-slot:activator="{ on }">
+							<template v-slot:activator="{}">
 								<v-icon :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
 							</template>
 							{{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
@@ -363,9 +363,9 @@ export default {
 	},
   data(){
     return {
-      tab: 0,
-			mini:true,
-      defaultModule: {},
+        tab: 0,
+        mini:true,
+        defaultModule: {},
 			drawer:false,
 			tabProcedure: null, 
 			sel: 0,
@@ -401,9 +401,7 @@ export default {
       ready:false,
       interval: null,
       catalogInterval: null,
-      modules: false,
       services: false,
-      procedures: false,
       defaults: [],
       runningServer: false,
       running: false

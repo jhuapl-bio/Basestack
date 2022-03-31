@@ -15,7 +15,7 @@
             :items="catalog.modules"
             icon-color="primary"
             dense outlined
-            class="mr-5  pt-3 mt-3"
+            class="pt-3 mt-3 mr-5"
             style="max-width: 25%"
             item-text="version"
             label="Loaded Versions"
@@ -51,7 +51,7 @@
             </template>
         </v-autocomplete>
         <v-tooltip bottom  v-if="!selectedModule.local">
-            <template v-slot:activator="{ on }">
+            <template v-slot:activator="{}">
                 <v-btn small icon class="mr-3">
                     <v-icon
                         color="indigo" 
@@ -81,7 +81,7 @@
                 :items="procedures"
                 icon-color="primary"
                 item-text="title"
-                class="mx-auto pr-2"
+                class="pr-2 mx-auto"
                 style="max-width: 105%"
                 :hint="`Choose procedure dependencies to install`"
                 label="Procedure"
@@ -113,25 +113,25 @@
         </v-spacer>
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-                <v-icon medium color="primary" v-on="on" class="configure mr-3 ml-3 " @click="buildModule(catalog.name)">$download</v-icon>
+                <v-icon medium color="primary" v-on="on" class="ml-3 mr-3 configure " @click="buildModule(catalog.name)">$download</v-icon>
             </template>
             Build Entire Module
         </v-tooltip>
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-                <v-icon v-on="on" medium color="indigo "  v-on:click="fetchRemoteCatalog(catalog.name)" style="text-align:right" class="configure ml-2 mr-3">$external-link-alt</v-icon>
+                <v-icon v-on="on" medium color="indigo "  v-on:click="fetchRemoteCatalog(catalog.name)" style="text-align:right" class="ml-2 mr-3 configure">$external-link-alt</v-icon>
             </template>
             Fetch Versions for Module
         </v-tooltip>
         <v-tooltip bottom v-if="catalog.status.building">
             <template v-slot:activator="{ on }">    
-                <v-icon v-on="on" medium color="light " v-on:click="cancelModule(catalog.name)"   style="text-align:right" class="configure ml-2 mr-3">$times-circle</v-icon>
+                <v-icon v-on="on" medium color="light " v-on:click="cancelModule(catalog.name)"   style="text-align:right" class="ml-2 mr-3 configure">$times-circle</v-icon>
             </template>
             Cancel Module Build
         </v-tooltip>
         <v-tooltip bottom >
             <template v-slot:activator="{ on }">
-                <v-icon v-on="on"  color="orange darken-2"    medium v-on:click="deleteModule(selectedModule.name)" style="" class="configure ml-4 mr-3">$trash-alt</v-icon>
+                <v-icon v-on="on"  color="orange darken-2"    medium v-on:click="deleteModule(selectedModule.name)" style="" class="ml-4 mr-3 configure">$trash-alt</v-icon>
             </template>
             Delete Entire Module and its dependencies 
         </v-tooltip>
@@ -246,7 +246,7 @@
                     <v-checkbox
                         v-model="overwrites[index]"
                         on-icon="$check-square"
-                        class="align-center justify-center text-xs-center" 
+                        class="justify-center align-center text-xs-center" 
                         off-icon="$square"
                         color="primary"
                     >
@@ -339,7 +339,6 @@ export default {
             procedures: [],
             selectedModule: {},
             defaultProcedure:0,
-            procedures: [],
             overwrites: [],
             stored: {},
             fields: [

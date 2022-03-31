@@ -1,28 +1,15 @@
 <template>
-  
   <v-card
     class="mx-5"
     style="min-height: 100vh"
   >
-    
     <v-divider></v-divider>
-    
-    
-  
   </v-card>
-
 </template>
 
 <script>
-import ListParams  from '@/components/Framework/Mods/ListParams.vue';
-import FileService from '@/services/File-service.js'
-import Render from "@/components/Framework/Mods/Render.vue"
 export default {
     props: ['variables', 'service', 'status'],
-    components:{
-      ListParams,
-      Render
-    },
     beforeDestroy: function(){
       if (this.interval){
         try{
@@ -74,10 +61,7 @@ export default {
             sortable: true
           }
         ]
-        
       }
-    },
-    mounted(){
     },
     watch:{
       variables(newValue, oldValue){
@@ -87,24 +71,11 @@ export default {
         }
       }
     },
-    methods: {
-      
-      
-
-
-    },
-
     computed: {
       additionals_formatted(){
-
         console.log(this.additionals)
-        return
+        return this.additionals
       }
-
     }
   };
 </script>
-
-<style scoped>
-
-</style>

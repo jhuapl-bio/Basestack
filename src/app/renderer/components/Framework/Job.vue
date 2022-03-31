@@ -95,7 +95,6 @@ import ListParams  from '@/components/Framework/Mods/ListParams.vue';
 import Progresses  from '@/components/Framework/Progresses.vue';
 
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
-import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
 
 export default {
   name: 'job',
@@ -106,8 +105,6 @@ export default {
    LogWindow,
    ListParams,
    Progresses,
-   LoopingRhombusesSpinner,
-   FulfillingBouncingCircleSpinner
   },
   methods: {
       

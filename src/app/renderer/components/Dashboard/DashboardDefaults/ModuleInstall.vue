@@ -10,7 +10,7 @@
   <div id="moduleinstall"  style="overflow-y:auto" ref="moduleinstall">
   	<!-- <div class="text-center" >  
   		<div v-if="system && system.docker && ( !system.docker.installed || !system.docker.running )" >
-	    	<h4  class="bg-danger text-white">
+	    	<h4  class="text-white bg-danger">
 	    		Docker is not {{ !system.docker.installed ?  'running or installed' : 'running or installed' }}
 	    		<span class="center-align-icon;"
                 	v-tooltip="{
@@ -328,14 +328,14 @@
 
 <script>
     import FileService from '../../../services/File-service.js'
-    import {HalfCircleSpinner, SemipolarSpinner  } from 'epic-spinners'
-    import ModuleConfig from "@/components/Dashboard/DashboardDefaults/ModuleConfig"
+    // import {HalfCircleSpinner, SemipolarSpinner  } from 'epic-spinners'
+    // import ModuleConfig from "@/components/Dashboard/DashboardDefaults/ModuleConfig"
 	export default {
 		name: 'moduleinstall',
 	    components: {
-	    	HalfCircleSpinner, 
-	    	SemipolarSpinner ,
-	    	ModuleConfig,
+	    	// HalfCircleSpinner, 
+	    	// SemipolarSpinner ,
+	    	// ModuleConfig,
 	    },
 		computed: {
 		},

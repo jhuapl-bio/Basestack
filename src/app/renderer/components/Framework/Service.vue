@@ -12,7 +12,7 @@
   <v-toolbar dense dark >
     <!-- <v-app-bar-nav-icon></v-app-bar-nav-icon> -->
 
-      <v-toolbar-title class="white--text text-center ">{{service.label}}</v-toolbar-title>
+      <v-toolbar-title class="text-center white--text ">{{service.label}}</v-toolbar-title>
       <div v-if="status.running">
         <looping-rhombuses-spinner  
           :animation-duration="6000" 
@@ -55,7 +55,7 @@
                   ><v-icon medium >$comment</v-icon>
                 </v-btn>
           </template>
-          <v-card  class="w-100 pr-2 pl-2 mt-2 mb-2">
+          <v-card  class="pl-2 pr-2 mt-2 mb-2 w-100">
             <p class="entry-label" style="font-size: 120%">Logs</p>
             <LogWindow :info="status.stream.info"></LogWindow>
           </v-card> 
@@ -76,7 +76,7 @@
               v-bind:key="entry.title"
             >
               <v-tooltip bottom>
-                <template v-slot:activator="{ on }">
+                <template v-slot:activator="{}">
                   <div  >
                     <span class="tabSideItemText">{{entry.title }}</span>
                   </div>

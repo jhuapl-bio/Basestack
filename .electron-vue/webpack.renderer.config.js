@@ -78,7 +78,14 @@ let rendererConfig = {
       },
       {
         test: /\.vue$/,
-        loader: 'vue-loader'
+        loader: 'vue-loader',
+        options: {
+            compilerOptions: {
+                compatConfig: {
+                    MODE: 2
+                }
+            }
+        }
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
@@ -139,7 +146,8 @@ let rendererConfig = {
   resolve: {
     alias: {
       '@': path.join(__dirname, '../src/app/renderer'),
-      'vue$': 'vue/dist/vue.esm.js'
+    //   'vue$': 'vue/dist/vue.esm.js',
+      'vue': '@vue/compat',
     },
     extensions: ['.js', '.vue', '.json', '.css', '.node']
   },

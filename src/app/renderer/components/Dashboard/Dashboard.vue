@@ -53,22 +53,12 @@
 </template>
 
 <script>
-
-
-
 import Sys from '@/components/Dashboard/System/Sys'
 import About from '@/components/Dashboard/DashboardDefaults/About'
-import Library from '@/components/Dashboard/DashboardDefaults/Library'
-
-import Docker from "@/components/Dashboard/System/Docker";
- 
-
 export default {
 	name: 'mainpage',
 	components:{
 		Sys,
-		Docker, 
-		Library,
 		About
 	},
 	

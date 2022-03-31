@@ -1152,19 +1152,6 @@ export default {
 	      		this.selectedHistory.runDir.manifest.entries = manifests_entries
       		}
       	},
-      	adjustManifest(){
-      		if (this.placeHolderManifestCount){
-      			let manifests_entries = []
-      			for (let i =1; i <= this.placeHolderManifestCount; i++){
-
-      				manifests_entries.push({
-      					id: `${this.placeHolderSampleID}${(i < 10 ? "0"+i.toString() : i)}`, 
-      					barcode: `${this.placeHolderBarcode}${(i < 10 ? "0"+i.toString() : i)}`
-      				})
-      			}
-	      		this.selectedHistory.runDir.manifest.entries = manifests_entries
-      		}
-      	},
 		changeBarcode(val, index){
 			this.$set(this.selectedHistory.runDir.manifest.entries, index, {id:this.selectedHistory.runDir.manifest.entries[index].id, barcode:val})
 		},

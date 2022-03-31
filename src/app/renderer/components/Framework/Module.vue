@@ -21,7 +21,7 @@
             :hint="'Version select'"
             item-text="version"
             item-value="version"
-            class="mx-auto pr-4"
+            class="pr-4 mx-auto"
             style="max-width: 15%;"
             persistent-hint
             return-object
@@ -58,7 +58,7 @@
             item-text="title"
             item-name="name"
             item-value="idx"
-            class="mx-auto pl-4 pr-2"
+            class="pl-4 pr-2 mx-auto"
             style="max-width: 33%;"
             label="Select Procedure"
             persistent-hint
@@ -68,7 +68,7 @@
           <template v-slot:prepend>
             <v-icon color="primary">{{ ( selectedProcedure.icon  ? '$'+selectedProcedure.icon : '$cog' ) }}</v-icon>
           </template>
-          <template v-slot:item="{ item, index }">
+          <template v-slot:item="{ item }">
             <v-icon v-if="item.icon" color="primary" class="mx-2" x-small>{{ '$' + item.icon }}</v-icon>
             {{item.title}}
           </template>
@@ -198,21 +198,13 @@
 </template>
 
 <script>
-
-import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
-import Procedure from "@/components/Framework/Procedure.vue"
 import FileService from '@/services/File-service.js'
 import Job from "@/components/Framework/Job.vue"
-import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
 export default {
 	name: 'module',
   components:{
     // Service,
     Job,
-    Procedure,
-    LogWindow,
-    LoopingRhombusesSpinner,
-    FulfillingBouncingCircleSpinner,
   },
   beforeDestroy: function(){
     if (this.interval){
@@ -284,12 +276,8 @@ export default {
     async updateValue(event){
 
     },
-    getStatus(serviceIdx){
-      return this.statuses[serviceIdx] && this.statuses[serviceIdx].running
-    },
-		sendStatus(event){
+    sendStatus(event){
       // this.status[event.service] = event.status.exists
-      
     },
     async rm_procedure(procedureKey){
       await FileService.rmProcedure({

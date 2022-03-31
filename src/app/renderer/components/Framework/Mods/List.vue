@@ -3,7 +3,7 @@
     <!-- <v-tooltip >
         <template v-slot:activator="{ on }">
             <v-btn v-on:click="addManifestRow(0)"  v-on="on"
-            class="ml-0 pl-0" small color="primary">
+            class="pl-0 ml-0" small color="primary">
             <v-icon
                 right class="mr-2"
                 dark x-small
@@ -112,15 +112,8 @@
   </div>
 </template>
 <script>
-
-import draggable from 'vuedraggable'
-
-
 export default {
 	name: 'multi-select',
-    components: {
-        draggable
-    },
     computed: {
         
         defaultItem(){
