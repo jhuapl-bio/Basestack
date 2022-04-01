@@ -1,15 +1,190 @@
-<!--
-  - # **********************************************************************
-  - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
-  - #
-  - # All Rights Reserved.
-  - # For any other permission, please contact the Legal Office at JHU/APL.
-  - # **********************************************************************
-  -->
+<script setup>
+import {onMounted, reactive, defineProps, computed} from 'vue'
+import {useIpcRenderer} from '@vueuse/electron'
+import FileService from '@/services/File-service.js'
+import SystemSummary from './components/Dashboard/System/SystemSummary.vue'
+import AppLayout from './components/AppLayout.vue'
+
+const ipcRenderer = useIpcRenderer()
+
+const data = reactive({
+    modules: [],
+    procedures: {},
+    defaultModule: {},
+    tabProcedure: null,
+    selected: 'defaults',
+    tab: 0,
+    mini: true,
+    drawer: false,
+    sel: 0,
+    colorList: [
+        "rgb(70, 240,240",
+        "rgb(128,0,0",
+        "rgb(128,128,0",
+        "rgb(255,165,0",
+        "rgb(255,255,0",
+        "rgb(0,128,0",
+        "rgb(128,0,128",
+        "rgb(255,0,255",
+        "rgb(255,0,0",
+        "rgb(0,255,0",
+        "rgb(0,128,128", 
+        "rgb(0,255,255",
+        "rgb(0,0,255",
+        "rgb(0,0,128",
+    ],
+    modulesInner: [],
+    collapsed: false,
+    isHovered: -1,
+    catalog: [],
+    indexLabel: null,
+    index: 0,
+    tabFind:0,
+    status: {},
+    system: {},
+    isLoading: false,
+    ready: false,
+    interval: null,
+    catalogInterval: null,
+    services: false,
+    defaults: [],
+    runningServer: false,
+    running: false
+})
+
+const version = computed(() =>  process.env.version_basestack)
+const selectedPort = computed(() => process.env.PORT_SERVER)
+const hideSlider = computed(() => data.select === 'procedures')
+const filtered_installed_modules = computed(() => {
+    return data.modules.filter(module => {
+        return module && module.status
+            ? module.status.fully_installed
+            : false
+    })
+})
+
+const selected_modules = computed(() => {
+    return data.modules.map(module => module.modules[0])
+})
+
+const labels = computed(() => {
+    return Object.keys(data.procedures)
+})
+
+onMounted(async () => {
+    ipcRenderer.on('change-port', (event, port) => {
+        process.env.PORT_SERVER = port
+        data.runningServer = true
+        createPingInterval()
+    })
+
+    try {
+        await pingServerPort()
+        await init()
+        data.ready = true
+        data.runningServer = true
+    } catch (error) {
+        console.error(error)
+        data.ready = false
+    } finally {
+        createPingInterval()
+        data.ready = true
+    }
+})
+
+async function createPingInterval() {
+    console.log(`Create interval for ping", ${process.env.PORT_SERVER}.`)
+    data.runningServer = true
+    data.ready = false
+    data.interval = setInterval(async () => {
+        if(data.runningServer) 
+            clearInterval(data.interval)
+
+        try {
+            let ping = await pingServerPort()
+            if(ping) init()
+        } catch (error) {
+            console.error(`Could not get server status, check if it is running on port: ${process.env.PORT_SERVER}.`)
+            data.runningServer = false
+        }
+    }, 6000)
+}
+
+function pingServerPort() {
+    return FileService.pingServerPort()
+}
+
+async function init() {
+    try {
+        let fileServiceDefaults = FileService.getDefaults()
+
+        await getModules()
+        
+        if(data.moduleInterval) 
+            clearInterval(data.moduleInterval)
+
+        data.moduleInterval = setInterval(() => {
+            getModules()
+        }, 2000)
+
+        // stores token or 'in development' prop in global state
+        // @todo: setup global state (vuex or pinia)
+        /*
+        if (process.env.NODE_ENV == 'development') {
+            data.$store.token = 'development'
+        } else {
+            let token = await FileService.createSession()
+            data.$store.token = token.data.data
+        }
+        */
+
+        data.defaults = fileServiceDefaults
+        data.runningServer = true
+    } catch (error) {
+        console.error(error, "Backend server is not running")
+        data.running = false
+        data.ready = true
+        // sweet alert fire
+        // data.$swal.fire({
+        //     position: 'center',
+        //     icon: 'error',
+        //     showConfirmButton:true,
+        //     title:  "Error in starting initialization",
+        //     text:  err.response.data.message
+        // }) 
+        throw error
+    } finally {
+        data.running = true // added this for dev.. since server is not working for me locally.
+        data.ready = true
+    }
+}
+
+async function getModules() {
+    let installedModules = await FileService.getInstalledModules()
+
+    data.catalog = installedModules.data.data
+        .map((module, index) => {
+            module.idx = index
+            return module
+        })
+        .forEach((module, index) => {
+            data.$set(data.catalog, index, module)
+        })
+}
+
+function clearAll() {
+    data.modules = []
+    data.services = []
+    data.defaults = []
+    data.procedures = []
+    data.running = false
+}
+
+</script>
 
 <template>
     <main id="app" class="subpixel-antialiased bg-white font-body">
-        <div v-if="(ready && running) || devMode" class="flex w-full">
+        <div v-if="data.ready && data.running" class="flex w-full">
         <!-- <MainPage
             v-bind:defaults="defaults"
             v-bind:modules="modules"
@@ -17,10 +192,10 @@
             v-bind:services="services"
         /> -->
             
-            <router-view />
+            <!-- <router-view /> -->
         </div>
 
-        <div v-else-if="!ready" class="absolute flex items-center justify-center w-screen h-screen bg-blue-900">
+        <div v-else-if="!data.ready" class="absolute flex items-center justify-center w-screen h-screen bg-blue-900">
             <header class="px-24 py-12 space-y-2 border border-white rounded-lg">
                 <h2 class="text-center text-white uppercase markup-h5">Welcome to Basestack</h2>
                 <h3 class="text-center text-white markup-h2 animate-pulse">Initiating…</h3>
@@ -28,139 +203,15 @@
         </div>
 
         <div v-else>   
-            <app-layout hasSidebar="true">
+            <AppLayout hasSidebar="true">
                 <template #title>
                     <h3 class="text-gray-800 markup-h3">Backend Server is not available</h3>
                 </template>
 
                 <template #sidebar>
-                    <system-summary />
+                    <SystemSummary />
                 </template>
-            </app-layout>
+            </AppLayout>
         </div>
     </main>
 </template>
-
-<script>
-// import 'bootstrap/dist/css/bootstrap.css'
-// import 'bootstrap-vue/dist/bootstrap-vue.css'
-// import MainPage from '@/components/MainPage'
-import FileService from '@/services/File-service.js'
-import SystemSummary from './components/Dashboard/System/SystemSummary.vue'
-import AppLayout from './components/AppLayout.vue'
-
-
-const moment = require('moment');
-const {dialog}=require("electron")
-export default {
-	name: 'client',
-	components: {
-        // MainPage,
-        'app-layout': AppLayout,
-        'system-summary': SystemSummary,
-    },
-    data(){
-        return {
-            devMode: true,
-            ready:false,
-            interval: null,
-            modules: false,
-            services: false,
-            procedures: false,
-            defaults: false,
-            runningServer: false,
-            running: false
-        }
-    },
-	async mounted() {
-        const $this = this;
-        this.$electron.ipcRenderer.on('changePort', (evt, port)=>{
-            console.log("changed port", port)
-            process.env.PORT_SERVER = port
-            $this.runningServer = false
-            $this.createPingInterval()
-        })
-
-        this.createPingInterval()
-
-        this.$electron.ipcRenderer.send('maiN')
-        await this.$store.dispatch("UPDATEDEFAULTS", this.defaults)
-        await this.$store.dispatch("UPDATEDEMODULES", this.modules)
-        this.ready = true
-	},
-    methods: {
-        clearAll(){
-            this.modules = []
-            this.services = []
-            this.defaults = []
-            this.procedures = []
-            this.running = false
-        },
-
-        async createPingInterval(){
-            console.log("create interval for ping", process.env.PORT_SERVER)
-            const $this = this;
-            if (this.interval){
-                clearInterval(this.interval)
-            }
-            this.clearAll()
-            this.runningServer = false
-            this.interval = setInterval(async () => {
-                if (this.runningServer){
-                    clearInterval($this.interval)
-                } else {
-                    try {
-                        let f = await $this.pingServerPort()
-                        console.log(f)
-                        if (f)
-                        {
-                        this.runningServer = true
-                        await this.init()
-                        }
-                    } catch(err){
-                        console.error("Could not get server status, check if it is running on port: ", process.env.PORT_SERVER)
-                    }
-                }
-            }, 2000)
-        },
-
-        async pingServerPort() {
-            return FileService.pingServerPort()
-        },
-
-        async init() {
-            try {
-                const $this = this
-                let modules = await FileService.getModules()
-                let defaults= await FileService.getDefaults()
-                let procedures = await FileService.getProcedures()
-                let services = await FileService.getServices()
-                // let serverStatus = await FileService.getServerStatus()
-                // let dockerStatus = await FileService.getDockerStatus()
-                this.modules = modules.data.data
-                this.defaults = defaults.data.data
-                this.services = services.data.data
-                this.procedures = procedures.data.data
-                this.running = true
-                return 
-            } catch(err) {
-                console.error(err, "Backend server is not running")
-                this.running = false 
-                this.ready = true
-                this.$swal.fire({
-                    position: 'center',
-                    icon: 'error',
-                    showConfirmButton:true,
-                    title:  "Error in starting initialization",
-                    text:  err.response.data.message
-                }) 
-
-                throw err
-            } finally{
-                this.ready = true
-            }
-        }
-    }
-};
-</script>
-
