@@ -18,6 +18,23 @@
             <div class="space-y-12">
                 <recent-modules />
                 <work-statuses :workStatuses="workStatuses" />
+
+                <section class="space-y-2">
+                    <div class="w-full min-h-[290px] p-12 bg-blue-200 text-blue-800 rounded-xl">
+                        <h3 class="mb-24 markup-h2">What can Basestack do?</h3>
+                        <router-link to="/tutorials">
+                            <regular-button action="accent" label="View Demo" />
+                        </router-link>
+                    </div>
+
+                    <div class="w-full min-h-[290px] p-12 bg-green-100/25 text-green-200 rounded-xl">
+                        <h3 class="mb-24 markup-h2">Learn to use Basestack</h3>
+                        <router-link to="/tutorials">
+                            <regular-button action="accent" label="View Demo" />
+                        </router-link>
+                    </div>
+                </section>
+
             </div>
 			<!-- <LearnBasestack /> -->
 		</template>
@@ -32,12 +49,10 @@
 
 <script>
 import AppLayout from '@/components/AppLayout';
-import Sys from '@/components/Dashboard/System/Sys'
-import About from '@/components/Dashboard/DashboardDefaults/About'
-import Library from '@/components/Dashboard/DashboardDefaults/Library'
-import WorkStatuses from '../ui/WorkStatus/WorkStatuses.vue'
-import SystemSummary from './System/SystemSummary.vue'
-import RecentModules from './RecentModules.vue'
+import WorkStatuses from '@/components/ui/WorkStatus/WorkStatuses.vue'
+import SystemSummary from '@/components/Dashboard/System/SystemSummary.vue'
+import RecentModules from '@/components/Dashboard/RecentModules.vue'
+import RegularButton from '../components/ui/buttons/RegularButton.vue';
 
 // import App from '../../App.vue';
 
@@ -50,6 +65,7 @@ export default {
         'work-statuses': WorkStatuses,
         'system-summary': SystemSummary,
         'recent-modules': RecentModules,
+        'regular-button': RegularButton,
     },
 	props: ['modules', 'defaults', "moduleIdx"],
 	data(){
@@ -78,49 +94,15 @@ export default {
             ],
 		}
 	},
-	created(){
-		
-	},
-	watch:{
-		
-	},
-	computed: {
-	  myProps() {
-	    	return { 
-	    		
-	    	}
-	  }
-	},
 	mounted(){
 		const $this = this				
 		
 	},
-
 	methods: {
-      emitChange( data){
-		   this.$emit("emitChange", data)
-	  }
+        emitChange( data){
+            this.$emit("emitChange", data)
+        }
       
 	}
 };
 </script>
-
-<!-- <style>
-.sidebox{
-	max-height: 95vh;
-	overflow:auto
-}
- 
-</style>
-<style lang="css">
-	@import '../../../static/css/style.css';
-</style>
-<style lang="css">
-	@import '../../../static/css/myriadpro.css';
-</style>
-<style lang="css">
-	@import '../../../static/css/revised_branding_banner.css';
-</style>
-<style>
-	@import '../../../static/css/tooltip.css';
-</style> -->
