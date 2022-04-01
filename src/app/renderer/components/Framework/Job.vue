@@ -9,15 +9,15 @@
   -->
 <template>
   <v-card id="job"  >
-    <v-stepper  v-model="el" v-if="services" >
+    <v-stepper v-model="el" v-if="services" >
         <v-stepper-header
             class="configure"
         >
-            <template v-for="(entry, key) in services"  >
+            <template v-for="(entry, key) in services" :key="key+'-entry'" >
                 
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
-                    :key="key+'-entry'"
+                   
                     complete-icon="$check"
                     :rules="[()=>{
                         return (status[key] && status[key].error ? !status[key].error : true) 

@@ -10,13 +10,14 @@
 <template>
   <v-app id="app" class="px-0 py-0" 
 	>
-		<v-navigation-drawer
+        <v-navigation-drawer>
+		<!-- <v-navigation-drawer
 				v-model="drawer"  
 				class="elevation-12 nav-drawer" app
-				:mini-variant.sync="mini"
+				mini-variant.sync="mini"
 				mini-variant-width="64"
 				permanent  
-			>
+			> -->
 			<!-- <v-layout column fill-height height="20px" style="overflow-y:auto"> -->
 				<v-list
 					dense class="procedure-list"
@@ -24,9 +25,8 @@
 					<v-list-item-group  @click="selected='procedures'" v-if="catalog">
 					<v-list-item
 						v-for="(entry, key) in catalog"  
-            
 						v-bind:key="entry.name"
-            @click="tabProcedure = key"
+                        @click="tabProcedure = key"
 						@mouseover="isHovered = entry.name; " 
 						@mouseleave="isHovered = null"
 						@change="selected = 'procedures'"

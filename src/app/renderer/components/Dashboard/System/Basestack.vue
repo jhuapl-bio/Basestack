@@ -7,10 +7,10 @@
     >
       <template v-slot:activator="{ on, attrs }">
         <v-btn
+          v-bind="attrs"
           color="light"
           icon-and-text
           class="pt-5 pb-5"
-          v-bind="attrs"
           v-on="on"
         >
           <v-img   :src="require('@/assets/1-icon.svg')" 
@@ -54,10 +54,10 @@
           <v-spacer></v-spacer>
           <v-btn
               @click="checkForUpdates()"
-              small icon-and-text  class=" ml-3"
+              small icon-and-text  class="ml-3 "
             >
               <v-icon
-                color="primary" class="mr-3 ml-3"
+                color="primary" class="ml-3 mr-3"
               >$recycle
               </v-icon>Check and Update Basestack
             </v-btn>
@@ -65,10 +65,10 @@
       </v-card>
     </v-dialog>
     <v-card-text v-if="releaseNotes.version !== version && releaseNotes.version > version">
-      <v-divider class="mb-4 mt-1"></v-divider>
+      <v-divider class="mt-1 mb-4"></v-divider>
       <v-icon
         
-        color="orange" class="mr-3 ml-3"
+        color="orange" class="ml-3 mr-3"
       >$exclamation-triangle
       </v-icon>Newer version available
     </v-card-text>

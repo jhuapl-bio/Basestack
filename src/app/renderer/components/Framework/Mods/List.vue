@@ -38,10 +38,10 @@
                     >
                     <template v-slot:activator="{ on, attrs }">
                         <v-btn
+                        v-bind="attrs"
                         color="primary"
                         dark
                         class="mb-2"
-                        v-bind="attrs"
                         v-on="on"
                         >
                         New Item

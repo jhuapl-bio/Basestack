@@ -1,12 +1,5 @@
 
 const path  = require("path")
-
-
-
-
-
-
-
 let globalPath; let OS;
 if (!process.env.PWD) {
   globalPath = process.cwd();
