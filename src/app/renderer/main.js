@@ -6,7 +6,7 @@
   // - # For any other permission, please contact the Legal Office at JHU/APL.
   // - # **********************************************************************
 
-
+import { createApp } from 'vue'
 import Vue from 'vue'
 import axios from 'axios'
  
@@ -64,7 +64,7 @@ Vue.component('Carousel', Carousel)
 Vue.component('Slide', Slide)
 Vue.use(require('vue-moment'));
 Vue.use(Multiselect)
-Vue.use(Vuex)
+// Vue.use(Vuex)
 // Vue.use(BootstrapVueIcons)
 Vue.use(VTooltip, {
 	defaultBoundariesElement: document.body
@@ -130,13 +130,18 @@ Vue.directive('pin', {
 
 import vuetify from '@/plugins/vuetify' // path to vuetify export
 /* eslint-disable no-new */
-new Vue({
-  vuetify,
-  components: { App,},
-  router,
-  store,
-  template: '<App/>'
-}).$mount('#app')
+// new Vue({
+//     vuetify,
+//     components: { App,},
+//     router,
+//     store,
+//     template: '<App/>'
+// }).$mount('#app')
+
+createApp(App)
+    .use(router)
+    .use(store)
+    .mount('#app')
 
 
 
