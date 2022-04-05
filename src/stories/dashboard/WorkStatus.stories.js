@@ -1,4 +1,4 @@
-import WorkStatus from '../app/renderer/components/ui/WorkStatus/WorkStatus.vue'
+import WorkStatus from '../../app/renderer/components/ui/WorkStatus/WorkStatus.vue'
 
 export default {
   title: 'Work Status',

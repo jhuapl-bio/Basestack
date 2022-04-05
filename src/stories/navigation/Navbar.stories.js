@@ -1,8 +1,8 @@
-import ModuleButton from '../app/renderer/components/ui/nav/ModuleButton.vue'
+import NavBar from '../../app/renderer/components/ui/nav/NavBar.vue'
 
 export default {
-  title: 'Nav/Module Button',
-  component: ModuleButton,
+  title: 'Nav/Nav Bar',
+  component: NavBar,
   argTypes: {
     moduleName: {
         control: {type: 'text'},
@@ -28,9 +28,9 @@ export default {
 
 const Template = (args, { argTypes }) => ({
   props: Object.keys(argTypes),
-  components: {ModuleButton},
+  components: {NavBar},
   template: `
-    <module-button v-bind="$props">{{icon ?? slotFallback}}</module-button>
+    <nav-bar v-bind="$props">{{icon ?? slotFallback}}</nav-bar>
     `
 });
 

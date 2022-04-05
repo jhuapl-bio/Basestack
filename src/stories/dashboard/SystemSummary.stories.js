@@ -1,4 +1,4 @@
-import SystemSummary from "../app/renderer/components/Dashboard/System/SystemSummary";
+import SystemSummary from "../../app/renderer/components/Dashboard/System/SystemSummary";
 
 export default {
   title: "Sections/System Summary",

@@ -1,4 +1,4 @@
-import UncontainedButton from '../app/renderer/components/ui/buttons/UncontainedButton.vue'
+import UncontainedButton from '../../app/renderer/components/ui/buttons/UncontainedButton.vue'
 
 export default {
   title: 'Buttons/Uncontained',

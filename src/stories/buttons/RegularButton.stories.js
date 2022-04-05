@@ -1,4 +1,4 @@
-import RegularButton from '../app/renderer/components/ui/buttons/RegularButton.vue'
+import RegularButton from '../../app/renderer/components/ui/buttons/RegularButton.vue'
 
 export default {
   title: 'Buttons/Regular',

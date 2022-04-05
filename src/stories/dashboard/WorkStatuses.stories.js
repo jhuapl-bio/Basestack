@@ -1,4 +1,4 @@
-import WorkStatuses from '../app/renderer/components/ui/WorkStatus/WorkStatuses.vue'
+import WorkStatuses from '../../app/renderer/components/ui/WorkStatus/WorkStatuses.vue'
 
 export default {
     title: 'Sections/Work Statuses',

@@ -1,22 +1,10 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center">
-        <font-awesome-icon
-          icon="cog"
-          class="text-lg text-blue-extradark mr-2"
-        />
-        <div class="markup-h5 strong">System Summary</div>
-      </div>
-      <UncontainedButton
-        label="All System Details"
-        class="markup-h5"
-        icon="chevron-right"
-      />
-    </div>
-    <div class="border border-gray rounded">
+    <font-awesome-icon icon="cog" class="text-lg text-blue-extradark mr-2" />
+    <div class="mb-4 markup-h5 strong">System Summary</div>
+    <div class="border border-gray-400 rounded">
       <div class="p-4">
-        <h3 class="markup-h5 strong mb-4">Processor</h3>
+        <h3 class="mb-4 markup-h5 strong">Processor</h3>
         <div class="grid grid-cols-3">
           <DataLabel
             label="CPU Brand"
@@ -29,19 +17,19 @@
           <DataLabel label="Virtualization" data="Yes" />
         </div>
       </div>
-      <hr class="border-gray" />
+      <hr class="border-gray-400" />
       <div class="p-4">
-        <h3 class="markup-h5 strong mb-4">Memory</h3>
+        <h3 class="mb-4 markup-h5 strong">Memory</h3>
         <div class="grid grid-cols-3">
           <DataLabel label="Total Mem (GB)" data="17.18" />
           <DataLabel label="Using Mem (GB)" data="5.43" />
           <DataLabel label="Available Mem (GB)" data="11.70" />
         </div>
       </div>
-      <hr class="border-gray" />
+      <hr class="border-gray-400" />
       <div class="p-4">
-        <h3 class="markup-h5 strong mb-4">Operating System</h3>
-        <div class="flex justify-between flex-wrap">
+        <h3 class="mb-4 markup-h5 strong">Operating System</h3>
+        <div class="flex flex-wrap justify-between">
           <DataLabel label="Kernel" data="20.6.0" />
           <DataLabel label="Platform" data="darwin" />
           <DataLabel label="Distro" data="macOS" />
@@ -49,6 +37,11 @@
         </div>
       </div>
     </div>
+    <UncontainedButton
+      label="All System Details"
+      class="markup-h5"
+      icon="chevron-right"
+    />
   </div>
 </template>
 

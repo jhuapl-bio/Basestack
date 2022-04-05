@@ -18,7 +18,7 @@
     </v-file-input >
     <!-- <v-alert
       v-if="cached" dense
-      color="blue lighten-3"
+      color="blue-500 lighten-3"
       icon="$question-circle"
       type="info"
     >

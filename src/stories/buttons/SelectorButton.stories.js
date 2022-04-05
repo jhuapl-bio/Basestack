@@ -1,4 +1,4 @@
-import SelectorButton from '../app/renderer/components/ui/buttons/SelectorButton.vue'
+import SelectorButton from '../../app/renderer/components/ui/buttons/SelectorButton.vue'
 
 export default {
   title: 'Buttons/Selector',
