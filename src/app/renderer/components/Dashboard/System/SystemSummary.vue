@@ -1,7 +1,16 @@
 <template>
   <div>
-    <font-awesome-icon icon="cog" class="text-lg text-blue-extradark mr-2" />
-    <div class="mb-4 markup-h5 strong">System Summary</div>
+    <div class="flex justify-between mb-2">
+      <div class="flex items-center">
+        <font-awesome-icon icon="cog" class="text-lg text-blue-900 mr-2" />
+        <h2 class="markup-h5 strong">System Summary</h2>
+      </div>
+      <UncontainedButton
+        label="All System Details"
+        class="markup-h5"
+        icon="chevron-right"
+      />
+    </div>
     <div class="border border-gray-400 rounded">
       <div class="p-4">
         <h3 class="mb-4 markup-h5 strong">Processor</h3>
@@ -37,11 +46,6 @@
         </div>
       </div>
     </div>
-    <UncontainedButton
-      label="All System Details"
-      class="markup-h5"
-      icon="chevron-right"
-    />
   </div>
 </template>
 

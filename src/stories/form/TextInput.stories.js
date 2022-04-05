@@ -1,31 +1,31 @@
-import TextInput from '../app/renderer/components/ui/forms/TextInput.vue'
+import TextInput from "../../app/renderer/components/ui/forms/TextInput.vue";
 
 export default {
-  title: 'Form/Text Input',
+  title: "Form/Text Input",
   component: TextInput,
   argTypes: {
     value: {
-        control: {type: 'text'},
-        defaultValue: '',
+      control: { type: "text" },
+      defaultValue: "",
     },
 
     placeholder: {
-        control: {type: 'text'},
-        defaultValue: 'Text goes here…',
+      control: { type: "text" },
+      defaultValue: "Text goes here…",
     },
   },
 };
 
 const Template = (args, { argTypes }) => ({
   props: Object.keys(argTypes),
-  components: {TextInput},
+  components: { TextInput },
   template: `
     <text-input v-bind="$props" :v-model="value" />
-    `
+    `,
 });
 
-export const Default = Template.bind({})
+export const Default = Template.bind({});
 Default.args = {
-  value: '',
-  placeholder: 'Text goes here...'
-}
+  value: "",
+  placeholder: "Text goes here...",
+};
