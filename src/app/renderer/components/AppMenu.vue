@@ -21,7 +21,7 @@
                 :class="[showAllModules ? 'flex-col-reverse' : 'flex-col' ]"
             >
                 <div>{{ showAllModules ? 'Show Less' : 'Show More' }}</div>
-                <font-awesome-icon icon="chevron-down" class="text-lg duration-300" :class="{'rotate-180': showAllModules}" />
+                <!-- <font-awesome-icon icon="chevron-down" class="text-lg duration-300" :class="{'rotate-180': showAllModules}" /> -->
             </button>
         </section>
 
