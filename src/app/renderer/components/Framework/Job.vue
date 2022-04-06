@@ -13,7 +13,7 @@
         <v-stepper-header
             class="configure"
         >
-            <template v-for="(entry, key) in services" :key="key+'-entry'" >
+            <div v-for="(entry, key) in services" :key="key+'-entry'" >
                 
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
@@ -48,7 +48,7 @@
                     v-if="key !== services.length - 1"
                     :key="key"
                 ></v-divider>
-            </template>
+            </div>
         </v-stepper-header>
         <v-alert type="warning" icon="$exclamation" shaped
           text v-if="jobStatus && !jobStatus.fully_installed ">All dependencies are not installed. Check the Library to see missing components
