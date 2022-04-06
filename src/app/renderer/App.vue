@@ -35,6 +35,7 @@
 
                 <template #sidebar>
                     <system-summary />
+                    <contact />
                 </template>
             </app-layout>
         </div>
@@ -47,6 +48,7 @@
 // import MainPage from '@/components/MainPage'
 import FileService from '@/services/File-service.js'
 import SystemSummary from './components/Dashboard/System/SystemSummary.vue'
+import Contact from './components/Dashboard/Contact.vue'
 import AppLayout from './components/AppLayout.vue'
 
 
@@ -58,6 +60,7 @@ export default {
         // MainPage,
         'app-layout': AppLayout,
         'system-summary': SystemSummary,
+        'contact': Contact,
     },
     data(){
         return {

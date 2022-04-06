@@ -24,7 +24,7 @@
 
 		<template #sidebar>
 			<system-summary />
-			<!-- <ContactUs /> -->
+            <contact />
 			<!-- <AplLogo /> -->
 		</template>
 	</app-layout>
@@ -37,6 +37,7 @@ import About from '@/components/Dashboard/DashboardDefaults/About'
 import Library from '@/components/Dashboard/DashboardDefaults/Library'
 import WorkStatuses from '../ui/WorkStatus/WorkStatuses.vue'
 import SystemSummary from './System/SystemSummary.vue'
+import Contact from './Contact.vue'
 import RecentModules from './RecentModules.vue'
 
 // import App from '../../App.vue';
@@ -50,6 +51,7 @@ export default {
         'work-statuses': WorkStatuses,
         'system-summary': SystemSummary,
         'recent-modules': RecentModules,
+        'contact': Contact,
     },
 	props: ['modules', 'defaults', "moduleIdx"],
 	data(){
