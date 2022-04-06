@@ -21,7 +21,9 @@
 import WorkStatus from './WorkStatus.vue'
 export default {
     components: {'work-status': WorkStatus},
-    props: ['workStatuses'],
+    props: {
+        workStatuses: Object
+    },
     computed: {
         numberOfStatuses: (props) => props.workStatuses.length
     }
