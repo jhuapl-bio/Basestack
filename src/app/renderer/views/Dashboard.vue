@@ -40,18 +40,22 @@
 		</template>
 
 		<template #sidebar>
-			<system-summary />
-			<!-- <ContactUs /> -->
-			<!-- <AplLogo /> -->
+            <div class="flex flex-col h-full space-y-8">
+                <system-summary />
+                <contact />
+                <apl-logo />
+            </div>
 		</template>
 	</app-layout>
 </template>
 
 <script>
-import AppLayout from '@/components/AppLayout';
-import WorkStatuses from '@/components/ui/WorkStatus/WorkStatuses.vue'
-import SystemSummary from '@/components/Dashboard/System/SystemSummary.vue'
-import RecentModules from '@/components/Dashboard/RecentModules.vue'
+import AppLayout from '../components/AppLayout';
+import WorkStatuses from '../components/ui/WorkStatus/WorkStatuses.vue'
+import SystemSummary from '../components/Dashboard/System/SystemSummary.vue'
+import Contact from '../components/Dashboard/Contact.vue'
+import AplLogo from '../components/Dashboard/AplLogo.vue'
+import RecentModules from '../components/Dashboard/RecentModules.vue'
 import RegularButton from '../components/ui/buttons/RegularButton.vue';
 
 // import App from '../../App.vue';
@@ -66,6 +70,8 @@ export default {
         'system-summary': SystemSummary,
         'recent-modules': RecentModules,
         'regular-button': RegularButton,
+        'contact': Contact,
+        'apl-logo': AplLogo,
     },
 	props: ['modules', 'defaults', "moduleIdx"],
 	data(){
