@@ -1,4 +1,4 @@
-import Contact from "../app/renderer/components/Dashboard/Contact";
+import Contact from "@/components/Dashboard/Contact";
 
 export default {
   title: "Sections/Contact",
