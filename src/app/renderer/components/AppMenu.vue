@@ -1,5 +1,5 @@
 <template>
-    <nav class="w-[123px] h-screen grid grid-cols-1 grid-rows-8 border-r border-l border-gray-300">
+    <nav class="min-w-[123px] h-screen grid grid-cols-1 grid-rows-8 border-r border-l border-gray-300">
 
         <section class="row-span-1 h-[12.5%]">
             <dashboard-button />
