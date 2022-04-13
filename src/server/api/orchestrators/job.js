@@ -1,22 +1,25 @@
 import nestedProperty from "nested-property"
 const cloneDeep = require("lodash.clonedeep"); 
 import { mapVariables } from '../controllers/mapper.js';
- const { Configuration }  = require("./configuration.js")
- const { Service }  = require("./service.js")
-const { module_status }  = require("../controllers/watcher.js")
+const { Configuration }  = require("../../../shared/configuration.js")
+const { Service }  = require("./service.js")
+const { module_status }  = require("../../../shared/watcher.js")
 const { readFile, removeFile, removeFolder, checkExists } = require("../controllers/IO.js")
 const { store }  = require("../../config/store/index.js")
-   
+const path = require("path")
 var logger = store.logger
 
-export  class Job { 
-    constructor(procedure){         
+export  class Job {  
+    constructor(procedure, config){         
         this.config = null  
         this.options = null   
         this.configurations = null
         this.services = []
         this.variables = {}
-        
+        this.runningConfig = {}
+        this.baseConfig = config
+        this.containers = []
+        this.env = {}
         this.status = { 
             exists: false, 
             services_used: [],
@@ -42,7 +45,7 @@ export  class Job {
         
     }   
     cleanup(){
-        clearInterval(this.interval.interval)
+        clearInterval(this.interval.interval) 
         return
     }
     create_interval (){
@@ -51,6 +54,7 @@ export  class Job {
             if (!$this.interval.checking){
                 $this.interval.checking = true
                 $this.statusCheck().then((state)=>{
+                    
                     $this.interval.checking = false
                 }).catch((err)=>{
                     logger.error("%s err in status check interval for %s",err, $this.name)
@@ -61,63 +65,94 @@ export  class Job {
         return 
     }    
     defineConfiguration (config) {
-        let configuration = new Configuration(config) 
+        let configuration = new Configuration(cloneDeep(config)) 
         configuration.defineMapping(); 
-        this.configuration = configuration 
-        return  
+        return  configuration
     } 
     setValueVariable(value, obj, key){ 
         const $this = this;
-        // if (value.source){
-            let getter = Object.getOwnPropertyDescriptor(obj, 'source');
-            if (getter && getter.get){
-                obj = value.source
-
-            } else {
-                $this.configuration.variables[key].source = value.source
+        if (obj.options){
+            if (obj.options ){
+                if (!obj.option){
+                    obj.option = 0
+                } 
+            }
+            if (!obj.optionValue){
+                obj.optionValue = obj.options[obj.option]
+            }
+        }
+        if (obj.optionValue  && !obj.source){
+            obj.source = obj.optionValue.source
+        }
+        if (value.source){
+            if (typeof value.source == 'string' || !typeof value.source){
+                obj.source = value.source
+            } else if (typeof value.source == 'object') {
+                for (let [key, v] of Object.entries(value.source)){
+                    obj.source[key] = v
+                }
+            }
+            if (obj.optionValue){
+                obj.optionValue.source = value.source
             } 
-        // } 
-        if (value.update || (value.optionValue && value.optionValue.update ) ){
-            console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-            if (value.update){
-                if (Array.isArray(value.update)){
-                    value.update.forEach((updating)=>{
-                        console.log("updating", updating.id, updating.value)
-                        nestedProperty.set(this.configuration, updating.id, updating.value)
-                    })
-                    console.log(this.configuration.variables)
-
-                }
-            } else {
-                console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")                
-                if (Array.isArray(value.optionValue.update)){
-                    value.optionValue.update.forEach((updating)=>{
-                        console.log("updating", updating.id, updating.value)
-                        nestedProperty.set(this.configuration, updating.id, updating.value)
-                    })
-                    console.log(this.configuration.variables)
-
-                }
-            }
-            console.log(this.configuration.variables.output.source)
         }
-        if (value.option || value.option == 0){
-            let getter = Object.getOwnPropertyDescriptor(obj, 'option');
-            if (getter && getter.get){
-                obj = value.option
-            } else {
-                $this.configuration.variables[key].option = value.option
+        let getter = Object.getOwnPropertyDescriptor(obj, 'source');
+        if (getter && getter.get){
+            obj = value.source
+            
+        } else if ( ( value.option || value.option == 0 ) || obj.options ) {   
+            if (!value.option){
+                obj.option = 0
+                obj.optionValue= obj.options[obj.option]
+            } else { 
+                obj.option = value.option
+                obj.optionValue= obj.options[obj.option]
             }
+            
+            $this.runningConfig.variables[key].option = obj.option
+            if (obj.source && typeof obj.optionValue == 'object'){ 
+                obj.optionValue.source = obj.source   
+                $this.runningConfig.variables[key].source = obj.optionValue.source
+                $this.runningConfig.variables[key].target = obj.optionValue.target
+            } 
+            else if (typeof obj.optionValue == 'string' ) {
+                $this.runningConfig.variables[key].source = obj.optionValue
+                $this.runningConfig.variables[key].target = obj.optionValue
+            } else {
+                
+                $this.runningConfig.variables[key].source = obj.optionValue.source
+                $this.runningConfig.variables[key].target = obj.optionValue.target
+            }  
+        }  else {
+            $this.runningConfig.variables[key].source = obj.source
+        }  
+        // if (obj.update || (obj.optionValue && obj.optionValue.update ) ){
+        //     if (obj.update){
+        //         if (Array.isArray(obj.update)){
+        //             obj.update.forEach((updating)=>{
+        //                 nestedProperty.set(this.runningConfig, updating.id, updating.value)
+        //             })  
+        //         } 
+        //     } else {
+        //         if (Array.isArray(obj.optionValue.update)){
+        //             obj.optionValue.update.forEach((updating)=>{
+        //                 nestedProperty.set(this.runningConfig, updating.id, updating.value)
+        //             })
+
+        //         } 
+        //     }
+        // }
+       
         
-        }
     } 
     async setVariable(value, variable, target){
+        
         return new Promise ((resolve, reject)=>{
             let data = {}
             data[target] = value 
-            let obj = this.configuration.variables[variable]
+            let obj = this.runningConfig.variables[variable]
             this.setValueVariable(data, obj, variable)
-            let variables = this.configuration.variables
+            let variables = this.runningConfig.variables
             let promises = []
             if (variables){
                 for (let [key, vari] of Object.entries(variables)){
@@ -127,14 +162,19 @@ export  class Job {
                     if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
                         let update_on = vari.update_on
                         let action  = update_on.action
-                        if (action == 'exists'){
-                            let returnedVari = {
-                                key: key, 
+                        if (action == 'exists'){ 
+                            let returnedVari = { 
+                                key: key,  
                                 value: null
                             }
                             promises.push(
                                 checkExists(update_on.source, true).then((f)=>{
-                                    vari.source = f
+                                    if(f.exists && f.location){
+                                        vari.source = path.join(update_on.source)
+                                    } else { 
+                                        vari.source = f.exists
+                                    }
+                                    // vari.source = f.exists
                                     returnedVari.value = vari
                                     return returnedVari
                                 }).catch((err)=>{
@@ -203,7 +243,6 @@ export  class Job {
         return new Promise(function(resolve,reject){  
             let promises = []
             if (dependency >= 0 || dependency){
-                console.log("Single remove!")
                 let watch = $this.status.watches[dependency]
                 if (typeof watch.source == 'string'){
                     promises.push(removeFile(watch.source))
@@ -213,17 +252,17 @@ export  class Job {
                     })
                 }
             } else {
-                if ($this.configuration.removal_override){
-                    let type = $this.configuration.removal_override
+                if ($this.runningConfig.removal_override){
+                    let type = $this.runningConfig.removal_override
                     if (!type){
                         type == 'file'
                     }
-                    if ($this.configuration.removal_override.source){
+                    if ($this.runningConfig.removal_override.source){
                         if(type == 'file') {
-                            promises.push(removeFile($this.configuration.removal_override.source))
+                            promises.push(removeFile($this.runningConfig.removal_override.source))
                         }
                         else{
-                            promises.push(removeFile($this.configuration.removal_override.source, 'dir'))
+                            promises.push(removeFile($this.runningConfig.removal_override.source, 'dir'))
                         }
                     }
                     
@@ -248,9 +287,10 @@ export  class Job {
         })
     } 
     setParams(params){
-        if (params.variables){
-            this.setVariables(params.variables)
-        }
+        // if (params.variables){
+        //     this.setVariables(params.variables)
+        // }        
+        // console.log(params,"PARAMS,,,,")
         if (params.images){
             params.images.forEach((service)=>{ 
                 this.services[service.service].override.image = service.image
@@ -261,25 +301,28 @@ export  class Job {
         })
 
 
-    }
+    } 
     setVariables(variables){
         this.variables = variables
         const $this = this
-        
         for(let [key, value] of Object.entries(variables)){
-            let obj = $this.configuration.variables[key]
+            let obj = $this.runningConfig.variables[key]
+            console.log("key")
             this.setValueVariable(value, obj, key)
         }
+        console.log("done")
         this.services.forEach((service)=>{ 
-            service.config.variables = $this.configuration.variables
+            service.config.variables = $this.runningConfig.variables
         })
+        console.log("return")
+        
         return 
     }
     async defineServices (services ) {
         const $this = this;
         for (let ix = 0; ix < services.length;  ix++){
             let serviceIdx = services[ix]
-            let service = new Service($this.configuration.services[serviceIdx], serviceIdx)
+            let service = new Service($this.baseConfig.services[serviceIdx], serviceIdx)
             await service.setOptions()
             this.services.push(service)
         }  
@@ -291,7 +334,8 @@ export  class Job {
         const $this = this; 
         return new Promise(function(resolve,reject){
             try{
-                let variables = $this.configuration.variables
+                let variables = ( $this.runningConfig.variables ? $this.runningConfig.variables : $this.baseConfig.variables)
+                
                 let promises = [] 
                 if (variables ){ 
                     let filtered_outputs = Object.values(variables).filter((value, key)=>{
@@ -312,7 +356,7 @@ export  class Job {
                             } else {
                                 store.logger.error("Error in getting status for watched location: %o", resp.reason )
                                 $this.status.watches[index] = 
-                                {
+                                { 
                                     ...filtered_outputs[index]
                                 }
                             }
@@ -328,6 +372,7 @@ export  class Job {
     }
     async statusCheck(){
 		const $this = this; 
+        let env = {}
 		return new Promise(function(resolve,reject){
             let promises = [] 
                 let running = false
@@ -343,6 +388,12 @@ export  class Job {
                         running = true
                     } else {
                         $this.service_steps[key] = false
+                    }
+                    
+                    if (service.env){
+                        if (typeof service.env == 'object'){
+                            $this.env = {...service.env}
+                        }
                     }
                 } )
                 let success = $this.services.every((d)=>{
@@ -363,7 +414,13 @@ export  class Job {
                 $this.status.complete = complete
                 $this.status.running = running
                 $this.status.error = error
+                
+                
+                
+                
                 $this.getProgress()
+
+
                 resolve()
         }) 
 	}
@@ -372,42 +429,40 @@ export  class Job {
         let promises = [] 
         this.services.forEach((service)=>{
             if (service.status){
-                promises.push(service.stop())
+                promises.push(service.stop()) 
             }
-        })
+        }) 
         let response = await Promise.allSettled(promises)
-        return
+        return 
     }
-    async loopServices(){
-        const $this  = this
+    async loopServices(){     
+        const $this  = this 
         let cancelled_or_skip = false
-        let end = false
+        let end = false  
         try{
             for (let i = 0; !end && i < $this.services.length; i++){
                 let service = $this.services[i]
-                if (service.config.orchestrator){
-                    logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
-                } else{
-                    try{
-                        let skip
-                        store.logger.info("I: %s, Starting a new job service %s", i, service.name)
-                        skip = await service.check_then_start({ variables: $this.variables}, true)
-                        if (skip){ 
-                            store.logger.info("skip %s", skip)
-                            cancelled_or_skip = skip
-                            end = true
-                            // i = $this.services.length
-                        }
-                    } catch(err){
-                        logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
-                        // if (!$this.configuration.skipError){
-                        //     i = $this.services.length
-                        // }
+                // if (service.config.orchestrator){
+                //     logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
+                // } else{
+                try{
+                    let skip
+                    store.logger.info("I: %s, Starting a new job service %s", i, service.name)
+                    
+                    skip = await service.check_then_start({ variables: $this.variables}, true)
+                    if (skip){ 
+                        store.logger.info("skip %s", skip)
+                        cancelled_or_skip = skip
                         end = true
-                        cancelled_or_skip = true
-                        $this.status.error = err
+                        // i = $this.services.length
                     }
+                } catch(err){
+                    logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
+                    end = true
+                    cancelled_or_skip = true
+                    $this.status.error = err
                 }
+                // }
             }
             store.logger.info("Job completed or skipped/exited")
             return cancelled_or_skip
@@ -416,15 +471,16 @@ export  class Job {
             throw err
         }
     }
-    async start(){    
+    async start(params){       
         const $this = this
         let services;
         $this.status.error = null 
         $this.status.running = true
         $this.status.complete = false
         let promises = []; 
-        store.logger.info("%s setting variables", $this.name)
-        this.configuration.setVariables()
+        store.logger.info("%s setting variables", $this.baseConfig.name)
+        this.runningConfig = this.defineConfiguration(this.baseConfig)
+        this.setVariables(params.variables)
         store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{
             if (service && service.streamObj){

@@ -94,21 +94,8 @@ orchestrators:
     format: "single"
     type: "json" 
     path: ${configPath}/dockerConfigs/dockerConfigSubclient.json #used by the Docker API, refere to the url for more information
-  dind:
-    service:
-      path: "${configPath}/service_dind/dind.yml"
-      format: "single" 
-      type: "yml"
-      config:
-        file: ${configPath}/dockerConfigs/dockerConfig.json #used by the Docker API, refere to the url for more information
-    procedure:
-      path: "${configPath}/procedure_dind/procedure_dind.yml"
-      format: "single" 
-      type: "yml"
-    module:
-      path: ${configPath}/modules/dind/index.yml
-      format: "single"
-      type: "yml"
-      build: 
-        file: "${configPath}/modules/dind/Dockerfile"
-      
+  orchestrator:
+    format: "single"
+    type: "json" 
+    path: ${configPath}/dockerConfigs/dockerConfigOrchestrator.json #used by the Docker API, refere to the url for more information
+  

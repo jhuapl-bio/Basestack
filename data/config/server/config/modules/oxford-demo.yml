@@ -25,11 +25,12 @@
           label: "Demo Port"
           column: 12
           output: true
-          target: "localhost:8089"
+          target: 8089
+          source": 8089
           port: true
-          bind:
-            from: "8089"
-            to: "8089"
+          portbind:
+            from: "%{variables.port.target}"
+            to: "%{variables.port.source}"
       services:
         - name: ont_demo
           label: "ONT Demo"

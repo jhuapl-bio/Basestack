@@ -54,6 +54,15 @@
                       >
                       
                     </v-checkbox> 
+                    <v-btn
+                      color="primary"
+                      class="text-caption"
+                      @click="reset()"
+                    >
+                      <v-icon class="mr-3" small color="primary lighten-2" >
+                          $cog 
+                      </v-icon>
+                    Reset Default</v-btn>
                     <tree-view :data="services" height="300px" class=" mt-2 mb-3 pt-0 elevation-5 treeview " style="overflow-y:auto" 
                             :options="{
                                 maxDepth: 3, 
@@ -65,9 +74,6 @@
                     </tree-view>
                   </v-card-text>
                   <v-card-actions class="justify-end">
-                    <!-- <v-btn
-                      text
-                    >Update</v-btn> -->
                     <v-btn
                       text
                       @click="dialog.value = false"
@@ -76,8 +82,6 @@
                 </v-card>
               </template>
             </v-dialog>
-            <!-- <v-divider class="mx-3" vertical>
-            </v-divider> -->
             <template v-for="(entry, key) in services"  >
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
@@ -194,8 +198,7 @@
           <v-col sm="6" v-if="headers.length > 0 && procedure "  >
             <v-card height="70vh" class="scroll fill-height">
               <Progresses
-                  :progresses="watches"
-                  
+                  :progresses="procedure.watches"
                   :status="status"
                   :job="jobStatus"
                   :catalog="module"
@@ -220,14 +223,22 @@
 import FileService from '@/services/File-service.js'
 import ListParams  from '@/components/Framework/Mods/ListParams.vue';
 import Progresses  from '@/components/Framework/Progresses.vue';
-
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
 import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
+import { Configuration } from '../../../../shared/configuration';
+import nestedProperty from 'nested-property';
+import { mapState } from 'vuex';
+const cloneDeep = require("lodash.clonedeep");
 
 export default {
   name: 'job',
   beforeDestroy: function(){
-   
+   if (this.procedure){
+     this.procedure.destroy_interval()
+   }
+   if (this.watcherInterval){
+     clearInterval(this.watcherInterval)
+   }
   },
   components:{
    LogWindow,
@@ -241,9 +252,21 @@ export default {
     updateImage(index,val){
       this.custom_images[index] = val
     },
+    reset(){
+      this.$store.dispatch("clearCatalog", {
+        procedure: this.procedureIdx, 
+        module: this.moduleIdx,
+        catalog: this.module,
+      })
+      let found = nestedProperty.get(this.$store.state,`configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`);
+      if (found){
+        this.loadProcedure(found)
+      } else {
+        this.getProcedure()
+      }
+    },
     async cancel_procedure(procedureKey){
       const $this = this
-      console.log("cancel job")
       await FileService.cancelJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
@@ -316,58 +339,88 @@ export default {
           })
       })
     },
-    updateValue(value){
-      let src = value.src
-      let variable = this.procedure.variables[value.variable]
-      if (value.option){
-        variable.option = src
-      } else {
-        variable.source  = src
-      }
-      const $this = this
-      console.log("vau updated")
-      try{
-        FileService.updateVariableJob({
-          module: this.moduleIdx,
-          procedure: this.procedureIdx,
-          catalog: this.module,
-          value: value.src, 
-          target: (value.option  ? "option" : "source"),
-          variable: value.variable,
-        }).then((response)=>{
-            if (response.data.data && Array.isArray(response.data.data)){
-                response.data.data.map((resp)=>{
-                    if (resp){
-                      $this.$set($this.procedure.variables[resp.key], 'source' , resp.value.source)
-                      if ($this.procedure.variables[resp.key].optionValue){
-                        $this.$set($this.procedure.variables[resp.key], 'optionValue', resp.value)
-                      }
-                    }
-                    
-                })
-            }
+    updateValue(value){ 
+      const $this = this;
+        $this.$store.dispatch('UPDATE_VARIABLE', {
+          name: value.variable,
+          source: value.src,
+          option: value.option,
+          module: $this.moduleIdx, 
+          catalog: $this.module, 
+          procedure: $this.procedureIdx
         })
-      } catch(err){
-        console.error(err,"<<<<< error in caching update")
-      } 
-      
+        this.procedure.variables[value.variable].source = value.src
+        this.procedure.updates(value).then((f)=>{
+          if (f){
+            f.forEach((changed)=>{
+              if ($this.procedure[changed.key]){
+                $this.procedure.variables[changed.key] = changed.value.source
+              }
+            })
+          }
+        })
+        
 
+    },
+    
+    loadProcedure(proc){
+      const $this = this;
+      let procedure = new Configuration(proc)
+      procedure.defineMapping()
+      procedure.create_intervalWatcher() 
+      // procedure.variables.file.source = "/Users/merribb1/Desktop/test-data2/metagenome/sample_metagenome.fastq"
+      procedure.getProgress()
+      let found = nestedProperty.get(this.$store.state, `catalog.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
+      console.log("daksjdksadj", found)
+      if (found){
+        try{
+          procedure.mergeInputs(found)
+        } catch (Err){
+          console.error(Err,"<<<")
+        }
+
+      }
+      this.procedure = procedure
+      this.watches  = this.procedure.watches
+      // this.$store.dispatch('CREATE_PROCEDURE', {
+      //   obj: procedure,
+      //   module: $this.moduleIdx, 
+      //   catalog: $this.module, 
+      //   procedure: $this.procedureIdx
+      // })
+      
+      // this.updateValue({
+      //   src: "/Users/merribb1/Desktop/test-data2/metagenome/sample_metagenome.fastq",
+      //   option: 0,
+      //   variable: "file"
+
+      // })
+      
+      this.services = this.procedure.services
+      if (Object.keys(this.services_to_use).length == 0){
+        for (let [key, value] of Object.entries(this.services)){
+            this.$set(this.services_to_use, key, 1)
+        }
+      }
     },
     async getProcedure(){
       const $this = this
       try{
-        let response = await FileService.getJobStaged({
+        let response = await FileService.getProcedureConfig({
           module: this.moduleIdx,
           procedure: this.procedureIdx,
           catalog: this.module
         })
-        this.procedure = response.data.data
-        this.services = this.procedure.services
-        if (Object.keys(this.services_to_use).length == 0){
-          for (let [key, value] of Object.entries(this.services)){
-              this.$set(this.services_to_use, key, 1)
-          }
-        }
+        this.$store.dispatch("SAVE_PROCEDURE_DEFAULT", {
+          module: $this.moduleIdx, 
+          catalog: $this.module, 
+          procedure: $this.procedureIdx,
+          config: response.data.data
+        })
+        console.log("next")
+
+        this.loadProcedure(cloneDeep(response.data.data))
+
       } catch(err){
         this.initial=false
         console.error(`${err} error in getting status`)
@@ -381,7 +434,9 @@ export default {
         el: 1,
         dry:false,
         full_services: null,
+        watcherInterval: null,
         services: null,
+        watches: [],
         procedure: null,
         custom_images: {},
         services_to_use: {},
@@ -420,50 +475,54 @@ export default {
                 sortable: true,
                 align:"center"                
             },
-            // {
-            //   text: "Bind",
-            //   value: "bind",
-            //   sortable: true
-            // },
             {
                 text: "Source",
                 value: "source",
                 align:"center"  ,              
                 sortable: false
             },
-            // {
-            //   text: "Target",
-            //   value: "target",
-            //   sortable: false
-            // },
             {
               text: "Type",
               align:"center"  ,              
               value: "element",
               sortable: false
             },
-            // {
-            //   text: "Status",
-            //   value: "status",
-            //   sortable: false
-            // }
         ],
 
      
     }
   },
-  props: [ 'module', 'moduleIdx', 'procedureIdx', 'title', 'status' ,'watches', "jobStatus" ],
+  props: [ 'module', 'moduleIdx', 'procedureIdx', 'title', 'status' , "jobStatus" ],
   watch: {
     procedureIdx(newValue){
         this.services_to_use = {}
         this.getProcedure()
     },
-    
   },
   computed: {
+    procedureConfig(){
+      return nestedProperty.get(this.$store.state, `configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
+    },
+    ...mapState({
+      catalog: state => state.catalog
+    }),
+    // watches(){
+    //   return this.procedure.watches
+    // },
+    // procedure(){
+    //   let found = nestedProperty.get(this.$store.state, `catalog.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
+    //   if (!found){
+    //     return {}
+    //   } else {
+    //     return this.$store.state.catalog[this.module].modules[this.moduleIdx].procedures[this.procedureIdx]
+    //   }
+    // },
+
     statuses(){
         return this.status.services
     },
+   
+    
     
     additionals(){
         let ta= []
@@ -471,9 +530,13 @@ export default {
             for (let [key, value ] of Object.entries(this.procedure.variables)){
                 if (!value.output){
                     value.name = key
+                    if (!value.source && value.options){
+                      value.optionValue = ( value.option ? value.options[value.option] : value.options[0])
+                      value.source = value.optionValue.source
+                    }
                     ta.push(value)
-
                 }
+                
             }
         }
         return ta
@@ -483,8 +546,30 @@ export default {
   },
   mounted(){
     const $this = this
-   
-    this.getProcedure()
+    let found = nestedProperty.get(this.$store.state,`configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`);
+    // this.$store.dispatch("clearAll")
+    if (!found){
+      this.getProcedure()
+    } else {
+      
+      // this.loadProcedure(cloneDeep(found))
+      this.getProcedure()
+
+    }
+    $this.watcherInterval = setInterval(()=>{
+      // let procedure = $this.$store.getters.getProcedure({
+      //   module: $this.moduleIdx, 
+      //   catalog: $this.module, 
+      //   procedure: $this.procedureIdx
+      // })
+      let procedure = $this.procedure
+      if(procedure.watches){
+        procedure.watches.map((f,i)=>{
+          $this.$set($this.watches, i, f)
+        })
+      }
+    },1000)
+    
     
 
   },

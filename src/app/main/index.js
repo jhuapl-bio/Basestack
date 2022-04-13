@@ -2,6 +2,7 @@
 
 const { app, dialog } = require('electron')
 
+import { installVueDevTools } from 'electron-devtools-installer'
 
 
 
@@ -94,7 +95,7 @@ client.app.on('activate', () => {
     client.createMenu()
   }
 })
-client.app.on('ready', () => {
+client.app.on('ready', async () => {
     // if (process.env.NODE_ENV !== 'production') {
     //   require('vue-devtools').install()
     // }
@@ -102,6 +103,14 @@ client.app.on('ready', () => {
   
   var { store } = require("../store/store.js");
   client.store = store;
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      await installVueDevTools()
+    } catch (e) {
+      console.error('Vue Devtools failed to install:', e.toString())
+    }
+    // debugger
+  }
   define_configuration(store.system).then((config)=>{
     try{
       logger = require("./logger.js").logger(config.logs.error, config.logs.logfile)

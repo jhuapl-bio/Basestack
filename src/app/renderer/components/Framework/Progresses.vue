@@ -31,7 +31,6 @@
         Delete Outputs
       </v-btn>
     </v-toolbar>
-    
   	<v-data-table
         v-if="progresses && progresses.length > 0"
         small
@@ -51,9 +50,9 @@
                 </template>
                 View Visualization in Browser. Ensure that the service is running first!
             </v-tooltip> 
-            <v-tooltip bottom v-else> 
+            <v-tooltip bottom> 
               <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon v-if="item.source || item.path" @click="determineOpen(item)">
+                <v-btn v-on="on" icon  @click="determineOpen(item)">
                   <v-icon 
                     class="" color="primary" 
                     medium>$archive
@@ -109,7 +108,7 @@
             <v-icon 
                 v-else
                 small> 
-                {{item.complete}} {{ ( item.total ? ` / ${item.total}` : '' ) }}
+                {{item.complete}} {{ ( item.total ? ` / ${1}` : '' ) }}
             </v-icon>
         </template>
        
@@ -132,7 +131,7 @@ export default {
     data() {
         return {
             value: null,
-            test: "placeholder",
+            test: "placeholder", 
             
            
         }
@@ -161,7 +160,6 @@ export default {
                 this.$electron.shell.openPath(path.dirname(item.source))
             } else {
               if (item.path){
-                console.log(item.path)
                 this.$electron.shell.openPath(item.path)
               } else {
                 this.$electron.shell.openPath(path.dirname(item.source[0]))
@@ -200,7 +198,6 @@ export default {
         },
         open (link) {
           try{        
-            console.log(link)
             this.$electron.shell.openPath(link)
           } catch(err){ 
             this.$swal.fire({ 
@@ -216,7 +213,6 @@ export default {
     mounted(){
     },
     watch: {
-        
     }
     
 };

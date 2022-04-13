@@ -135,7 +135,6 @@
         :module="module.name"
         ref="job"
         :title="module.title"
-        :watches="(job ? job.watches : [])"
         :status="( job ? job.services : {})"
         :procedureIdx="selectedProcedure.idx"
         :jobStatus="job"

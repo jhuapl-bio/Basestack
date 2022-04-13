@@ -29,10 +29,8 @@
             bind_parent_dir: true
             source: null
             optional: false
-            target: null
-            bind: 
-              from: "%{variables.sequencing_summary.source}"
-              to: "/opt/summary_sequencing"     
+            target: "/opt/sequencing_summary/sequencing_summary.txt"
+            bind: "directory"  
         
         class: "wb-100  p-3 mb-1"
         source: null
@@ -42,10 +40,9 @@
         hint: "Directory containing your fastq files"
         warning: All fastq files will be included, make sure demux has taken place before inputting
         source: "%{variables.dir.source}/fastq_pass" 
+        target: "/opt/data/fastq_pass" 
         optional: "<<notExists(%{variables.dir.source})>>"
-        bind: 
-          from: "%{variables.fastq_pass.source}"
-          to: "%{variables.dir.bind.to}/fastq_pass" 
+        bind: "self"
         define:
           out_prefix_nanopolish: consensus_nanopolish
           out_prefix_medaka: consensus_medaka
@@ -57,9 +54,8 @@
         hint: "Select the fast5 pass directory from your run"
         class: "wb-50 p-3 mb-1"
         source: "%{variables.dir.source}/fast5_pass" 
-        bind: 
-          from: "%{variables.fast5_pass.source}"
-          to: "%{variables.dir.bind.to}/fast5_pass" 
+        target: "/opt/fast5/fast5_pass" 
+        bind: "self"
       filter_min:
         label: "Filter Min Length"
         element: number
@@ -136,9 +132,8 @@
         optional: false
         bind_parent_dir: false
         source: null
-        bind: 
-          from: "%{variables.dir.source}"
-          to: "/opt/data"
+        target: "/opt/data"
+        bind: "self"
         class: "wb-50  p-3 mb-1"
         define:
           consensus_dir: /opt/data/consensus
@@ -252,8 +247,10 @@
           type: files
           pattern: "barcode.*consensus_nanopolish.consensus.fasta$"
       services:
-        - "%{shared.services.demultiplex}"
-        - "%{shared.services.guppyplex}"
+        - target: demultiplex
+          shared: True
+        - target: guppyplex
+          shared: True
         - name: nanopolish
           label: "Nanopolish"
           image: "jhuaplbio/basestack_consensus"
@@ -347,8 +344,10 @@
           type: files
           pattern: "barcode.*consensus_medaka.consensus.fasta$"
       services:
-        - "%{shared.services.demultiplex}"
-        - "%{shared.services.guppyplex}"
+        - target: demultiplex
+          shared: True
+        - target: guppyplex
+          shared: True
         - name: medaka
           label: "Medaka"
           image: "jhuaplbio/basestack_consensus"

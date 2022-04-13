@@ -296,7 +296,7 @@ export default {
 			mini:true,
       defaultModule: {},
 			drawer:false,
-			tabProcedure: 9, 
+			tabProcedure: 17, 
 			sel: 0,
 			selected: 'procedures',
       colorList: [
@@ -333,8 +333,11 @@ export default {
       $this.runningServer = false
       $this.createPingInterval()
     })
+    // this.$electron.ipcRenderer.on('getStore', (evt, message)=>{
+    //   $this.store = message
+    // })
+    // this.$electron.ipcRenderer.send("getStore")
     this.$vuetify.icons.dropdown = 'fas fa-square'
-
     try{
       await $this.pingServerPort()
       await this.init()

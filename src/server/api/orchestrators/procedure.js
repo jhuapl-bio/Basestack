@@ -1,5 +1,3 @@
-import e from 'express';
-import { resolve } from 'path';
 const cloneDeep = require("lodash.clonedeep");
 
 /*
@@ -10,15 +8,13 @@ const cloneDeep = require("lodash.clonedeep");
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
   */
-var Docker = require('dockerode');   
 const path = require("path")    
 var  { store }  = require("../../config/store/index.js")
 const { readFile, checkExists, removeFile, downloadSource, decompress_file, itemType  } = require("../controllers/IO.js")
 const { remove_images, pullImage, loadImage } = require("../controllers/post-installation.js")
-const { list_module_statuses }  = require("../controllers/watcher.js")
-const { check_container, getExternalSource, check_image, fetch_external_dockers } = require("../controllers/fetch.js")
+const {  check_image, fetch_external_dockers } = require("../controllers/fetch.js")
 const { Service }  = require("./service.js") 
-const { spawnLog, createLoggingObject } = require("../controllers/logger.js")
+const { spawnLog } = require("../controllers/logger.js")
 
 var logger = store.logger
 // var docker = new Docker();   
@@ -30,6 +26,7 @@ export class Procedure {
 		this.name = procedure.name    
         this.type = 'procedure'
         this.config = procedure  
+        this.lastJob = null
         if (procedure.shared && procedure.shared.variables){
             
             for (let [key, value] of Object.entries(procedure.variables)){
@@ -37,7 +34,18 @@ export class Procedure {
                     this.config.variables[key]= procedure.shared.variables[key]
                 }
             }
-        }        
+        }   
+        if (procedure.shared && procedure.shared.services){
+            procedure.services.forEach((service,i)=>{
+                if (service.shared && procedure.shared.services[service.target]){
+                    this.config.services[i] = procedure.shared.services[service.target]
+                    
+                }
+            }) 
+        }
+        
+        
+          
         this.i =0
         this.dependencies  = cloneDeep(procedure.dependencies).map((d)=>{ 
             d.streamObj = null
@@ -116,12 +124,12 @@ export class Procedure {
             }
         }
 
-	} 
+	}  
     async init(){ 
-        // await this.defineDependencies()
+        // await this.defineDependencies() 
         this.dependencyCheck()
         await this.initServices()
-        return 
+        return  
     }
     async defineDependencies(){
         const $this = this; 
@@ -136,6 +144,7 @@ export class Procedure {
         this.services_config.forEach((service, i)=>{
             let service_obj = new Service(service)
             service_obj.setOptions()
+            
             this.services.push(service_obj)
         })
         return
@@ -336,7 +345,7 @@ export class Procedure {
             return
         } catch (err){
             logger.error(`%o error inerror in initializing service ${this.name}`, err)
-            throw err
+            throw err 
         }
         //Check if all dependencies are installed, if not return false
 
@@ -345,6 +354,14 @@ export class Procedure {
 		const $this = this;
 		return new Promise(function(resolve,reject){
             $this.dependencyCheck().then((dependencies)=>{
+                $this.services.forEach((service)=>{
+                    if (service.env){
+                        if (typeof service.Config == 'object' ){
+                            $this.lastJob = {  ...service.Config    } 
+                        }
+                    }
+                    
+                })
                 resolve()
             }).catch((err)=>{
                 store.logger.error("%o error in dependency check for procedure %s", err, $this.name)
@@ -402,7 +419,7 @@ export class Procedure {
                 dependency.status.stream = spawnLog(stream, $this.logger)
                    
                 dependency.streamObj = stream     
-                $this.buildlog = spawnLog(stream, $this.logger)
+                $this.buildlog = spawnLog(stream, $this.logger) 
                 stream.on("close", (err, data)=>{
                     dependency.status.downloading = false
                     dependency.status.building = false
@@ -437,7 +454,6 @@ export class Procedure {
             if (dependency.version){
                 target = `${dependency.target}:${dependency.version}`
             }
-            console.log("pulling", target)
             pullImage(target, dependency).then((stream, error)=>{
                 dependency.status.building = true
                 dependency.status.downloading = true
@@ -513,19 +529,27 @@ export class Procedure {
                     dependency.status.downloading= false
                     dependency.status.error = err 
                 }).then((stream)=>{
-                    dependency.streamObj = service.stream
-                    let log = spawnLog(service.stream, $this.logger)
-                    dependency.status.stream =  log
-                    try{
-                        dependency.streamObj.on("end", (response)=>{
-                            console.log("closed")
-                            dependency.status.building = false
-                            dependency.status.downloading= false
-                            dependency.status.error = null
-                        })
-                    } catch(err){
-                        store.logger.error(err)
+                    if (service && service.stream){
+                        dependency.streamObj = service.stream
+                        let log = spawnLog(service.stream, $this.logger)
+                        dependency.status.stream =  log
+                        try{
+                            dependency.streamObj.on("end", (response)=>{
+                                console.log("closed")
+                                dependency.status.building = false
+                                dependency.status.downloading= false
+                                dependency.status.error = null
+                            })
+                        } catch(err){
+                            store.logger.error(err)
+                        }
                     }
+                    
+                }).catch((err)=>{
+                    store.logger.error(err)
+                    dependency.status.building = false
+                    dependency.status.downloading= false
+                    dependency.status.error = err 
                 })
             }).catch((err)=>{
                 store.logger.error(err)

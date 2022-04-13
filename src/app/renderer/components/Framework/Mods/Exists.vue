@@ -8,16 +8,7 @@
   -->
 <template>
   <v-layout id="exists" class="mt-2 " > 
-  	<!-- <v-icon color="green" small v-if="value">$check-circle
-    </v-icon>
-
-    <v-tooltip bottom v-else>
-        <template v-slot:activator="{ on }">
-          <v-icon class="" v-on="on" small color="warning lighten-1" >$exclamation-triangle
-          </v-icon>
-        </template>
-        Must Exist!
-    </v-tooltip> -->
+  	
   </v-layout> 
 </template>
 
@@ -42,7 +33,7 @@ export default {
         return{
             value: {
                 required: requiredIf((value)=>{
-                    return value && !this.source.optional
+                    return value && !this.variable.optional
                 })
             },
         }
@@ -51,7 +42,6 @@ export default {
         source: {
             deep: true,
             handler(newValue){
-                console.log("newValue exists", newValue)
                 this.value = newValue.source
                 this.$set(this, 'value', newValue.source)
             }
@@ -59,7 +49,7 @@ export default {
     },
 	props: ['source', 'status', 'service', 'variable'],
     mounted(){
-        this.value = this.source.source
+        this.value = this.source
     },
     
     

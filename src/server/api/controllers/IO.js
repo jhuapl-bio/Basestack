@@ -238,7 +238,9 @@ export async function checkExists(location, globSet){
 			fs.stat(location, function(err, exists){
 				
 				if (err){
-					resolve(false) 
+					resolve(
+						{location: location, exists: false}
+					)
 				}
 				if(exists){
 					// let size = 0 
@@ -246,9 +248,14 @@ export async function checkExists(location, globSet){
 					// 	size = bytesToSize(exists.size)
 					// 	console.log(size, path)
 					// }
-					resolve(true)
+					resolve(
+						{location: location, exists: true}
+					)
 				} else {
-					resolve(false)
+					resolve({
+						location: null,
+						exists: null
+					})
 				}
 			})
 		} else { 
@@ -257,15 +264,21 @@ export async function checkExists(location, globSet){
 				{ cwd: path.dirname(location) },  // you want to search in parent directory
 				(err, files) => {
 					if (err) {
-					resolve(false)
+						resolve(
+							{location: location, exists: false}
+						)
 					}
 					console.log(path.basename(location), path.dirname(location))
 				
 					if (files && files.length) {
 						console.log(files,"<<<<<")
-					resolve(true)
+						resolve(
+							{location: files, exists: true}
+						)
 					} else {
-					resolve(false)
+						resolve(
+							{location: files, exists: false}
+						)
 					}
 				}
 			);

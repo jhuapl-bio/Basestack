@@ -9,53 +9,29 @@
 var express = require('express');
 var router = express.Router();
 const YAML = require("yaml") 
-const { Server } = require("../../serverClass.js")
 var { store } = require("../../config/store/index.js")
 var { error_alert } = require("../controllers/logger.js")
 const logger = store.logger
-import { Procedure } from "../orchestrators/procedure.js";
-const { Service } = require('../orchestrators//service.js');
-const { Job } = require("../orchestrators/job.js")
 
-import upload from "../controllers/upload.js"
 import { cacheParams }  from "../controllers/cache.js" ;
-import { mapTargetConfiguration, mapCacheVariables } from "../controllers/mapper.js";
+import {  mapCacheVariables } from "../controllers/mapper.js";
 import nestedProperty from "nested-property"
 const path = require("path")
 const { create_job } = require("../controllers/configurations.js")
 //Import Validation Scripting
-const { validate_run_dir } = require("../controllers/validate.js")
 let dateFormat = require("date-format")
 
 // Import cusotm modules and functions
 const { 
-	remove_images, 
-	prune_images, 
-	pullImage,
-	loadImage,
-	install_images_offline, 
-	install_images_online, 
-	cancel_load_images } = require("../controllers/post-installation.js")
-const {	define_service, define_module, define_procedure, create_procedure, create_module, create_service } = require("../controllers/init.js")
+	prune_images,  
+	 } = require("../controllers/post-installation.js")
+const {	 create_module } = require("../controllers/init.js")
 const { 
-	getPrimerDirsVersions, 
-	fetch_protocols, 
-	check_image,
-	fetch_annotations, 
-	fetch_primers, 
-	fetch_videos_meta, 
-	fetch_video,
-	fetch_histories,
+
 	fetch_status,
-	listImages,
 	getMeta,
-	getDockerStatus,
-	getServerStatus,
 	fetch_external_dockers,
-	getExternalSource,
-	getRemoteConfigurations,
 	fetch_docker_stats,
-	fetch_external_config,
 	fetch_external_config_target,
 	set_stored, 
 	save_remote_module
@@ -65,33 +41,18 @@ const cloneDeep = require("lodash.clonedeep");
 
 const { 
 	readFile, 
+	getFiles,
 	decompress_file,
-	copyFile,
 	writeFile,
-	readTableFile,
 	archive,
 	removeFile,
-	downloadSource
 } = require("../controllers/IO.js")
 const crypto  = require("crypto")
 
 const { 
-	 start_module,
-	 init,
 	 cancel_container, 
-	 initialize,
 	 updateDockerSocket,
-	 add_selections,
-	 rm_selections
  } = require('../controllers/index')
-
-const {	removeAnnotation } = require("../controllers/annotations.js")
-
-const { 
-	watch_consensus, 
-	init_watch_consensus, 
-	module_status  
-} = require("../controllers/watcher.js")
 
 
 router.get("/server/ping", (req,res,next)=>{
@@ -861,11 +822,11 @@ router.post("/service/run", (req,res,next)=>{ // build workflow according to nam
 				for (let [key, variable] of Object.entries(req.body.variables)){
 					if (variable.source){
 						cacheParams(token, {
-							...bb,
+							...bb,   
 							value: variable.source, 
 							variable:key,
 							target: "source"  
-						})    
+						})     
 					}
 					if (variable.option || variable.option == 0){
 						cacheParams(token, {
@@ -1293,18 +1254,18 @@ router.post("/images/prune", (req,res,next)=>{ //this method needs to be reworke
 				}).catch((err)=>{
 					logger.error("%s %s", "Error in pruning images", err)
 					res.status(419).send({status: 419, message: "There was an error; " + err.message});
-				})			
+				})			 
 		} catch(err2){
 			logger.error("%s %s", "Error in pruning images", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
-		}	
+		}	    
 	})()  
-})  
+})    
  
 
 router.get("/job/stage/:catalog/:module/:procedure", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function() {
-		try { 
+		try {  
 			let module = store.catalog[req.params.catalog].modules[req.params.module]
 			let procedure = module.procedures[req.params.procedure]
 			let services = procedure.services.map((d,i)=>{
@@ -1315,13 +1276,54 @@ router.get("/job/stage/:catalog/:module/:procedure", (req,res,next)=>{ //this me
 				services:services,
 				...procedure.config
 			}
-			res.status(200).json({status: 200, message: "Completed job setting", data: returnable });
+			// if (procedure.lastJob && procedure.lastJob.env){
+			// 	for (let [key, value] of Object.entries(procedure.lastJob.env)){
+			// 		console.log(key,value)
+			// 		if (!returnable.variables[key] && !returnable.variables[key].source){
+			// 			returnable.variables[key] = value.source
+			// 		}
+			// 	}
+			// }
+  			res.status(200).json({status: 200, message: "Completed job setting", data: returnable });
+		} catch(err2){ 
+			logger.error("%s %s", "Error in setting job", err2)
+			res.status(419).send({status: 419, message: error_alert(err2) });
+		}	 
+	})()  
+}) 
+
+router.get("/procedure/status/:catalog/:module/:procedure", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	(async function() {
+		try { 
+			let module = store.catalog[req.params.catalog].modules[req.params.module]
+			let found = module.procedures[req.params.procedure]
+			if (found){ 
+				res.status(200).json({status: 200, message: "Procedure Status fetched", data: found.status });
+			} else {
+				res.status(201).json({status: 201, message: "Could not get procedure status", data: null });
+			}  
+			  
 		} catch(err2){
 			logger.error("%s %s", "Error in setting job", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
 		}	
+	})()   
+})  
+
+router.get("/procedure/config/:catalog/:module/:procedure", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	(async function() {
+		try {  
+			let found = nestedProperty.get(store, `catalog.${req.params.catalog}.modules.${req.params.module}.procedures.${req.params.procedure}`)
+			let returnable = {}	
+			res.status(200).json({status: 200, message: "Got procedure configuration", data: found.config });
+		} catch(err2){
+			logger.error("%s %s", "Error in getting procedure config", err2)
+			res.status(419).send({status: 419, message: error_alert(err2) });
+		}	
 	})()  
-}) 
+
+
+})
 
 router.get("/job/status/:catalog/:module/:procedure", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function() {
@@ -1430,7 +1432,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			// console.log("req body", job.configuration.variables.file.source, job.configuration.variables.file.bind.from)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}`, job)
-			let skip = await job.start()
+			let skip = await job.start(req.body)
 			store.logger.info("Completed or Exited Job!")
 			if (!skip){
 				res.status(200).json({status: 200, message: "Initiated job " + procedure.name, skip: skip });
@@ -1448,7 +1450,20 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 		res.status(419).send({status: 419, message: error_alert(err2) });
 	})
 }) 
-
+router.post("/files/get", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
+	(async function() { 
+		try { 
+			let files = [] 
+			if(req.body.path){
+				files = await getFiles(req.body.path)
+			}
+			res.status(200).json({status: 200, message: "Completed files getter", data: files });
+		} catch(err2){
+			logger.error("%s %s", "Error in getting files in path", err2)
+			res.status(419).send({status: 419, message: error_alert(err2) });
+		}	
+	})()  
+}) 
 
 router.post("/job/cancel", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function() { 
@@ -1494,6 +1509,7 @@ router.get("/job/get/:catalog/:module/:procedure/:token", (req,res,next)=>{ //th
 				complete: false	,
 				exists: false			
 			}
+			console.log("get job")
 			let variables = {}
 			if (job){
 				if( job.status){

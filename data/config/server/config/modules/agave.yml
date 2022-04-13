@@ -92,7 +92,7 @@
         label: "JSON Visualization File"
         hint: "Custom JSON generated from the AGAVE report pipeline"
         source: "<<directory(%{variables.variant.bind.from})>>/variants.json"
-        target: "%{variables.variant.bind.to}/variants.json"
+        target: "<<directory(%{variables.variant.target})>>/variants.json"
   procedures:
     - name: "agave_and_ivar"
       icon: "dna"
@@ -109,8 +109,10 @@
           # command: ["bash","-c", "head ${gff}; samtools mpileup -aa -A -d 0 -B -Q 0 ${bam}   " ]
           command: ["bash","-c", " samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam} | ivar variants -p ${outputName}  -r ${reference}  " ]
           workingdir: "/opt/data"
-        - "%{shared.services.agave_create_report}"
-        - "%{shared.services.agave_visualization}"
+        - target: agave_create_report
+          shared: True
+        - target: agave_visualization
+          shared: True
       variables:
         bam:
           label: "Bam File"
@@ -126,6 +128,7 @@
           label: "Reference GFF3"
           class: "wb-100 p-3 mb-1"
           hint: "Contains Coding regions and annotations"
+          source: null
           option: 0
           options:
             - name: "SARS-CoV-2 GFF Reference"
@@ -133,7 +136,6 @@
               hint: "Coding regions for SARS-CoV-2"
               bind_parent_dir: true
               source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
-              target: "/opt/gff/GCF_009858895.2_ASM985889v3_genomic.gff"
               bind: 
                 from: "%{variables.gff.source}"
                 to: "/opt/gff"
@@ -143,6 +145,21 @@
                 services: 
                   - 0
               class: "wb-100  p-3 mb-1" 
+            # - name: "SARS-CoV-2 GFF Reference"
+            #   element: null
+            #   hint: "Coding regions for SARS-CoV-2"
+            #   bind_parent_dir: true
+            #   source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
+            #   target: "/opt/gff/GCF_009858895.2_ASM985889v3_genomic.gff"
+            #   bind: 
+            #     from: "%{variables.gff.source}"
+            #     to: "/opt/gff"
+            #   append:
+            #     command: " -g ${gff} "
+            #     placement: 2
+            #     services: 
+            #       - 0
+            #   class: "wb-100  p-3 mb-1" 
             - element: "file"
               name: "Custom GFF3"
               source: null
@@ -249,7 +266,6 @@
           type: "docker"
           format: "docker"
       variables:
-        
         variant: 
           label: "VCF or TSV file/folder "
           hint: "Variant file or a folder containing variant called information (VCF, ivar TSV) for input to AGAVE"
@@ -257,7 +273,7 @@
           options:
             - element: "file"
               name: "File (single)"
-              bind_parent_dir: true
+              bind_parent_dir: true 
               bind: 
                 from: "%{variables.variant.source}"
                 to: "/opt/data/variant"
@@ -275,7 +291,6 @@
                 to: "/opt/data/variant"
               class: "wb-100  p-3 mb-1"
           source: null
-        
         depth: 
           label: "Depth file(s)"
           hint: "One or more files to be used as referencing the depth from the sample run"
@@ -329,8 +344,8 @@
           openSelf: True
           label: "JSON Visualization File"
           hint: "Custom JSON generated from the AGAVE report pipeline"
-          source: "<<directory(%{variables.variant.bind.from})>>/variants.json"
-          target: "%{variables.variant.bind.to}/variants.json"
+          source: "<<directory(%{variables.variant.source})>>/variants.json"
+          target: "%{variables.variant.target}/variants.json"
         port:
           shared: True
           target: "%{shared.variables.port}"
@@ -359,8 +374,10 @@
                 services: 
                   - 0
       services:
-        - "%{shared.services.agave_create_report}"
-        - "%{shared.services.agave_visualization}"
+        - target: agave_create_report
+          shared: True
+        - target: agave_visualization
+          shared: True
     
         
           

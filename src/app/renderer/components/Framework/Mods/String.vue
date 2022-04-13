@@ -10,7 +10,7 @@
   <div id="string" > 
   	<v-text-field
         v-model="value"
-        :label="(source.hint ? source.hint : '' )"
+        :label="(variable.hint ? variable.hint : '' )"
     >
     </v-text-field>
     <!-- <v-tooltip bottom v-if="!$v.value.required">
@@ -35,15 +35,7 @@ export default {
             test: "placeholder"
         }
     },
-    // validations (){
-    //     return{
-    //         value: {
-    //             required: requiredIf((value)=>{
-    //             return value && !this.source.optional
-    //             })
-    //         },
-    //     }
-    // },
+  
     computed: {
         
     },
@@ -52,12 +44,14 @@ export default {
 	},
 	props: ['source', 'status', 'service', 'variable'],
     mounted(){
-        this.value = this.source.source
+        this.value = this.source
     },
     watch: {
         value(newValue, oldValue){
             this.$emit("updateValue", newValue )
+        
         }
+        
     }
     
 };

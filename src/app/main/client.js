@@ -126,8 +126,10 @@ export class  Client {
           console.log(err)
         }
         ipcMain.on("changePort", (event, arg) => {
-          process.env.PORT_SERVER = arg
           event.reply('changePort', process.env.PORT_SERVER)
+        })
+        ipcMain.on("getStore", (event, arg) => {
+          event.reply('getStore', this.store)
         })
         ipcMain.on('downloadDocker', async (event,  data   ) => {
           console.log(data)

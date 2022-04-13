@@ -58,6 +58,7 @@ class FileService {
   getModules(param){
     return Api().get(`${baseEndpoint.get()}/modules/get/${param.catalog}`)    
   }
+  
   getInstalledModules(){
     return Api().get(`${baseEndpoint.get()}/catalog/installed/get`) 
   }
@@ -88,7 +89,7 @@ class FileService {
   }
   buildModuleDependency(params){
     return Api().post(`${baseEndpoint.get()}/module/build/dependency`, params)    
-  }
+  } 
   removeModuleDependency(params){
     return Api().post(`${baseEndpoint.get()}/module/build/remove/dependency`, params)    
   }
@@ -98,10 +99,15 @@ class FileService {
   getServices(){
     return Api().get(`${baseEndpoint.get()}/services/get`)    
   }
+  listFilesDirectory(path){
+    return Api().post(`${baseEndpoint.get()}/files/get`, { path: path} )    
+  }
   getProcedures(params){
     return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.module}/${params.token}`)    
   }
-
+  getProcedureConfig(params){
+    return Api().get(`${baseEndpoint.get()}/procedure/config/${params.catalog}/${params.module}/${params.procedure}`)    
+  }
   getJobStaged(params){
     return Api().get(`${baseEndpoint.get()}/job/stage/${params.catalog}/${params.module}/${params.procedure}`)    
   }
@@ -109,7 +115,6 @@ class FileService {
     return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.module}/${params.procedure}`)    
   }
   startJob(params){
-    console.log("Starting job with params", params)
     return Api().post(`${baseEndpoint.get()}/job/start`, params)    
   }
   cancelJob(params){

@@ -19,10 +19,9 @@
       left shaped top vertical 
     >
       There are one or more errors:
-      <div v-for="(v, index) in $v.items.$each" :key="`iter-${index}`">
+      <!-- <div v-for="(v, index) in $v.items.$each" :key="`iter-${index}`">
         <small v-if="!v.source.required">Value for {{v.$model.label}} is required.</small>
-        <small v-if="!v.in_column">Value for {{v.$model.label}} is not valid, check hints.</small>
-      </div>
+      </div> -->
       <template v-slot:action="{ attrs }">
         <v-btn
           color="pink"
@@ -35,24 +34,20 @@
       </template>
     </v-snackbar>
     <v-list height="70vh" class="scroll fill-height fill-width"  two-line >
+        
         <v-list-item  v-for="(item, key) in items.filter((d)=>{
             return !d.hidden
         })"     
-        class="elevation-6 mx-0 my-0 pb-0"
+        class="elevation-6 "
         :key="`listVariables-${key}`">
+            
             <v-list-item-content >
                 <v-list-item-title v-text="item.label"></v-list-item-title>
                 <v-list-item-subtitle class="text-wrap" v-if="item.hint">
                     {{item.hint}}
                 </v-list-item-subtitle>
-                <v-alert class="text-caption"  
-                    dense  dark type="error"
-                    elevation="2" v-if="!in_column(item)"
-                    text
-                >
-                    Invalid input
-                </v-alert>
-                <v-layout v-if="item.options"    width="1px">
+                
+                <v-container v-if="item.options"    width="10px">
                     <v-select
                         v-model="item.optionValue" 
                         :disabled="item.output"
@@ -60,7 +55,7 @@
                         :hint="`Select an item`"
                         @input="setOption($event,key, item)"
                         :items="item.options" 
-                        style="width: 40px"
+                        style="width: 200px"
                         label="Select"
                         item-text="name"
                         persistent-hint
@@ -69,26 +64,29 @@
                     >
                         
                     </v-select>
+                    ------{{item.source}}----
                     <component
                         :is="factory[item.optionValue.element]"
                         v-if="item.optionValue && item.optionValue.element !== 'render' && item.optionValue.element"
                         :disabled="item.optionValue.output"
-                        :source="item.optionValue"
+                        :source="item.source"
                         :variable="item.optionValue"
                         :hidden="item.optionValue.hidden"
+                        @updateValidity="updateValidity(data)"
                         @updateValue="updateValue($event, false, item, key, item.name)"
                         >
                     </component>
                     
                     
-                </v-layout>
-                <v-layout v-else>
+                </v-container>
+                <v-container v-else>
                     <component
                         :is="factory[item.element]"
                         :disabled="item.output"
-                        :source="item"
+                        :source="item.source"
                         :variable="item"
                         :hidden="item.hidden"
+                        @updateValidity="updateValidity(data)"
                         @updateValue="updateValue($event, false, item, key, item.name)"
                         >
                     </component>
@@ -96,7 +94,7 @@
                     
                      
                                    
-                </v-layout>
+                </v-container>
                 
                 <v-alert class="text-caption" v-if="item && item.warning" 
                     dense 
@@ -113,34 +111,15 @@
                 
                     
             </v-list-item-content>
-            
             <v-list-item-action class="">
                 <v-list-item-action-text>
-                    {{ ( item.optional || (item.optionValue && item.optionValue.optional) ? 'Optional ' : "Required " )  }}{{item.element}}
-
-                    <v-tooltip bottom v-if="item.optional || (item.optionValue && item.optionValue.optional)" >
-                        <template v-slot:activator="{ on }">
-                            <v-icon small  v-on="on" class="" color="grey">$slash
-                            </v-icon>
-                        </template>
-                        Optional Input
-                    </v-tooltip>
-                    
-                    <v-tooltip bottom v-else-if="item.source || (item.optionValue && !item.optionValue.element  )">
-                        <template v-slot:activator="{ on }">
-                            <v-icon  v-on="on" small    class="" color="green">$check-circle
-                            </v-icon>
-                        </template>
-                        Value exists 
-                    </v-tooltip>
-                    
-                    <v-tooltip bottom v-else-if="( !item.source ) && !( item.optional) "  >
-                        <template v-slot:activator="{ on }">
-                            <v-icon small  v-on="on" class="" color="warning">$exclamation-triangle
-                            </v-icon>
-                        </template>
-                        Must input value {{item.source}}
-                    </v-tooltip>
+                    <!-- {{ ( item.optional || (item.optionValue && item.optionValue.optional) ? 'Optional ' : "Required " )  }}{{item.element}} -->
+                    <Validation 
+                        :item="item"
+                        :validations="item.validations"
+                        :value="item.source"
+                    >
+                    </Validation>
                     
                 </v-list-item-action-text>
                 
@@ -156,6 +135,7 @@
             
                  
         </v-list-item>
+        
             
 
     </v-list>
@@ -170,45 +150,14 @@ import String from '@/components/Framework/Mods/String.vue';
 import Checkbox from '@/components/Framework/Mods/Checkbox.vue';
 import Exists from '@/components/Framework/Mods/Exists.vue';
 import File from '@/components/Framework/Mods/File.vue';
+import MultiFile from '@/components/Framework/Mods/MultiFile.vue';
 import Dir from '@/components/Framework/Mods/Dir.vue';
 import List  from '@/components/Framework/Mods/List.vue';
 import ConfigurationFile from '@/components/Framework/Mods/ConfigurationFile.vue';
 import Render from '@/components/Framework/Mods/Render.vue';
 import Multiselect from 'vue-multiselect'
 import {  reactive, computed } from '@vue/composition-api'
-
-import useVuelidate from '@vuelidate/core'
-import { required, email, requiredIf, minLength, between, helpers } from '@vuelidate/validators'
-const optional = (optional) => (value) => {  console.log(optional, ",",value); return !optional && !value }
-const in_column  = (value) => {
-    let returnable = true
-    if (value.validations){
-        value.validations.forEach((validation)=>{
-            if (validation.type == 'contains'){
-                if (validation.target.type == 'column'){
-                    console.log(validation)
-                    let source = value.source.map((f)=>{
-                        return f[validation.target.location]
-                    })
-                    let index = source.indexOf(validation.target.value)
-                    if (index <= -1){
-                        returnable = false
-                    }
-                } else {
-                    let index = value.source.includes(validation.target.value)
-                    if (index <= -1){
-                        returnable = false
-                    }
-                }
-            } else {
-                returnable = true
-            }
-        })
-        return returnable
-    } else {
-        return true
-    }
-}
+import Validation from '@/components/Framework/Mods/Validation.vue';
 
 
 const path  = require("path")
@@ -216,6 +165,8 @@ export default {
 	name: 'multi-select',
     components: {
         File,
+        MultiFile,
+        Validation,
         Number,
         Dir,
         String,
@@ -226,39 +177,7 @@ export default {
         ConfigurationFile,
         Multiselect,
     },
-    setup: () => ({ $v: useVuelidate() }),
-    validations (){      
-        return{
-            items: {
-                required,
-                // $each: {
-                //     source: {
-                //         in_column: in_column,
-                //         required: requiredIf((value)=>{
-                //             if (value.options){
-                //                 if (value.optional){
-                //                     return !true
-                //                 } else {
-                //                     let optionValue = value.optionValue
-                //                     return !(value.option >= 0 && optionValue.source)
-                //                 }
-                //             } else {
-                //                 if (value.optional){
-                //                     return !true
-                //                 } else {
-                //                     if (!value.source){
-                //                         console.log("exists")
-                //                     }
-                //                     return !value.source 
-                //                 }
-                //             }
-                            
-                //         })
-                //     }
-                // }
-            }
-        }
-    },
+    
     computed: {
         defaultItem(){
             let item = {}
@@ -283,12 +202,10 @@ export default {
         val || this.close()
       },
       v(newValue){
-          console.log("newvalue", newValue)
       },
       items: {
           deep:true,
           handler(newValue){
-              console.log("Items", newValue)
           }
       },
       dialogDelete (val) {
@@ -307,13 +224,12 @@ export default {
                 }
             this.$emit("updateValue", { src: item.source, option: false, variable: item.name }   )
         },
-       
         electronOpenDir(key){
             const $this = this
             if (key.options ){
                 key = key.options[key.option]
             }
-            if (key.element == 'file'){
+            if (key.element == 'file' || !key.element){
                 this.$electron.shell.openPath(path.dirname(key.source))
             } else {
                 this.$electron.shell.openPath(key.source)
@@ -322,15 +238,15 @@ export default {
         
         updateValue(value, option, variable, name, var_name){
             let src = value
-            if (option){
-                variable.option = src
-                this.$set(variable, 'option', src)
-            } else {
-                variable.source  = src
-                this.$set(variable, 'source', src)
-            }
-            this.$set(this.items, name, variable)
-            this.intervalProgress = false
+            // if (option){
+            //     variable.option = src
+            //     this.$set(variable, 'option', src)
+            // } else {
+            //     variable.source  = src
+            //     this.$set(variable, 'source', src)
+            // }
+            // this.$set(this.items, name, variable)
+            // this.intervalProgress = false
             this.$emit("updateValue", { src: src, option: option, variable: var_name }   )
         },
         save () {
@@ -392,16 +308,11 @@ export default {
     data (){
         return {
             values: [],
-            firstName: '',
-            lastName: '',
-            contact: {
-                email: ''
-            },
             showErrors: false,
+            errors: {},
             dialog: false,
             shippingAddress: null,
             editedIndex: -1,
-            in_column: in_column,
             editedItem: {},
             dialogDelete: false,
             intervalProgress: false,
@@ -414,8 +325,10 @@ export default {
                 "checkbox": "Checkbox",
                 "exists": "Exists",
                 "file": "File",
+                "files": "MultiFile",
                 "render": "Render",
                 "configuration-file": "ConfigurationFile",
+                "json": "ConfigurationFile",
                 "dir": "Dir",
                 "list": "List"
 

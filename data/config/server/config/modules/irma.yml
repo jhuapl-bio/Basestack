@@ -38,19 +38,16 @@
               hint: "FASTQ File used as input, from your own machine"
               bind_parent_dir: true
               source: null
-              target: null
-              bind: 
-                from: "%{variables.fastq.source}"
-                to: "/opt/data"
+              target: "/opt/data/<<basename(%{variables.fastq.source})>>"
+              bind: "directory"
               class: "wb-100  p-3 mb-1" 
             - element: null
               name: "Test File"
-              bind_parent_dir: false
-              source: "${writePath}/modules/irma/test2.fastq" 
-              target: "/opt/src/flu-amd/tests/test2.fastq"
               bind:
                 from: "${writePath}/modules/irma"
                 to: "/opt/data"
+              source: "${writePath}/modules/irma/test2.fastq" 
+              target: "/opt/src/flu-amd/tests/test2.fastq"
         output:
           label: "Output Directory"
           element: "dir"
@@ -63,7 +60,7 @@
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.fastq.source})>>/irma_output"
           path: "<<directory(%{variables.fastq.source})>>/irma_output"
-          target: "%{variables.fastq.to}/irma_output"
+          target: "%{variables.fastq.target}/irma_output"
           define:
             outputdir: "/opt/data/irma_output"
       services:

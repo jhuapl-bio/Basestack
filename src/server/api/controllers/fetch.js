@@ -429,6 +429,7 @@ export async function check_container(container_name){
 				exists: false,
 				running: false,  
 				msg: null,
+				container: {},
 				success:false
 			}
 			await container.inspect((err,inspection)=>{ 
@@ -441,12 +442,11 @@ export async function check_container(container_name){
 						returnable.complete= true
 					} else if (!inspection){
 						returnable.complete= true
+						returnable.container = inspection.Config
 						returnable.running = false
 					} else if (inspection.State.Status == 'exited') {
 						returnable.exists = true
-						// if (container_name == 'mytax_kraken2_report'){
-						// 	console.log(inspection.State)
-						// }
+						returnable.container = inspection.Config
 						if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 127 ) || inspection.State.ExitCode == 1 ){
 							// logger.info(`${container_name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
 							returnable.err  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}. Check Logs!`
@@ -465,19 +465,21 @@ export async function check_container(container_name){
 						returnable.exists = true
 						returnable.running = true
 						returnable.complete = false
+						returnable.container = inspection.Config
 					} 
 				} catch(err2){
 					// logger.error("%o error in inspecting container on end", err2)
 				} finally{
+					if (returnable.container && returnable.container.Env && returnable.container.Env.length > 0){
+						let newEnv = {}
+						returnable.container.Env.forEach((f)=>{
+							const split = f.split("=")
+							newEnv[split[0]] = split[1]
+						})
+						returnable.container.env = newEnv
+					}
 					resolve(returnable)
 				}
-
-
-				// if (err){
-				// 	resolve({container: null, running: false, exists: false})
-				// } else if (info) { 
-				// 	resolve({container: container, running: info.State.Running, exists: true })
-				// } 
 			})
 		})().catch((error)=>{ 
 			logger.error("%s error checking if docker exists", error)  

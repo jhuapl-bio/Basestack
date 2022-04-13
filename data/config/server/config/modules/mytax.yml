@@ -16,8 +16,8 @@
           output: true
           label: "JSON Visualization File"
           hint: ".json file, to be uploaded to the Mytax Visualization Service"
-          source: "<<directory(%{variables.file.bind.from})>>/<<basename,trim(%{variables.file.source})>>.report.json"
-          target: "%{variables.file.bind.to}/<<basename,trim(%{variables.file.source})>>.report.json"
+          source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report.json"
+          target: "<<trim(%{variables.file.target})>>.report.json"
       report: 
           label: "Report From classification, in kraken-style"
           element: "file"
@@ -25,7 +25,7 @@
           openSelf: true         
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report"
-          target: "%{variables.file.bind.to}/<<basename,trim(%{variables.file.source})>>.report"
+          target: "<<trim(%{variables.file.target})>>.report"
   procedures:
     - name: "mytax_kraken2_report"
       title: "Kraken2 Mytax2"
@@ -81,11 +81,10 @@
           element: "file"
           optional: false
           bind_parent_dir: true
-          bind: 
-            from: "%{variables.file.source}"
-            to: "/opt/data"
+          bind: "directory"
           class: "wb-100  p-3 mb-1"
           source: null
+          target: "/opt/data/<<basename(%{variables.file.source})>>"
         memory_mapping: 
           label: "Memory Load Database"
           hint: "Do or Don't load the database into memory. Useful if you are limited in RAM"
@@ -118,9 +117,7 @@
               label: "Report From classification, in kraken-style"
               element: "file"
               bind_parent_dir: true
-              bind: 
-                from: "%{variables.nodes.source}"
-                to: "/taxonomy"
+              bind: "self"
               # class: "wb-100  p-3 mb-1"
               source: null
         db:
@@ -139,6 +136,7 @@
             - element: null
               name: "Flukraken2-2021"
               source: "${writePath}/workflows/mytax/flukraken2"
+              target: "/opt/databases/flukraken2"
               bind:  
                 from: "%{variables.db.source}"
                 to: "/opt/databases/flukraken2" #This ${} is converted into the variable attribute of selected option only!
@@ -148,19 +146,11 @@
               name: "Marine Mitogenome"
               target: "/opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629"
               source: "/opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629"
-            - element: null
-              name: "Marine Mitogenome version 2"
-              source: "${writePath}/workflows/mytax/20210629-all-mitochondrion-20220323-taxa-plus-phil-seqs"
-              bind:  
-                from: "%{variables.db.source}"
-                to: "/opt/databases/mitogenome"
             - element: "dir"
               name: "Custom DB"
               source: null
-              target: null
-              bind: 
-                from: "%{variables.db.source}"
-                to: "/opt/databases" 
+              target: "/opt/databases/<<basename(%{variables.db.source})>>"
+              bind: "self"
         report: 
           target: "%{shared.variables.report}"
           shared: true
@@ -217,12 +207,13 @@
           element: "render"
           label: "Mytax Sunburst Service"
           column: 12
-          output: true
-          target: "localhost:8086"
+          output: false
+          target: 8086
+          source: 8086
           port: true
-          bind:
-            from: "8086"
-            to: "8086"
+          portbind:
+            from: "%{variables.port.source}"
+            to: "%{variables.port.target}"
       dependencies: 
         - target: "jhuaplbio/basestack_mytax"
           version: "v1.1.2"
@@ -241,7 +232,7 @@
           post-run-tab: "render"
           ports: 
             - 8086
-          command: ["bash", "-c", "echo 'Running Mytax Visualization' && python3 -m http.server 8086"]
+          command: ["bash", "-c", "echo 'Running Mytax Visualization' && python3 -m http.server ${port}"]
           
 
               

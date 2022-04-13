@@ -10,9 +10,14 @@
   <div id="number" > 
   	<v-text-field
         v-model="value"
-        type="number"
-        :label="(source.hint ? source.hint : '' )"
+        type="number" 
+        :hint="(variable.hint ? variable.hint : '' )"
     >
+    </v-text-field>
+    <v-text-field
+        v-model="variable.target"
+        type="number" disabled 
+    > 
     </v-text-field>
     <!-- <v-tooltip bottom v-if="!$v.value.required">
         <template v-slot:activator="{ on }">
@@ -42,22 +47,18 @@ export default {
 	methods: {
 	
 	},
-    // validations (){
-    //     return{
-    //         value: {
-    //             required: requiredIf((value)=>{
-    //             return value && !this.source.optional
-    //             })
-    //         },
-    //     }
-    // },
 	props: ['source', 'status', 'service', 'variable'],
     mounted(){
-        this.value = this.source.source
+        this.value = this.source
     },
     watch: {
         value(newValue, oldValue){
             this.$emit("updateValue", newValue )
+        },
+        source(newValue){
+          if (!newValue){
+            this.value = null
+          } 
         }
     }
     

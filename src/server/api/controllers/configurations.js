@@ -14,13 +14,13 @@ export function bytesToSize(bytes) {
    return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
 } 
 export async function create_job(config, params, services, procedure){
-    let job = new Job(procedure)
-    job.defineConfiguration(config)   
+    let job = new Job(procedure,config)
+
+    // job.defineConfiguration(config)   
     if (!services){  
         services = config.services.map((d,i)=>{ 
             return i  
-        }) 
-                  
+        })                   
     }  
     await job.defineServices(services) 
     if (params){       
