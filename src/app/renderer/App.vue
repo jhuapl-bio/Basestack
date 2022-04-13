@@ -1,9 +1,12 @@
 <script setup>
 import {onMounted, reactive, defineProps, computed} from 'vue'
+import {RouterView} from 'vue-router'
+import Dashboard from './views/Dashboard.vue'
 import {useIpcRenderer} from '@vueuse/electron'
 import FileService from '@/services/File-service.js'
 import SystemSummary from './components/Dashboard/System/SystemSummary.vue'
 import AppLayout from './components/AppLayout.vue'
+// import Dashboard from './components/Dashboard/Dashboard.vue'
 
 const ipcRenderer = useIpcRenderer()
 
@@ -192,7 +195,8 @@ function clearAll() {
             v-bind:services="services"
         /> -->
             
-            <!-- <router-view /> -->
+           <Dashboard />
+            <!-- <RouterView /> -->
         </div>
 
         <div v-else-if="!data.ready" class="absolute flex items-center justify-center w-screen h-screen bg-blue-900">

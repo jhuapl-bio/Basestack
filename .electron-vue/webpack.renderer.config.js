@@ -82,7 +82,8 @@ let rendererConfig = {
         options: {
             compilerOptions: {
                 compatConfig: {
-                    MODE: 3
+                    MODE: 3,
+                    
                 }
             }
         }
@@ -162,7 +163,9 @@ if (process.env.NODE_ENV !== 'production') {
   rendererConfig.devtool = 'eval-cheap-source-map'
   rendererConfig.plugins.push(
     new webpack.DefinePlugin({
-      '__static': `"${path.join(__dirname, '../src/app/static').replace(/\\/g, '\\\\')}"`
+      '__static': `"${path.join(__dirname, '../src/app/static').replace(/\\/g, '\\\\')}"`,
+      '__VUE_OPTIONS_API__': true,
+      '__VUE_PROD_DEVTOOLS__': false,
     })
   )
 }

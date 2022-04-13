@@ -7,7 +7,7 @@
   // - # **********************************************************************
 
 import { createApp } from 'vue'
-import Vue from 'vue'
+// import Vue from 'vue'
 import axios from 'axios'
  
 import App from './App'
@@ -41,38 +41,38 @@ library.add( faTerminal, faBorderAll, faClock, faChevronRight, faInfoCircle, faS
 let config = process.env.logfile
 let configError = process.env.errorfile
 // let logger = require("../../shared/logger.js").logger(configError, config)
-import TreeView from "vue-json-tree-view"
-Vue.use(TreeView)
+// import TreeView from "vue-json-tree-view"
+// Vue.use(TreeView)
 
 
-Vue.prototype.$eventHub = new Vue(); // Global event bus
+// Vue.prototype.$eventHub = new Vue(); // Global event bus
 // window.localStorage.clear()
 
-if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
-Vue.http = Vue.prototype.$http = axios
-Vue.config.productionTip = false
+// if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
+// Vue.http = Vue.prototype.$http = axios
+// Vue.config.productionTip = false
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 // Install BootstrapVue
 // Vue.use(BootstrapVue)
-Vue.use(VueSweetalert2)
-Vue.use(Vuelidate)
-Vue.use(ToggleButton)
-Vue.use(Carousel);
-Vue.use(Slide);
-Vue.component('font-awesome-icon', FontAwesomeIcon)
-Vue.component('Carousel', Carousel)
-Vue.component('Slide', Slide)
-Vue.use(require('vue-moment'));
-Vue.use(Multiselect)
+// Vue.use(VueSweetalert2)
+// Vue.use(Vuelidate)
+// Vue.use(ToggleButton)
+// Vue.use(Carousel);
+// Vue.use(Slide);
+// Vue.component('font-awesome-icon', FontAwesomeIcon)
+// Vue.component('Carousel', Carousel)
+// Vue.component('Slide', Slide)
+// Vue.use(require('vue-moment'));
+// Vue.use(Multiselect)
 // Vue.use(Vuex)
 // Vue.use(BootstrapVueIcons)
-Vue.use(VTooltip, {
-	defaultBoundariesElement: document.body
-});
+// Vue.use(VTooltip, {
+// 	defaultBoundariesElement: document.body
+// });
 
-Vue.use(VueScrollTo);
+// Vue.use(VueScrollTo);
 
-[HalfCircleSpinner, AtomSpinner].forEach((x) => Vue.use(x));
+// [HalfCircleSpinner, AtomSpinner].forEach((x) => Vue.use(x));
 
 
 // if (process.env.NODE_ENV === 'development') {
@@ -81,54 +81,54 @@ Vue.use(VueScrollTo);
 
 
 // Vue.prototype.$logger = logger
-import upperFirst from 'lodash/upperFirst'
-import camelCase from 'lodash/camelCase'
+// import upperFirst from 'lodash/upperFirst'
+// import camelCase from 'lodash/camelCase'
 
-const requireComponent = require.context(
-  // The relative path of the components folder
-  './components/Framework/Mods',
-  // Whether or not to look in subfolders
-  false,
-  // The regular expression used to match base component filenames
-  /Base[A-Z]\w+\.(vue)$/
-)
+// const requireComponent = require.context(
+//   // The relative path of the components folder
+//   './components/Framework/Mods',
+//   // Whether or not to look in subfolders
+//   false,
+//   // The regular expression used to match base component filenames
+//   /Base[A-Z]\w+\.(vue)$/
+// )
  
 
 
-requireComponent.keys().forEach(fileName => {
-  // Get component config
-  const componentConfig = requireComponent(fileName)
+// requireComponent.keys().forEach(fileName => {
+//   // Get component config
+//   const componentConfig = requireComponent(fileName)
 
-  // Get PascalCase name of component
-  const componentName = upperFirst(
-    camelCase(
-      // Gets the file name regardless of folder depth
-      fileName
-        .split('/')
-        .pop()
-        .replace(/\.\w+$/, '')
-    )
-  )
-  // Register component globally
-  Vue.component(
-    componentName,
-    // Look for the component options on `.default`, which will
-    // exist if the component was exported with `export default`,
-    // otherwise fall back to module's root.
-    componentConfig.default || componentConfig
-  )
-})
+//   // Get PascalCase name of component
+//   const componentName = upperFirst(
+//     camelCase(
+//       // Gets the file name regardless of folder depth
+//       fileName
+//         .split('/')
+//         .pop()
+//         .replace(/\.\w+$/, '')
+//     )
+//   )
 
-Vue.directive('pin', {
-  bind: function (el, binding, vnode) {
-      Object.entries(binding.value).forEach((d)=>{
-        el[d[0]] = d[1]
-      })
-  }
+// Register component globally
+// Vue.component(
+//     componentName,
+//     // Look for the component options on `.default`, which will
+//     // exist if the component was exported with `export default`,
+//     // otherwise fall back to module's root.
+//     componentConfig.default || componentConfig
+//   )
+// })
 
-})
+// Vue.directive('pin', {
+//   bind: function (el, binding, vnode) {
+//       Object.entries(binding.value).forEach((d)=>{
+//         el[d[0]] = d[1]
+//       })
+//   }
+// })
 
-import vuetify from '@/plugins/vuetify' // path to vuetify export
+// import vuetify from '@/plugins/vuetify' // path to vuetify export
 /* eslint-disable no-new */
 // new Vue({
 //     vuetify,
@@ -138,9 +138,10 @@ import vuetify from '@/plugins/vuetify' // path to vuetify export
 //     template: '<App/>'
 // }).$mount('#app')
 
-createApp(App)
+const app = createApp(App)
     .use(router)
     .use(store)
+    .component('font-awesome-icon', FontAwesomeIcon)
     .mount('#app')
 
 

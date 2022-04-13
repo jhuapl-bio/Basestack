@@ -4,7 +4,7 @@
         
         <article class="flex-grow min-w-[783px] space-y-12 overflow-y-auto w-auto h-screen py-4 px-24">
             <header>
-                <slot name="title" /> 
+                <slot name="title" />
 
                 <!-- <form v-if="moduleSearch" action=""> -->
                     <!-- <ModuleSearch /> -->
