@@ -1,8 +1,8 @@
 <template>
-    <section class="flex flex-grow w-full">
+    <section class="flex w-full">
         <app-menu />
         
-        <article class="flex-grow min-w-[783px] space-y-12 overflow-y-auto w-auto h-screen py-4 px-24">
+        <article class="grow min-w-[783px] space-y-12 overflow-y-auto w-auto h-screen py-4 px-24">
             <header>
                 <slot name="title" /> 
 
