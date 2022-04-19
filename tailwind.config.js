@@ -81,6 +81,9 @@ module.exports = {
       xl: `0 0 38px 0 ${theme.colors.gray["500"]}`,
     }),
     extend: {
+      borderWidth: {
+        '3': '3px'
+      },
       lineHeight: {
         zero: "0",
       },

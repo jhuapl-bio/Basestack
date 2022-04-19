@@ -1,4 +1,3 @@
-client
 .DS_Store
 dist/electron/*
 dist/web/*
@@ -36,4 +35,4 @@ client/*
 *.zip
 cromwell*
 !data/config
-/yarn-error.log
+yarn-error.log

@@ -21,7 +21,7 @@ import Vuex from 'vuex'
 // Font Awesome Icons
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faTerminal, faBorderAll, faClock, faChevronRight, faInfoCircle, faSpinner, faExclamationTriangle, faEllipsisV, faCube, faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
+import {fas} from '@fortawesome/free-solid-svg-icons'
 
 import Vuelidate from 'vuelidate'
 import Multiselect from 'vue-multiselect'
@@ -36,7 +36,7 @@ import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
 // import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
  
 
-library.add( faTerminal, faBorderAll, faClock, faChevronRight, faInfoCircle, faSpinner, faExclamationTriangle, faEllipsisV, faCube, faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
+library.add(fas)
 
 let config = process.env.logfile
 let configError = process.env.errorfile
