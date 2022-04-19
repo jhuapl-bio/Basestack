@@ -6,14 +6,14 @@
   // - # For any other permission, please contact the Legal Office at JHU/APL.
   // - # **********************************************************************
   
-import Vue from 'vue'
+// import Vue from 'vue'
 import Vuex from 'vuex'
 
 import { createPersistedState, createSharedMutations } from 'vuex-electron'
 // import createPromiseAction from './promise-action'
 import modules from './modules'
 
-Vue.use(Vuex)
+// Vue.use(Vuex)
 
 
 // let plugins = []
