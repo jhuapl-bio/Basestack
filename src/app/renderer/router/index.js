@@ -6,7 +6,6 @@ import Logs from "@/views/Logs"
 import System from "@/views/System"
 import Tutorials from "@/views/Tutorials"
 
-
 const router = createRouter({
     history: createWebHistory(),
     routes: [

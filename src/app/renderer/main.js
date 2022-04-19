@@ -6,37 +6,37 @@
   // - # For any other permission, please contact the Legal Office at JHU/APL.
   // - # **********************************************************************
 
-import { createApp } from 'vue'
-// import Vue from 'vue'
-import axios from 'axios'
+import { createApp, configureCompat } from 'vue'
+// import axios from 'axios'
  
 import App from './App'
 import './main.css'
 import router from './router'
-import store from './store'
+// import store from './store'
 // import { BootstrapVue } from 'bootstrap-vue'
-import VueSweetalert2 from 'vue-sweetalert2'
-import 'sweetalert2/dist/sweetalert2.min.css';
-import Vuex from 'vuex'
+// import VueSweetalert2 from 'vue-sweetalert2'
+// import 'sweetalert2/dist/sweetalert2.min.css';
+// import Vuex from 'vuex'
 // Font Awesome Icons
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faTerminal, faBorderAll, faClock, faChevronRight, faInfoCircle, faSpinner, faExclamationTriangle, faEllipsisV, faCube, faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
+import {fas} from '@fortawesome/free-solid-svg-icons'
 
-import Vuelidate from 'vuelidate'
-import Multiselect from 'vue-multiselect'
-import VTooltip from 'v-tooltip'
-import  VueScrollTo from 'vue-scrollto'
-import {Slide, Carousel } from 'vue-carousel';
-const  { HalfCircleSpinner, AtomSpinner } = require('epic-spinners');
-import path from "path" 
-import ToggleButton from 'vue-js-toggle-button'
-import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
+// import Vuelidate from 'vuelidate'
+import Vuelidate from '@vuelidate/core'
+// import Multiselect from 'vue-multiselect'
+// import VTooltip from 'v-tooltip'
+// import  VueScrollTo from 'vue-scrollto'
+// import {Slide, Carousel } from 'vue-carousel';
+// const  { HalfCircleSpinner, AtomSpinner } = require('epic-spinners');
+// import path from "path" 
+// import ToggleButton from 'vue-js-toggle-button'
+// import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
 // import { BootstrapVueIcons } from 'bootstrap-vue'
 // import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
  
 
-library.add( faTerminal, faBorderAll, faClock, faChevronRight, faInfoCircle, faSpinner, faExclamationTriangle, faEllipsisV, faCube, faDownload, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle)
+library.add(fas)
 
 let config = process.env.logfile
 let configError = process.env.errorfile
@@ -138,11 +138,12 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 //     template: '<App/>'
 // }).$mount('#app')
 
-const app = createApp(App)
+configureCompat({
+    MODE: 3,
+})
+
+createApp(App)
     .use(router)
-    .use(store)
+    .use(Vuelidate)
     .component('font-awesome-icon', FontAwesomeIcon)
     .mount('#app')
-
-
-

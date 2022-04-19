@@ -1,6 +1,5 @@
 <script setup>
 import {onMounted, reactive, defineProps, computed} from 'vue'
-import {RouterView} from 'vue-router'
 import Dashboard from './views/Dashboard.vue'
 import {useIpcRenderer} from '@vueuse/electron'
 import FileService from '@/services/File-service.js'
@@ -92,6 +91,7 @@ onMounted(async () => {
     } finally {
         createPingInterval()
         data.ready = true
+        console.log(data)
     }
 })
 
@@ -171,7 +171,7 @@ async function getModules() {
             return module
         })
         .forEach((module, index) => {
-            data.$set(data.catalog, index, module)
+            // data.$set(data.catalog, index, module)
         })
 }
 
