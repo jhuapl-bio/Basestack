@@ -130,7 +130,7 @@
 
 <script>
   import FileService from '../../../services/File-service.js'
-  import { required} from 'vuelidate/lib/validators'
+  import { required } from '@vuelidate/validators'
   import path from "path"
   import Multiselect from 'vue-multiselect'
 

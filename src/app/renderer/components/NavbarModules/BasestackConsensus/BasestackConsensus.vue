@@ -756,7 +756,7 @@
 <script>
 import FileService from '../../../services/File-service.js'
 import swal from 'vue-sweetalert2'
-import { required, minLength } from 'vuelidate/lib/validators'
+import { required, minLength } from '@vuelidate/validators'
 import Multiselect from 'vue-multiselect'
 import path from "path"
 import {HalfCircleSpinner} from 'epic-spinners'
