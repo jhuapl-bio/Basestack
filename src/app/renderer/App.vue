@@ -9,14 +9,7 @@
 
 <template>
     <main id="app" class="subpixel-antialiased bg-white font-body">
-        <div v-if="(ready && running) || devMode" class="flex w-full">
-        <!-- <MainPage
-            v-bind:defaults="defaults"
-            v-bind:modules="modules"
-            v-bind:procedures="procedures"
-            v-bind:services="services"
-        /> -->
-            
+        <div v-if="(ready && running) || devMode" class="flex w-full">           
             <router-view />
         </div>
 
@@ -43,21 +36,16 @@
 </template>
 
 <script>
-// import 'bootstrap/dist/css/bootstrap.css'
-// import 'bootstrap-vue/dist/bootstrap-vue.css'
-// import MainPage from '@/components/MainPage'
 import FileService from '@/services/File-service.js'
 import SystemSummary from './components/Dashboard/System/SystemSummary.vue'
 import Contact from './components/Dashboard/Contact.vue'
 import AppLayout from './components/AppLayout.vue'
-
 
 const moment = require('moment');
 const {dialog}=require("electron")
 export default {
 	name: 'client',
 	components: {
-        // MainPage,
         'app-layout': AppLayout,
         'system-summary': SystemSummary,
         'contact': Contact,
