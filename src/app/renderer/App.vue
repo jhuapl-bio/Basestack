@@ -1,11 +1,9 @@
 <script setup>
 import {onMounted, reactive, defineProps, computed} from 'vue'
-import Dashboard from './views/Dashboard.vue'
 import {useIpcRenderer} from '@vueuse/electron'
 import FileService from '@/services/File-service.js'
 import SystemSummary from './components/Dashboard/System/SystemSummary.vue'
 import AppLayout from './components/AppLayout.vue'
-// import Dashboard from './components/Dashboard/Dashboard.vue'
 
 const ipcRenderer = useIpcRenderer()
 
@@ -20,20 +18,20 @@ const data = reactive({
     drawer: false,
     sel: 0,
     colorList: [
-        "rgb(70, 240,240",
-        "rgb(128,0,0",
-        "rgb(128,128,0",
-        "rgb(255,165,0",
-        "rgb(255,255,0",
-        "rgb(0,128,0",
-        "rgb(128,0,128",
-        "rgb(255,0,255",
-        "rgb(255,0,0",
-        "rgb(0,255,0",
-        "rgb(0,128,128", 
-        "rgb(0,255,255",
-        "rgb(0,0,255",
-        "rgb(0,0,128",
+        "rgb(70, 240, 240)",
+        "rgb(128,0,0)",
+        "rgb(128,128,0)",
+        "rgb(255,165,0)",
+        "rgb(255,255,0)",
+        "rgb(0,128,0)",
+        "rgb(128,0,128)",
+        "rgb(255,0,255)",
+        "rgb(255,0,0)",
+        "rgb(0,255,0)",
+        "rgb(0,128,128)", 
+        "rgb(0,255,255)",
+        "rgb(0,0,255)",
+        "rgb(0,0,128)",
     ],
     modulesInner: [],
     collapsed: false,
@@ -120,7 +118,6 @@ function pingServerPort() {
 async function init() {
     try {
         let fileServiceDefaults = FileService.getDefaults()
-
         await getModules()
         
         if(data.moduleInterval) 
@@ -188,15 +185,7 @@ function clearAll() {
 <template>
     <main id="app" class="subpixel-antialiased bg-white font-body">
         <div v-if="data.ready && data.running" class="flex w-full">
-        <!-- <MainPage
-            v-bind:defaults="defaults"
-            v-bind:modules="modules"
-            v-bind:procedures="procedures"
-            v-bind:services="services"
-        /> -->
-            
-           <Dashboard />
-            <!-- <RouterView /> -->
+            <RouterView />
         </div>
 
         <div v-else-if="!data.ready" class="absolute flex items-center justify-center w-screen h-screen bg-blue-900">
