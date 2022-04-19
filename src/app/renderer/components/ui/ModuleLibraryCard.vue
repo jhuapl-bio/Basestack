@@ -12,23 +12,23 @@
         </div>
 
         <div>
-            <h2 class="markup-h4 strong text-gray-700" :class="{'mt-4': isNotCompact}">{{moduleName}}</h2>
+            <h2 class="text-gray-700 markup-h4 strong" :class="{'mt-4': isNotCompact}">{{moduleName}}</h2>
 
             <div v-if="isNotCompact" class="flex items-center justify-start space-x-2">
-                <span class="markup-label-sm text-gray-600">{{`V${version}`}}</span>
+                <span class="text-gray-600 markup-label-sm">{{`V${version}`}}</span>
 
                 <span 
                     v-if="hasUpdateAvailable" 
-                    class="font-medium markup-label-sm text-blue-900"
+                    class="font-medium text-blue-900 markup-label-sm"
                 >
                     Update Available
                 </span>
             </div>
 
-            <p class="text-left markup-body-sm text-gray-800" :class="{'mt-2': isNotCompact }">
+            <p class="text-left text-gray-800 markup-body-sm" :class="{'mt-2': isNotCompact }">
                 {{description}}
             </p>
-            <a v-if="isNotCompact" :href="link" class="font-bold markup-body-sm text-blue-900">Read more</a>
+            <a v-if="isNotCompact" :href="link" class="font-bold text-blue-900 markup-body-sm">Read more</a>
         </div>
     </div>
 </template>
