@@ -4,11 +4,11 @@
         <v-col sm="12">
         <v-expansion-panels  style="text-align:left;"  v-model="panel">
             <v-col  :sm="(isHovered.name !== catalog.name ? 4 : 4 )"   v-for="(catalog, key) in catalog" :key="catalog.name ">
-                <v-card dense class="configure mx-0 elevation-4 " >
+                <v-card dense class="mx-0 configure elevation-4 " >
                     <v-expansion-panel  v-model="panel" expand  @click="isHovered = catalog">
                                 <v-expansion-panel-header 
                                     :color="(isHovered.name == catalog.name ? 'grey' : 'light')">
-                                    <v-toolbar-title  class=" pl-0 " v-bind:style="{ color: getColor(key, 0.95, (isHovered.name == catalog.name  ), false), fontSize: '0.9em' }">
+                                    <v-toolbar-title  class="pl-0 " v-bind:style="{ color: getColor(key, 0.95, (isHovered.name == catalog.name  ), false), fontSize: '0.9em' }">
                                         {{ catalog.title ? catalog.title : catalog.name }}
                                     </v-toolbar-title>
                                     <v-spacer></v-spacer> 
@@ -47,7 +47,7 @@
                                                 <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
                                             </v-list-item-avatar>
                                             
-                                            <v-list-item-content outlined  class=" " >
+                                            <v-list-item-content outlined  class="" >
                                                 <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
                                                 
                                                 <v-spacer></v-spacer>
@@ -65,7 +65,7 @@
                                                 <v-subheader v-if="item.loaded">Installed</v-subheader>
                                                 <v-tooltip v-if="!item.loaded" bottom>
                                                     <template v-slot:activator="{ on }">    
-                                                        <v-icon v-on="on" small color="light " v-on:click="loadRemoteModule(item)"   style="text-align:right" class="configure ml-2">$download</v-icon>
+                                                        <v-icon v-on="on" small color="light " v-on:click="loadRemoteModule(item)"   style="text-align:right" class="ml-2 configure">$download</v-icon>
                                                     </template>
                                                     Load Remote Module
                                                 </v-tooltip>
@@ -74,7 +74,7 @@
                                         <template  v-if="stagedRemote && !stagedRemote.loaded" v-slot:append>
                                         <v-tooltip bottom>
                                                 <template v-slot:activator="{ on }">    
-                                                    <v-icon  v-on="on" small color="light " v-on:click="loadRemoteModule(stagedRemote)"   style="text-align:right" class="configure ml-2">$download</v-icon>
+                                                    <v-icon  v-on="on" small color="light " v-on:click="loadRemoteModule(stagedRemote)"   style="text-align:right" class="ml-2 configure">$download</v-icon>
                                                 </template>
                                                 Load Remote Module
                                             </v-tooltip>
@@ -165,6 +165,9 @@
             setInterval(()=>{
                 $this.getStatus()
             },4000)    
+
+
+            console.log(this.catalog)
 	    },
 	    watch: { 
             isHovered(newValue){

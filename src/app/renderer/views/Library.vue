@@ -8,20 +8,46 @@
 
 		<template #content>
             <div class="space-y-8">
-                <tabs :tabs="tabs" />
+                <tabs>
+                    <tab name="My Procedures" class="flex flex-col space-y-12">
+                        <h4 class="text-blue-900 markup-h4">My Procedures</h4>
+                    </tab>
 
-                <h3>My Modules</h3> <!-- @todo: this is tied to the active tab -->
-                
-                <section class="grid grid-cols-3 gap-4">
-                    <module-library-card />
-                    <module-library-card />
-                    <module-library-card />
-                    <module-library-card />
-                    <module-library-card />
-                    <module-library-card />
-                    <module-library-card />
-                    <module-library-card />
-                </section>
+                    <tab name="My Modules" class="flex flex-col space-y-12">
+                        <h4 class="text-blue-900 markup-h4">My Modules</h4>
+                        
+                        <section class="grid grid-cols-3 gap-4">
+                            <module-library-card 
+                                v-for="(module, index) in catalog.filter(module => module.status.installed)" :key="module.name" 
+                                :moduleName="module.title"
+                                :version="module.latest_version"
+                                :description="module.tags.join(' | ')"
+                                :hasUpdateAvailable="!module.status.latest_installed"
+                            />
+                        </section>
+                    </tab>
+
+                    <tab name="Browse All Modules" class="flex flex-col space-y-12">
+                        <h4 class="text-blue-900 markup-h4">Browse All Modules</h4> <!-- @todo: this is tied to the active tab -->
+            
+                        <section class="grid grid-cols-3 gap-4">
+                            <!-- @todo: temp made description a list of the module tags. figure out what the description will actually be -->
+                            <module-library-card 
+                                v-for="(module, index) in catalog" :key="module.name" 
+                                :moduleName="module.title"
+                                :version="module.latest_version"
+                                :description="module.tags.join(' | ')"
+                                :hasUpdateAvailable="!module.status.latest_installed"
+                            />
+                        </section>
+                    </tab>
+                </tabs>
+
+               
+
+                <!-- <section>
+                    <library />
+                </section> -->
             </div>
 		</template>
 	</app-layout>
@@ -31,15 +57,20 @@
 import AppLayout from '@/components/AppLayout';
 import Tabs from '../components/ui/Tabs.vue';
 import ModuleLibraryCard from '../components/ui/ModuleLibraryCard.vue';
+import Library from '../components/Dashboard/DashboardDefaults/Library.vue';
+import FileService from '../services/File-service'
+import Tab from '../components/ui/Tab.vue';
 export default {
 	components: {
         'app-layout': AppLayout,
         'tabs': Tabs,
-ModuleLibraryCard,
+        'tab': Tab,
+        ModuleLibraryCard,
+        Library,
     },
-	props: [],
 	data(){
 		return {
+            catalog: [],
             tabs: [
                 {anchor: 'my-procedures', text: 'My Procedures'},
                 {anchor: 'my-modules', text: 'My Modules'},
@@ -47,5 +78,52 @@ ModuleLibraryCard,
             ]
         }
 	},
+    mounted(){
+        this.getStatus()
+
+        setInterval(()=>{
+            this.getStatus()
+        }, 4000)    
+
+        console.log({
+
+        })
+    },
+
+    methods: {
+        async getStatus(){
+            const $this = this
+            try{
+                let response = await FileService.getCatalog()
+                let status_obj = response.data.data
+                let reported_status_obj = {}
+                this.modules_new = [] 
+                this.catalog = response.data.data
+                this.catalog.map((d,i)=>{
+                    d.selected = d.modules[this.defaultModule]
+                    if (!this.stored[d.name]){
+                        this.stored[d.name] = d.modules[this.defaultModule]
+                    }
+                    d.idx = i
+                    d.modules.map((f, y)=>{
+                        f.idx = y
+                        return f
+                    })
+                    return d
+                })
+                if (!this.isHovered.name){
+                    this.isHovered = this.catalog[this.defaultModule]
+                } else {
+                    this.isHovered = this.catalog[this.isHovered.idx]
+                }       
+            } catch(err){
+                this.initial=false
+                console.error(`${err} error in getting status`)
+            } finally {
+                this.intervalChecking = false
+                console.log(this.catalog)
+            }
+        }
+    },
 };
 </script>
