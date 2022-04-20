@@ -1,7 +1,7 @@
 @layer components {
 
     .button {
-        @apply inline-grid items-center font-semibold duration-300 rounded-sm markup-h5 font-display; 
+        @apply inline-grid items-center font-semibold duration-300 rounded-sm outline-none markup-h5 font-display; 
     }
 
     .button > div {
@@ -14,11 +14,11 @@
     }
 
     .button.secondary {
-        @apply bg-blue-100 hover:bg-blue-200 text-blue-800;
+        @apply text-blue-800 bg-blue-100 hover:bg-blue-200;
     }
 
     .button.accent {
-        @apply bg-white border-2 text-blue-900 border-blue-400 hover:bg-blue-100;
+        @apply text-blue-900 bg-white border-2 border-blue-400 hover:bg-blue-100;
     }
 
     .button.neutral {
