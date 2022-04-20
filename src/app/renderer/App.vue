@@ -122,19 +122,36 @@ export default {
         async init() {
             try {
                 const $this = this
-                let modules = await FileService.getModules()
-                let defaults= await FileService.getDefaults()
-                let procedures = await FileService.getProcedures()
-                let services = await FileService.getServices()
-                // let serverStatus = await FileService.getServerStatus()
-                // let dockerStatus = await FileService.getDockerStatus()
-                this.modules = modules.data.data
-                this.defaults = defaults.data.data
-                this.services = services.data.data
-                this.procedures = procedures.data.data
-                this.running = true
-                return 
-            } catch(err) {
+                // let modules = await FileService.getModules()
+                // this.modules = modules.data.data
+                let defaults = await FileService.getDefaults()
+                // await this.getModules()
+                if (this.moduleInterval) {
+                    clearInterval(this.moduleInterval)
+                }
+                this.moduleInterval = setInterval(()=>{
+                // this.getModules()
+            }, 2000)
+            // this.catalog = catalog
+            if (process.env.NODE_ENV == 'development'){
+                // let token = await FileService.createSession()
+                this.$store.token = 'development'
+            } else {
+                // let token = await FileService.createSession() Deprecated for now
+                // this.$store.token = token.data.data
+                this.$store.token = 'development'
+            }
+            // // let serverStatus = await FileService.getServerStatus()
+            // let dockerStatus = await FileService.getDockerStatus()
+            
+            // defaults currently holds [dashboard, library, play, logs.... the main menu items]
+            this.defaults = defaults.data.data
+            console.log({defaults: this.defaults})
+            // this.services = services.data.data
+            // this.procedures = procedures.data.data
+            this.runningServer = true
+            return 
+        } catch(err) {
                 console.error(err, "Backend server is not running")
                 this.running = false 
                 this.ready = true
