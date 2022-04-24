@@ -56,9 +56,10 @@
               name: "Sequencing Summary File"
               bind_parent_dir: true
               bind:  
-                from: "%{variables.input.source}"
+                from: "<<directory(%{variables.input.source})>>"
                 to: "/opt/summary"
               source: null
+              target: "/opt/data/<<basename(%{variables.input.source})>>"
               append:
                 command: " --summary ${input} "
                 placement: 2
@@ -69,10 +70,11 @@
               bind_parent_dir: true
               element: "file"
               bind: 
-                from: "%{variables.input.source}"
+                from: "<<directory(%{variables.input.source})>>"
                 to: "/opt/data"
               class: "wb-100  p-3 mb-1"
               source: null
+              target: "/opt/data/<<basename(%{variables.input.source})>>"
               append:
                 command: " --fasta ${input} "
                 placement: 2
@@ -83,10 +85,11 @@
               bind_parent_dir: true
               element: "file"
               bind: 
-                from: "%{variables.input.source}"
+                from: "<<directory(%{variables.input.source})>>"
                 to: "/opt/data"
               class: "wb-100  p-3 mb-1"
               source: null
+              target: "/opt/data/<<basename(%{variables.input.source})>>"
               append:
                 command: " --fastq_rich ${input} "
                 placement: 2
@@ -97,9 +100,10 @@
               bind_parent_dir: true
               element: "file"
               bind: 
-                from: "%{variables.input.source}"
+                from: "<<directory(%{variables.input.source})>>"
                 to: "/opt/data"
               class: "wb-100  p-3 mb-1"
+              target: "/opt/data/<<basename(%{variables.input.source})>>"
               append:
                 command: " --fastq ${input} "
                 placement: 2
@@ -113,10 +117,11 @@
               bind_parent_dir: true
               element: "file"
               bind: 
-                from: "%{variables.input.source}"
+                from: "<<directory(%{variables.input.source})>>"
                 to: "/opt/data"
               class: "wb-100  p-3 mb-1"
               source: null
+              target: "/opt/data/<<basename(%{variables.input.source})>>"
               append:
                 command: " --fastq_minimal ${input} "
                 placement: 2
@@ -127,17 +132,18 @@
               bind_parent_dir: true
               element: "file"
               bind: 
-                from: "%{variables.input.source}"
+                from: "<<directory(%{variables.input.source})>>"
                 to: "/opt/data"
               class: "wb-100  p-3 mb-1"
               source: null
+              target: "/opt/data/<<basename(%{variables.input.source})>>"
               append:
                 command: " --bam ${input} "
                 placement: 2
                 services: 
                   - 0
           define:
-            outdir: "%{variables.input.bind.to}/NanoPlot"        
+            outdir: "<<directory(%{variables.input.target})>>/NanoPlot"        
         output:
           label: "Output Plots"
           element: "file"
@@ -155,8 +161,9 @@
           element: "file"
           source: false
           bind: 
-            from: "%{variables.barcoded.source}"
+            from: "<<directory(%{variables.barcoded.source})>>"
             to: "/opt/barcode"
+          target: "/opt/barcode/<<basename(%{variables.barcoded.source})>>"
           optional: true
           append:
             - command: " awk -F '\\t' '{ if ($10 != \"FALSE\" && 10 != \"False\" ) {print $0}}'  ${input} > /opt/sequencing_summary.txt; python3 /opt/scripts/add_barcodes_to_summary.py /opt/sequencing_summary.txt  ${barcoded}; input=/opt/databases/barcoded_sequencing_summary.txt.gz;  "

@@ -16,7 +16,7 @@ const { getFiles, readFile,  writeFile, writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 const { spawn } = require("child_process")
 const axios = require("axios")
-const YAML = require("yaml") 
+const YAML = require("js-yaml") 
 const { parseConfigVariables } = require("../../../shared/definitions.js")
 
 export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathVersion){
@@ -26,7 +26,7 @@ export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathV
 	    	if (err2){
 	    		console.error(err2)
 	    		reject()
-	    	} else{
+	    	} else{ 
 	    		if (!stats.isFile()){
 	    			(async ()=>{
 						let validVersion = await validatePrimerVersions(fullpath, primerNameDir,fullpathVersion)
@@ -429,6 +429,7 @@ export async function check_container(container_name){
 				exists: false,
 				running: false,  
 				msg: null,
+				container: {},
 				success:false
 			}
 			await container.inspect((err,inspection)=>{ 
@@ -441,12 +442,11 @@ export async function check_container(container_name){
 						returnable.complete= true
 					} else if (!inspection){
 						returnable.complete= true
+						returnable.container = inspection.Config
 						returnable.running = false
 					} else if (inspection.State.Status == 'exited') {
 						returnable.exists = true
-						// if (container_name == 'mytax_kraken2_report'){
-						// 	console.log(inspection.State)
-						// }
+						returnable.container = inspection.Config
 						if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 127 ) || inspection.State.ExitCode == 1 ){
 							// logger.info(`${container_name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
 							returnable.err  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}. Check Logs!`
@@ -465,19 +465,21 @@ export async function check_container(container_name){
 						returnable.exists = true
 						returnable.running = true
 						returnable.complete = false
+						returnable.container = inspection.Config
 					} 
 				} catch(err2){
 					// logger.error("%o error in inspecting container on end", err2)
 				} finally{
+					if (returnable.container && returnable.container.Env && returnable.container.Env.length > 0){
+						let newEnv = {}
+						returnable.container.Env.forEach((f)=>{
+							const split = f.split("=")
+							newEnv[split[0]] = split[1]
+						})
+						returnable.container.env = newEnv
+					}
 					resolve(returnable)
 				}
-
-
-				// if (err){
-				// 	resolve({container: null, running: false, exists: false})
-				// } else if (info) { 
-				// 	resolve({container: container, running: info.State.Running, exists: true })
-				// } 
 			})
 		})().catch((error)=>{ 
 			logger.error("%s error checking if docker exists", error)  
@@ -596,7 +598,7 @@ export async function fetch_resources(){
 		let system = await si.system()
 		let os  = await si.osInfo()
 		return {cpu: cpu, mem: mem, disk: disk, system: system, os: os}
-	} catch(err){
+	} catch(err){ 
 		logger.error(`${err} <-- error in fetching resources`)
 		throw err
 	}
@@ -613,6 +615,13 @@ export async function fetch_docker_stats(){
 			DockerRootDir: docker_info.DockerRootDir,
 			MemTotal: docker_info.MemTotal
 		}
+		// let df_docker = await store.docker.df()
+		// let filtered = df_docker.Volumes.filter((f)=>{
+		// 	return f.Name == "basestack-docker-viralrecon"
+		// })
+		// console.log(filtered,"<<<")
+
+
 		return docker
 	} catch(err){
 		logger.error(`${err} <-- error in fetching docker version`)

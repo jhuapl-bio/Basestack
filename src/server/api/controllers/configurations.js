@@ -5,24 +5,25 @@ const { set_stored } = require("./fetch.js")
 const { Job } = require("../orchestrators/job")
 const { getFolders, readFile, getFiles} = require("./IO.js") 
 import path from "path" 
-const YAML = require("yaml")    
+const YAML = require("js-yaml")    
  
 export function bytesToSize(bytes) {
    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
    if (bytes == 0) return '0 Byte'; 
    var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
    return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
-} 
+}  
 export async function create_job(config, params, services, procedure){
-    let job = new Job(procedure)
-    job.defineConfiguration(config)   
+    let job = new Job(procedure,config)
+    // job.defineConfiguration(config)   
     if (!services){  
+        
         services = config.services.map((d,i)=>{ 
             return i  
-        }) 
-                  
+        })                   
     }  
-    await job.defineServices(services) 
+    
+    await job.defineServices(services, params) 
     if (params){       
         job.setParams(params)      
     }      
@@ -124,7 +125,6 @@ export const  define_base = async function(){
         store.system.dockerConfigs.subclient = subclient
         store.system.dockerConfigs.default = config
 
-        console.log("Defining the base for modules and procedures of all types...")
         let dind = store.system.orchestrators.dind
 
 
@@ -168,110 +168,7 @@ export const  define_base = async function(){
             }
                
         })
-        // let procedure_config = dind.procedure
-        // let service_config = dind.service
-        // let module_config = dind.module
-        // let result_dind = await import_cfgs(module_config)
-        // if (result_dind){
-        //     let key = Object.keys(result_dind[0])[0]
-        //     let module_dind = result_dind[0]
-        //     store.config.modules[key] = module_dind[key]
-        // }
-
-
-        // result_dind = await import_cfgs(service_config)
-        // if (result_dind){
-        //     result_dind = result_dind[0]
-        //     let keys = Object.keys(result_dind)
-        //     keys.forEach((key)=>{ 
-        //         let service_dind = result_dind[key]
-        //         store.config.services[key] = service_dind
-        //     })
-        // }
-            
-        // result_dind = await import_cfgs(procedure_config)
-        // if (result_dind){
-        //     result_dind.forEach((re)=>{
-        //         for (let [key, procedure] of Object.entries(re)){                
-        //             store.config.procedures[key] = procedure
-        //         }
-        //     })
-        // }
-        
-
-        // promises  = []
-        // let modules = store.system.modules
-        // modules.forEach((module)=>{ 
-        //     custom.modules.push({
-        //         custom: module.custom,
-        //         path: module.path
-        //     })
-        //     promises.push(import_cfgs(module))
-        // })
-        // let results_data = await Promise.allSettled(promises)
-        // if (results_data){
-        //     results_data.forEach((result, i)=>{
-        //         if (result.status == 'fulfilled'){
-        //             result.value.forEach((config)=>{
-        //                 try{ 
-        //                     const key = Object.keys(config)[0]
-        //                     config[key].custom = custom.modules[i].custom
-        //                     store.config.modules[key] = config[key]
-        //                 } catch(err){
-        //                     store.logger.error(err)
-        //                 }
-        //             })
-        //         }
-        //     })
-        // }
-
-        // promises  = []
-        // let services = store.system.services 
-        // services.forEach((service)=>{
-        //     custom.services.push({
-        //         custom: service.custom,
-        //         path: service.path
-        //     })
-        //     promises.push(import_cfgs(service)) 
-        // })
-        // results_default = await Promise.allSettled(promises)
-        // results_default.forEach((result, index)=>{
-        //     if (result.status == 'fulfilled'){ 
-        //         result.value.forEach((config)=>{
-        //             store.config.services = [ ...store.config.services, ...config ]
-        //         })
-        //     }
-        // })
-        // let procedures = store.system.procedures
-        // promises = []
-        // procedures.forEach((procedure)=>{ 
-        //     custom.procedures.push({
-        //         custom: procedure.custom,
-        //         path: procedure.path
-        //     })
-        //     promises.push(import_cfgs(procedure))
-        // })
-        // results_data = await Promise.allSettled(promises)
-        // if (results_data){
-        //     results_data.forEach((result, i)=>{
-        //         if (result.status == 'fulfilled'){
-        //             result.value.forEach((config)=>{
-        //                 for(let [key2, entry] of Object.entries(config)){
-        //                     try{
-        //                         entry.custom = custom.procedures[i].custom
-        //                         store.config.procedures[key2] = entry
-        //                     } catch(err){
-        //                         store.logger.error(err)
-        //                     }
-        //                 }
-        //                 // config.forEach((conf)=>{
-        //                 //     conf.custom = custom.procedures[i]
-        //                 // })
-        //                 // store.config.procedures = [ ...store.config.procedures,  ...config]
-        //             })
-        //         }
-        //     }) 
-        // }
+       
         return 
     } catch(err){
         console.error(err)

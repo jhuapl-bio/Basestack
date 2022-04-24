@@ -7,7 +7,6 @@
   - # **********************************************************************
   -->
 <template>
-  <!-- <v-card id="about" > -->
   	<v-list dense>
 		<v-list-item
 		>
@@ -32,7 +31,6 @@
 					<a class="center-y-img" style="font-size: 90%;" href="" v-on:click="open(entry.url,$event)">{{entry.name}}
 					</a>
 				</v-list-item-subtitle>
-				 <!-- <v-list-item-subtitle v-text=""v-on:click="open(entry.url,$event)" v-text="'Location'" ></v-list-item-subtitle> -->
 			</v-list-item-content>
 		</v-list-item>
 	</v-list>

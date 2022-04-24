@@ -35,11 +35,10 @@
           hint: "Select your first genome (FASTA) file"
           bind_parent_dir: true
           element: "file"
-          bind: 
-            from: "%{variables.genome1.source}"
-            to: "/opt/data"
+          bind: "directory"
           class: "wb-100  p-3 mb-1"
           source: null
+          target: "/opt/data/<<basename(%{variables.genome1.source})>>"
         genome2:
           label: "Genome 2"
           hint: "Select your second genome (FASTA) file"
@@ -49,15 +48,11 @@
               source: "${writePath}/workflows/mash/refseq.genomes.k21s1000.msh"
               target: "/opt/data2/refseq.genomes.k21s1000.msh"
               bind_parent_dir: true
-              bind:  
-                from: "%{variables.genome2.source}"
-                to: "/opt/data2" #This ${} is converted into the variable attribute of selected option only!
-            - bind_parent_dir: true
-              element: "file"
+              bind:  "directory" #This ${} is converted into the variable attribute of selected option only!
+            - element: "file"
               name: "Second File"
-              bind: 
-                from: "%{variables.genome2.source}"
-                to: "/opt/data2"
+              bind: "directory"
+              target: "/opt/data2/<<basename(%{variables.genome2.source})>>"
               class: "wb-100  p-3 mb-1"
               source: null
         sketch1:
@@ -103,7 +98,7 @@
           openSelf: true       
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.genome1.source})>>/mash.dist.tsv" 
-          target: "%{variables.genome1.bind.to}/mash.dist.tsv"
+          target: "<<directory(%{variables.genome1.target})>>/mash.dist.tsv"
         outscreen:
           label: "Output screen metrics"
           element: "file"  
@@ -111,7 +106,7 @@
           openSelf: true       
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.genome1.source})>>/mash.screen.tsv" 
-          target: "%{variables.genome1.bind.to}/mash.screen.tsv"
+          target: "<<directory(%{variables.genome1.target})>>/mash.screen.tsv"
       services:
         - name: mash
           label: "MASH"

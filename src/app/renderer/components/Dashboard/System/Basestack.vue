@@ -65,6 +65,7 @@
       </v-card>
     </v-dialog>
     <v-card-text v-if="releaseNotes.version !== version && releaseNotes.version > version">
+      
       <v-divider class="mb-4 mt-1"></v-divider>
       <v-icon
         
@@ -127,9 +128,6 @@
       })
       this.$electron.ipcRenderer.send("queryRelease", "")
       this.$electron.ipcRenderer.on('mainNotification', (evt, message)=>{
-        // if (message.patchNotes){
-        //   $this.releaseNotes.releaseNotes = message
-        // } 
         console.log(message)
         this.$swal.fire({
                 position: 'center',

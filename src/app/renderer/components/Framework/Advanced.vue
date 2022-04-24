@@ -15,7 +15,6 @@
 
 <script>
 import ListParams  from '@/components/Framework/Mods/ListParams.vue';
-import FileService from '@/services/File-service.js'
 import Render from "@/components/Framework/Mods/Render.vue"
 export default {
     props: ['variables', 'service', 'status'],

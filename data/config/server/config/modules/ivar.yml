@@ -18,26 +18,22 @@
             bind_parent_dir: true
             source: "${writePath}/workflows/ivar/reference.fasta"
             target: "/opt/reference/reference.fasta"
-            bind:   
-              from: "%{variables.reference.source}"
-              to: "/opt/reference" 
+            bind: "directory"
             class: "wb-100  p-3 mb-1" 
           - element: "file" 
             name: "Custom Reference FASTA file"
             source: null
             bind_parent_dir: true
-            target: null
-            bind: 
-              from: "%{variables.reference.source}"
-              to: "/opt/reference" 
+            target: "/opt/reference/<<basename(%{variables.reference.source})>>" 
+            bind: "directory"
+              
       bam:
         label: "Bam File"
         element: "file"
         hint: "Bam alignment file"
         bind_parent_dir: true
-        bind: 
-          from: "%{variables.bam.source}"
-          to: "/opt/data"
+        bind: "directory"
+        target: "/opt/data/<<basename(%{variables.bam.source})>>"
         class: "wb-100  p-3 mb-1" 
         source: null
       outputNameConsensusFile:
@@ -49,7 +45,7 @@
         bind_parent_dir: true
         class: "wb-100  p-3 mb-1"
         source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.consensus.ivar.fa"
-        target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.consensus.ivar.fa"
+        target: "%{variables.bam.target}/<<basename,trim(%{variables.bam.source})>>.consensus.ivar.fa"
         define:
           outputNameConsensus: "<<basename,trim(%{variables.bam.source})>>.consensus.ivar"
       output:
@@ -61,7 +57,7 @@
         bind_parent_dir: true
         class: "wb-100  p-3 mb-1"  
         source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
-        target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+        target: "%{variables.bam.target}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
         define:
           outputName: "<<basename,trim(%{variables.bam.source})>>.ivar"
     services:
@@ -150,7 +146,7 @@
           element: number
           hint: "Minimum per-base quality"
           class: "wb-50 p-3 mb-1"
-          source: 20 
+          source: 10 
           target: null
         output: 
           target: "%{shared.variables.output}"
@@ -169,9 +165,8 @@
               hint: "Coding regions for SARS-CoV-2"
               bind_parent_dir: true
               source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
-              bind: 
-                from: "%{variables.gff.source}"
-                to: "/opt/gff"
+              bind: "directory"
+              target: "/opt/gff/GCF_009858895.2_ASM985889v3_genomic.gff"
               append:
                 command: " -g ${gff} "
                 placement: 2
@@ -182,18 +177,17 @@
               name: "Custom GFF3"
               bind_parent_dir: true
               source: null
-              target: null
+              target: "/opt/gff/<<basename(%{variables.gff.source})>>" 
               append:
                 command: " -g ${gff} "
                 placement: 2
                 services: 
                   - 0
-              bind: 
-                from: "%{variables.gff.source}"
-                to: "/opt/gff" 
+              bind: "directory"
         
       services:
-        - "%{shared.services.consensus}"
+        - target: consensus
+          shared: True
         - name: staphb_ivar
           image: "staphb/ivar"
           orchestrated: false #orchestrated means it r

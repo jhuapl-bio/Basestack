@@ -306,10 +306,6 @@
                     </v-checkbox> 
             </template>
             <template v-slot:item.build="{ item, index }">
-                <!-- <v-btn class="btn" x-small color="primary" 
-                    style=""
-                    @click="buildModuleDependency(module.name, index)">Build
-                </v-btn> -->
                 <v-icon  class="configure" small color="primary" 
                     style="" v-if="item.status.dependComplete"
                     @click="buildModuleDependency(catalog.name, index)">$download
@@ -330,20 +326,12 @@
               
             </template>
             <template v-slot:item.remove="{ item, index }">
-                <!-- <v-btn class="btn" x-small color="orange darken-1" 
-                    style=""
-                    @click="removeModuleDependency(module.name, index)">Remove
-                </v-btn> -->
                 <v-icon class="configure" small color="orange darken-1" 
                     style=""
                     @click="removeModuleDependency(catalog.name, index)">$trash-alt
                 </v-icon>
             </template>
             <template v-slot:item.cancel="{ item, index }">
-                <!-- <v-btn class="btn" x-small color="light" 
-                    style=""
-                    @click="cancelModuleDependency(module.name, index)">Cancel
-                </v-btn> -->
                 <v-icon class="configure" small color="light" 
                     style="" v-if="item.status.building"
                     @click="cancelModuleDependency(catalog.name, index)">$times-circle
@@ -469,10 +457,7 @@ export default {
         selectedModule(newValue){
             this.selectedProcedure = {}
             this.procedures = []
-            this.getStatus()
-            // this.stored[this.catalog.name].selected = newValue
-            
-            
+            this.getStatus()            
         },
         selectedProcedure(newValue){
             if (newValue.dependencies){
@@ -584,8 +569,6 @@ export default {
                         showConfirmButton: true,
                         allowOutsideClick: true
                     });
-                    // let variantIdx  = this.selectedModule.idx
-                    // let procedureIdx  = this.selectedModule.procedures.findIndex(data => data === this.selectedProcedure)
                     FileService.removeProcedureDependency({
                         module: $this.moduleIdx,
                         catalog: $this.catalog.name,
@@ -742,7 +725,6 @@ export default {
                 this.$set(this.selectedProcedure , 'status', this.procedures[this.selectedProcedure.idx].status)
                 
                 if (this.selectedProcedure.status && this.selectedProcedure.status.buildStream){
-                    // logs = this.selectedProcedure.buildStream
                     this.selectedProcedure.status.buildStream.forEach((entry, i)=>{
                         this.procedureLogs.push(entry)
                     })

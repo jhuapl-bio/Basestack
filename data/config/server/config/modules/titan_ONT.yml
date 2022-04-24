@@ -1,0 +1,134 @@
+- name: titan_ONT
+  title: "Titan ONT"
+  icon: "times"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tooltip: "Run Stats on a single BAM file"
+  procedures: 
+    - name: titan_ont #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Titan ONT"
+      icon: "times"
+      module: True
+      init: false 
+      dependencies:
+        - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          label: jhuaplbio/basestack_orchestrator
+          type: "docker-local"
+          build: 
+            path: ${configPath}/modules/orchestrator/Dockerfile
+            file: Dockerfile
+          format: "dockerfile"
+      tags: 
+        - "Quality Check"
+        - "Stats"
+        - "BAM"
+        - "Alignment Stats"
+      tooltip: "Run a full-fledged anaysis on SARS-CoV-2 samples"
+      variables:
+        reads:
+          label: "Reads Demux FASTQ file"
+          hint: "Select your FASTQ file that contains demux'd reads"
+          bind_parent_dir: true
+          element: "file"
+          bind: "directory"
+          target: "/opt/data/<<basename(%{variables.reads.source})>>"
+          class: "wb-100  p-3 mb-1"
+          source: null
+        primers:
+          label: "Primer Schemes"
+          hint: "Must be ARTIC v1-4"
+          options:
+            - element: null
+              name: "V4 Artic Primers"
+              bind: "directory"
+              target: "/opt/schemes/<<basename(%{variables.primers.source})>>"
+              source: "${writePath}/workflows/titan_ONT/artic-ncov2019/primer_schemes/nCoV-2019/V4/SARS-CoV-2.primer.bed"
+            - element: null
+              name: "V3 Artic Primers"
+              bind: "directory"
+              target: "/opt/schemes/<<basename(%{variables.primers.source})>>"
+              source: "${writePath}/workflows/titan_ONT/artic-ncov2019/primer_schemes/nCoV-2019/V3/nCoV-2019.primer.bed"
+            - element: null
+              name: "V2 Artic Primers"
+              bind: "directory"
+              target: "/opt/schemes/<<basename(%{variables.primers.source})>>"
+              source: "${writePath}/workflows/titan_ONT/artic-ncov2019/primer_schemes/nCoV-2019/V2/nCoV-2019.primer.bed"
+            - element: null
+              name: "V1 Artic Primers"
+              bind: "directory"
+              target: "/opt/schemes/<<basename(%{variables.primers.source})>>"
+              source: "${writePath}/workflows/titan_ONT/artic-ncov2019/primer_schemes/nCoV-2019/V1/nCoV-2019.primer.bed"
+            - element: "file"
+              label: "Custom Primer Scheme bed file"
+              name: "Custom primer scheme bed file"
+              bind: "directory"
+              class: "wb-100  p-3 mb-1"
+              source: null
+              target: "/opt/schemes/<<basename(%{variables.primers.source})>>"
+        dockstorefile:
+          label: "Dockstore JSON Configuration"
+          option: 0
+          options:
+            - name: "Dockstore Configuration"
+              hint: "Select your Dockstore JSON"
+              element: "configuration-file"
+              target: "/opt/configuration/custom_Dockstore.json"
+              bind: 
+                from: "${writePath}/workflows/titan_ONT"
+                to: "/opt/configuration"
+              create:
+                  target: "${writePath}/workflows/titan_ONT/custom_Dockstore.json"
+                  type: "json"
+              class: "wb-100  p-3 mb-1"
+              source: {
+                  "titan_ont.primer_bed": "/opt/schemes/<<basename(%{variables.primers.source})>>",
+                  "titan_ont.demultiplexed_reads": "/opt/data/<<basename(%{variables.reads.source})>>",
+                  "titan_ont.samplename": "%{variables.samplename.source}"
+              }
+            - name: "Custom Dockstore File"
+              hint: "Select your Dockstore file"
+              bind_parent_dir: true
+              element: "configuration-file"
+              target: "/opt/configuration/<<basename(%{variables.dockstorefile.source})>>"
+              bind: "directory"
+              class: "wb-100  p-3 mb-1"
+              source: null
+        samplename:
+          label: "Sample Name"
+          element: "string"  
+          hint: "zipped raw data from output of bamstats"
+          output: false   
+          openSelf: false    
+          source: "Sample" 
+          target: "%{variables.samplename.source}"
+        outdata:
+          label: "Output data directory"
+          element: "dir"  
+          output: true   
+          openSelf: true  
+          hint: "Check the numeric folder name in titan_ONT of the same directory as your fastq file for output. titan_ONT/cromwell-executions/titan_ont/**"  
+          bind: "self"   
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.reads.source})>>/titan_ONT" 
+          target: "/tmp"
+      services:
+        - name: orchestrator
+          label: "Orchestrator"
+          image: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          orchestrator: true
+          force_restart: false
+          continuous: true
+          force_init: false
+          command: []
+        - name: titan_ont
+          label: "Titan ONT"
+          image: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          workingdir: "/opt/data"
+          warning: "This process requires internet in its current state"
+          orchestrated: 0
+          command: ["bash","-c", "dockstore workflow launch --entry github.com/theiagen/public_health_viral_genomics/Titan_ONT:sw-augur-columns-dev --json ${dockstorefile}"]
+    

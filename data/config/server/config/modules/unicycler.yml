@@ -29,11 +29,10 @@
           hint: "Can be one of the paired end reads (Illumina) OR your aggregated FASTQ for Long Read Sequencing"
           bind_parent_dir: true
           element: "file"
-          bind: 
-            from: "%{variables.file.source}"
-            to: "/opt/data"
+          bind: "directory"
           class: "wb-100  p-3 mb-1"
           source: null
+          target: "/opt/data/<<basename(%{variables.file.source})>>"
         gfa: 
           label: "Genome Graph Assembly File"
           element: "file"
@@ -43,7 +42,7 @@
           watch: true
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.file.source})>>/unicycler_assembly_long_reads/assembly.gfa"
-          target: "%{variables.file.bind.to}/unicycler_assembly_long_reads/assembly.gfa"
+          target: "/opt/data/unicycler_assembly_long_reads/assembly.gfa"
         assembly: 
           label: "Genome Assembly"
           element: "file"
@@ -52,7 +51,7 @@
           watch: true
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.file.source})>>/unicycler_assembly_long_reads/assembly.fasta"
-          target: "%{variables.file.bind.to}/unicycler_assembly_long_reads/assembly.fasta"
+          target: "/opt/data//unicycler_assembly_long_reads/assembly.fasta"
       services:
         - name: unicycler
           label: "Unicycler"
@@ -85,21 +84,17 @@
         file:
           label: "FASTQ File"
           hint: "Can be one of the paired end reads (Illumina) OR your aggregated FASTQ for Long Read Sequencing"
-          bind_parent_dir: true
           element: "file"
-          bind: 
-            from: "%{variables.file.source}"
-            to: "/opt/data"
+          bind: "directory"
           class: "wb-100  p-3 mb-1"
           source: null
+          target: "/opt/data/<<basename(%{variables.file.source})>>"
         file2:
           label: "FASTQ 2nd File"
           element: "file"
           hint: "The other paired end read (If using Illumina)"
-          bind_parent_dir: true
-          bind: 
-            from: "%{variables.file2.source}"
-            to: "/opt/data"
+          bind: "directory"
+          target: "/opt/data2/<<basename(%{variables.file2.source})>>"
           class: "wb-100  p-3 mb-1"
           source: null
         assembly: 
@@ -110,7 +105,7 @@
           openSelf: True
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.file.source})>>/unicycler_assembly_short_reads/assembly.fasta"
-          target: "%{variables.file.bind.to}/unicycler_assembly_short_reads/assembly.fasta"
+          target: "/opt/data/unicycler_assembly_short_reads/assembly.fasta"
         gfa: 
           label: "Genome Graph Assembly File"
           element: "file"
@@ -120,7 +115,7 @@
           hint: "View in a 3rd party UI like Bandage http://rrwick.github.io/Bandage/"
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.file.source})>>/unicycler_assembly_short_reads/assembly.gfa"
-          target: "%{variables.file.bind.to}/unicycler_assembly_short_reads/assembly.gfa"
+          target: "/opt/data/unicycler_assembly_short_reads/assembly.gfa"
       services:
         - name: unicycler
           label: "Unicycler"

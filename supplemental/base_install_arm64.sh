@@ -262,7 +262,7 @@ case ${answer:0:1} in
     ;;
 esac
 
-read -p "Setup CUDA: ( y / n )? " answer
+read -p "Setup CUDA: r (arm64) / d (amd64) / n)? This should already be installed on your device if you're using a Jetson flashed with Jetpack" answer
 case ${answer:0:1} in
     y|Y )
         install_CUDA_11_6 

@@ -32,9 +32,6 @@ export async function init_dind(){
 			'basestack-network'   
 		]) 
 		let responseVolumes = await createVolumes([  
-			"basestack-docker",
-			"basestack-docker2",
-			"basestack-data",
 			"basestack-docker-certs-ca", 
 			"basestack-docker-certs-client" 
 		])
@@ -77,7 +74,7 @@ export async function import_configurations(){
 	try{
 		let data = await readFile(store.system.configurationFile)
 		data = JSON.parse(data)
-		return data
+		return data  
 	} catch (err){
 		store.logger.error("Could not import config file %o ", err) 
 		throw err

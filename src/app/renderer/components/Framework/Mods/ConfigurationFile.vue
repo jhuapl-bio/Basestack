@@ -17,8 +17,7 @@
                 Edit Me!    
             </v-tooltip>
         </template>
-       
-        <tree-view :data="value"  class=" mt-2 mb-3 pt-0  elevation-5 treeview " style="" @change-data="onChangeData"
+        <tree-view :data="source"  class=" mt-2 mb-3 pt-0  elevation-5 treeview " style="" @change-data="onChangeData"
                 :options="{
                     maxDepth: 3, 
                     rootObjectKey: 'root',
@@ -44,7 +43,6 @@ export default {
     },
     computed: {
         items(){
-            console.log(this.value)
             return [
                 {
                     id: 1,
@@ -67,14 +65,18 @@ export default {
 	},
 	props: ['source', 'status', 'service', 'variable'],
     mounted(){
-        this.value = this.source.source
+        this.value = this.source
     },
     watch: {
         value: {
             deep: true,
             handler(newValue, oldValue){
-                
                 this.$emit("updateValue", newValue )
+            }
+        },
+        source: {
+            deep:true, 
+            handler(newValue){
             }
         }
     }

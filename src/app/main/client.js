@@ -3,7 +3,9 @@ import { ClientMenu } from "./menu"
 import { Updater } from "./updater"
 const { ipcMain, BrowserWindow, dialog, shell, Menu } = require('electron')
 const path = require("path")
- 
+const { download } = require('electron-dl');
+const { spawn } = require('child_process');
+
 export class  Client {
 	constructor(app){
 		this.logger = null
@@ -15,13 +17,7 @@ export class  Client {
         if (!process.env.APPDATA){
             process.env.APPDATA = this.app.getPath('userData')
         }
-        if (isMac){
-            process.env.platform_os = "mac"
-        } else if(isWin){
-            process.env.platform_os = "win"
-        } else {
-            process.env.platform_os = "linux"
-        }
+        
         this.system={
             'isMac': isMac,
             'isWin': isWin
@@ -62,6 +58,7 @@ export class  Client {
         let menu = new ClientMenu(this.logger, this.mainWindow, dialog, this.app, this.system, this.spawned_logs, this.updater)
         menu.store = this.store
         let m = menu.makeMenu() 
+        this.menu = menu
     }
     createUpdater(){ 
         this.updater = new Updater(this.logger, this.mainWindow, dialog)
@@ -129,9 +126,66 @@ export class  Client {
           console.log(err)
         }
         ipcMain.on("changePort", (event, arg) => {
-          process.env.PORT_SERVER = arg
           event.reply('changePort', process.env.PORT_SERVER)
         })
+        ipcMain.on("getStore", (event, arg) => {
+          event.reply('getStore', this.store)
+        })
+        ipcMain.on('downloadDocker', async (event,  data   ) => {
+          console.log(data)
+          const win2 = BrowserWindow.getFocusedWindow();
+          let bat;
+          if (data.platform == 'darwin'){ 
+            let url;
+            if (data.arch == 'x64'){
+              url ="https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-amd64"
+            } else {
+              url = "https://desktop.docker.com/mac/main/arm64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-arm64"
+            }
+            // url = "https://raw.githubusercontent.com/jhuapl-bio/Basestack/main/supplemental/base_install_arm64.sh"
+            let downloading = download(win2, url, {
+              overwrite: true,
+              openFolderWhenDone: true
+            });
+            this.mainWindow.webContents.send("dockerDownloadStatus", {
+              "type": "info",
+              "message": `Downloading file now.. check toolbar for status. Please open the file when complete`
+            })
+            downloading.then((event)=>{
+              let filepath = event.getSavePath()
+              this.mainWindow.webContents.send("dockerDownloadStatus", {
+                "type": "success",
+                "info": `Downloaded success to: ${ filepath }. `,
+                message: "Please open the .dmg (double-click) file to extract and complete installation"
+              })
+            })
+
+           
+          } else if (data.platform == 'linux') {
+            let url;
+            if (data.arch == 'x64'){
+              url = "curl -sSL https://get.docker.com/ | sh"
+            } else {
+              url = "curl -sSL https://get.docker.com/ | sh"
+            }
+            console.log(url)
+            // console.log(await download(win2, url));
+            
+          } else {
+            let url = "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe"
+            let downloading = download(win2, url, {
+              overwrite: true,
+            });
+            downloading.then((event)=>{
+              this.mainWindow.webContents.send("dockerDownloadStatus", {
+                "type": "success",
+                "message": `Downloaded success to: ${event.getSavePath()}`
+              })
+            })
+          }
+          
+          
+        });
         ipcMain.on("queryRelease", (event, arg) => {
           event.reply('releaseNotes', $this.updater.releaseNotes)
         })
