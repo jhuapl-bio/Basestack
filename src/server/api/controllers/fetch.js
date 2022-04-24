@@ -16,7 +16,7 @@ const { getFiles, readFile,  writeFile, writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 const { spawn } = require("child_process")
 const axios = require("axios")
-const YAML = require("yaml") 
+const YAML = require("js-yaml") 
 const { parseConfigVariables } = require("../../../shared/definitions.js")
 
 export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathVersion){
@@ -598,7 +598,7 @@ export async function fetch_resources(){
 		let system = await si.system()
 		let os  = await si.osInfo()
 		return {cpu: cpu, mem: mem, disk: disk, system: system, os: os}
-	} catch(err){
+	} catch(err){ 
 		logger.error(`${err} <-- error in fetching resources`)
 		throw err
 	}
@@ -615,6 +615,13 @@ export async function fetch_docker_stats(){
 			DockerRootDir: docker_info.DockerRootDir,
 			MemTotal: docker_info.MemTotal
 		}
+		// let df_docker = await store.docker.df()
+		// let filtered = df_docker.Volumes.filter((f)=>{
+		// 	return f.Name == "basestack-docker-viralrecon"
+		// })
+		// console.log(filtered,"<<<")
+
+
 		return docker
 	} catch(err){
 		logger.error(`${err} <-- error in fetching docker version`)

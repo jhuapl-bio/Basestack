@@ -54,7 +54,6 @@
 	  	},
 		props: ['imageName'],
 		computed: {
-		// ...mapGetters({staged: 'getStaged'})
 			staged: {
 				get() {
 					return this.$store.getters.getStaged.images[this.imageName]
@@ -66,8 +65,6 @@
 		},
 		
 	    mounted(){
-			// this.staged = this.$store.getters.getStaged.images[this.imageName]
-			// console.log(this.staged, this.$store.getters.getStaged.images['jhuaplbio/basestack_consensus'], this.imageName)
 	    },
 	    watch: { 
 	    },

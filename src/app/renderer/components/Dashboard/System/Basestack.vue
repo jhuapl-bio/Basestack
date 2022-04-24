@@ -128,9 +128,6 @@
       })
       this.$electron.ipcRenderer.send("queryRelease", "")
       this.$electron.ipcRenderer.on('mainNotification', (evt, message)=>{
-        // if (message.patchNotes){
-        //   $this.releaseNotes.releaseNotes = message
-        // } 
         console.log(message)
         this.$swal.fire({
                 position: 'center',

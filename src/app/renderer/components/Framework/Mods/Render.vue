@@ -99,11 +99,6 @@
 	</v-data-table>
 	<br>
 	
-	<!-- <v-row v-if="show && status.exists && status.exists.running" class="">  -->
-		<!-- <object type="text/html"  class="renderObj ml-4 mr-2" :data="getUrl()"></object>
-		<object type="text/html"  class="renderObj ml-4 mr-2" :data="getUrl()"></object> -->
-	<!-- </v-row> -->
-	
 	
   </div> 
   
@@ -112,7 +107,6 @@
 
 <script>
 
-import FileService from '@/services/File-service.js'
 
 export default {
 	name: 'Render',
@@ -201,12 +195,9 @@ export default {
 		open_local_link (link, e) {
           e.stopPropagation()
 		  console.log(this.getUrl(link),link.from)
-          // this.$electron.shell.openExternal(this.getUrl(link.to))
-          // console.log(this.$electron.dialog.open(this.getUrl(link.to)))
           window.open(this.getUrl(link), "browser", 'top=500,left=200,frame=true,nodeIntegration=no')
       	},
 		getUrl(link){
-			//   let url  = `http://localhost:8080`
 			  let url 
 			  if (Array.isArray(link.from)){
 				url  = `http://localhost:${link.from[0]}`
@@ -234,7 +225,6 @@ export default {
   min-height: 90vh;
   position: relative; 
   background: none; 
-  /*border:1px solid #000;  */
   width:100%; 
   height: 100%;
   overflow-y:auto; 

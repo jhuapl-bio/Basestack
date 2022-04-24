@@ -147,7 +147,7 @@ export default new Vuex.Store({
     //   nestedProperty.set(state,`catalog.${watcher.catalog}.modules.${watcher.module}.procedures.${watcher.procedure}.watcher`, watcher.watcher)
     // },
     setLogger (state, logger){
-      state.logger = logger
+      state.logger = logger 
     },
     clearCatalog (state, params){
       try{

@@ -10,15 +10,15 @@ const cloneDeep = require("lodash.clonedeep");
   */
 const path = require("path")    
 var  { store }  = require("../../config/store/index.js")
-const { readFile, checkExists, removeFile, downloadSource, decompress_file, itemType  } = require("../controllers/IO.js")
-const { remove_images, pullImage, loadImage } = require("../controllers/post-installation.js")
+const { readFile, checkExists,  removeFile, downloadSource, decompress_file, itemType  } = require("../controllers/IO.js")
+const { remove_images, removeVolume, checkVolumeExists, pullImage, loadImage, createVolumes } = require("../controllers/post-installation.js")
 const {  check_image, fetch_external_dockers } = require("../controllers/fetch.js")
 const { Service }  = require("./service.js") 
 const { spawnLog } = require("../controllers/logger.js")
-
+  
 var logger = store.logger
 // var docker = new Docker();   
-const fs = require("file-system")    
+const fs = require("file-system")     
 let dockerObj;    
    
 export class Procedure { 
@@ -26,7 +26,10 @@ export class Procedure {
 		this.name = procedure.name    
         this.type = 'procedure'
         this.config = procedure  
+        this.baseConfig = procedure
         this.lastJob = null
+        const $this = this
+
         if (procedure.shared && procedure.shared.variables){
             
             for (let [key, value] of Object.entries(procedure.variables)){
@@ -49,7 +52,7 @@ export class Procedure {
         this.i =0
         this.dependencies  = cloneDeep(procedure.dependencies).map((d)=>{ 
             d.streamObj = null
-            // this.fetchVersion(d) 
+            
             if (d.type == 'docker' || d.type == 'docker-local'){
                 if (d.version){
                     d.fulltarget = `${d.target}:${d.version}`
@@ -89,6 +92,7 @@ export class Procedure {
             fully_installed: false, 
             partial_install: false
         } 
+
         this.interval = {
             checking: false, 
             interval: this.create_interval() 
@@ -96,24 +100,29 @@ export class Procedure {
         this.services_config.forEach((service)=>{
             this.service_steps[service] = false
         }) 
+        
         this.checkDependenciesVersion()
-        const $this = this
+        
         for (let [key, value] of Object.entries($this.config.variables)){
+            
             if (value.options){
                 if (!value.option){
                     value.option = 0
                 } 
+                
                 value.optionValue = value.options[value.option]
-                if (!value.optionValue.source && !value.optionValue.element && typeof value.optionValue != "string"   ){
+                if (typeof value.optionValue == 'object' && !value.optionValue.source && !value.optionValue.element && typeof value.optionValue != "string"   ){
                     value.optionValue.source = true
                 }
-                if (!value.options[value.option].source){
+                
+                if (typeof value.options[value.option] == 'object' && !value.options[value.option].source){
+                    
                     if (typeof value.optionValue == 'string'){
                         value.source = value.optionValue
                     }else {
                         value.source = value.optionValue.source
                     }
-                }
+                } 
             }
             if (value.load){
                 readFile(value.load).then((data)=>{
@@ -232,7 +241,9 @@ export class Procedure {
 				} else if (dependency.type == "docker-local"){ 
                     let target = dependency.fulltarget
 					promises.push(check_image(target))
-				}
+				} else if (dependency.type == 'volume'){
+                    promises.push(checkVolumeExists(dependency.target))
+                }
                 else { 
                     promises.push(checkExists(dependency.target)) 
                 }
@@ -251,9 +262,8 @@ export class Procedure {
 					} else { 
 						dependencies[index].status.exists = false
 						dependencies[index].status.version = null
-                        
-                        
 					}
+                    
                     if (dependencies[index].status && dependencies[index].status.stream && Array.isArray(dependencies[index].status.stream.info)){
                             
                         logs.push(...dependencies[index].status.stream.info)
@@ -277,7 +287,6 @@ export class Procedure {
                     v.push(dependency.value)
 				})
                 $this.status.buildStream = logs
-                
                 $this.status.building = building
                 let fully_installed = v.every((dependency)=>{
                     return dependency
@@ -288,7 +297,7 @@ export class Procedure {
                         return dependency.status.exists
                     } else {
                         return false
-                    }
+                    } 
                 })
                 
                 let exists_all = $this.dependencies.every((dependency)=>{
@@ -298,6 +307,9 @@ export class Procedure {
                         return false
                     }
                 })
+                // if ($this.name == 'nfcore_viralrecon_nanopore'){
+                //     console.log(dependencies)
+                // }
                 $this.status.fully_installed = exists_all
                 $this.status.partial_install = exists_any
                 // $this.status.fully_installed = fully_installed
@@ -719,7 +731,7 @@ export class Procedure {
             dependencies = [dependencies[params]]
         }
         try{
-            dependencies.forEach((dependency_obj, i)=>{            
+            dependencies.forEach((dependency_obj, i)=>{ 
                 dependency_obj.status.downloading = true
                 dependency_obj.status.building = true
                 objs.push(dependency_obj) 
@@ -736,6 +748,13 @@ export class Procedure {
                     promises.push($this.pullImage(dependency_obj))
                 }   else if (dependency_obj.type == 'docker-local' && dependency_obj.build ){
                     promises.push($this.buildImage(dependency_obj))
+                }   else if (dependency_obj.type == 'volume'){
+                    promises.push(createVolumes([dependency_obj.target]).then((f)=>{
+                        dependency_obj.status.building = false
+                    }).catch((err)=>{
+                        dependency_obj.status.building = false
+                        dependency_obj.status.error = err
+                    }))
                 }   else if (dependency_obj.type == 'docker' && dependency_obj.local  ){
                     promises.push($this.loadImage(dependency_obj))
                 } else if (dependency_obj.type == 'orchestration'  ){
@@ -778,6 +797,7 @@ export class Procedure {
                     store.logger.info("Finished building module")
                 }).catch((err)=>{
                     store.logger.error("error in building process: %o", err)
+                    dependency_obj.status.building = false
                 })
             })
             
@@ -794,7 +814,7 @@ export class Procedure {
 	} 
     async remove ( dependencyIdx ){
 		const $this = this; 
-        let promises = []
+        let promises = [] 
         let objs = [] 
         let selectedDep = []
         if (!dependencyIdx && dependencyIdx != 0){
@@ -805,10 +825,12 @@ export class Procedure {
         selectedDep.map((dependency_obj, i)=>{            
             // dependency_obj.status.downloading = true
             objs.push(dependency_obj) 
-            if (dependency_obj.type == 'docker' || dependency_obj.type == 'docker-image'  ){
+            if (dependency_obj.type == 'docker' || dependency_obj.type == 'docker-local'  ){
                 let target = dependency_obj.fulltarget
-                console.log("remove image", target)
                 promises.push(remove_images(target)) 
+            } else if (dependency_obj.type == 'volume'){
+                console.log("remove module volume")
+                promises.push( removeVolume(dependency_obj.target)  )
             }
             else{
                 promises.push(removeFile(dependency_obj.target, dependency_obj.type, false) )

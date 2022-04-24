@@ -48,12 +48,8 @@
 </template>
 
 <script>
-import FileService from '../../../services/File-service.js'
-// import MutationTable from './MutationTable'
-
   export default {
     name: 'nextstrain',
-    // components: {MutationTable},
     props: ['data'],
     data(){
       return {
@@ -97,17 +93,13 @@ import FileService from '../../../services/File-service.js'
 </script>
 <style>
 #nextstrain{
-  /* height:100%; */
   overflow-y:auto;
   width: 100%;
 }
 #nextstrainObj{
-  /* min-height: 70vh; */
   position: relative; 
   background: none; 
-  /*border:1px solid #000;  */
   width:100%; 
-  /* height: 100%; */
   overflow-y:auto; 
 }
 </style>

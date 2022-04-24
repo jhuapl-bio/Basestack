@@ -217,7 +217,6 @@ export default {
                 emptyRow[key] = null
             })
 			this.source.splice(index, 0, emptyRow)
-            // this.$set( this.values, this.values)
 		},
 		rmManifestRow(index){
 			this.source.splice(index, 1)

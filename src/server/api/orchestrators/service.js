@@ -393,8 +393,9 @@ export class Service {
             sep = ","
         }
         
-        let tsv_file_content = item.map((d)=>{
+        let tsv_file_content = item.map((d)=>{ 
             let full = []
+             
             if (header && !Array.isArray(d) && typeof d == 'object'){
                 header.forEach((head)=>{
                     full.push(d[head])
@@ -407,7 +408,12 @@ export class Service {
             }
             return full.join( ( sep == 'tab' ? "\t" : sep )  )
 
-        }).join('\n') 
+        })
+        if (header){
+            tsv_file_content.unshift(header.join(( sep == 'tab' ? "\t" : sep )))
+        }
+        
+        tsv_file_content = tsv_file_content.join('\n') 
         if (newline){
             tsv_file_content = tsv_file_content + "\n"
         }
@@ -420,7 +426,7 @@ export class Service {
         let defaultVariables = this.config.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                selected_option = ( typeof selected_option.optionValue == 'object' ? selected_option.optionValue : selected_option )
+                
                 if (typeof selected_option == 'object' && selected_option.portbind){
                     let from = selected_option.portbind.from
                     let to = selected_option.portbind.to 
@@ -459,27 +465,25 @@ export class Service {
                     if (typeof b == 'object'){
                         binds.push(`${b.from}:${b.to}`)
                     } else {
-                        binds.push(b)
+                        binds.push(b) 
                     }
-                })  
+                })   
             } else {
                 let b  = $this.config.bind
                 binds.push(`${b.from}:${b.to}`)
             } 
         }
-        // if (params.bind){  
-        //     params.bind.forEach((b)=>{ 
-        //         binds.push(b) 
-        //     })
-        // } 
+        if (this.config.orchestrator){
+            // binds.push(`${path.join(store.system.writePath,  "workflows", this.name, "docker") }:/var/lib/docker`)
+            binds.push(`basestack-docker-${$this.name}:/var/lib/docker`)
+        }
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                
-                selected_option = ( typeof selected_option.optionValue == 'object' ? selected_option.optionValue : selected_option )
                 if (typeof selected_option == 'object' && selected_option.bind){
                     let from = selected_option.source
                     let to = selected_option.target
-                    if (Array.isArray(selected_option.source)){
+                    
+                    if (Array.isArray(selected_option.source) && selected_option.element != 'list'){
                         let s = from.map((f)=>{
                             
                             if (selected_option.bind == 'directory'){
@@ -490,15 +494,16 @@ export class Service {
                                 return f
                             } 
                         })   
+                        
                         s.forEach((directory,i)=>{
                             // let file = `${i}_file` 
-                            let finalpath = selected_option.target[i]
+                            let finalpath = selected_option.target[i] 
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
                                 binds.push(`${directory}:${finalpath}`)
-                            } 
+                            }  
                             seenTargetTos.push(finalpath)
-                        }) 
-                    } else {
+                        })  
+                    } else { 
                         if (selected_option.bind == 'directory'){
                             let finalpath = path.dirname(to)
                             if (seenTargetTos.indexOf(finalpath) == -1 && from){
@@ -517,7 +522,7 @@ export class Service {
                     }
 
                     
-                    
+                     
                 }
             }
         }
@@ -525,6 +530,7 @@ export class Service {
 
         return 
     }  
+    
     defineEnv(){
         let env = []
         let bind = [] 
@@ -537,7 +543,6 @@ export class Service {
                     selected_option = selected_option.optionValue
                 } 
                 let full_item = cloneDeep(selected_option)
-                
                 if (typeof selected_option == 'object'){ 
                     if (selected_option.output && !selected_option.target){
                         store.logger.info(`no defined target for variable: ${key}`) 
@@ -605,7 +610,7 @@ export class Service {
                 /////////////////////////////////////////////////
                 let custom_variables = params.variables 
                 let defaultVariables = {}   
-                let seenTargetTos = [] 
+                let seenTargetTos = []  
                 let seenTargetFrom = []  
                 defaultVariables = $this.config.variables 
                 if ($this.config.serve ){ 
@@ -619,16 +624,16 @@ export class Service {
                 $this.definePortBinds()
                 $this.updatePorts($this.portbinds,options)
                 
-                
+                  
                 if (defaultVariables &&  typeof defaultVariables == 'object'){
                     for (let [name, selected_option ] of Object.entries(defaultVariables)){
+
+                        
                         if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
                             let targetBinding = selected_option
-                            let full_item = cloneDeep(selected_option)
-                            if (selected_option.options && selected_option.option >=0){
-                                selected_option= selected_option.optionValue
-                            }  
-                            if (selected_option.framework){
+                            let full_item = cloneDeep(selected_option)   
+                              
+                            if (selected_option.framework){ 
                                 let validated_framework = validateFramework(selected_option.framework, defaultVariables)
                                 selected_option.source = validated_framework
                             }     
@@ -639,7 +644,7 @@ export class Service {
                                 )  
                                 promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
                                     logger.error(err) 
-                                }))  
+                                }))   
   
                             }  
                             if (selected_option.create){
@@ -651,35 +656,38 @@ export class Service {
 
                                 } else if (selected_option.create.type == 'json' ) {
                                     promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
-                                        logger.error(err)
-                                    }))
-                                } else { 
+                                        logger.error(err) 
+                                    }))      
+                                } else {   
                                     promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
-                                        logger.error(err)
-                                    }))  
-                                }
-                            } 
-                            
-                            function append_commands(appendable){
+                                        logger.error(err)    
+                                    }))        
+                                }                      
+                            }    
+                                 
+                            function append_commands(appendable){  
                                 let serviceFound = appendable.services.findIndex(data => data == $this.serviceIdx)
                                 if (serviceFound >= 0){ 
                                     let service = appendable
-                                    if (service.placement >= 0){
+                                       
+                                    if (service.placement >= 0){ 
                                         if (appendable.position == 'start'){
                                             options.Cmd[service.placement] =  appendable.command + " " + options.Cmd[service.placement]  +  " "
-                                        }else {
+                                        }else {    
                                             options.Cmd[service.placement] =  options.Cmd[service.placement]  +  appendable.command + " "
-                                        }
-                                    } else{
+                                        } 
+                                    } else{ 
                                         if (appendable.position == 'start'){
                                             options.Cmd[options.Cmd.length - 1] =  appendable.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
                                         } else {
                                             options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   appendable.append.command
                                         }
                                     }
-        
+         
                                 } 
                             }
+
+                            // console.log(selected_option,"<<<<<")
                             // Define the command additions if needed  
                             if (selected_option.append && cmd && ( !selected_option.element ||  full_item.source ) ){ 
                                 if (!Array.isArray(selected_option.append)) {
@@ -727,12 +735,12 @@ export class Service {
                 }  
                 if ($this.override.image){
                     options.Image = $this.override.image
-                }
+                } 
                 options.Env = [...options.Env, ...$this.env ]  
                 options.HostConfig.Binds = [...options.HostConfig.Binds, ...$this.binds ]
                 options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
-                logger.info("%o _____", options)
-                logger.info(`starting the container ${options.name} `)
+                logger.info("%o _____ %o", options, $this.binds)
+                // logger.info(`starting the container ${options.name} `)
                 if ($this.config.dry){ 
                     resolve() 
                 } else {
@@ -805,7 +813,6 @@ export class Service {
                                 $this.status.stream.info.push("%s", JSON.stringify(options, null, 4))
                                 $this.status.stream.info.push(`starting the container ${options.name} `)
                                 $this.stream = stream 
-                                console.log("container")
                                 container.start(function (err, data) {
                                     store.logger.info("Starting... %s", $this.name)
                                     if (err){  

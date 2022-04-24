@@ -50,7 +50,7 @@
                 </template>
                 View Visualization in Browser. Ensure that the service is running first!
             </v-tooltip> 
-            <v-tooltip bottom> 
+            <v-tooltip bottom v-if="item.source"> 
               <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon  @click="determineOpen(item)">
                   <v-icon 
@@ -62,9 +62,9 @@
               </template>
               {{item.source}}
             </v-tooltip>
-            <v-tooltip bottom v-if="item.openSelf">
+            <v-tooltip bottom v-if="item.openSelf && item.source">
               <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item, true)">
+                <v-btn v-on="on" icon  @click="determineOpen(item, true)">
                   <v-icon 
                     class="" color="primary" 
                     medium>$file
@@ -142,12 +142,9 @@ export default {
 	methods: {
         open_link (link, e) {
           e.stopPropagation()
-          // this.$electron.shell.openExternal(this.getUrl(link.to))
-          // console.log(this.$electron.dialog.open(this.getUrl(link.to)))
           window.open(this.getUrl(link), "browser", 'top=500,left=200,frame=true,nodeIntegration=no')
       	},
         getUrl(link){ 
-        //   let url  = `http://localhost:8080`
             let url  = `http://localhost:${link.bind.to}`
             if (link.suburl){
                 url = url +link.suburl

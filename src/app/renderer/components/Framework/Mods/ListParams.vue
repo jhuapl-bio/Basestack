@@ -4,24 +4,15 @@
         dark dense class="elevation-6" style="width: 100%"
     >
         <v-toolbar-title  >{{ ( title ? title : 'Inputs' )  }}</v-toolbar-title>
+        
         <v-spacer>
         </v-spacer>
-        <!-- <v-app-bar-nav-icon dense v-if="$v.items.$invalid" > 
-            <v-btn small  dense @mouseover="showErrors = true"  @mouseout="showErrors = false">
-                <v-icon color="red" small >$exclamation
-                </v-icon>
-            </v-btn>
-                
-        </v-app-bar-nav-icon> -->
     </v-toolbar>
     <v-snackbar
       v-model="showErrors" :timeout="-1"
       left shaped top vertical 
     >
       There are one or more errors:
-      <!-- <div v-for="(v, index) in $v.items.$each" :key="`iter-${index}`">
-        <small v-if="!v.source.required">Value for {{v.$model.label}} is required.</small>
-      </div> -->
       <template v-slot:action="{ attrs }">
         <v-btn
           color="pink"
@@ -42,7 +33,8 @@
         :key="`listVariables-${key}`">
             
             <v-list-item-content >
-                <v-list-item-title v-text="item.label"></v-list-item-title>
+                <v-list-item-title v-text="item.label + '→${' + item.name  + '}' "></v-list-item-title>
+                
                 <v-list-item-subtitle class="text-wrap" v-if="item.hint">
                     {{item.hint}}
                 </v-list-item-subtitle>
@@ -64,12 +56,11 @@
                     >
                         
                     </v-select>
-                    ------{{item.source}}----
                     <component
                         :is="factory[item.optionValue.element]"
                         v-if="item.optionValue && item.optionValue.element !== 'render' && item.optionValue.element"
                         :disabled="item.optionValue.output"
-                        :source="item.source"
+                        :source="items[key].source"
                         :variable="item.optionValue"
                         :hidden="item.optionValue.hidden"
                         @updateValidity="updateValidity(data)"
@@ -113,7 +104,6 @@
             </v-list-item-content>
             <v-list-item-action class="">
                 <v-list-item-action-text>
-                    <!-- {{ ( item.optional || (item.optionValue && item.optionValue.optional) ? 'Optional ' : "Required " )  }}{{item.element}} -->
                     <Validation 
                         :item="item"
                         :validations="item.validations"
@@ -130,6 +120,13 @@
                     </template>
                     {{  ( item.source ? item.source : item.options[item.option].source  )     }}
                 </v-tooltip> 
+                <v-tooltip bottom v-if="item.custom">
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" @click="removeCustomVariable(item.name)" class="configure" small>$trash-alt
+                        </v-icon>
+                    </template>
+                    Remove Custom Variable
+                </v-tooltip>
                 
             </v-list-item-action>
             
@@ -213,6 +210,9 @@ export default {
       },
     },
 	methods: {
+        removeCustomVariable(variable){
+            this.$emit("removeCustomVariable", variable)
+        },
         setOption(event, index, item){            
             let idx = item.options.findIndex(data => data.name == event.name)
             item.option = idx
@@ -238,15 +238,6 @@ export default {
         
         updateValue(value, option, variable, name, var_name){
             let src = value
-            // if (option){
-            //     variable.option = src
-            //     this.$set(variable, 'option', src)
-            // } else {
-            //     variable.source  = src
-            //     this.$set(variable, 'source', src)
-            // }
-            // this.$set(this.items, name, variable)
-            // this.intervalProgress = false
             this.$emit("updateValue", { src: src, option: option, variable: var_name }   )
         },
         save () {
@@ -290,7 +281,6 @@ export default {
                 emptyRow[key] = null
             })
 			this.items.splice(index, 0, emptyRow)
-            // this.$set( this.values, this.values)
 		},
 		rmManifestRow(index){
 			this.items.splice(index, 1)
@@ -345,131 +335,3 @@ export default {
 
 <style>
 </style>
-
- <!-- <v-card height="70vh" class="scroll fill-height fill-width ">
-    <v-expansion-panels dense multiple v-model="panel" >
-        <v-expansion-panel  dense v-for="(item, key) in items.filter((d)=>{
-            return !d.hidden
-        })"     
-        class="elevation-6 "
-        :key="`listVariables-${key}`" >
-                <v-expansion-panel-header >
-                    <template v-slot:actions>
-                        <v-icon small color="grey">
-                        $chevron-up
-                        </v-icon>
-                    </template>
-                    <v-card class="mr-4">
-                        <v-card-title class="m">
-                            {{item.label}}
-                        </v-card-title>
-                        <v-card-subtitle class="">
-                            
-                            {{ ( item.optional ? 'Optional ' : "Required " )  }}{{item.element}}
-                            <v-tooltip bottom v-if="item.source || ( item.optionValue && item.optionValue.source)">
-                                <template v-slot:activator="{ on }">
-                                    <v-icon  v-on="on" small    class="" color="green">$check-circle
-                                    </v-icon>
-                                </template>
-                                Value exists
-                            </v-tooltip>
-                            <v-tooltip bottom v-else-if="(!item.source || ( item.optionValue && !item.optionValue.source) ) && !( item.optional) "  >
-                                <template v-slot:activator="{ on }">
-                                    <v-icon small  v-on="on" class="" color="warning">$exclamation-triangle
-                                    </v-icon>
-                                </template>
-                                Must input value
-                            </v-tooltip>
-                            <v-tooltip bottom v-if="(item.element == 'file' || item.element == 'dir') &&  ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )">
-                                <template v-slot:activator="{ on }">
-                                    <v-icon small v-on="on"  @click="electronOpenDir(item, $event)" class="configure" color="primary">$archive
-                                    </v-icon>
-                                </template>
-                                {{  ( item.source ? item.source : item.options[item.option].source  )     }}
-                            </v-tooltip> 
-                        </v-card-subtitle>
-                    </v-card>
-                    
-                    
-                    
-                    
-                </v-expansion-panel-header>
-                <v-expansion-panel-content dense>
-                    <v-layout class=" mx-3" v-if="item.options"    width="10px">
-                       
-                        <v-select
-                                v-model="item.optionValue" 
-                                :disabled="item.output"
-                                class="text-caption"
-                                :hint="`Select an item`"
-                                @input="setOption($event,key, item)"
-                                :items="item.options" 
-                                style="width: 200px"
-                                label="Select"
-                                item-text="name"
-                                persistent-hint
-                                return-object
-                                single-line
-                            >
-                                
-                            </v-select>
-                            <component
-                                :is="factory[item.optionValue.element]"
-                                v-if="item.optionValue && item.optionValue.element !== 'render' && item.optionValue.element"
-                                :disabled="item.optionValue.output"
-                                :source="item.options[item.option]"
-                                :variable="item.optionValue"
-                                :hidden="item.optionValue.hidden"
-                                @updateValue="updateValue($event, false, item, key, item.name)"
-                                >
-                            </component>
-                            
-                            
-                        </v-layout>
-                        <v-layout class="mx-3" v-else>
-                           
-                            <component
-                                :is="factory[item.element]"
-                                v-if="item.element !== 'render'"
-                                :disabled="item.output"
-                                :source="item"
-                                :variable="item"
-                                :hidden="item.hidden"
-                                @updateValue="updateValue($event, false, item, key, item.name)"
-                                >
-                            </component>
-                            
-                            <v-tooltip bottom v-else>
-                                <template v-slot:activator="{ on }">
-                                    <v-btn icon-and-text v-on="on" class="configure mt-5 mb-5 mr-5 ml-5" @click="open_link(item, $event)" color="info" large>
-                                        <v-icon align="end"  >$external-link-alt
-                                        </v-icon>
-                                        Click Me! 
-                                    </v-btn>
-                                </template>
-                                View Visualization in Browser. Ensure that the service is running first!
-                            </v-tooltip>  
-                                        
-                        </v-layout>
-                            
-                    
-                    <v-alert class="text-caption" v-if="item && item.warning" 
-                        dense 
-                        text
-                        border="left"
-                        type="info"
-                        elevation="2"
-                    
-                    >
-                        <v-icon  small >$exclamation
-                        </v-icon>
-                        {{item.warning}}
-                    </v-alert> 
-                </v-expansion-panel-content>
-            
-                 
-        </v-expansion-panel>
-            
-
-    </v-expansion-panels>
-    </v-card> -->

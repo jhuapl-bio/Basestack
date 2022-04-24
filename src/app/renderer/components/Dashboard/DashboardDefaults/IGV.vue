@@ -35,7 +35,6 @@
   min-height: 90vh;
   position: relative; 
   background: none; 
-  /*border:1px solid #000;  */
   width:100%; 
   height: 100%;
   overflow-y:auto; 

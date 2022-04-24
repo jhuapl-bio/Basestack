@@ -35,7 +35,13 @@ RUN mkdir -p ~/.dockstore \
 RUN curl -o requirements.txt "https://dockstore.org/api/metadata/runner_dependencies?client_version=1.11.5&python_version=3" 
 RUN apk add libxslt-dev && cat requirements.txt
 RUN  pip install -r requirements.txt && cwltool --version
+RUN curl -s https://get.nextflow.io | bash
+RUN pip install  nf-core
+RUN mv nextflow /usr/local/bin/
 RUN dockstore --version
+RUN apk add --no-cache parallel ncurses && \
+    mkdir -p ~/.parallel && touch ~/.parallel/will-cite
+RUN echo "done"
 # RUN echo 'alias curl="curl -k"' | tee -a  ~/.bashrc
 # RUN mkdir -p  /etc/docker/ && echo '{"dns": ["8.8.4.4", "8.8.8.8"]} ' | tee /etc/docker/daemon.json
 # RUN mkdir -p  /etc/docker/ && echo '{"dns": [ "172.17.0.9"]} ' | tee /etc/docker/daemon.json

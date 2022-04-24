@@ -42,7 +42,7 @@
 
 import { in_column } from "@/controllers/validation.js"
 import useVuelidate from '@vuelidate/core'
-import { required, requiredIf, minLength, between, helpers } from '@vuelidate/validators'
+import {  requiredIf,  helpers } from '@vuelidate/validators'
 
 export default {
 	name: 'validation',
@@ -82,7 +82,6 @@ export default {
                         if (item.optional){
                             return false
                         } else {
-                            let optionValue = item.optionValue
                             return true
                         }
                     } else {

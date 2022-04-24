@@ -6,7 +6,7 @@ const cloneDeep = require("lodash.clonedeep");
 const { check_image, fetch_external_dockers } = require("../controllers/fetch.js")
 const {  removeFile, decompress_file, checkExists } = require("../controllers/IO.js")
 const { spawnLog } = require("../controllers/logger.js") 
-const {  remove_images } = require("../controllers/post-installation.js")
+const {  remove_images, removeVolume } = require("../controllers/post-installation.js")
 export  class Module {      
 	constructor(module, catalog, moduleIdx){       
         this.name= module.name 
@@ -114,7 +114,6 @@ export  class Module {
     async defineProcedure(procedure, procedureIdx){
         procedure.shared = this.config.shared
         let proce = new Procedure(procedure, this.catalog, this.module, procedureIdx )
-        
         await proce.init() 
         
         return proce
@@ -154,6 +153,8 @@ export  class Module {
             objs.push(dependency_obj) 
             if (dependency_obj.type == 'docker' || dependency_obj.type == 'docker-image'  ){
                 promises.push(remove_images(dependency_obj.target)) 
+            } else if (dependency_obj.type == 'volumne'){
+                promises.push( removeVolume(dependency_obj.target)  )
             }
             else{
                 promises.push(removeFile(dependency_obj.target, dependency_obj.type, false) )

@@ -13,11 +13,12 @@ export  class Job {
     constructor(procedure, config){         
         this.config = null  
         this.options = null   
-        this.configurations = null
+        this.configurations = null 
         this.services = []
         this.variables = {}
         this.runningConfig = {}
-        this.baseConfig = config
+        this.baseConfig = cloneDeep(config)
+        this.mergedConfig = cloneDeep(this.baseConfig)
         this.containers = []
         this.env = {}
         this.status = { 
@@ -71,77 +72,59 @@ export  class Job {
     } 
     setValueVariable(value, obj, key){ 
         const $this = this;
-        if (obj.options){
-            if (obj.options ){
-                if (!obj.option){
-                    obj.option = 0
-                } 
-            }
-            if (!obj.optionValue){
-                obj.optionValue = obj.options[obj.option]
-            }
-        }
-        if (obj.optionValue  && !obj.source){
-            obj.source = obj.optionValue.source
-        }
-        if (value.source){
-            if (typeof value.source == 'string' || !typeof value.source){
-                obj.source = value.source
-            } else if (typeof value.source == 'object') {
-                for (let [key, v] of Object.entries(value.source)){
-                    obj.source[key] = v
+        try{  
+            if (obj && obj.options){
+                if (obj.options ){
+                    if (!obj.option){
+                        obj.option = 0
+                    } 
                 }
             }
-            if (obj.optionValue){
-                obj.optionValue.source = value.source
-            } 
-        }
-        let getter = Object.getOwnPropertyDescriptor(obj, 'source');
-        if (getter && getter.get){
-            obj = value.source
             
-        } else if ( ( value.option || value.option == 0 ) || obj.options ) {   
-            if (!value.option){
-                obj.option = 0
-                obj.optionValue= obj.options[obj.option]
-            } else { 
-                obj.option = value.option
-                obj.optionValue= obj.options[obj.option]
-            }
             
-            $this.runningConfig.variables[key].option = obj.option
-            if (obj.source && typeof obj.optionValue == 'object'){ 
-                obj.optionValue.source = obj.source   
-                $this.runningConfig.variables[key].source = obj.optionValue.source
-                $this.runningConfig.variables[key].target = obj.optionValue.target
+            if (value.source){
+                if (typeof value.source == 'string' || typeof value.source == 'number' || !typeof value.source){
+                    obj.source = value.source
+                } else if (typeof value.source == 'object') {
+                    for (let [key, v] of Object.entries(value.source)){
+                        obj.source[key] = v
+                    }
+                } else {
+                    obj.source = value.source
+                }
             } 
-            else if (typeof obj.optionValue == 'string' ) {
-                $this.runningConfig.variables[key].source = obj.optionValue
-                $this.runningConfig.variables[key].target = obj.optionValue
-            } else {
+            
+            
+            let getter = Object.getOwnPropertyDescriptor(obj, 'source');
+            
+            if (getter && getter.get){
+                obj = value.source
                 
-                $this.runningConfig.variables[key].source = obj.optionValue.source
-                $this.runningConfig.variables[key].target = obj.optionValue.target
-            }  
-        }  else {
-            $this.runningConfig.variables[key].source = obj.source
-        }  
-        // if (obj.update || (obj.optionValue && obj.optionValue.update ) ){
-        //     if (obj.update){
-        //         if (Array.isArray(obj.update)){
-        //             obj.update.forEach((updating)=>{
-        //                 nestedProperty.set(this.runningConfig, updating.id, updating.value)
-        //             })  
-        //         } 
-        //     } else {
-        //         if (Array.isArray(obj.optionValue.update)){
-        //             obj.optionValue.update.forEach((updating)=>{
-        //                 nestedProperty.set(this.runningConfig, updating.id, updating.value)
-        //             })
+            } else if ( ( value.option || value.option == 0 ) || obj.options ) {   
+                
+                if (!value.option && value.option != 0){
+                    obj.option = 0
+                } else { 
+                    obj.option = value.option
+                }
+                $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
+                $this.runningConfig.variables[key].option = obj.option
+                if (obj.source ){ 
+                    $this.runningConfig.variables[key].source = obj.source
+                } 
+                if (obj.target){
+                    $this.runningConfig.variables[key].target = obj.target
+                }
+                
 
-        //         } 
-        //     }
-        // }
+               
+            }  else {
+                $this.runningConfig.variables[key].source = obj.source
+            }  
+        } catch (Err){
+            store.logger.error(Err)
+        }
+
        
         
     } 
@@ -154,6 +137,7 @@ export  class Job {
             this.setValueVariable(data, obj, variable)
             let variables = this.runningConfig.variables
             let promises = []
+            
             if (variables){
                 for (let [key, vari] of Object.entries(variables)){
                     if (vari.options && vari.option >=0 ){
@@ -224,6 +208,7 @@ export  class Job {
 
             }
             let changed_variables = []
+            
             Promise.allSettled(promises).then((respo)=>{
                 respo.forEach((res)=>{
                     if (res.status == 'fulfilled'){
@@ -286,11 +271,7 @@ export  class Job {
             })
         })
     } 
-    setParams(params){
-        // if (params.variables){
-        //     this.setVariables(params.variables)
-        // }        
-        // console.log(params,"PARAMS,,,,")
+    async setParams(params){
         if (params.images){
             params.images.forEach((service)=>{ 
                 this.services[service.service].override.image = service.image
@@ -299,31 +280,53 @@ export  class Job {
         this.services.forEach((service)=>{ 
             service.config.dry = params.dry
         })
+        this.mergeInputs(params, 'mergedConfig'  )
+        return 
+
 
 
     } 
+    updateCommand(service, command){
+        const $this = this  
+        if (command){
+            service.config.command = command  
+        } 
+    }
     setVariables(variables){
         this.variables = variables
         const $this = this
         for(let [key, value] of Object.entries(variables)){
+            if (!$this.runningConfig.variables[key] && value.custom){
+                $this.runningConfig.variables[key] = value
+            }
             let obj = $this.runningConfig.variables[key]
-            console.log("key")
             this.setValueVariable(value, obj, key)
         }
-        console.log("done")
+          
         this.services.forEach((service)=>{ 
             service.config.variables = $this.runningConfig.variables
         })
-        console.log("return")
         
         return 
     }
-    async defineServices (services ) {
+    async defineServices (services, params ) {
         const $this = this;
         for (let ix = 0; ix < services.length;  ix++){
             let serviceIdx = services[ix]
             let service = new Service($this.baseConfig.services[serviceIdx], serviceIdx)
             await service.setOptions()
+            let command;
+            let commandsIndex = -1
+
+            if (params.command){
+                commandsIndex = params.command.findIndex((d)=>{
+                    return d.service == serviceIdx
+                })
+                if (commandsIndex>=0){
+                    command = params.command[commandsIndex].command
+                }
+            }
+            $this.updateCommand(service, command)
             this.services.push(service)
         }  
         this.status.services_used = services
@@ -442,9 +445,6 @@ export  class Job {
         try{
             for (let i = 0; !end && i < $this.services.length; i++){
                 let service = $this.services[i]
-                // if (service.config.orchestrator){
-                //     logger.info("Skipping service %s since it is orchestrated. Ensure that the orchestrator is function/running for proper procedure completion", i)
-                // } else{
                 try{
                     let skip
                     store.logger.info("I: %s, Starting a new job service %s", i, service.name)
@@ -454,7 +454,6 @@ export  class Job {
                         store.logger.info("skip %s", skip)
                         cancelled_or_skip = skip
                         end = true
-                        // i = $this.services.length
                     }
                 } catch(err){
                     logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
@@ -471,6 +470,21 @@ export  class Job {
             throw err
         }
     }
+    mergeInputs(params, path){
+        if (!path){
+            path = ""
+        }
+        const $this = this;
+        for (let [key, custom_variable] of Object.entries(params)){
+            if ( custom_variable && typeof custom_variable == 'object' ){
+                this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`)
+            } else {
+                if (custom_variable){ 
+                    nestedProperty.set($this, `${path}.${key}`, custom_variable)
+                }
+            }
+        }
+    }
     async start(params){       
         const $this = this
         let services;
@@ -479,7 +493,8 @@ export  class Job {
         $this.status.complete = false
         let promises = []; 
         store.logger.info("%s setting variables", $this.baseConfig.name)
-        this.runningConfig = this.defineConfiguration(this.baseConfig)
+        // this.mergeInputs(params, 'mergedConfig'  )
+        this.runningConfig = this.defineConfiguration(this.mergedConfig)
         this.setVariables(params.variables)
         store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{

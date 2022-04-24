@@ -10,8 +10,6 @@
 <template>
   <div id="service" v-if="status">
   <v-toolbar dense dark >
-    <!-- <v-app-bar-nav-icon></v-app-bar-nav-icon> -->
-
       <v-toolbar-title class="white--text text-center ">{{service.label}}</v-toolbar-title>
       <div v-if="status.running">
         <looping-rhombuses-spinner  
@@ -235,86 +233,7 @@ export default {
       } catch(err){
         console.error(err,"<<<<< error in caching update")
       } 
-      // try{
-      //   let promises = []
-      //   if (this.service.variables){
-      //     let reads = []
-      //     for (let [key, f] of Object.entries($this.service.variables)){
-      //       if (f.read){
-      //         reads.push(f)
-      //       }
-      //     }
-      //     if (variable && reads.length > 0){
-      //       reads.forEach((variable)=>{
-      //         FileService.readDepVariable({
-      //           value: variable.read,
-      //           variable: variable, 
-      //           variables: $this.service.variables
-      //         }).then((response)=>{
-      //           let data = response.data.data
-      //           if (variable.depends){
-      //             let key = variable.depends_key
-      //             variable.depends.map((d)=>{
-      //               data.forEach((row)=>{
-      //                 if (row[key] == d){
-      //                   if ($this.service.variables[row[key]].option || $this.service.variables[row[key]].option  == 0){
-      //                     let index = $this.service.variables[row[key]].options.map((e)=>{
-      //                       return e 
-      //                     }).indexOf(row.configuration)
-      //                     $this.service.variables[row[key]].option = index
-      //                   } else {
-      //                     $this.service.variables[row[key]].source = row.configuration
-      //                   }
-      //                 }
-      //               })
-      //             })
-      //           }
-      //           variable.source = response.data.data
-      //         }).catch((err)=>{
-      //           console.log(err)
-      //         })
-              
-      //       })
-      //     }
-      //   }
-        
-      // } catch(err){
-      //   // $this.logger.error(err)
-      //   console.error(err)
-      // }
-
-      // if (!this.intervalProgress){
-      //     try{
-      //         this.intervalProgress = true 
-      //         if ($this.service.progress){
-      //           if ($this.intervalProgress){
-      //             try{
-      //               clearInterval($this.intervalProgress)
-      //             } catch(err){
-      //               console.error(err)
-      //             }
-      //           }
-      //           if  ($this.progresses.filter((d)=>{return d != 1}).length > 1 ){
-      //             clearInterval($this.intervalProgress)
-      //           } 
-      //           else {
-      //             $this.progressChecking = false
-      //             $this.getServiceProgress()
-      //             $this.intervalProgress = setInterval(()=>{
-      //               if (!$this.progressChecking){
-      //                 $this.getServiceProgress()
-      //               }
-      //             }, 3000)
-      //           }
-      //         }
-      //     }
-      //     catch (err){
-      //         console.error(err)
-      //     } finally{
-      //         this.intervalProgress = false
-      //        
-      //     }
-      // }
+      
     },
     async getService(){
       const $this = this
@@ -347,7 +266,6 @@ export default {
           })
           this.status = response.data.data.status
           this.progresses = response.data.data.watches
-          // this.$emit("sendStatus", { status: this.status, service: $this.serviceIdx } )			
       } catch(err){
         this.initial=false
         console.error(`${err} error in getting status`)
@@ -385,7 +303,6 @@ export default {
         this.logdialog = false
     },
     async start_service( ){
-      // this.checkError()
       const $this = this
       let variables ={}
       if (this.service.variables){
@@ -433,31 +350,16 @@ export default {
       service: {},
       status: {},
       headers: [
-        // {
-        //   text: "Actions",
-        //   value: "actions",
-        //   sortable: true
-        // },
         {
           text: "Param",
           value: "label",
           sortable: true
         },
-        // {
-        //   text: "Bind",
-        //   value: "bind",
-        //   sortable: true
-        // },
         {
           text: "Source",
           value: "source",
           sortable: true
         },
-        // {
-        //   text: "Target",
-        //   value: "target",
-        //   sortable: true
-        // }
       ],
       logdialog: false,
       factory: {

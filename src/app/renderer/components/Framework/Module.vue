@@ -148,16 +148,13 @@
 <script>
 
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
-import Procedure from "@/components/Framework/Procedure.vue"
 import FileService from '@/services/File-service.js'
 import Job from "@/components/Framework/Job.vue"
 import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
 export default {
 	name: 'module',
   components:{
-    // Service,
     Job,
-    Procedure,
     LogWindow,
     LoopingRhombusesSpinner,
     FulfillingBouncingCircleSpinner,
@@ -185,8 +182,6 @@ export default {
         })
        this.selectedProcedure.job = response.data.data
        this.job = response.data.data
-      //  console.log(this.selectedProcedure, this.job, "<<<")
-     
       } catch(err){
         this.initial=false
         console.error(`${err} error in getting status`)
@@ -235,8 +230,6 @@ export default {
       return this.statuses[serviceIdx] && this.statuses[serviceIdx].running
     },
 		sendStatus(event){
-      // this.status[event.service] = event.status.exists
-      
     },
     async rm_procedure(procedureKey){
       await FileService.rmProcedure({
@@ -352,18 +345,7 @@ export default {
 
   },
   computed: {
-    // latest() {
-    //   let latest  = null
-    //   let maxVersion = 1
-    //   if (this.module){
-    //     let version = this.modules.map((f)=>{
-    //       return f.version
-    //     })
-    //     maxVersion = Math.max(version)
-    //   }
-    //   return maxVersion
-
-    // },
+  
     computed_services(){
       let values = []
       for (let [key, value] of Object.entries(this.services)){
@@ -402,21 +384,12 @@ export default {
         return 0
       }
     },
-    // selected(){
-    //   if (this.selected_index || this.selected_index == 0){
-    //     this.selectedProcedure = this.module.variants[this.selected_index].procedures[this.defaultProcedure]
-    //     return this.module.variants[this.selected_index]
-    //   } else {
-    //     return {}
-    //   }
-    // }
+    
   },
   mounted(){
     const $this = this;
     $this.getStatus()
-    // this.interval = setInterval(()=>{
-    //   $this.getStatus()
-    // }, 3000)
+    
   },
   
     
@@ -424,10 +397,8 @@ export default {
 </script>
 
 <style>
-#framework{
-}
+
 .caro-bottom .v-icon {
-  /* left: 10% !important; */
   background: "blue"
 }
 

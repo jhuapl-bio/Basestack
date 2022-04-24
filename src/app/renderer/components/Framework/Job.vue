@@ -9,79 +9,102 @@
   -->
 <template>
   <v-card  fluid id="job" class=" noscroll mt-0 mb-0"  >
+    <v-btn
+      color="indigo lighten-1"
+      class="text-caption "
+      @click.stop="drawer = !drawer"
+    >
+      <v-icon class="mr-3" small  >
+          $cog 
+      </v-icon>
+    Customize</v-btn>
+    <v-dialog
+      transition="dialog-bottom-transition"
+      max-width="600"
+    >
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn
+          color="primary"
+          class="text-caption"
+          v-on="on"
+          v-bind="attrs"
+        >
+          <v-icon class="mr-3" small color="primary lighten-2" >
+              $cog 
+          </v-icon>
+        Info</v-btn>
+      </template>
+     
+      <template v-slot:default="dialog">
+        <v-card>
+          <v-toolbar
+            color="light"
+            dark
+          >Advanced Configuration Information for {{procedure.title}}
+          <v-spacer>
+          </v-spacer>
+          
+          </v-toolbar>
+          <v-card-text>
+            <v-checkbox
+                  v-model="dry"
+                  label="Perform Dry Run"
+                  hint="Check the logs for the configuration JSON for this procedure"
+                  on-icon="$check-square"
+                  class="align-center justify-center text-xs-center mx-4" 
+                  off-icon="$square"
+                  color="primary"
+              >
+              
+            </v-checkbox> 
+            <v-btn
+              color="primary"
+              class="text-caption"
+              @click="reset()"
+            >
+              <v-icon class="mr-3" small color="primary lighten-2" >
+                  $cog 
+              </v-icon>
+            Reset Default</v-btn>
+            <tree-view :data="services" height="300px" class=" mt-2 mb-3 pt-0 elevation-5 treeview " style="overflow-y:auto" 
+                    :options="{
+                        maxDepth: 3, 
+                        rootObjectKey: 'root',
+                        modifiable: false,
+                        limitRenderDepth: false
+                    }"
+                >
+            </tree-view>
+          </v-card-text>
+          <v-card-actions class="justify-end">
+            <v-btn
+              text
+              @click="dialog.value = false"
+            >Close</v-btn>
+          </v-card-actions>
+        </v-card>
+      </template>
+    </v-dialog>
+    <v-banner
+      elevation="12"
+      v-if="services && services.filter((f)=>{return f.orchestrator}).length > 0"
+    >
+      <v-avatar
+        slot="icon"
+        color="orange accent-4"
+        size="40"
+      >
+        <v-icon
+          color="white"
+        >
+          $exclamation-triangle
+        </v-icon>
+      </v-avatar>
+      This procedure uses an orchestrated container and DOES NOT end at pipeline completion. Check output field for status</v-banner>
     <v-stepper  v-model="el" v-if="services" >
         <v-stepper-header
             class="configure"
         >
-            
-            
-            <v-dialog
-              transition="dialog-bottom-transition"
-              max-width="600"
-            >
-              <template v-slot:activator="{ on,attrs  }">
-               
-                <v-btn
-                  color="primary"
-                  class="text-caption"
-                  v-bind="attrs"
-                  v-on="on"
-                >
-                  <v-icon class="mr-3" small color="primary lighten-2" >
-                      $cog 
-                  </v-icon>
-                Info</v-btn>
-              </template>
-              <template v-slot:default="dialog">
-                <v-card>
-                  <v-toolbar
-                    color="light"
-                    dark
-                  >Advanced Configuration Information for {{procedure.title}}
-                  <v-spacer>
-                  </v-spacer>
-                  
-                  </v-toolbar>
-                  <v-card-text>
-                    <v-checkbox
-                          v-model="dry"
-                          label="Perform Dry Run"
-                          hint="Check the logs for the configuration JSON for this procedure"
-                          on-icon="$check-square"
-                          class="align-center justify-center text-xs-center mx-4" 
-                          off-icon="$square"
-                          color="primary"
-                      >
-                      
-                    </v-checkbox> 
-                    <v-btn
-                      color="primary"
-                      class="text-caption"
-                      @click="reset()"
-                    >
-                      <v-icon class="mr-3" small color="primary lighten-2" >
-                          $cog 
-                      </v-icon>
-                    Reset Default</v-btn>
-                    <tree-view :data="services" height="300px" class=" mt-2 mb-3 pt-0 elevation-5 treeview " style="overflow-y:auto" 
-                            :options="{
-                                maxDepth: 3, 
-                                rootObjectKey: 'root',
-                                modifiable: false,
-                                limitRenderDepth: false
-                            }"
-                        >
-                    </tree-view>
-                  </v-card-text>
-                  <v-card-actions class="justify-end">
-                    <v-btn
-                      text
-                      @click="dialog.value = false"
-                    >Close</v-btn>
-                  </v-card-actions>
-                </v-card>
-              </template>
-            </v-dialog>
             <template v-for="(entry, key) in services"  >
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
@@ -185,30 +208,92 @@
           text v-if="jobStatus && !jobStatus.fully_installed ">All dependencies are not installed. Check the Library to see missing components
         </v-alert>
         <v-row >
-          <v-col sm="6" v-if="procedure && procedure.variables" >
+          <v-navigation-drawer
+            v-model="drawer"
+            absolute
+            temporary
+            style="width: 500px"
+          >
+            <v-list-item>
+              <v-list-item-avatar>
+                <v-icon color="primary">{{ ( procedure.icon  ? '$'+procedure.icon : '$cog' ) }}</v-icon>
+              </v-list-item-avatar>
+
+              <v-list-item-content>
+                <v-list-item-title>Customization</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-select
+              :items="serviceList"
+              v-model="el"
+              label="Adjust service"
+            >
+            </v-select>
+            <v-card class="scroll fill-height" >
+              <v-subheader>
+                Adjust Cmd in Docker Pipeline
+              </v-subheader>
+              <v-textarea
+                v-model="services[el-1].command[index]"
+                v-for="(item, index) in services[el-1].command"
+                :key="`${index}-commandIndex`"
+                :disabled="index <=1"
+                :hidden="index <=1"
+                @change="changeCommand(el-1, services[el-1].command[index] )"
+              >
+              </v-textarea>
+              <Customize
+                style="max-height: 200px"
+                @addCustomElement="addCustomElement"
+                >
+              </Customize>
+            </v-card>
+          </v-navigation-drawer>
+          <!-- <v-col sm="4" class="scroll fill-height" >
+            <v-subheader>
+              Customize
+            </v-subheader>
+            <v-text-field
+              v-model="services[el-1].command[index]"
+              v-for="(item, index) in services[el-1].command"
+              :key="`${index}-commandIndex`"
+              hint="Service command"
+              :disabled="index <=1"
+              persistent-hint
+            >
+            </v-text-field>
+            <Customize
+              style="max-height: 200px"
+              @addCustomElement="addCustomElement"
+              >
+            </Customize>
+          </v-col> -->
+          <v-col sm="6" v-if="procedure && procedure.variables" class="overflow:auto; min-height:">
             <ListParams
                 :items="additionals"
                 v-if="additionals.length > 0"
                 :defaultHeaders="headers"
                 @updateValue="updateValue"
+                @removeCustomVariable="removeCustomVariable"
             >
             </ListParams>
             
           </v-col>
           <v-col sm="6" v-if="headers.length > 0 && procedure "  >
-            <v-card height="70vh" class="scroll fill-height">
+            <v-card height="90vh" class="scroll fill-height">
               <Progresses
-                  :progresses="procedure.watches"
-                  :status="status"
-                  :job="jobStatus"
-                  :catalog="module"
-                  :module="moduleIdx"
-                  :procedure="procedureIdx"
-                  :defaultHeaders="outputHeaders"
+                :progresses="procedure.watches"
+                :status="status"
+                :job="jobStatus"
+                :catalog="module"
+                :module="moduleIdx"
+                :procedure="procedureIdx"
+                @removeCustomVariable="removeCustomVariable"
+                :defaultHeaders="outputHeaders"
               >
               </Progresses>
               <LogWindow  v-if="jobStatus && jobStatus.stream  " :info="jobStatus.stream" ></LogWindow> 
-             
+              
             </v-card>
           </v-col>
         </v-row>
@@ -222,6 +307,7 @@
 <script>
 import FileService from '@/services/File-service.js'
 import ListParams  from '@/components/Framework/Mods/ListParams.vue';
+import Customize  from '@/components/Framework/Customize.vue';
 import Progresses  from '@/components/Framework/Progresses.vue';
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
 import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
@@ -244,6 +330,7 @@ export default {
    LogWindow,
    ListParams,
    Progresses,
+   Customize,
    LoopingRhombusesSpinner,
    FulfillingBouncingCircleSpinner
   },
@@ -251,6 +338,18 @@ export default {
   methods: {
     updateImage(index,val){
       this.custom_images[index] = val
+    },
+    removeCustomVariable(variable){
+      this.$delete(this.procedure.variables, variable);
+      console.log(this.procedure.variables[variable], variable)
+    },
+    changeCommand(index, command){
+      this.custom_command[index] = command
+    },
+    addCustomElement(element){
+      console.log("element sent", element)
+      this.$set(this.procedure.variables, element.name, element)
+      console.log(this.procedure.variables,"<")
     },
     reset(){
       this.$store.dispatch("clearCatalog", {
@@ -310,6 +409,14 @@ export default {
           })
         }
       }
+      let keys = Object.keys(this.custom_command)
+      let custom_command = []
+      keys.forEach((key)=>{
+        custom_command.push({
+          service: key,
+          command: $this.custom_command[key]
+        })
+      })
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
@@ -318,6 +425,7 @@ export default {
         images: images,
         dry: $this.dry,
         services: services,
+        command: custom_command,
         variables: $this.procedure.variables
       }).then((response)=>{
         if (!response.data.skip){
@@ -365,36 +473,22 @@ export default {
     
     loadProcedure(proc){
       const $this = this;
-      let procedure = new Configuration(proc)
+      let procedure = new Configuration(cloneDeep(proc))
       procedure.defineMapping()
       procedure.create_intervalWatcher() 
-      // procedure.variables.file.source = "/Users/merribb1/Desktop/test-data2/metagenome/sample_metagenome.fastq"
       procedure.getProgress()
       let found = nestedProperty.get(this.$store.state, `catalog.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
-      console.log("daksjdksadj", found)
       if (found){
         try{
           procedure.mergeInputs(found)
         } catch (Err){
-          console.error(Err,"<<<")
+          console.error(Err,"<<<") 
         }
 
       }
       this.procedure = procedure
       this.watches  = this.procedure.watches
-      // this.$store.dispatch('CREATE_PROCEDURE', {
-      //   obj: procedure,
-      //   module: $this.moduleIdx, 
-      //   catalog: $this.module, 
-      //   procedure: $this.procedureIdx
-      // })
       
-      // this.updateValue({
-      //   src: "/Users/merribb1/Desktop/test-data2/metagenome/sample_metagenome.fastq",
-      //   option: 0,
-      //   variable: "file"
-
-      // })
       
       this.services = this.procedure.services
       if (Object.keys(this.services_to_use).length == 0){
@@ -433,6 +527,8 @@ export default {
     return{
         el: 1,
         dry:false,
+        custom_command: {},
+        drawer: false,
         full_services: null,
         watcherInterval: null,
         services: null,
@@ -503,21 +599,16 @@ export default {
     procedureConfig(){
       return nestedProperty.get(this.$store.state, `configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
     },
+    serviceList(){
+      let serviceList = []
+      this.services.map((f,i)=>{
+        serviceList.push(i+1)
+      })
+      return serviceList
+    },
     ...mapState({
       catalog: state => state.catalog
     }),
-    // watches(){
-    //   return this.procedure.watches
-    // },
-    // procedure(){
-    //   let found = nestedProperty.get(this.$store.state, `catalog.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
-    //   if (!found){
-    //     return {}
-    //   } else {
-    //     return this.$store.state.catalog[this.module].modules[this.moduleIdx].procedures[this.procedureIdx]
-    //   }
-    // },
-
     statuses(){
         return this.status.services
     },
@@ -547,21 +638,13 @@ export default {
   mounted(){
     const $this = this
     let found = nestedProperty.get(this.$store.state,`configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`);
-    // this.$store.dispatch("clearAll")
     if (!found){
       this.getProcedure()
     } else {
-      
-      // this.loadProcedure(cloneDeep(found))
       this.getProcedure()
 
     }
     $this.watcherInterval = setInterval(()=>{
-      // let procedure = $this.$store.getters.getProcedure({
-      //   module: $this.moduleIdx, 
-      //   catalog: $this.module, 
-      //   procedure: $this.procedureIdx
-      // })
       let procedure = $this.procedure
       if(procedure.watches){
         procedure.watches.map((f,i)=>{

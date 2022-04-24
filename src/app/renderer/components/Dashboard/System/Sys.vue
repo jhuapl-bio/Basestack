@@ -90,7 +90,6 @@
           $this.checkingResources = false
           return 
         }).catch((err)=>{
-          // $this.$logger.error(err)
           $this.checkingResources = false
 
         })

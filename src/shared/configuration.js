@@ -22,6 +22,7 @@ export  class Configuration {
             }
           };
         this.obj = obj
+        this.setDefaultVariables()
     }   
     destroy_interval(){
         if (this.watcher){
@@ -30,6 +31,20 @@ export  class Configuration {
             } catch(err){
                 console.error(err)
 
+            }
+        }
+    }
+    setDefaultVariables(){
+        for (let [key, custom_variable] of Object.entries(this.variables)){
+            if (!custom_variable.option && custom_variable.options){
+                custom_variable.option = 0
+            }
+            if (custom_variable.option >=0 && !custom_variable.source){
+                if (typeof custom_variable.options[custom_variable.option] == 'object'){
+                    custom_variable.source = custom_variable.options[custom_variable.option].source
+                } else {
+                    custom_variable.source = custom_variable.options[custom_variable.option]
+                }
             }
         }
     }
@@ -53,13 +68,16 @@ export  class Configuration {
         }
         const $this = this;
         for (let [key, custom_variable] of Object.entries(params)){
-            if ( custom_variable && typeof custom_variable == 'object' ){
-                this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`)
-            } else {
-                if (custom_variable){
-                    nestedProperty.set($this, `${path}.${key}`, custom_variable)
+            if (!custom_variable.element != 'confguration-file'){
+                if ( custom_variable && typeof custom_variable == 'object' ){
+                    this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`)
+                } else {
+                    if (custom_variable){ 
+                        nestedProperty.set($this, `${path}.${key}`, custom_variable)
+                    }
                 }
             }
+            
         }
     }
     async getProgress(){
@@ -201,7 +219,6 @@ export  class Configuration {
                     if (res.status == 'fulfilled'){
                         changed_variables.push(res.value)
                         try{
-                            console.log(res.value,"<")
                             if (res.value.value){
                                 $this.variables[res.value.key].source = res.value.value.source
                                 if ($this.variables[res.value.key].optionValue){
@@ -280,7 +297,6 @@ export  class Configuration {
                                 }
                                 else if (d == 'length'){ 
                                     result = matched_string.length
-                                    console.log(result,"<<< lent")
                                 } else {
                                     if (Array.isArray(matched_string)){
                                         matched_string = matched_string.join("")
@@ -312,6 +328,7 @@ export  class Configuration {
         for (let [key, custom_variable] of Object.entries(this.variables)){
             let selected_option  = defaultVariables[key]
             let name = key;
+            
             if (custom_variable){  
                 if (selected_option.options){ 
                     if (! custom_variable.option){
@@ -416,7 +433,6 @@ export  class Configuration {
                         if (fo ){ 
                             let original = cloneDeep(obj[key])
                             let saved_original = cloneDeep(obj[key])
-                            
                             Object.defineProperty(obj, key, {
                                 enumerable: true,   
                                 set: function(value){
@@ -433,11 +449,14 @@ export  class Configuration {
                                              
                                             id = match.replace(/[\&\{\}]/g, "")
                                             found =  nestedProperty.get($this, id)
+                                            // if (original == '%{variables.outdir.source}/multiqc/%{variables.artic_minion_caller.source}/multiqc_report.html'){
+                                            //     console.log("orginal", id, match)
+                                            // }
                                             // fullstring  = fullstring.replaceAll(match, found)  
                                             let returned_final = $this.mapTargetFunctions(found, fullstring)
                                             fullstring = returned_final                                  
                                         } catch(err)  {
-                                            console.error("error in matching", match, id, found)
+                                            console.error("error in matching", match, id, found, "original:", original)
                                             console.error(err)
                                         }
                                     })
@@ -481,6 +500,7 @@ export  class Configuration {
                             let original = cloneDeep(obj[key])
                             let saved_original = cloneDeep(obj[key])
                             
+
                             Object.defineProperty(obj, key, {
                                 enumerable: true,   
                                 set: function(value){
@@ -495,26 +515,29 @@ export  class Configuration {
                                         try{  
                                             id = match.replace(/[\%\{\}]/g, "")
                                             found =  nestedProperty.get($this, id)
-                                            
-                                            if (typeof found == 'string' ){
-                                                fullstring  = fullstring.replaceAll(match, found)                                            
-                                            } else if (Array.isArray(found)) {
-                                                let newval = []
-                                                
-                                                fullstring = found.map((f,i)=>{
-                                                    let u = cloneDeep(original).replaceAll(match, f)   
-                                                    return u
-                                                })
-                                            } else {
-                                                fullstring = found
+                                            if (fullstring){
+                                                if (typeof found == 'string' && match ){
+                                                    fullstring  = fullstring.replaceAll(match, found)        
+                                                } else if (Array.isArray(found) && match) {
+                                                    let newval = []
+                                                    
+                                                    fullstring = found.map((f,i)=>{
+                                                        let u = cloneDeep(original).replaceAll(match, f)   
+                                                        return u 
+                                                    })
+                                                } else {
+                                                    fullstring = found 
+                                                }  
                                             }
                                             
-                                        } catch(err)  {
-                                            console.error("error in matching", match, id, found)
-                                            console.error(err)
+                                                 
+                                        } catch(err)  { 
+                                            console.error("error in matching", match, id, found, "origina:", original)
+                                            console.log(err)
                                         }
                                         
                                     })
+                                    
                                     
                                     // if (fo.indexOf('%{variables.files.source}') >-1){
                                     //     console.log(fo, original,fullstring)
