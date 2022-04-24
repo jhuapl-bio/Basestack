@@ -1,0 +1,46 @@
+- name: oxford-demo
+  title: "ONT Sequencing Demo"
+  icon: "book"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tooltip: "Demo for the oxford sequencing"
+  procedures: 
+    - name: ont_demo #Top level is the left-hand selection of the menu and the major module to install 
+      title: "ONT Demo"
+      icon: "book"
+      module: True
+      init: false 
+      dependencies:
+        - target: "jhuaplbio/oxford-demo"
+          label: "jhuaplbio/oxford-demo"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "Demo"
+        - "Sequencing"
+      variables:
+        port:
+          element: "render"
+          label: "Demo Port"
+          column: 12
+          output: true
+          target: 8089
+          source": 8089
+          port: true
+          portbind:
+            from: "%{variables.port.target}"
+            to: "%{variables.port.source}"
+      services:
+        - name: ont_demo
+          label: "ONT Demo"
+          image: "jhuaplbio/oxford-demo"
+          workingdir: "/opt/src"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: null
+          ports:  
+            - 8089:8089
+    

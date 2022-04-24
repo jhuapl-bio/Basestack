@@ -10,7 +10,7 @@
   <div id="checkbox" > 
   	<v-checkbox
         v-model="value"
-        :label="(source.hint ? source.hint : '' )"
+        :label="(variable.hint ? variable.hint : '' )"
         on-icon="$check-square"
         class="align-center justify-center text-xs-center" 
         off-icon="$square"
@@ -37,7 +37,7 @@ export default {
 	},
 	props: ['source', 'status', 'service', 'variable'],
     mounted(){
-        this.value = this.source.source
+        this.value = this.source
     },
     watch: {
         value(newValue, oldValue){

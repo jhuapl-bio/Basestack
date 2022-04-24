@@ -31,7 +31,6 @@
         Delete Outputs
       </v-btn>
     </v-toolbar>
-    
   	<v-data-table
         v-if="progresses && progresses.length > 0"
         small
@@ -51,9 +50,9 @@
                 </template>
                 View Visualization in Browser. Ensure that the service is running first!
             </v-tooltip> 
-            <v-tooltip bottom v-else> 
+            <v-tooltip bottom v-if="item.source"> 
               <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item)">
+                <v-btn v-on="on" icon  @click="determineOpen(item)">
                   <v-icon 
                     class="" color="primary" 
                     medium>$archive
@@ -63,9 +62,9 @@
               </template>
               {{item.source}}
             </v-tooltip>
-            <v-tooltip bottom v-if="item.openSelf">
+            <v-tooltip bottom v-if="item.openSelf && item.source">
               <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item, true)">
+                <v-btn v-on="on" icon  @click="determineOpen(item, true)">
                   <v-icon 
                     class="" color="primary" 
                     medium>$file
@@ -109,7 +108,7 @@
             <v-icon 
                 v-else
                 small> 
-                {{item.complete}} {{ ( item.total ? ` / ${item.total}` : '' ) }}
+                {{item.complete}} {{ ( item.total ? ` / ${1}` : '' ) }}
             </v-icon>
         </template>
        
@@ -132,7 +131,7 @@ export default {
     data() {
         return {
             value: null,
-            test: "placeholder",
+            test: "placeholder", 
             
            
         }
@@ -143,12 +142,9 @@ export default {
 	methods: {
         open_link (link, e) {
           e.stopPropagation()
-          // this.$electron.shell.openExternal(this.getUrl(link.to))
-          // console.log(this.$electron.dialog.open(this.getUrl(link.to)))
           window.open(this.getUrl(link), "browser", 'top=500,left=200,frame=true,nodeIntegration=no')
       	},
         getUrl(link){ 
-        //   let url  = `http://localhost:8080`
             let url  = `http://localhost:${link.bind.to}`
             if (link.suburl){
                 url = url +link.suburl
@@ -156,18 +152,21 @@ export default {
             return url
         },
         determineOpen(item, self){
-          console.log(item,"open")
           if (item.element != 'file'){
             if (typeof item.source =='string'){
-              this.open(path.dirname(item.source))
+                this.$electron.shell.openPath(path.dirname(item.source))
             } else {
-              this.open(path.dirname(item.source[0]))
+              if (item.path){
+                this.$electron.shell.openPath(item.path)
+              } else {
+                this.$electron.shell.openPath(path.dirname(item.source[0]))
+              }
             }
           } else{
             if (self){
-              this.open(item.source)
+              this.$electron.shell.openPath(item.source)
             } else {
-              this.open(path.dirname(item.source))
+              this.$electron.shell.openPath(path.dirname(item.source))
             }
           }
         },
@@ -211,7 +210,6 @@ export default {
     mounted(){
     },
     watch: {
-        
     }
     
 };

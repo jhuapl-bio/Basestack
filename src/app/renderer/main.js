@@ -19,8 +19,8 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import Vuex from 'vuex'
 
 
-import Vuelidate from 'vuelidate'
-import Multiselect from 'vue-multiselect'
+// import Vuelidate from 'vuelidate'
+import Multiselect from 'vue-multiselect' 
 import VTooltip from 'v-tooltip'
 import  VueScrollTo from 'vue-scrollto'
 import {Slide, Carousel } from 'vue-carousel';
@@ -31,11 +31,14 @@ import promiseIpc from 'electron-promise-ipc' // yarn add electron-promise-ipc
 // import { BootstrapVueIcons } from 'bootstrap-vue'
 // import 'bootstrap-vue/dist/bootstrap-vue-icons.min.css'
  
-
 let config = process.env.logfile
 let configError = process.env.errorfile
-// let logger = require("../../shared/logger.js").logger(configError, config)
+let logger = require("../../shared/logger.js").logger(configError, config)
 import TreeView from "vue-json-tree-view"
+import VueCompositionAPI from '@vue/composition-api'
+
+Vue.use(VueCompositionAPI)
+
 Vue.use(TreeView)
 
 
@@ -49,7 +52,7 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 // Install BootstrapVue
 // Vue.use(BootstrapVue)
 Vue.use(VueSweetalert2)
-Vue.use(Vuelidate)
+// Vue.use(Vuelidate)
 Vue.use(ToggleButton)
 Vue.use(Carousel);
 Vue.use(Slide);
@@ -111,6 +114,15 @@ requireComponent.keys().forEach(fileName => {
     componentConfig.default || componentConfig
   )
 })
+Vue.mixin({
+  data: function() {
+    return {
+      get logger() {
+        return logger
+      }
+    }
+  }
+})
 
 Vue.directive('pin', {
   bind: function (el, binding, vnode) {
@@ -128,7 +140,8 @@ new Vue({
   components: { App,},
   router,
   store,
-  template: '<App/>'
+  template: '<App/>',
+  
 }).$mount('#app')
 
 

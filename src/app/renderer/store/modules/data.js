@@ -5,8 +5,11 @@
   // - # All Rights Reserved.
   // - # For any other permission, please contact the Legal Office at JHU/APL.
   // - # **********************************************************************
-import { getField, updateField } from 'vuex-map-fields'
+import nestedProperty from "nested-property"
+let config = process.env.logfile
+let configError = process.env.errorfile
 
+let logger = require("../../../../shared/logger.js").logger(configError, config)
 
 function getDefaultState(){
   return {
@@ -15,6 +18,8 @@ function getDefaultState(){
     modules:[],
     system: {},
     status: {},
+    catalog: {
+    },
     staged: {
       images:{},
       modules:{},
@@ -26,98 +31,20 @@ function getDefaultState(){
 const state = getDefaultState()
 
 const actions = {
-  FASTQ_FOLDER ({ commit }, name) {
-    return new Promise((resolve, reject)=>{
-      commit('FASTQ_FOLDER', name);
-      resolve()
-    })
+  UPDATE_PROCEDURE ({ commit }, params) {
+    logger.info("yes.......................................")
+    commit("UPDATE_PROCEDURE", params)
+    // return new Promise((resolve, reject)=>{
+    //   commit('UPDATE_PROCEDURE', params);
+    //   resolve(params)
+    // })
   },
-  CONSENSUS_FOLDER ({ commit }, name) {
-    return new Promise((resolve, reject)=>{
-      commit('CONSENSUS_FOLDER', name);
-      resolve()
-    })
-  },
-  PRIMER_FOLDER ({ commit }, obj) {
-    return new Promise((resolve, reject)=>{
-      commit('PRIMER_FOLDER', obj);
-      resolve()
-    })
-  },
-  PROTOCOL_FOLDER ({ commit }, obj) {
-    return new Promise((resolve, reject)=>{
-      commit('PROTOCOL_FOLDER', obj);
-      resolve()
-    })
-  },
-  ANNOTATIONS_FOLDER ({ commit }, obj) {
-    return new Promise((resolve, reject)=>{
-      commit('ANNOTATIONS_FOLDER', obj);
-      resolve()
-    })
-  },
-  NEW_FOLDER ({ commit }, name) {
-    return new Promise((resolve, reject)=>{
-      commit('NEW_FOLDER', name);
-      resolve()
-    })
-  },
-  NEW_NAME({ commit }, name) {
-    return new Promise((resolve, reject)=>{
-      commit('NEW_NAME', name);
-      resolve()
-    })
-  },
-  HISTORY({ commit }, obj) {
-    return new Promise((resolve, reject)=>{
-      commit('HISTORY', obj)
-      resolve()
-    })
-  },
-  UPDATEMODULES({ commit }, meta){
-    return new Promise((resolve, reject)=>{
-      commit('MODULES', meta)
-      resolve()
-    })
-  },
-  UPDATEDEFAULTS({ commit }, meta){
-    return new Promise((resolve, reject)=>{
-      console.log("yes")
-      commit('DEFAULTS', meta)
-      resolve()
-    })
-  },
-  UPDATESTATUS({ commit}, status){
-    return new Promise((resolve, reject)=>{
-      commit('STATUS', status)
-      resolve()
-    })
-  },
-  UPDATESYSTEM({ commit}, system){
-    return new Promise((resolve, reject)=>{
-      commit('SYSTEM', system)
-      resolve()
-    })
-  },
-  UPDATESTAGEDTARGET ({ commit }, obj) {
-    return new Promise((resolve, reject)=>{
-      commit('STAGEDTARGET', obj)
-      commit('STAGED', state.staged)
-      resolve()
-    })
-  },
-  UPDATESTAGEDDEPENDENCY ({ commit }, obj) {
-    return new Promise((resolve, reject)=>{
-      commit('STAGEDDEPENDENCY', obj)
-      commit('STAGED', state.staged)
-      resolve()
-    })
-  },
-  UPDATESTAGED ({ commit }, obj) {
-    return new Promise((resolve, reject)=>{
-      commit('STAGED', obj)
-      resolve()
-    })
+  setLogger ({ commit }, logger) {
+    commit("setLogger", logger)
+    // return new Promise((resolve, reject)=>{
+    //   commit('UPDATE_PROCEDURE', params);
+    //   resolve(params)
+    // })
   },
   clearAll({commit}){
     return new Promise((resolve, reject)=>{
@@ -128,11 +55,13 @@ const actions = {
 };
 
 const mutations = {
-  DEFAULTS (state, meta){
-    state.defaults = meta
+  UPDATE_PROCEDURE (state, meta){
+    state.logger.info("yes")
+    // nestedProperty.set(`state.catalog.${meta.catalog}.modules.${meta.module}.procedures${meta.procedure}`, meta)
+    state.catalog = {new:1}
   },
-  MODULES (state, meta){
-    state.modules = meta
+  setLogger (state, logger){
+    state.logger = logger
   },
   SYSTEM (state, system){
     state.system = system
@@ -184,12 +113,8 @@ const mutations = {
 };
 
 const getters = {
-  getSystem: state => state.system,
-  getMeta: state => state.meta,
-  getDefaults: state => state.defaults,
-  getModules: state => state.modules,
-  getStatus: state => state.status,
-  getStaged: state => state.staged
+  getProcedures: state => state.catalog,
+  getCatalog: state => state.catalog,
 }
 
 export default {

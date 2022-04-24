@@ -7,29 +7,32 @@
   - # **********************************************************************
   -->
 <template>
-  <v-layout id="file" @drop.prevent="addDropFile" @dragover.prevent >
-    <v-file-input 
-        v-model="value"
-        :hint="(source.hint ? source.hint : '')" 
-        show-size  
-        counter dense
-    > 
-      <template v-slot:append-outer>
-         <v-icon  v-if="value" class="text--caption configure" @click="value = null" color="grey" small>$times-circle
-        </v-icon>
-      </template>
-    </v-file-input >
+  <v-container id="file"   @drop.prevent="addDropFile" @dragover.prevent >
+      <v-file-input 
+          v-model="value"  class="fill-width"
+          :hint="hint" persistent-hint
+          show-size  overlap
+          counter 
+      > 
+        <template v-slot:append-outer>
+          <v-icon  v-if="value" class="text--caption configure" @click="value = null" color="grey" small>$times-circle
+          </v-icon>
+        </template>
+      </v-file-input >
+  
+    
+      
+        
+      
+    
    
    
   	
     
-  </v-layout>
+  </v-container>
 </template>
 
 <script>
-
-import { required, requiredIf, minLength, between, helpers } from 'vuelidate/lib/validators'
-const optional = (optional) => (value) => { console.log(optional,value,"fjsdfsdjflk"); return !optional && !value }
 export default {
 	name: 'file',
   data() {
@@ -40,12 +43,22 @@ export default {
       }
   },
   computed: {
-    
+    hint(){
+      let hint = ""
+      if (this.variable.target){
+        hint =`${this.variable.target}`
+      }
+      return hint
+    },
   },
 	methods: {
     addDropFile(e) { 
       this.value = e.dataTransfer.files[0]; 
     },
+    
+    updateValidity(){
+    }
+    
     
     
 
@@ -53,33 +66,28 @@ export default {
 	},
 	props: ['source', 'variable'],
   mounted(){
-    if (!this.value && typeof(this.source.source) == 'string'){
-        var file = new File([this.source.source], this.source.source, {
+    if (!this.value && typeof(this.source) == 'string'){
+        var file = new File([this.source], this.source, {
           type: "text/plain",
         });
         this.value = file
         this.cached = true
       }
   },
+  
   watch: {
         value(newValue, oldValue){
             if (!newValue){
-              this.$emit("updateValue", newValue )
+              this.$emit("updateValue", newValue  )
             }
             else if (newValue.path && newValue.path !== ""){
-              this.$emit("updateValue", newValue.path )
+              this.$emit("updateValue", newValue.path  )
               this.cached = false
             } else {
-              this.$emit("updateValue", newValue.name)
+              this.$emit("updateValue",  newValue.name  )
             }
         },
-        // source: {
-        //   deep: true,
-        //   handler(newValue, oldValue){
-        //     this.cached = true
-        //     console.log("source changed")
-        //   }
-        // }
+       
     }
     
 };

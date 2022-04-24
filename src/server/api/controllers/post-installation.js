@@ -62,6 +62,44 @@ export async function createVolumes(names){
 			logger.error(`${err}, error in creating volume(s)`)
 			reject(err)
 		}
+	}) 
+}
+export async function checkVolumeExists(name){
+		// try { 
+		let volume = await store.docker.getVolume(name)
+		let inspected = await volume.inspect()
+		// console.log("next")
+		return volume
+		// } catch(err){
+		// 	// logger.error(`${err}, error in getting volume(s) ${name}`)
+		// 	throw err
+		// }
+}
+
+export async function removeVolume(name){
+	return new Promise(function(resolve,reject){
+		try { 
+			logger.info(`${name}, removing  volumes`);
+			( async ()=>{
+				let volume = await store.docker.getVolume(name)
+				if (volume){
+					volume.remove().then((f)=>{
+						store.logger.info(f)
+						resolve(f)
+					}).catch((Err)=>{
+						store.logger.error("Error in removing volume %o", Err)
+						reject(Err)
+					})
+				} else {
+					reject()
+				}
+			})().catch((Err)=>{
+				reject(Err)
+			});
+		} catch(err){
+			logger.error(`${err}, error in removing volume(s)`)
+			reject(err)
+		}
 	})
 }
 
@@ -127,7 +165,7 @@ export var install_images_offline = function(obj){
 		})
 	})
 }
-
+ 
 export var loadImage = function(obj){
   return new Promise(function(resolve,reject){
     store.docker.loadImage(
@@ -147,6 +185,7 @@ export var loadImage = function(obj){
 
 export var pullImage  = function(name){
 	return new Promise(function(resolve,reject){
+	console.log(name,"<<<< name pull")
     store.docker.pull(name)
       .then((stream, error)=>{
         if(error){

@@ -23,33 +23,41 @@
           element: "file"
           hint: "Genome FASTA File"
           bind_parent_dir: true
-          bind: 
-            from: "%{variables.fasta.source}"
-            to: "/opt/data"
+          bind: "directory"
           class: "wb-100  p-3 mb-1" 
-          source: null
+          target: "/opt/data/<<basename(%{variables.fasta.source})>>"
+          source: "/Users/merribb1/Desktop/test-data2/metagenome/DHQP1701672_complete_genome.fasta"
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(fasta|fa|fna|faa)$"
         geneDB:
           label: "Gene DB FASTA"
           option: 0
+          hint: ".fsa formatted file that contains information of AMR genes"
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(fsa)$"
           options:
-            - element: "file"
+            - element: null
               name: "ResFinder Gamma Combined DB for AMR"
               hint: "Combined ResFinder AMR FSA file downloaded from GitHub Source"
               bind_parent_dir: true
               source: "${writePath}/workflows/gamma/resfinder_combined.fsa"
-              bind: 
-                from: "%{variables.geneDB.source}"
-                to: "/opt/databases" #This ${} is converted into the variable attribute of selected option only!
+              target: "/opt/databases/<<basename(%{variables.geneDB.source})>>"
+              bind: "directory"
             - element: "file"
               hint: "DB"
               label: "Custom Database for AMR"
               name: "Custom DB File"
               bind_parent_dir: true
-              bind: 
-                from: "%{variables.geneDB.source}"
-                to: "/opt/databases"
+              bind: "directory"
               class: "wb-100  p-3 mb-1"
               source: null
+              target: "/opt/databases/<<basename(%{variables.geneDB.source})>>"
         gamma:
           watch: True
           output: True
@@ -58,14 +66,19 @@
           hint: ".gamma file containing AMR calls in consensus genome compared to used DB"
           element: "file"
           source: "<<directory(%{variables.fasta.source})>>/<<basename,trim(%{variables.output.source})>>.gamma"
-          target: "%{variables.fasta.bind.to}/<<basename,trim(%{variables.output.source})>>.gamma"
+          target: "/opt/data/<<trim(%{variables.fasta.target})>>.gamma"
         output:
           label: "Output Name"
           element: "string"
           hint: "Text String to name output files as .gamma (tsv) format"
           bind_parent_dir: true
           class: "wb-100  p-3 mb-1"
-          source: "output"
+          source: "outputf"
+          # validations:
+          #   - type: "contains"
+          #     target: 
+          #       type: "value"
+          #       value: ".*f.*"
       dependencies: 
         - target: "staphb/gamma"
           label: "staphb/gamma"

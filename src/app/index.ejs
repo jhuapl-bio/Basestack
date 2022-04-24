@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <% if (process.env.NODE_ENV === 'development') { %>
+      <script src="http://localhost:8098"></script>
+    <% } %>
     <meta charset="utf-8">
     <title>Basestack</title>
     <% if (htmlWebpackPlugin.options.nodeModules) { %>
@@ -17,6 +20,8 @@
       <script>
         if (process.env.NODE_ENV !== 'development') window.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
       </script>
+      
+      
     <% } %>
 
     <!-- webpack builds are automatically injected -->

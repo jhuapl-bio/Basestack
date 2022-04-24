@@ -168,7 +168,6 @@
             }"
             responsive
         >
-           
             <template v-slot:item.status.exists="{ item }">
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
@@ -232,7 +231,7 @@
                         >
                             $check
                         </v-icon>
-                        <v-icon v-on="on" x-small v-else-if="item.status.latest !== item.status.version && item.status.version" color="red darken-2">
+                        <v-icon v-on="on" x-small v-else-if="item.status.latest !== item.status.version && item.status.version" color="orange lighten-2">
                             $times-circle
                         </v-icon>
                         <v-icon v-on="on" x-small v-else color="teal darken-2">
@@ -251,7 +250,48 @@
                 </v-tooltip> 
             </template>                        
             <template v-slot:item.label="{ item }">
-                {{ ( item.label ? item.label : item.target   )}}
+                {{ ( item.label ? item.label : item.target   )}}{{ ( item.version ? ':'+item.version : '')  }}
+            </template>
+            <template v-slot:item.tags="{ item }">
+                <v-dialog v-if="item.type == 'docker' && item.tags && item.tags.length > 0"
+                    transition="dialog-bottom-transition"
+                    max-width="600"
+                    >
+                    <template v-slot:activator="{ on,attrs  }">                    
+                        <v-icon class="mr-3 configure" v-on="on" v-bind="attrs" small  color="primary lighten-2" >
+                            $cog 
+                        </v-icon>
+                    </template>
+                    <template v-slot:default="dialog">
+                        <v-card>
+                        <v-toolbar
+                            color="light"
+                            dark
+                        >All Tags available for {{item.target}}
+                        
+                        </v-toolbar>
+                        <v-card-text>
+                            <v-list dense>
+                                <v-list-item
+                                    v-for="(item, i) in item.tags"
+                                    :key="i"
+                                >
+                                    {{item}}
+                                </v-list-item>
+                            </v-list>
+                        </v-card-text>
+                        <v-card-actions class="justify-end">
+                            <v-btn
+                            text
+                            @click="dialog.value = false"
+                            >Close</v-btn>
+                        </v-card-actions>
+                        </v-card>
+                    </template>
+                </v-dialog>
+               
+                
+                    
             </template>
             <template v-slot:item.overwrite="{ item,index }">
                 
@@ -266,10 +306,6 @@
                     </v-checkbox> 
             </template>
             <template v-slot:item.build="{ item, index }">
-                <!-- <v-btn class="btn" x-small color="primary" 
-                    style=""
-                    @click="buildModuleDependency(module.name, index)">Build
-                </v-btn> -->
                 <v-icon  class="configure" small color="primary" 
                     style="" v-if="item.status.dependComplete"
                     @click="buildModuleDependency(catalog.name, index)">$download
@@ -290,20 +326,12 @@
               
             </template>
             <template v-slot:item.remove="{ item, index }">
-                <!-- <v-btn class="btn" x-small color="orange darken-1" 
-                    style=""
-                    @click="removeModuleDependency(module.name, index)">Remove
-                </v-btn> -->
                 <v-icon class="configure" small color="orange darken-1" 
                     style=""
                     @click="removeModuleDependency(catalog.name, index)">$trash-alt
                 </v-icon>
             </template>
             <template v-slot:item.cancel="{ item, index }">
-                <!-- <v-btn class="btn" x-small color="light" 
-                    style=""
-                    @click="cancelModuleDependency(module.name, index)">Cancel
-                </v-btn> -->
                 <v-icon class="configure" small color="light" 
                     style="" v-if="item.status.building"
                     @click="cancelModuleDependency(catalog.name, index)">$times-circle
@@ -352,6 +380,7 @@ export default {
 	data(){
 		return {
             selectedProcedure: {},
+            custom_images: {},
             procedures: [],
             selectedModule: {},
             defaultProcedure:0,
@@ -408,6 +437,11 @@ export default {
                     text: 'Latest'
                 },
                 {
+                    value: 'tags',
+                    align: "center",
+                    text: 'Versions'
+                },
+                {
                     value: 'remove',
                     align: "center",
                     text: 'Remove'
@@ -423,10 +457,7 @@ export default {
         selectedModule(newValue){
             this.selectedProcedure = {}
             this.procedures = []
-            this.getStatus()
-            // this.stored[this.catalog.name].selected = newValue
-            
-            
+            this.getStatus()            
         },
         selectedProcedure(newValue){
             if (newValue.dependencies){
@@ -538,8 +569,6 @@ export default {
                         showConfirmButton: true,
                         allowOutsideClick: true
                     });
-                    // let variantIdx  = this.selectedModule.idx
-                    // let procedureIdx  = this.selectedModule.procedures.findIndex(data => data === this.selectedProcedure)
                     FileService.removeProcedureDependency({
                         module: $this.moduleIdx,
                         catalog: $this.catalog.name,
@@ -668,6 +697,15 @@ export default {
                 this.procedures = response.data.data
                 this.procedures.map((d,i)=>{
                     d.idx = i
+                    if (d.dependencies){
+                        d.dependencies.filter((f)=>{
+                            return f.type == 'docker'
+                        }).forEach((f)=>{
+                            if (!this.custom_images[f.label]){
+                                this.custom_images[f.label] = ( f.tag ? f.tag : 'latest')
+                            }
+                        })
+                    }
                 })
                 
                 if (!this.selectedModule.name || this.selectedModule.name !== this.catalog.name){
@@ -685,9 +723,8 @@ export default {
                 }
                 this.$set(this.selectedProcedure , 'dependencies', this.procedures[this.selectedProcedure.idx].dependencies)
                 this.$set(this.selectedProcedure , 'status', this.procedures[this.selectedProcedure.idx].status)
-
+                
                 if (this.selectedProcedure.status && this.selectedProcedure.status.buildStream){
-                    // logs = this.selectedProcedure.buildStream
                     this.selectedProcedure.status.buildStream.forEach((entry, i)=>{
                         this.procedureLogs.push(entry)
                     })

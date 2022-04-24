@@ -1,9 +1,0 @@
-{
-	"name": "IVA",
-	"description": "Amplicon based sequencing of influenza A virus.",
-	"url": "",
-	"annotationOptions": {
-		"require_two_barcodes": "false",
-		"barcode_set": "rapid"
-	}
-}

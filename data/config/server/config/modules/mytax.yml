@@ -16,8 +16,8 @@
           output: true
           label: "JSON Visualization File"
           hint: ".json file, to be uploaded to the Mytax Visualization Service"
-          source: "<<directory(%{variables.file.bind.from})>>/<<basename,trim(%{variables.file.source})>>.report.json"
-          target: "%{variables.file.bind.to}/<<basename,trim(%{variables.file.source})>>.report.json"
+          source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report.json"
+          target: "<<trim(%{variables.file.target})>>.report.json"
       report: 
           label: "Report From classification, in kraken-style"
           element: "file"
@@ -25,7 +25,7 @@
           openSelf: true         
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report"
-          target: "%{variables.file.bind.to}/<<basename,trim(%{variables.file.source})>>.report"
+          target: "<<trim(%{variables.file.target})>>.report"
   procedures:
     - name: "mytax_kraken2_report"
       title: "Kraken2 Mytax2"
@@ -42,9 +42,22 @@
         - metagenome
       dependencies: 
         - target: "jhuaplbio/basestack_mytax"
+          version: "v1.1.2" 
           type: "docker"
-          version: "latest"
           format: "docker"
+        - source: 
+            url: "https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz"
+            type: "file" 
+            remove: true
+            target: "${writePath}/workflows/mytax/flukraken2.tar.gz"
+          type: "download" 
+          format: "file"
+          decompress: 
+            format: "tgz"
+            source: "${writePath}/workflows/mytax/flukraken2.tar.gz"
+          label: "2021 Flukraken database"
+          target: "${writePath}/workflows/mytax/flukraken2"
+          overwrite: true
         - source: 
             url: "ftp.ccb.jhu.edu"
             type: "file"
@@ -53,14 +66,14 @@
             password: null
             protocol: "ftp"
             remove: false
-            target: "${writePath}/modules/mytax/minikraken2.tar.gz"
+            target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           label: "Minikraken2"
           type: "download" 
           format: "dir"
           decompress: 
             format: "tgz"
-            source: "${writePath}/modules/mytax/minikraken2.tar.gz"
-          target: "${writePath}/modules/mytax/minikraken2_v2_8GB_201904_UPDATE"
+            source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
           overwrite: false
       variables:
         file:
@@ -68,12 +81,10 @@
           element: "file"
           optional: false
           bind_parent_dir: true
-          bind: 
-            from: "%{variables.file.source}"
-            to: "/opt/data"
+          bind: "directory"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.file.bind.to}/"
+          target: "/opt/data/<<basename(%{variables.file.source})>>"
         memory_mapping: 
           label: "Memory Load Database"
           hint: "Do or Don't load the database into memory. Useful if you are limited in RAM"
@@ -81,9 +92,11 @@
           options:
             - element: null
               name: "Pre-load"
+              source: null
               warning: "This process is fast but requires 8 GB of RAM to operate the pipeline"
             - element: null
               name: "Use Local Filesystem"
+              source: null
               warning: "This process is slower than pre-load. Use ONLY if you don't have 8 GB of RAM to spare"
               append:
                 command: " --memory-mapping"
@@ -106,10 +119,7 @@
               label: "Report From classification, in kraken-style"
               element: "file"
               bind_parent_dir: true
-              bind: 
-                from: "%{variables.nodes.source}"
-                to: "/taxonomy"
-              # class: "wb-100  p-3 mb-1"
+              bind: "self"
               source: null
         db:
           label: "Classifier database"
@@ -118,31 +128,30 @@
           options:
             - element: null
               name: "Minikraken2"
-              source: "${writePath}/modules/mytax/minikraken2_v2_8GB_201904_UPDATE"
+              source: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
               target: "/opt/databases/minikraken2"
               warning: "Requires roughly 7.5 GB of free RAM to load. If limited in RAM available, try to change Memory Mapping below to classify on the local filesystem. If your input file is large, however, this can take a long time"
               bind:  
                 from: "%{variables.db.source}"
-                to: "/opt/databases" #This ${} is converted into the variable attribute of selected option only!
+                to: "/opt/databases/minikraken2" #This ${} is converted into the variable attribute of selected option only!
             - element: null
               name: "Flukraken2-2021"
-              target: "/opt/databases/flukraken2" 
-              source: "/opt/databases/flukraken2" 
+              source: "${writePath}/workflows/mytax/flukraken2"
+              target: "/opt/databases/flukraken2"
+              bind:  
+                from: "%{variables.db.source}"
+                to: "/opt/databases/flukraken2" #This ${} is converted into the variable attribute of selected option only!
               # cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken2"
               # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index. 
             - element: null
               name: "Marine Mitogenome"
               target: "/opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629"
               source: "/opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629"
-              # cmd: "tar -xvzf ${db}.tar.gz -C /opt/databases/flukraken2"
-              # placement: "2" #Where to place the command in the above command (before) as appending starting at 0 index.  
             - element: "dir"
               name: "Custom DB"
               source: null
-              target: null
-              bind: 
-                from: "%{variables.db.source}"
-                to: "/opt/databases" 
+              target: "/opt/databases/<<basename(%{variables.db.source})>>"
+              bind: "self"
         report: 
           target: "%{shared.variables.report}"
           shared: true
@@ -153,14 +162,15 @@
       services: 
         - name: "mytax_kraken2_report"
           label: "Kraken2 Report"
-          image: "jhuaplbio/basestack_mytax"
+          image: "jhuaplbio/basestack_mytax:v1.1.2"
           workingdir: "/opt/test-data"
           orchestrated: false #orchestrated means it r
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax && 
-            export KRAKEN2_DEFAULT_DB=${db} && ls -lht $file; kraken2  --output ${report}.out  --report ${report}  ${file}
+          command: ["bash","-c", " 
+            export KRAKEN2_DEFAULT_DB=${db} && 
+              ls -lht $file; kraken2  --output ${report}.out  --report ${report}  ${file}
             "
           ]
         - name: "mytax_create_json"
@@ -168,13 +178,16 @@
           depends: 
             - type: "module"
               id: "mytax"
-          image: "jhuaplbio/basestack_mytax"
+          image: "jhuaplbio/basestack_mytax:v1.1.2"
           workingdir: "/opt/test-data"
           orchestrated: false #orchestrated means it r
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "source /opt/conda/etc/profile.d/conda.sh && conda activate mytax &&
+          # command: ["bash","-c", "
+          #   python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes}"
+          # ]
+          command: ["bash","-c", "
             python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes} &&
             bash krakenreport2json.sh -i ${report}.fullstring -o ${report}.json
             "
@@ -196,16 +209,17 @@
           element: "render"
           label: "Mytax Sunburst Service"
           column: 12
-          output: true
-          target: "localhost:8086"
+          output: false
+          target: 8086
+          source: 8086
           port: true
-          bind:
-            from: "8086"
-            to: "8086"
+          portbind:
+            from: "%{variables.port.source}"
+            to: "%{variables.port.target}"
       dependencies: 
         - target: "jhuaplbio/basestack_mytax"
+          version: "v1.1.2"
           type: "docker"
-          version: "latest"
           format: "docker"
       services: 
         - name: "mytax_visualization"
@@ -215,12 +229,12 @@
           label: "Visualization"
           force_restart: false
           config: null
-          image: "jhuaplbio/basestack_mytax"
+          image: "jhuaplbio/basestack_mytax:v1.1.2"
           workingdir: "/opt/software/mytax/sunburst"
           post-run-tab: "render"
           ports: 
             - 8086
-          command: ["bash", "-c", "echo 'Running Mytax Visualization' && python3 -m http.server 8086"]
+          command: ["bash", "-c", "echo 'Running Mytax Visualization' && python3 -m http.server ${port}"]
           
 
               

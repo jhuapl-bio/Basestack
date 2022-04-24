@@ -9,12 +9,103 @@
   -->
 <template>
   <v-card  fluid id="job" class=" noscroll mt-0 mb-0"  >
+    <v-btn
+      color="indigo lighten-1"
+      class="text-caption "
+      @click.stop="drawer = !drawer"
+    >
+      <v-icon class="mr-3" small  >
+          $cog 
+      </v-icon>
+    Customize</v-btn>
+    <v-dialog
+      transition="dialog-bottom-transition"
+      max-width="600"
+    >
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn
+          color="primary"
+          class="text-caption"
+          v-on="on"
+          v-bind="attrs"
+        >
+          <v-icon class="mr-3" small color="primary lighten-2" >
+              $cog 
+          </v-icon>
+        Info</v-btn>
+      </template>
+     
+      <template v-slot:default="dialog">
+        <v-card>
+          <v-toolbar
+            color="light"
+            dark
+          >Advanced Configuration Information for {{procedure.title}}
+          <v-spacer>
+          </v-spacer>
+          
+          </v-toolbar>
+          <v-card-text>
+            <v-checkbox
+                  v-model="dry"
+                  label="Perform Dry Run"
+                  hint="Check the logs for the configuration JSON for this procedure"
+                  on-icon="$check-square"
+                  class="align-center justify-center text-xs-center mx-4" 
+                  off-icon="$square"
+                  color="primary"
+              >
+              
+            </v-checkbox> 
+            <v-btn
+              color="primary"
+              class="text-caption"
+              @click="reset()"
+            >
+              <v-icon class="mr-3" small color="primary lighten-2" >
+                  $cog 
+              </v-icon>
+            Reset Default</v-btn>
+            <tree-view :data="services" height="300px" class=" mt-2 mb-3 pt-0 elevation-5 treeview " style="overflow-y:auto" 
+                    :options="{
+                        maxDepth: 3, 
+                        rootObjectKey: 'root',
+                        modifiable: false,
+                        limitRenderDepth: false
+                    }"
+                >
+            </tree-view>
+          </v-card-text>
+          <v-card-actions class="justify-end">
+            <v-btn
+              text
+              @click="dialog.value = false"
+            >Close</v-btn>
+          </v-card-actions>
+        </v-card>
+      </template>
+    </v-dialog>
+    <v-banner
+      elevation="12"
+      v-if="services && services.filter((f)=>{return f.orchestrator}).length > 0"
+    >
+      <v-avatar
+        slot="icon"
+        color="orange accent-4"
+        size="40"
+      >
+        <v-icon
+          color="white"
+        >
+          $exclamation-triangle
+        </v-icon>
+      </v-avatar>
+      This procedure uses an orchestrated container and DOES NOT end at pipeline completion. Check output field for status</v-banner>
     <v-stepper  v-model="el" v-if="services" >
         <v-stepper-header
             class="configure"
         >
             <template v-for="(entry, key) in services"  >
-                
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
                     :key="key+'-entry'"
@@ -62,7 +153,46 @@
                           </template>
                           Cancelled!
                       </v-tooltip>
+                      <v-dialog
+                        transition="dialog-bottom-transition"
+                        max-width="600"
+                      >
+                        <template v-slot:activator="{ on,attrs }">                        
+                            <v-icon  v-bind="attrs" v-on="on" class="ml-2" small color="primary lighten-2" >
+                                $cog
+                            </v-icon>
+                        </template>
+                        <template v-slot:default="dialog">
+                          <v-card>
+                            <v-toolbar
+                              color="light"
+                              dark
+                            >Adjust Configuration for service: {{entry.label}}
+                            <v-spacer>
+                            </v-spacer>
+                            </v-toolbar>
+                            <v-card-text>
+                              <small>Default image: {{entry.image}}</small>
+                              <v-text-field
+                                label="Service Image to Use"
+                                v-model="custom_images[key]"
+                                single-line
+                              ></v-text-field>
+                              <v-btn
+                                text @click="custom_images[key]=entry.image"
+                              >Default</v-btn>
+                            </v-card-text>
+                            <v-card-actions class="justify-end">
+                              <v-btn
+                                text
+                                @click="dialog.value = false"
+                              >Close</v-btn>
+                            </v-card-actions>
+                          </v-card>
+                        </template>
+                      </v-dialog>
                     </small>
+                    
                     
                     
                     
@@ -78,31 +208,92 @@
           text v-if="jobStatus && !jobStatus.fully_installed ">All dependencies are not installed. Check the Library to see missing components
         </v-alert>
         <v-row >
-          <v-col sm="6" v-if="procedure && procedure.variables" >
+          <v-navigation-drawer
+            v-model="drawer"
+            absolute
+            temporary
+            style="width: 500px"
+          >
+            <v-list-item>
+              <v-list-item-avatar>
+                <v-icon color="primary">{{ ( procedure.icon  ? '$'+procedure.icon : '$cog' ) }}</v-icon>
+              </v-list-item-avatar>
+
+              <v-list-item-content>
+                <v-list-item-title>Customization</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-select
+              :items="serviceList"
+              v-model="el"
+              label="Adjust service"
+            >
+            </v-select>
+            <v-card class="scroll fill-height" >
+              <v-subheader>
+                Adjust Cmd in Docker Pipeline
+              </v-subheader>
+              <v-textarea
+                v-model="services[el-1].command[index]"
+                v-for="(item, index) in services[el-1].command"
+                :key="`${index}-commandIndex`"
+                :disabled="index <=1"
+                :hidden="index <=1"
+                @change="changeCommand(el-1, services[el-1].command[index] )"
+              >
+              </v-textarea>
+              <Customize
+                style="max-height: 200px"
+                @addCustomElement="addCustomElement"
+                >
+              </Customize>
+            </v-card>
+          </v-navigation-drawer>
+          <!-- <v-col sm="4" class="scroll fill-height" >
+            <v-subheader>
+              Customize
+            </v-subheader>
+            <v-text-field
+              v-model="services[el-1].command[index]"
+              v-for="(item, index) in services[el-1].command"
+              :key="`${index}-commandIndex`"
+              hint="Service command"
+              :disabled="index <=1"
+              persistent-hint
+            >
+            </v-text-field>
+            <Customize
+              style="max-height: 200px"
+              @addCustomElement="addCustomElement"
+              >
+            </Customize>
+          </v-col> -->
+          <v-col sm="6" v-if="procedure && procedure.variables" class="overflow:auto; min-height:">
             <ListParams
                 :items="additionals"
                 v-if="additionals.length > 0"
                 :defaultHeaders="headers"
                 @updateValue="updateValue"
+                @removeCustomVariable="removeCustomVariable"
             >
             </ListParams>
             
           </v-col>
           <v-col sm="6" v-if="headers.length > 0 && procedure "  >
-            <v-card height="70vh" class="scroll fill-height">
+            <v-card height="90vh" class="scroll fill-height">
               <Progresses
-                  :progresses="watches"
-                  
-                  :status="status"
-                  :job="jobStatus"
-                  :catalog="module"
-                  :module="moduleIdx"
-                  :procedure="procedureIdx"
-                  :defaultHeaders="outputHeaders"
+                :progresses="procedure.watches"
+                :status="status"
+                :job="jobStatus"
+                :catalog="module"
+                :module="moduleIdx"
+                :procedure="procedureIdx"
+                @removeCustomVariable="removeCustomVariable"
+                :defaultHeaders="outputHeaders"
               >
               </Progresses>
               <LogWindow  v-if="jobStatus && jobStatus.stream  " :info="jobStatus.stream" ></LogWindow> 
-             
+              
             </v-card>
           </v-col>
         </v-row>
@@ -116,28 +307,65 @@
 <script>
 import FileService from '@/services/File-service.js'
 import ListParams  from '@/components/Framework/Mods/ListParams.vue';
+import Customize  from '@/components/Framework/Customize.vue';
 import Progresses  from '@/components/Framework/Progresses.vue';
-
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
 import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-spinners'
+import { Configuration } from '../../../../shared/configuration';
+import nestedProperty from 'nested-property';
+import { mapState } from 'vuex';
+const cloneDeep = require("lodash.clonedeep");
 
 export default {
   name: 'job',
   beforeDestroy: function(){
-   
+   if (this.procedure){
+     this.procedure.destroy_interval()
+   }
+   if (this.watcherInterval){
+     clearInterval(this.watcherInterval)
+   }
   },
   components:{
    LogWindow,
    ListParams,
    Progresses,
+   Customize,
    LoopingRhombusesSpinner,
    FulfillingBouncingCircleSpinner
   },
   
   methods: {
+    updateImage(index,val){
+      this.custom_images[index] = val
+    },
+    removeCustomVariable(variable){
+      this.$delete(this.procedure.variables, variable);
+      console.log(this.procedure.variables[variable], variable)
+    },
+    changeCommand(index, command){
+      this.custom_command[index] = command
+    },
+    addCustomElement(element){
+      console.log("element sent", element)
+      this.$set(this.procedure.variables, element.name, element)
+      console.log(this.procedure.variables,"<")
+    },
+    reset(){
+      this.$store.dispatch("clearCatalog", {
+        procedure: this.procedureIdx, 
+        module: this.moduleIdx,
+        catalog: this.module,
+      })
+      let found = nestedProperty.get(this.$store.state,`configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`);
+      if (found){
+        this.loadProcedure(found)
+      } else {
+        this.getProcedure()
+      }
+    },
     async cancel_procedure(procedureKey){
       const $this = this
-      console.log("cancel job")
       await FileService.cancelJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
@@ -172,13 +400,32 @@ export default {
       let services = Object.keys(this.services_to_use).filter((key, i)=>{
         return this.services_to_use[parseInt(key)] == 1
       })
-      console.log("Starting job using services",services)
+      let images  = []
+      if (this.custom_images ){
+        for (let [key, value] of Object.entries(this.custom_images) ){
+          images.push({
+            service: parseInt(key),
+            image: value
+          })
+        }
+      }
+      let keys = Object.keys(this.custom_command)
+      let custom_command = []
+      keys.forEach((key)=>{
+        custom_command.push({
+          service: key,
+          command: $this.custom_command[key]
+        })
+      })
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         module: $this.moduleIdx,
         catalog: $this.module,
         token: $this.$store.token,
+        images: images,
+        dry: $this.dry,
         services: services,
+        command: custom_command,
         variables: $this.procedure.variables
       }).then((response)=>{
         if (!response.data.skip){
@@ -191,66 +438,83 @@ export default {
 
         }
       }).catch((error)=>{
-        console.error("-----------------", error)
-        this.$swal.fire({
-          position: 'center',
-          icon: 'error',
-          showConfirmButton:true,
-          title:  error.response.data.message
-		})
+          console.error("-----------------", error)
+          this.$swal.fire({
+            position: 'center',
+            icon: 'error',
+            showConfirmButton:true,
+            title:  error.response.data.message
+          })
       })
     },
-    updateValue(value){
-      let src = value.src
-      let variable = this.procedure.variables[value.variable]
-      if (value.option){
-        variable.option = src
-      } else {
-        variable.source  = src
-      }
-      const $this = this
-      try{
-        FileService.updateVariableJob({
-          module: this.moduleIdx,
-          procedure: this.procedureIdx,
-          catalog: this.module,
-          value: value.src, 
-          target: (value.option  ? "option" : "source"),
-          variable: value.variable,
-        }).then((response)=>{
-            if (response.data.data && Array.isArray(response.data.data)){
-                response.data.data.map((resp)=>{
-                    if (resp){
-                      $this.$set($this.procedure.variables[resp.key], 'source' , resp.value.source)
-                      if ($this.procedure.variables[resp.key].optionValue){
-                        $this.$set($this.procedure.variables[resp.key], 'optionValue', resp.value)
-                      }
-                    }
-                    
-                })
-            }
+    updateValue(value){ 
+      const $this = this;
+        $this.$store.dispatch('UPDATE_VARIABLE', {
+          name: value.variable,
+          source: value.src,
+          option: value.option,
+          module: $this.moduleIdx, 
+          catalog: $this.module, 
+          procedure: $this.procedureIdx
         })
-      } catch(err){
-        console.error(err,"<<<<< error in caching update")
-      } 
-      
+        this.procedure.variables[value.variable].source = value.src
+        this.procedure.updates(value).then((f)=>{
+          if (f){
+            f.forEach((changed)=>{
+              if ($this.procedure[changed.key]){
+                $this.procedure.variables[changed.key] = changed.value.source
+              }
+            })
+          }
+        })
+        
 
+    },
+    
+    loadProcedure(proc){
+      const $this = this;
+      let procedure = new Configuration(cloneDeep(proc))
+      procedure.defineMapping()
+      procedure.create_intervalWatcher() 
+      procedure.getProgress()
+      let found = nestedProperty.get(this.$store.state, `catalog.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
+      if (found){
+        try{
+          procedure.mergeInputs(found)
+        } catch (Err){
+          console.error(Err,"<<<") 
+        }
+
+      }
+      this.procedure = procedure
+      this.watches  = this.procedure.watches
+      
+      
+      this.services = this.procedure.services
+      if (Object.keys(this.services_to_use).length == 0){
+        for (let [key, value] of Object.entries(this.services)){
+            this.$set(this.services_to_use, key, 1)
+        }
+      }
     },
     async getProcedure(){
       const $this = this
       try{
-        let response = await FileService.getJobStaged({
+        let response = await FileService.getProcedureConfig({
           module: this.moduleIdx,
           procedure: this.procedureIdx,
           catalog: this.module
         })
-        this.procedure = response.data.data
-        this.services = this.procedure.services
-        if (Object.keys(this.services_to_use).length == 0){
-          for (let [key, value] of Object.entries(this.services)){
-              this.$set(this.services_to_use, key, 1)
-          }
-        }
+        this.$store.dispatch("SAVE_PROCEDURE_DEFAULT", {
+          module: $this.moduleIdx, 
+          catalog: $this.module, 
+          procedure: $this.procedureIdx,
+          config: response.data.data
+        })
+        console.log("next")
+
+        this.loadProcedure(cloneDeep(response.data.data))
+
       } catch(err){
         this.initial=false
         console.error(`${err} error in getting status`)
@@ -262,9 +526,15 @@ export default {
   data(){
     return{
         el: 1,
+        dry:false,
+        custom_command: {},
+        drawer: false,
         full_services: null,
+        watcherInterval: null,
         services: null,
+        watches: [],
         procedure: null,
+        custom_images: {},
         services_to_use: {},
         outputHeaders: [
             {
@@ -301,50 +571,49 @@ export default {
                 sortable: true,
                 align:"center"                
             },
-            // {
-            //   text: "Bind",
-            //   value: "bind",
-            //   sortable: true
-            // },
             {
                 text: "Source",
                 value: "source",
                 align:"center"  ,              
                 sortable: false
             },
-            // {
-            //   text: "Target",
-            //   value: "target",
-            //   sortable: false
-            // },
             {
               text: "Type",
               align:"center"  ,              
               value: "element",
               sortable: false
             },
-            // {
-            //   text: "Status",
-            //   value: "status",
-            //   sortable: false
-            // }
         ],
 
      
     }
   },
-  props: [ 'module', 'moduleIdx', 'procedureIdx', 'title', 'status' ,'watches', "jobStatus" ],
+  props: [ 'module', 'moduleIdx', 'procedureIdx', 'title', 'status' , "jobStatus" ],
   watch: {
     procedureIdx(newValue){
         this.services_to_use = {}
         this.getProcedure()
     },
-    
   },
   computed: {
+    procedureConfig(){
+      return nestedProperty.get(this.$store.state, `configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
+    },
+    serviceList(){
+      let serviceList = []
+      this.services.map((f,i)=>{
+        serviceList.push(i+1)
+      })
+      return serviceList
+    },
+    ...mapState({
+      catalog: state => state.catalog
+    }),
     statuses(){
         return this.status.services
     },
+   
+    
     
     additionals(){
         let ta= []
@@ -352,9 +621,13 @@ export default {
             for (let [key, value ] of Object.entries(this.procedure.variables)){
                 if (!value.output){
                     value.name = key
+                    if (!value.source && value.options){
+                      value.optionValue = ( value.option ? value.options[value.option] : value.options[0])
+                      value.source = value.optionValue.source
+                    }
                     ta.push(value)
-
                 }
+                
             }
         }
         return ta
@@ -364,8 +637,22 @@ export default {
   },
   mounted(){
     const $this = this
-   
-    this.getProcedure()
+    let found = nestedProperty.get(this.$store.state,`configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`);
+    if (!found){
+      this.getProcedure()
+    } else {
+      this.getProcedure()
+
+    }
+    $this.watcherInterval = setInterval(()=>{
+      let procedure = $this.procedure
+      if(procedure.watches){
+        procedure.watches.map((f,i)=>{
+          $this.$set($this.watches, i, f)
+        })
+      }
+    },1000)
+    
     
 
   },

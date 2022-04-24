@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -13,8 +13,13 @@
     "help:builder": "electron-builder --linux AppImage --help",
     "build": "node .electron-vue/build.js",
     "build:linux": "node .electron-vue/build.js && electron-builder --linux AppImage",
-    "build:linuxOffline": "node .electron-vue/build.js && electron-builder --linux AppImage -p never",
+    "build:linuxARM64": "node .electron-vue/build.js && electron-builder --arm64 --linux AppImage ",
+    "build:linuxAll": "node .electron-vue/build.js && electron-builder --arm64 --x64 --linux AppImage ",
+    "buildOnly:linuxARM64": "electron-builder --arm64 --linux AppImage",
     "buildOnly:linux": "electron-builder --linux AppImage",
+    "buildOnly:linuxAll": "electron-builder --arm64 --x64 --linux  AppImage",
+    "buildOnly:mac": "electron-builder --mac dmg",
+    "build:linuxOffline": "node .electron-vue/build.js && electron-builder --linux AppImage -p never",
     "build:mac-zip": "node .electron-vue/build.js && electron-builder --mac  zip",
     "package:mac-zip": "electron-builder --mac zip",
     "package:mac": "electron-builder --mac",
@@ -44,6 +49,7 @@
     "dev:mimicProductionServer": "cross-env serveProduction=true  node .electron-vue/dev-server.js",
     "dev:server": "node .electron-vue/dev-server.js",
     "dev:app": "node .electron-vue/dev-runner.js",
+    "dev-tools": "vue-devtools",
     "dev:up": "docker compose up basestack_orchestrator",
     "dev:down": "docker compose down basestack_orchestrator",
     "install_modules": "npm install --force",
@@ -116,7 +122,7 @@
       "icon": "build/icons/icon_256x256.png",
       "category": "Science",
       "executableName": "Basestack",
-      "artifactName": "Basestack.${ext}"
+      "artifactName": "${name}.${arch}.${ext}"
     },
     "nsis": {
       "perMachine": true,
@@ -131,11 +137,15 @@
     }
   },
   "dependencies": {
+    "@vue/composition-api": "^1.4.9",
+    "@vuelidate/core": "^2.0.0-alpha.38",
+    "@vuelidate/validators": "^2.0.0-alpha.28",
     "axios": "^0.21.1",
     "cors": "^2.8.5",
     "csv-parser": "^2.3.3",
     "date-format": "^4.0.3",
     "dockerode": "^3.2.0",
+    "electron-dl": "^3.3.0",
     "electron-log": "^4.3.1",
     "electron-promise-ipc": "^2.1.0",
     "electron-updater": "^4.3.5",
@@ -145,8 +155,10 @@
     "file-system": "^2.2.2",
     "git-clone": "^0.2.0",
     "glob": "^7.2.0",
+    "gunzip-file": "^0.1.1",
     "jquery": "^3.5.0",
     "js-cookie": "^2.2.1",
+    "js-yaml": "^4.1.0",
     "mkdirp": "^1.0.4",
     "moment": "^2.25.3",
     "mongodb": "^4.3.1",
@@ -158,6 +170,7 @@
     "node-gzip": "^1.1.2",
     "rimraf": "^3.0.2",
     "simple-git": "^2.48.0",
+    "source-map-support": "^0.5.19",
     "sweetalert2": "^9.10.9",
     "systeminformation": "^5.0.6",
     "tar": "^6.1.11",
@@ -179,11 +192,11 @@
     "vuelidate": "^0.7.7",
     "vuetify": "^2.6.2",
     "vuetify-loader": "^1.7.3",
-    "vuex": "^3.0.1",
+    "vuex": "^3.1.0",
     "vuex-electron": "^1.0.3",
+    "vuex-logger-plugin": "^1.0.1",
     "vuex-map-fields": "^1.4.1",
-    "winston": "^3.2.1",
-    "yaml": "^1.10.2"
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.14.8",
@@ -195,7 +208,8 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/vue-fontawesome": "^2.0.6",
-    "ajv": "^6.5.0",
+    "@vue/devtools": "^6.1.4",
+    "ajv": "^6.12.6",
     "babel-loader": "^8.2.2",
     "cfonts": "^2.9.1",
     "chai": "^4.1.2",
@@ -238,6 +252,7 @@
     "multispinner": "^0.2.1",
     "node-loader": "^0.6.0",
     "nodemon-webpack-plugin": "^4.4.4",
+    "npm-run-all": "^4.1.5",
     "require-dir": "^1.0.0",
     "sass": "~1.32",
     "sass-loader": "^12.4.0",
@@ -255,6 +270,7 @@
     "webpack-hot-middleware": "^2.22.2",
     "webpack-merge": "^4.1.3",
     "webpack-node-externals": "^2.5.2",
+    "webpack-watch-files-plugin": "^1.2.1",
     "yaml-loader": "^0.6.0"
   }
 }

@@ -29,12 +29,10 @@
           element: "file"
           hint: "Consensus FASTA file that you need to determine lineage from"
           bind_parent_dir: true
-          bind: 
-            from: "%{variables.file.source}"
-            to: "/opt/data"
+          bind: "directory"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.file.bind.to}/%{variables.file.source}"
+          target: "/opt/data/<<basename(%{variables.file.source})>>"
         autoUpdate:
           label: "AutoUpdated"
           element: "checkbox"
@@ -53,7 +51,7 @@
           output: true
           openSelf: True
           source: "<<directory(%{variables.file.source})>>/sequences.aln.fasta"
-          target: "%{variables.file.bind.to}/sequences.aln.fasta"
+          target: "<<directory(%{variables.file.target})>>/sequences.aln.fasta"
         report:
           label: "Lineage Report"
           element: "file"
@@ -62,7 +60,7 @@
           bind_parent_dir: false
           source: "<<directory(%{variables.file.source})>>/lineage_report.csv"
           # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
-          target: "%{variables.file.bind.to}/lineage_report.csv"
+          target: "<<directory(%{variables.file.target})>>/lineage_report.csv"
       tooltip: "Run the pangolin UI interface"
       services:
         - name: pangolin

@@ -10,8 +10,15 @@
         <v-data-table
             small
             :headers="headers"
-            :items="source.source"
+            :items="source"
             :items-per-page="6"
+            :footer-props="{
+            showFirstLastPage: true,
+                prevIcon: '$arrow-alt-circle-left',
+                nextIcon: '$arrow-alt-circle-right',
+                firstIcon: '$step-backward',
+                lastIcon: '$step-forward',
+            }"
             class="elevation-1"					        
         >	
             <template v-slot:top>
@@ -107,30 +114,15 @@
 <script>
 
 import draggable from 'vuedraggable'
-import { required, requiredIf, minLength, between } from 'vuelidate/lib/validators'
-
 
 export default {
 	name: 'multi-select',
     components: {
         draggable
     },
-    validations (){
-        return{
-            length : {
-                minLength: minLength(1),
-                required
-            },
-            values: {
-                required: requiredIf((value)=>{
-                    return value && !this.source.optional
-                }),
-            },
-        }
-    },
     computed: {
         length(){
-            return this.source.source.length
+            return this.source.length
         },
         defaultItem(){
             let item = {}
@@ -146,8 +138,8 @@ export default {
             if (this.defaultHeaders){
                 return this.defaultHeaders
             }
-            else if (this.source && this.source.header){
-                let tt = this.source.header.map((d,i)=>{
+            else if (this.source && this.variable.header){
+                let tt = this.variable.header.map((d,i)=>{
                     return {
                         text: d,
                         value: d,
@@ -170,7 +162,6 @@ export default {
         val || this.close()
       },
       defaultHeaders(newValue, oldValue){
-          console.log(newValue)
       },
       dialogDelete (val) {
         val || this.closeDelete()
@@ -178,8 +169,8 @@ export default {
       source: {
           deep: true,
           handler(newValue){
-              console.log("source changed!!!!", newValue)
               this.values = newValue.source
+              console.log("new value", newValue.source)
           }
 
       },
@@ -188,9 +179,9 @@ export default {
         save () {
             this.editedItem.index = this.editedIndex
             if (this.editedIndex > -1) {
-                Object.assign(this.source.source[this.editedIndex], this.editedItem)
+                Object.assign(this.source[this.editedIndex], this.editedItem)
             } else {
-                this.source.source.push(this.editedItem)
+                this.source.push(this.editedItem)
             }
             this.close()
         },
@@ -209,35 +200,34 @@ export default {
             })
         },
         editItem (item) {
-            this.editedIndex = this.source.source.indexOf(item)
+            this.editedIndex = this.source.indexOf(item)
             this.editedItem = Object.assign({}, item)
             this.dialog = true
         },
 
         deleteItem (item, index) {
-            this.editedIndex = this.source.source.splice(index, 1)
+            this.editedIndex = this.source.splice(index, 1)
             this.editedItem = Object.assign({}, item)
             this.dialogDelete = true
         },
 		addManifestRow(index){
             let emptyRow  = {}
-            let keys = this.source.header
+            let keys = this.variable.header
             keys.forEach((key)=>{
                 emptyRow[key] = null
             })
-			this.source.source.splice(index, 0, emptyRow)
-            // this.$set( this.values, this.values)
+			this.source.splice(index, 0, emptyRow)
 		},
 		rmManifestRow(index){
-			this.source.source.splice(index, 1)
+			this.source.splice(index, 1)
 		},
         changeID(val, index, index2){
-			this.$set(this.source.source[index], index2, val)
+			this.$set(this.source[index], index2, val)
 		},
 		moveUpRow(index){
-			const tmp =  this.source.source[index]
-			this.$set(this.source.source, index ,this.source.source[index-1] )
-			this.$set(this.source.source, index-1, tmp)
+			const tmp =  this.source[index]
+			this.$set(this.source, index ,this.source[index-1] )
+			this.$set(this.source, index-1, tmp)
 		},
 	},
     props: ['source', 'status', 'service', "variable", "defaultHeaders", 'title'],
@@ -251,8 +241,6 @@ export default {
         }
     },
     mounted(){
-        console.log("mounted multiselect")
-        console.log(this.defaultHeaders)
     }, 
 
     

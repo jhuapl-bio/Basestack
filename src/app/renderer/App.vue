@@ -209,28 +209,11 @@
 			</v-card>
 		</v-footer>
 	</v-app>
-  
-  <!-- <MainPage  v-if="ready && runningServer"
-    v-bind:defaults="defaults"
-  ></MainPage> 
-  <v-app  v-else-if="!ready || !runningServer">
-    <v-main >
-        <h3>Backend Server is not available</h3>
-        <Dashboard></Dashboard>
-    </v-main> 
-  </v-app>
-  <v-app v-else>
-    <v-main  >
-        <h3>Initiating Backend Connection....</h3>
-        <Dashboard></Dashboard>
-    </v-main>
-  </v-app> -->
+
 
 </template>
 
 <script>
-// import 'bootstrap/dist/css/bootstrap.css'
-// import 'bootstrap-vue/dist/bootstrap-vue.css'
 import FileService from '@/services/File-service.js'
 import Module from '@/components/Framework/Module'
 import Dashboard from "@/components/Dashboard/Dashboard"
@@ -262,10 +245,10 @@ export default {
     },
 	  hideSlider(){
 		  if (this.selected == 'procedures'){
-			  return false
+			  return false 
 		  } else {
 			  return true
-		  }
+		  } 
 	  },
     selectedPort(){
       return process.env.PORT_SERVER
@@ -296,7 +279,7 @@ export default {
 			mini:true,
       defaultModule: {},
 			drawer:false,
-			tabProcedure: null, 
+			tabProcedure: 0, 
 			sel: 0,
 			selected: 'defaults',
       colorList: [
@@ -333,21 +316,14 @@ export default {
       $this.runningServer = false
       $this.createPingInterval()
     })
+    
     this.$vuetify.icons.dropdown = 'fas fa-square'
-
     try{
       await $this.pingServerPort()
       await this.init()
       this.ready = true
       this.runningServer = true
-      // if (f)
-      // {
-      //   this.runningServer = true
-      //   await this.init()
-      // } else {
-      //   this.createPingInterval()
-      //   this.ready = false
-      // }
+    
     } catch(err){
       console.error(err)
       this.ready = false
@@ -359,10 +335,6 @@ export default {
 
 
     
-
-    // this.$electron.ipcRenderer.send('maiN')
-    // await this.$store.dispatch("UPDATEDEFAULTS", this.defaults)
-    // await this.$store.dispatch("UPDATEDEMODULES", this.modules)
     this.ready = true
     
 	},

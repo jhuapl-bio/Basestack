@@ -28,12 +28,10 @@
           hint: "Select your BAM file"
           bind_parent_dir: true
           element: "file"
-          bind: 
-            from: "%{variables.bam.source}"
-            to: "/opt/data"
+          bind: "directory"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.bam.bind.to}/"
+          target: "/opt/data/<<basename(%{variables.bam.source})>>"
         outdata:
           label: "Output bamstats zipped data"
           element: "file"  
@@ -43,7 +41,7 @@
           class: "wb-100  p-3 mb-1"
           source: "<<directory(%{variables.bam.source})>>/bamstats_report.zip" 
           # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
-          target: "<<directory(%{variables.bam.bind.to})>>/bamstats_report.zip"
+          target: "<<directory(%{variables.bam.target})>>/bamstats_report.zip"
         # outfile:
         #   label: "Output bamstats unzipped report data"
         #   element: "file"  
@@ -64,4 +62,95 @@
           force_restart: false
           force_init: false
           command: ["bash","-c", "/usr/local/bin/bamstats 4 ${bam};  "]
+    - name: bamstats dockstore #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Bamstats Dockstore"
+      icon: "times"
+      module: True
+      init: false 
+      dependencies:
+        - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          label: jhuaplbio/basestack_orchestrator
+          type: "docker-local"
+          build: 
+            path: ${configPath}/modules/orchestrator/Dockerfile
+            file: Dockerfile
+          format: "dockerfile"
+      tags: 
+        - "Quality Check"
+        - "Stats"
+        - "BAM"
+        - "Alignment Stats"
+      tooltip: "Run stats report on a BAM file"
+      variables:
+        bam:
+          label: "BAM file"
+          hint: "Select your BAM file"
+          bind_parent_dir: true
+          element: "file"
+          bind: "directory"
+          target: "/opt/data/<<basename(%{variables.bam.source})>>"
+          class: "wb-100  p-3 mb-1"
+          source: null
+        dockstorefile:
+          label: "Dockstore file"
+          options:
+            - name: "Custom input"
+              hint: "Select your Dockstore file"
+              element: "json"
+              target: "/opt/configuration/custom_Dockstore.json"
+              bind: 
+                from: "${writePath}/workflows/bamstats"
+                to: "/opt/configuration"
+              class: "wb-100  p-3 mb-1"
+              create:
+                target: "${writePath}/workflows/bamstats/custom_Dockstore.json"
+                type: "json"
+              source: {
+                  "mem_gb": 4,
+                  "bam_input": {
+                    "path": "/opt/data/<<basename(%{variables.bam.source})>>",
+                    "format": "http://edamontology.org/format_2572",
+                    "class": "File"
+                  },
+                  "bamstats_report": {
+                    "path": "/tmp/bamstats/bamstats.report.zip",
+                    "class": "File"
+                  }
+                }
+            - name: "Dockestore.json file"
+              hint: "Select your pre-made Dockstore.json file"
+              bind_parent_dir: true
+              element: "file"
+              bind: "directory"
+              target: "/opt/data/<<basename(%{variables.dockstorefile.source})>>"
+              class: "wb-100  p-3 mb-1"
+              source: null
+        outdata:
+          label: "Output bamstats zipped data"
+          element: "file"  
+          hint: "zipped raw data from output of bamstats"
+          output: true   
+          openSelf: true    
+          # bind: "directory"   
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory,directory(%{variables.bam.source})>>/bamstats_report.zip" 
+          target: "/tmp/bamstats_report.zip"
+      services:
+        - name: orchestrator
+          label: "Orchestrator"
+          image: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          orchestrator: true
+          force_restart: false
+          continuous: true
+          force_init: false
+          command: []
+        - name: bamstats
+          label: "Bamstats"
+          image: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          workingdir: "/opt/data"
+          orchestrated: 0
+          command: ["bash","-c", "dockstore tool launch --entry quay.io/collaboratory/dockstore-tool-bamstats:1.25-6_1.0 --json ${dockstorefile}; mv /tmp/bamstats/bamstats.report.zip /opt/data/"]
     

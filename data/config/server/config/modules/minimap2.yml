@@ -10,6 +10,25 @@
     - "genomics"
   tooltip: "Run Minimap2 Alignment on Fastq Files against database files"
   shared:
+    services:
+      samtools_view_sam_to_bam_minimap2:
+        label: "Samtools BAM from SAM"
+        image: "staphb/samtools"
+        workingdir: "/opt/data"
+        orchestrated: false #orchestrated means it r
+        init: false
+        force_restart: false
+        force_init: false
+        command: ["bash","-c", "samtools view -S -F4 -b ${sam}  | samtools sort > ${bam}"]
+      samtools_index_minimap2:
+        label: "Samtools Index"
+        image: "staphb/samtools"
+        workingdir: "/opt/data"
+        orchestrated: false #orchestrated means it r
+        init: false
+        force_restart: false
+        force_init: false
+        command: ["bash","-c", "samtools index ${bam}"]
     variables:
       sam:
         label: "Alignment File"
@@ -18,31 +37,29 @@
         output: True
         openSelf: True
         element: "file"
-        source: "%{variables.file.source}.sam" 
-        target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.sam.source})>>.sam"
+        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.sam"
+        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.sam"
       bam:
         label: "BAM File"
         element: "file"
         hint: "Compressed BAM file from SAM format"
         bind_parent_dir: true
         output: True
-        bind: 
-          from: "%{variables.bam.source}"
-          to: "/opt/data"
+        bind: "directory"
         class: "wb-100  p-3 mb-1"
-        source: "%{variables.file.source}.bam"
-        target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.sam.source})>>.bam"
+        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bam"
+        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bam"
       bai:
         label: "BAI File"
         hint: "BAI index file generated from an alignment and sorted"
         watch: True
         output: True
         element: "file"
-        source: "%{variables.file.source}.bam.bai"
-        target: "%{variables.bam.bind.to}/<<basename(%{variables.bam.source})>>.bai"
+        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bam.bai"
+        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bam.bai"
   procedures:
-    - name: minimap2 #Top level is the left-hand selection of the menu and the major module to install 
-      title: "Minimap2"
+    - name: minimap2Long #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Minimap2 ONT"
       icon: "magic"
       module: True
       init: false 
@@ -61,24 +78,32 @@
         file:
           label: "FASTA/Q File"
           element: "file"
-          bind_parent_dir: true
-          bind: 
-            from: "%{variables.file.source}"
-            to: "/opt/data"
+          bind: "directory"
+          # bind: 
+          #   from: "%{variables.file.source}"
+          #   to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "%{variables.file.bind.to}/%{variables.file.source}"
+          target: "/opt/data/<<basename(%{variables.file.source})>>"
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(fastq|fq|fa|fna|faa|fasta)$"
         ref:
           label: "Reference to align against"
           class: "wb-100 p-3 mb-1"
           hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
           element: "file" 
           bind_parent_dir: true
-          bind: 
-            from: "%{variables.ref.source}"
-            to: "/opt/ref"
+          bind: "directory"
           source: null
-          target: "%{variables.ref.bind.to}/%{variables.ref.source}"
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(fasta|fa|fna)$"
+          target: "/opt/ref/<<basename(%{variables.ref.source})>>"
         bam: 
           target: "%{shared.variables.bam}"
           shared: true
@@ -98,24 +123,111 @@
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "minimap2   ${ref} ${file} -a -o ${file}.sam"]
-        - name: samtools_view_sam_to_bam_minimap2
-          label: "Samtools BAM from SAM"
-          image: "staphb/samtools"
+          command: ["bash","-c", "minimap2  -ax map-ont ${ref} ${file} -a -o ${sam}"]
+        - target: samtools_view_sam_to_bam_minimap2
+          shared: True
+        - target: samtools_index_minimap2
+          shared: True
+    - name: minimap2PairedEnd #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Minimap2 Paired End"
+      icon: "magic"
+      module: True
+      init: false 
+      dependencies:
+        - target: "staphb/minimap2"
+          type: "docker"
+          format: "docker"
+        - target: "staphb/samtools"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "minimap2"
+        - "alignment"
+        - "short reads"
+        - "genomics"
+      variables:
+        files:
+          label: "FASTA/Q File Paired-end files"
+          element: "files"
+          bind_parent_dir: true
+          bind: "directory"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "/opt/data/<<basename(%{variables.files.source})>>"
+        output:
+          label: "Output Base Name"
+          element: "string"
+          hint: "Name of your SAM/BAM/BAI"
+          class: "wb-100  p-3 mb-1"
+          source: "alignment"
+          target: "%{variables.output.source}"
+        outputDir:
+          label: "Output Direcotry"
+          element: "dir"
+          hint: "Output Directory to place your SAM/BAM/BAI file(s)"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          bind: "self"
+          target: "/opt/output"
+        ref:
+          label: "Reference to align against"
+          class: "wb-100 p-3 mb-1"
+          hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
+          element: "file" 
+          bind_parent_dir: true
+          bind: 
+            from: "<<directory(%{variables.ref.source})>>"
+            to: "/opt/ref"
+          source: null
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(fasta|fa|fna)$"
+          target: "/opt/ref/<<basename(%{variables.ref.source})>>"
+        sam:
+            label: "Alignment File"
+            hint: "Alignment file to be used in downstream analysis"
+            watch: True
+            output: True
+            openSelf: True
+            element: "file"
+            source: "%{variables.outputDir.source}/%{variables.output.source}.sam"
+            target: "/opt/output/%{variables.output.source}.sam"
+            bind: "directory"
+        bam:
+          label: "BAM File"
+          element: "file"
+          hint: "Compressed BAM file from SAM format"
+          bind_parent_dir: true
+          output: True
+          bind: "directory"
+          class: "wb-100  p-3 mb-1"
+          source: "%{variables.outputDir.source}/%{variables.output.source}.bam"
+          target: "/opt/output/%{variables.output.source}.bam"
+        bai:
+          label: "BAI File"
+          hint: "BAI index file generated from an alignment and sorted"
+          watch: True
+          output: True
+          element: "file"
+          source: "%{variables.outputDir.source}/%{variables.output.source}.bai"
+          target: "/opt/output/%{variables.output.source}.bai"
+          bind: "directory"
+      tooltip: "Run a Paired end set of fastq files using Minimap2 Alignment against reference FASTA files"
+      services:
+        - name: minimap2
+          label: "Minimap2 Alignment Short Reads"
+          image: "staphb/minimap2"
           workingdir: "/opt/data"
           orchestrated: false #orchestrated means it r
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "samtools view -S -F4 -b ${sam}  | samtools sort > ${bam}"]
-        - name: samtools_index_minimap2
-          label: "Samtools Index"
-          image: "staphb/samtools"
-          workingdir: "/opt/data"
-          orchestrated: false #orchestrated means it r
-          init: false
-          force_restart: false
-          force_init: false
-          command: ["bash","-c", "samtools index ${bam}"]
-            
+          command: ["bash","-c", "minimap2  -ax sr   ${ref} ${files} -a -o ${sam}"]
+        - target: samtools_view_sam_to_bam_minimap2
+          shared: True
+        - target: samtools_index_minimap2
+          shared: True
+        
       

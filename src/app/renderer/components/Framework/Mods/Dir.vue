@@ -10,10 +10,10 @@
   <v-card >
       
       <v-sheet  elevation="1" 
-          height="50"
-          max-width="600" class="px-8 pt-4"
+          height="50" :hint="hint" persistent-hint
+          max-width="600" class="px-8 pt-4" 
           style="" @drop.prevent="addDropFiles" @dragover.prevent >
-            
+          
             <v-icon
             small class="mr-2 "
             > $upload
@@ -26,7 +26,6 @@
       
       <small class="text-caption" v-if="directory">
         {{directory}}
-        
       </small>
       
       
@@ -49,7 +48,14 @@ export default {
       }
   },
   computed: {
-      
+      hint(){
+      let hint = ""
+      if (this.variable.target){
+        hint =`${this.variable.target}`
+      }
+      console.log(hint)
+      return hint
+    },
   },
   
 	methods: {
@@ -64,25 +70,24 @@ export default {
         const $this = this
         this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
             $this.directory = message
-            $this.source.source = message
-            console.log($this.source,"changed dir")
+            $this.source = message
         })
         this.$electron.ipcRenderer.send("openDirSelect", "")
 		},
 	},
 	props: ['source', 'status', 'service', 'variable'],
   mounted(){
-    this.directory = this.source.source 
+    this.directory = this.source 
   },
   watch: {
         directory(newValue, oldValue){
             this.$emit("updateValue", newValue )
         },
-        // directory(newValue, oldValue){
-        //     if (newValue){
-        //       this.value  = newValue.path.replace(newValue.name, "")
-        //     }
-        // },
+        source(newValue){
+          if (!newValue){
+            this.directory = null
+          }
+        },
         valueDir(newValue, oldValue){
             if (newValue && newValue.length > 0){   
     			if (newValue.length == 1){

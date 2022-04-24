@@ -6,6 +6,12 @@
         <v-alert type="success" shaped icon="$check-circle"
           text v-else>Docker is running 
         </v-alert>
+        <v-btn
+          icon-and-text v-if="!docker"
+          color="primary"
+          @click="installDocker()"
+        >Install Docker
+        </v-btn>
         <v-list-item
           v-for="entry in fields_docker"
           :key="entry.key"
@@ -40,7 +46,7 @@
 <script>
   import FileService from '@/services/File-service.js'
   export default {
-    props: ['serverStatus'],
+    props: ['serverStatus', "resources"],
     beforeDestroy: function(){
       if (this.intervalDocker){
         try{
@@ -112,6 +118,7 @@
     mounted(){
       const $this = this;
       this.getDockerStats()
+      console.log(this.resources)
       this.intervalDocker = setInterval(()=>{
         if (!$this.checkingDocker){
           $this.checkingDocker = true
@@ -119,7 +126,24 @@
         }
       }, 3000)
     },
+    watch: {
+    },
     methods: {
+      async installDocker(){
+        console.log("install docker")
+        this.$electron.ipcRenderer.send("downloadDocker", { platform: this.resources.os.platform, arch: this.resources.os.arch } )
+        this.$electron.ipcRenderer.on('dockerDownloadStatus', (evt, message)=>{
+          this.$swal.fire({
+            position: 'center',
+            icon: (message.type ? message.type : 'info'),
+            showConfirmButton:true,
+            title:  message.message,
+            text:  message.info
+          })
+
+        })
+
+      },
       async updateSocket(){
         FileService.updateSocket(this.dockerSocket).catch((err)=>{
           console.error(err)

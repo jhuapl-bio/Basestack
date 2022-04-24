@@ -24,10 +24,6 @@
     data () {
       return {
         fields_disk: [
-          // {
-          //   key: 'fs',
-          //   label: 'Partition'
-          // },
           {
             key: 'mount',
             label: 'Mount'

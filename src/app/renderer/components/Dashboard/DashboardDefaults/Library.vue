@@ -1,5 +1,4 @@
 <template>
-  <!-- <v-container fluid> -->
     <v-row   style="height: 10vh">
         <v-col sm="12" height="10vh" >
         <v-expansion-panels  height="10vh"  style="text-align:left;"  v-model="panel">
@@ -101,7 +100,6 @@
         </v-col>
     </v-col>
     </v-row>
-  <!-- </v-container> -->
 </template>
 
 <script>
@@ -146,22 +144,11 @@
             defaultModule(){
                 return this.panel
             },
-            // moduleIdx(){
-            //     if (this.isHovered.modules && this.selectedModule){
-            //         // return   this.isHovered.variants.findIndex(data => data === this.selectedModule)
-            //         return   ( this.selectedModule.idx && this.selectedModule.idx >= 0 ? this.selectedModule.idx : 0 )
-            //     }
-            //     else {
-            //         return 0
-            //     }
-            // }
-		
 		},
 		
 	    mounted(){
             this.getStatus()
             const $this = this
-            // this.fetchAllRemoteLibrary('modules')
             setInterval(()=>{
                 $this.getStatus()
             },4000)    

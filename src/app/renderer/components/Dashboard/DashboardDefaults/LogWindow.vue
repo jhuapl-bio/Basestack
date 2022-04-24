@@ -55,14 +55,10 @@ export default {
 	},
     props: ['info',' link'],
   watch: {
-    // info(newValue){
-    //   console.log("new Value", newValue)
-    // }
   },
 	methods:{
 		open (link) {
           try{        
-            // this.$electron.shell.openPath(link)
             this.$electron.ipcRenderer.send("openLogs")
           } catch(err){ 
             this.$swal.fire({ 

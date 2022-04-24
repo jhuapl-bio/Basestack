@@ -37,10 +37,10 @@
           optional: false
           bind_parent_dir: false
           source: null
-          bind: 
-            from: "%{variables.dir.source}"
-            to: "/opt/data"
+          target: "/opt/data"
+          bind: "self"
           class: "wb-50  p-3 mb-1"
+          
         fast5:
           label: "Fast5 Pass Folder"
           hint: "Required for nanopolish mode (consensus portion). Contains your FAST5 files. Folder must be named fast5_pass"
@@ -51,33 +51,39 @@
               - dir
             action: "exists"
             source: "%{variables.dir.source}/fast5_pass"
-          target: "%{variables.file.bind.to}/"
         summary:
           label: "Sequencing Summary File"
           warning: "Must be in the root (same level) of the run directory"
-          hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory"
+          hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. This is oftentimes generated during basecalling so be sure to check that folder if missing"
           element: "exists"
           source:  null
+          validations:
+            - type: "files"
+              error: "Must have a sequencing_summary.txt file in the root directory (directly in your run directory)"
+              target: 
+                type: "value"
+                minimum: 1
+                path: "%{variables.dir.source}"
+                value: ".*(sequencing_summary.*.txt)$"
           update_on: 
             depends:
               - dir
             action: "exists"
-            source: "%{variables.dir.source}/sequencing_summary*.txt"
-          target: "%{variables.file.bind.to}/"
+            source: "%{variables.dir.source}"
+            # source: "%{variables.dir.source}/sequencing_summary*.txt"
         fastq_pass:
           label: "Input Long-Reads FASTQ Directory"
           hint: "Folder that contains 1 or more fastq files in UNCOMPRESSED format"
           class: "wb-50  p-3 mb-1"
           warning: "Ensure that all fastq files you want to analyze are decompressed"
-          # element: "exists"
-          # hidden: false
-          # name: "fastq_pass"
-          # update_on: 
-          #   depends:
-          #     - dir
-          #   action: "exists"
-          #   source: "%{variables.dir.source}/fastq_pass"
-          # target: "%{variables.file.bind.to}/"
+          validations:
+            - type: "files"
+              error: "Must have 1 or more .fastq files"
+              target: 
+                type: "value"
+                minimum: 1
+                path: "%{variables.dir.source}"
+                value: ".*(fastq|fq)$"
           options:
             - element: "exists"
               hidden: false
@@ -87,15 +93,13 @@
                   - dir
                 action: "exists"
                 source: "%{variables.dir.source}/fastq_pass"
-              target: "%{variables.file.bind.to}/"
+              target: "/opt/data/fastq_pass"
               source: null
             - element: "dir"
               name: "Custom Fastq Pass Directory"
               source: null
-              target: null
-              bind: 
-                from: "%{variables.fastq_pass.source}"
-                to: "%{variables.dir.bind.to}/fastq_pass" 
+              target: "/opt/data/fastq_pass"
+              bind: "self"
         primers:
           label: "Primer Configuration"
           element: null
@@ -105,6 +109,7 @@
           link: run_config
           warning: "Must be ARTIC format in the pipeline's current state"
           class: "wb-50 p-3 mb-1"
+          target: "${variables.primers.source"
           options:
             - "nCoV-2019/V3"
             - "nCoV-2019/V4"
@@ -126,6 +131,7 @@
           hint: "Which basecalling configuration you used to create your fastq_pass folder"
           link: run_config
           class: "wb-50 p-3 mb-1"
+          target: "${variables.basecalling.source"
           column: 4
           options:
             - "dna_r9.4.1_450bps_hac.cfg"
@@ -154,6 +160,7 @@
           link: run_config
           column: 4
           class: "wb-50 p-3 mb-1"
+          target: "${variables.barcoding.source"
           options:
             - "barcode_arrs_nb96.cfg"
             - "barcode_arrs_16s.cfg"
@@ -175,7 +182,7 @@
         manifest:
           label: "Input Manifest"
           element: "list"
-          hint: "Mapping of your Barcodes to Sample IDs"
+          hint: "Mapping of your Barcodes to Sample IDs. You must have an NTC listed even if you haven't used one. You can list a NTC as NB00 to get it to run if you don't have one"
           columns: 2
           column: 12
           sep: "tab"
@@ -189,6 +196,14 @@
           create:
             target: "%{variables.dir.source}/manifest.txt"
             sep: "tab"
+            type: "list"
+          validations:
+            - type: "contains"
+              error: "Must have 1 NTC in the id slot. Select NB00 and NTC for barcode and id, respectively, if not using a NTC"
+              target: 
+                type: "column"
+                location: 'id'
+                value: "NTC"
           class: "wb-50  p-3 mb-1"
           source: []
           header: [ 'barcode', 'id']
@@ -204,6 +219,7 @@
           create:
             target: "%{variables.dir.source}/run_config.txt"
             sep: "tab"
+            type: "list"
           class: "wb-50  p-3 mb-1"
           source: []
           framework: [
@@ -227,7 +243,8 @@
           hint: "Folder containing demulitplexed files from long-read run"
           element: file
           source: "%{variables.dir.source}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
-          target: "%{variables.dir.bind.to}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
+          path:  "%{variables.dir.source}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
+          target: "%{variables.dir.target}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
         length-filter:
           watch: True
           output: True
@@ -235,21 +252,23 @@
           hint: "Folder containing all filtered length files (Step 2)"
           type: files
           pattern: ".complete"
+          path: "%{variables.dir.source}/artic-pipeline/2-length-filter"
           total:  
             target: "<<length(&{variables.manifest.source})>>" 
           source: "%{variables.dir.source}/artic-pipeline/2-length-filter"
-          target: "%{variables.dir.bind.to}/artic-pipeline/2-length-filter"
+          target: "%{variables.dir.target}/artic-pipeline/2-length-filter"
         normalizations:
           watch: True
           output: True
           label: "Normalization"
           hint: "Files are normalized by depth"
           type: files
+          path: "%{variables.dir.source}/artic-pipeline/3-normalization"
           pattern: ".complete"
           total: 
             target: "<<length(&{variables.manifest.source})>>" 
           source: "%{variables.dir.source}/artic-pipeline/3-normalization"
-          target: "%{variables.dir.bind.to}/artic-pipeline/3-normalization"
+          target: "%{variables.dir.target}/artic-pipeline/3-normalization"
         consensuses:
           watch: True
           output: True
@@ -259,8 +278,9 @@
           total: 
             target: "<<length(&{variables.manifest.source})>>" 
           pattern: ".complete"
+          path: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"
           source: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"
-          target: "%{variables.dir.bind.to}/artic-pipeline/4-draft-consensus"
+          target: "%{variables.dir.target}/artic-pipeline/4-draft-consensus"
         report:
           watch: True
           output: True
@@ -269,7 +289,7 @@
           hint: "Report PDF containing information about your consensus generation output and the overall run"
           element: file
           source: "%{variables.dir.source}/artic-pipeline/report.pdf"
-          target: "%{variables.dir.bind.to}/artic-pipeline/report.pdf"
+          target: "%{variables.dir.target}/artic-pipeline/report.pdf"
       services: 
         - name: artic_consensus_jhuapl
           label: "Report"
