@@ -276,7 +276,7 @@
           workingdir: "/opt/data"
           warning: "This process requires internet in its current state"
           command: [
-            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh pwd 'nextflow run nf-core/viralrecon -r ${revision}
+            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh pwd 'sleep 5; nextflow run nf-core/viralrecon -r ${revision}
               --primer_set_version ${primer_set_version}
               --fastq_dir ${fastq_dir}
               --fast5_dir ${fast5_dir}

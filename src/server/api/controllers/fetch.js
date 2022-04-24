@@ -26,7 +26,7 @@ export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathV
 	    	if (err2){
 	    		console.error(err2)
 	    		reject()
-	    	} else{
+	    	} else{ 
 	    		if (!stats.isFile()){
 	    			(async ()=>{
 						let validVersion = await validatePrimerVersions(fullpath, primerNameDir,fullpathVersion)
