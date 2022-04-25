@@ -11,7 +11,8 @@
             "basestack-docker-certs-client:/certs/client"
         ],	 
         "PortBindings": {
-        }
+        },
+        "UsernsMode": "host"
     },
     "Volumes": {
     },  
