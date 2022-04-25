@@ -101,7 +101,7 @@ export class Service {
     }
 	defineConfig(){
         let service = this.config
-        let optionsFile
+        let optionsFile 
         if (service.config ){
             optionsFile = service.config
         } else if ( ( typeof service.orchestrated == 'number' && service.orchestrated >= 0  ) && !service.config ){
@@ -110,7 +110,7 @@ export class Service {
             optionsFile = store.system.orchestrators.orchestrator.path
         } else {
             optionsFile = store.system.orchestrators.default.path
-        }
+        } 
         return optionsFile
     }
     
