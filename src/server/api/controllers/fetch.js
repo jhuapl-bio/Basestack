@@ -267,6 +267,7 @@ export async function fetch_external_config_target(key,catalog){
 				d.remote = true
 				d.local = false
 			})
+			console.log(json.data.data,"<<<<ß")
 			return json.data.data
 		} catch(err){
 			logger.error(`${err} error in fetching external url____________`)
