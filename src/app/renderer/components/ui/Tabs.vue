@@ -1,5 +1,4 @@
 <template>
-    <!-- https://inclusive-components.design/tabbed-interfaces/ -->
     <div>
         <nav>
             <ul role="tablist" class="flex items-center space-x-6 border-b border-gray-600">
@@ -36,10 +35,10 @@ export default {
     },
 
     mounted() {
-        // let preSelectedTab = this.tabs.findIndex(tab => tab.selected === true)
-        // if(preSelectedTab === -1){
-        //     this.tabs[0].isActive = true
-        // }
+        let preSelectedTab = this.tabs.findIndex(tab => tab.selected === true)
+        if(preSelectedTab === -1) {
+            this.tabs[0].isActive = true
+        }
     },
 
     methods: {
