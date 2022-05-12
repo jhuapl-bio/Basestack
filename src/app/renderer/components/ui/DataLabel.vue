@@ -16,7 +16,7 @@ export default {
   name: "DataLabel",
   props: {
     label: String,
-    data: String,
+    data: [String, Number],
   },
 };
 </script>

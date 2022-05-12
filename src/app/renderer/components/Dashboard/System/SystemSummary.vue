@@ -17,32 +17,32 @@
         <div class="grid grid-cols-3">
           <DataLabel
             label="CPU Brand"
-            data="Core i7-7820HQ"
+            :data="resources.cpu.brand"
             class="col-span-2"
           />
-          <DataLabel label="Manufacturer" data="Intel" />
-          <DataLabel label="Cores" data="8" />
-          <DataLabel label="Physical Cores" data="4" />
-          <DataLabel label="Virtualization" data="Yes" />
+          <DataLabel label="Manufacturer" :data="resources.cpu.manufacturer" />
+          <DataLabel label="Cores" :data="resources.cpu.cores" />
+          <DataLabel label="Physical Cores" :data="resources.cpu.physicalCores" />
+          <DataLabel label="Virtualization" :data="resources.cpu.virtualization ? 'Yes' : 'No'" />
         </div>
       </div>
       <hr class="border-gray-400" />
       <div class="p-4">
         <h3 class="mb-4 markup-h5 strong">Memory</h3>
         <div class="grid grid-cols-3">
-          <DataLabel label="Total Mem (GB)" data="17.18" />
-          <DataLabel label="Using Mem (GB)" data="5.43" />
-          <DataLabel label="Available Mem (GB)" data="11.70" />
+          <DataLabel label="Total Mem (GB)" :data="convertGb(resources.mem.total)" />
+          <DataLabel label="Using Mem (GB)" :data="convertGb(resources.mem.active)" />
+          <DataLabel label="Available Mem (GB)" :data="convertGb(resources.mem.available)" />
         </div>
       </div>
       <hr class="border-gray-400" />
       <div class="p-4">
         <h3 class="mb-4 markup-h5 strong">Operating System</h3>
         <div class="flex flex-wrap justify-between">
-          <DataLabel label="Kernel" data="20.6.0" />
-          <DataLabel label="Platform" data="darwin" />
-          <DataLabel label="Distro" data="macOS" />
-          <DataLabel label="Release" data="11.5.2" />
+          <DataLabel label="Kernel" :data="resources.os.kernel" />
+          <DataLabel label="Platform" :data="resources.os.platform" />
+          <DataLabel label="Distro" :data="resources.os.distro" />
+          <DataLabel label="Release" :data="resources.os.release" />
         </div>
       </div>
     </div>
@@ -62,5 +62,15 @@ export default {
     DataLabel,
     UncontainedButton,
   },
+  props: ['resources'],
+  methods: {
+    convertGb(size, val){
+      if (val =='MB'){
+        return size / 1000 
+      } else {
+        return (size / 1000000000).toFixed(2)
+      }
+    }
+  }
 };
 </script>
