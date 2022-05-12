@@ -53,11 +53,10 @@
                     </tab>
                 </tabs>
 
-               
-
-                <!-- <section>
+                <!-- old library view attached here if you need to install/manage modules -->
+                <section>
                     <library />
-                </section> -->
+                </section>
             </div>
 		</template>
 	</app-layout>
