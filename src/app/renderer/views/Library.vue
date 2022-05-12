@@ -1,16 +1,26 @@
 <template>
 	<app-layout>
 		<template #title>
-            <h2 class="text-blue-900 markup-h1">
-			    Library
-            </h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-blue-900 markup-h1">
+                    Library
+                </h2>
+
+                <SearchModulesField />
+            </div>
 		</template>
 
 		<template #content>
             <div class="space-y-8">
                 <tabs>
                     <tab name="My Procedures" class="flex flex-col space-y-12">
-                        <h4 class="text-blue-900 markup-h4">My Procedures</h4>
+                        <div class="px-6 py-4 bg-blue-100 rounded-lg">
+                            <h4 class="mb-4 text-blue-900 markup-h4">My Procedures</h4>
+                            <div class="flex items-center justify-between">
+                                <p class="markup-body-sm">String together services across modules to create a custom procedure</p>
+                                <button>Create Procedure</button>
+                            </div>
+                        </div>
                     </tab>
 
                     <tab name="My Modules" class="flex flex-col space-y-12">
@@ -60,6 +70,7 @@ import ModuleLibraryCard from '../components/ui/ModuleLibraryCard.vue';
 import Library from '../components/Dashboard/DashboardDefaults/Library.vue';
 import FileService from '../services/File-service'
 import Tab from '../components/ui/Tab.vue';
+import SearchModulesField from '../components/ui/forms/SearchModulesField.vue'
 export default {
 	components: {
         'app-layout': AppLayout,
@@ -67,6 +78,7 @@ export default {
         'tab': Tab,
         ModuleLibraryCard,
         Library,
+        SearchModulesField
     },
 	data(){
 		return {
@@ -84,10 +96,6 @@ export default {
         setInterval(()=>{
             this.getStatus()
         }, 4000)    
-
-        console.log({
-
-        })
     },
 
     methods: {
