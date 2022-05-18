@@ -160,6 +160,7 @@
         "postcss-import": "^14.0.2",
         "rimraf": "^3.0.2",
         "simple-git": "^2.48.0",
+        "slugify": "^1.6.5",
         "sweetalert2": "^9.10.9",
         "systeminformation": "^5.0.6",
         "tar": "^6.1.11",
