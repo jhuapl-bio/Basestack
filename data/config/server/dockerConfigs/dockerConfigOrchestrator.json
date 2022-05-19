@@ -11,10 +11,12 @@
             "basestack-docker-certs-client:/certs/client"
         ],	 
         "PortBindings": {
-        }
+        },
+        "UsernsMode": "host"
     },
     "Volumes": {
     },  
+
     "Env": [
         "DOCKER_TLS_CERTDIR=/certs"
     ], 
