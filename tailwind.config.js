@@ -75,10 +75,11 @@ module.exports = {
       "2xl": "2.375rem", //38px
       "3xl": "3.625rem", //38px
     },
-    shadow: ({ theme }) => ({
+    boxShadow: ({ theme }) => ({
       DEFAULT: `0 0 5px 0 ${theme.colors.gray["300"]}`,
       lg: `0 0 12px 0 ${theme.colors.gray["400"]}`,
       xl: `0 0 38px 0 ${theme.colors.gray["500"]}`,
+      checkbox: `inset 0 0 0 4px ${theme.colors.white}`,
     }),
     extend: {
       borderWidth: {
@@ -92,5 +93,5 @@ module.exports = {
       "7": "7px",
     },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/forms')]
 };
