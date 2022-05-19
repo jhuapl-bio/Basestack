@@ -1,9 +1,14 @@
 - name: samtools
   title: "Samtools"
   icon: "binoculars"
+  schema_version: 1
   version: 1.0
   basestack_released: 2.0
   module: True
+  tags: 
+    - "SAM"
+    - "alignment"
+    - "BAM"
   tooltip: "Download the samtools suite"
   procedures: 
     - name: sam2bam #Top level is the left-hand selection of the menu and the major module to install 

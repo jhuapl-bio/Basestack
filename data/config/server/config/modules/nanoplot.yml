@@ -4,10 +4,18 @@
   version: 1.0
   basestack_released: 2.0
   module: True
+  schema_version: 1
+  url: https://github.com/wdecoster/NanoPlot
+  description: "Run plotting metrics  based on a a Nanopore reads run directory"
   tooltip: "Run Pairwise distance estimation on 2 genomes"
+  tags: 
+    - "Plotting"
+    - "nanopore"
+    - "statistics"
+    - "graphing"
   procedures: 
     - name: nanoplot #Top level is the left-hand selection of the menu and the major module to install 
-      title: "Nanoplot"
+      title: "Nanoplot" 
       icon: "chart-area"
       module: True
       init: false 

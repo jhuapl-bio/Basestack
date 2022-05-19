@@ -331,7 +331,6 @@ export  class Configuration {
                                         try{  
                                             id = match.replace(/[\%\{\}]/g, "")
                                             found =  nestedProperty.get($this, id)
-                                            // console.log("yes",found.variables, id, key, )
                                             if (typeof found == 'string' || !found){
                                                 fullstring  = fullstring.replaceAll(match, found)                                            
                                             } else {

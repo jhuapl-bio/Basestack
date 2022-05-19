@@ -14,9 +14,8 @@ export function bytesToSize(bytes) {
    return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
 }  
 export async function create_job(config, params, services, procedure){
-    let job = new Job(procedure,config)
-    // job.defineConfiguration(config)   
-    if (!services){  
+    let job = new Job(procedure,config) 
+    if (!services){   
         
         services = config.services.map((d,i)=>{ 
             return i  
@@ -26,12 +25,12 @@ export async function create_job(config, params, services, procedure){
     await job.defineServices(services, params) 
     if (params){       
         job.setParams(params)      
-    }      
+    }    
     return job   
 }           
 
    
-async function import_cfgs(module, type){ 
+export async function import_cfgs(module, type){ 
     try{   
         let promises_files = [] 
         let promises_folders = []   
@@ -46,16 +45,17 @@ async function import_cfgs(module, type){
         }   
         if (promises_folders.length > 0 ){     
             let results = await Promise.allSettled(promises_folders)
+            
             results.forEach((result, i)=>{ 
                 let inner_file_read = []    
                 result.value.forEach((dir)=>{  
                     try{  
-                         
                         if  (module.format == 'dir'){ 
                             promises_files.push(readFile(path.join( dir.path,  module.filename )    )     )
                             files_marked.push(path.join( dir.path,  module.filename )    )
                         } else {  
-                            promises_files.push(readFile(dir )     )
+                            promises_files.push(readFile( dir )     )
+                            
                             files_marked.push(( dir  ))
                         }
                     } catch(err){
@@ -75,11 +75,10 @@ async function import_cfgs(module, type){
                     if(config){
                         return_data.push(config)
                     }
-                    // config = parseConfigVariables(result.value, module.type, files_marked[i])
-                    // config.path = files_marked[i]
                 } catch (err_2){ 
                     store.logger.error(`______Init YAML/JSON ERROR for ${result.value}___________`)
                     store.logger.error(err_2)
+                    
                     store.logger.error("_________________________")
                 }   
                 
@@ -91,10 +90,9 @@ async function import_cfgs(module, type){
                     data.forEach((d)=>{
                         d.path = files_marked[i]
                     })
-                } else {
-                    for (let [key, value] of Object.entries(data)){
-                        value.path = files_marked[i]
-                    }
+                } else if (typeof data == 'object') {
+                    data.path = files_marked[i]
+                    
                 }
             })
         }
@@ -105,55 +103,28 @@ async function import_cfgs(module, type){
     }
 }
 
+
 export const  define_base = async function(){
     try{
        
-        const { Module } = require("../orchestrators/module.js") 
-        // const { Procedure } = require("../orchestrators/procedure.js")
-        // const { Service } = require("../orchestrators/service.js")
-
         let default_config = null
         let subclient_config = null
         let custom = {
             services: [],
             modules: [],
             procedures: [],
+            imported: []
         }
-
+        
+ 
         let config = await import_cfgs(store.system.orchestrators.default, "docker")
         let subclient = await import_cfgs(store.system.orchestrators.subclient, "docker")
         store.system.dockerConfigs.subclient = subclient
         store.system.dockerConfigs.default = config
 
         let dind = store.system.orchestrators.dind
-
-
-        let module_paths = store.system.modules
         let promises = []
-        module_paths.forEach((item)=>{ 
-            promises.push(import_cfgs(item))
-        })
-        let results_default = await Promise.allSettled(promises)
-        results_default.forEach((result, index)=>{
-            if (result.status == 'fulfilled'){ 
-                result.value.forEach((config)=>{
-                    config.map((d)=>{
-                        let version = ( d.version ? d.version : 1.0 )
-                        if (module_paths[index].custom){
-                            version = 0
-                        } else if (module_paths[index].remote){
-                            version = module_paths[index].version
-                        } 
-                        d.local = module_paths[index].local
-                        d.custom = module_paths[index].custom
-                        d.remote = module_paths[index].remote
-                        d.version = version
-                    })
-                    store.config.modules = [ ...store.config.modules, ...config ]
-                })
-            }
-        })
-        promises = []
+        let results_default
 
         let defaults = store.system.default.items
         defaults.forEach((item)=>{ 
@@ -163,7 +134,19 @@ export const  define_base = async function(){
         results_default.forEach((result)=>{
             if (result.status == 'fulfilled'){ 
                 result.value.forEach((config)=>{
-                    store.default = [ ...store.default, ...config ]
+                    
+                    config.forEach((conf)=>{
+                        let idx = store.default.findIndex((f)=>{
+                            return f.name == config.name
+                        }) 
+                        store.logger.info("%s idx %s",conf,idx)
+                        if (idx == -1){
+                            store.default.push(conf)
+                        } else {
+                            store.default[idx] = conf
+                        }
+                    })
+                    
                 })
             }
                

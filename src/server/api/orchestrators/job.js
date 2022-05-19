@@ -271,12 +271,13 @@ export  class Job {
             })
         })
     } 
-    async setParams(params){
+    setParams(params){
         if (params.images){
             params.images.forEach((service)=>{ 
                 this.services[service.service].override.image = service.image
             })
         }
+        
         this.services.forEach((service)=>{ 
             service.config.dry = params.dry
         })
@@ -292,7 +293,7 @@ export  class Job {
             service.config.command = command  
         } 
     }
-    setVariables(variables){
+    setVariables(variables){  
         this.variables = variables
         const $this = this
         for(let [key, value] of Object.entries(variables)){
@@ -311,23 +312,27 @@ export  class Job {
     }
     async defineServices (services, params ) {
         const $this = this;
+        
         for (let ix = 0; ix < services.length;  ix++){
             let serviceIdx = services[ix]
-            let service = new Service($this.baseConfig.services[serviceIdx], serviceIdx)
-            await service.setOptions()
-            let command;
-            let commandsIndex = -1
+            if (serviceIdx < this.baseConfig.services.length){
+                
+                let service = new Service($this.baseConfig.services[serviceIdx], serviceIdx)
+                await service.setOptions()
+                let command;
+                let commandsIndex = -1
 
-            if (params.command){
-                commandsIndex = params.command.findIndex((d)=>{
-                    return d.service == serviceIdx
-                })
-                if (commandsIndex>=0){
-                    command = params.command[commandsIndex].command
+                if (params.command){
+                    commandsIndex = params.command.findIndex((d)=>{
+                        return d.service == serviceIdx
+                    })
+                    if (commandsIndex>=0){
+                        command = params.command[commandsIndex].command
+                    }
                 }
+                $this.updateCommand(service, command)
+                this.services.push(service)
             }
-            $this.updateCommand(service, command)
-            this.services.push(service)
         }  
         this.status.services_used = services
         this.create_interval()
@@ -474,12 +479,14 @@ export  class Job {
         if (!path){
             path = ""
         }
+        
         const $this = this;
         for (let [key, custom_variable] of Object.entries(params)){
             if ( custom_variable && typeof custom_variable == 'object' ){
                 this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`)
             } else {
                 if (custom_variable){ 
+                    
                     nestedProperty.set($this, `${path}.${key}`, custom_variable)
                 }
             }

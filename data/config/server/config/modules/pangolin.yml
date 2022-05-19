@@ -2,8 +2,11 @@
   title: "Pangolin"
   icon: "highlighter"
   version: 1.0
+  schema_version: 1
   basestack_released: 2.0
+  description: "Software package for assigning SARS-CoV-2 genome sequences to global lineages."
   module: True
+  url: https://github.com/cov-lineages/pangolin
   tags: 
     - "lineages"
     - "phylogenetics"

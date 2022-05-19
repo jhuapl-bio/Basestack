@@ -130,8 +130,8 @@
       init: false 
       dependencies:
         - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          label: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          type: "docker"
+          label: jhuaplbio/basestack_orchestrator
+          type: "docker-local"
           build: 
             path: ${configPath}/modules/orchestrator/Dockerfile
             file: Dockerfile
@@ -297,8 +297,8 @@
       init: false 
       dependencies:
         - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          label: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          type: "docker"
+          label: jhuaplbio/basestack_orchestrator
+          type: "docker-local"
           build: 
             path: ${configPath}/modules/orchestrator/Dockerfile
             file: Dockerfile

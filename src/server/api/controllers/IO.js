@@ -236,7 +236,6 @@ export async function checkExists(location, globSet){
 	return new Promise((resolve, reject)=>{
 		if (!globSet){
 			fs.stat(location, function(err, exists){
-				
 				if (err){
 					resolve(
 						{location: location, exists: false}

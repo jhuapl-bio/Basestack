@@ -28,27 +28,32 @@
       
       variables:
         
-        fastq:
+        fastqs:
           label: "Input  FASTAQ"
           class: "wb-100 p-3 mb-1"
           option: 0
           options:
-            - name: "Your input file"
+            - name: "Single End"
               element: "file"
-              hint: "FASTQ File used as input, from your own machine"
+              hint: "Single end illumina or nanopore read(s) file"
               bind_parent_dir: true
               source: null
               target: "/opt/data/<<basename(%{variables.fastq.source})>>"
               bind: "directory"
               class: "wb-100  p-3 mb-1" 
-            - element: null
-              name: "Test File"
+            - element: files
+              name: "Short reads - paired"
+              hint: "Illumina paired end reads"
               bind:
-                from: "${writePath}/modules/irma"
+                from: "<<directory(%{variables.fastqs.source})>>"
                 to: "/opt/data"
-              source: "${writePath}/modules/irma/test2.fastq" 
-              target: "/opt/src/flu-amd/tests/test2.fastq"
-        output:
+              target: "<<basename(%{variables.fastqs.source}"
+        samplename: 
+          source: test
+          target: "%{variables.samplename.source}"
+          hint: "Sample name as output folder"
+          label: "Samplename"
+        report:
           label: "Output Directory"
           element: "dir"
           output: True
@@ -63,6 +68,26 @@
           target: "%{variables.fastq.target}/irma_output"
           define:
             outputdir: "/opt/data/irma_output"
+        outputDir:
+          label: "Output Directory"
+          element: "dir"
+          output: True
+          openSelf: True
+          hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
+          bind: self
+          source: null
+          target: "/opt/output/%{variables.outputDir.source}"
+        protocol: 
+          option: 0
+          hint: "What target you are interested in"
+          label: "Target"
+          options: 
+            - FLU
+            - EBOLA
+            - CoV
+            - FLU-utr
+            - FLU-pacbio
+            - FLU-pgm
       services:
         - name: "consensus" 
           image: "jhuaplbio/irma:latest"
@@ -71,6 +96,6 @@
           hideStatus: false
           label: "IRMA Consensus"
           force_restart: true
-          command: ["bash","-c", " rm -r irma_output; IRMA FLU ${fastq} irma_output " ]
-          workingdir: "/opt/data"
+          command: ["bash","-c", " cd $outputDir; rm -r ./$samplename; IRMA ${protcol} ${fastqs} ${samplename} " ]
+          workingdir: "/opt/output"
     

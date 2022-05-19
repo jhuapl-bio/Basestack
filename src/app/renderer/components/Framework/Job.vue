@@ -277,6 +277,7 @@
                 @removeCustomVariable="removeCustomVariable"
             >
             </ListParams>
+            {{this.procedure.variables}}---
             
           </v-col>
           <v-col sm="6" v-if="headers.length > 0 && procedure "  >
@@ -286,7 +287,6 @@
                 :status="status"
                 :job="jobStatus"
                 :catalog="module"
-                :module="moduleIdx"
                 :procedure="procedureIdx"
                 @removeCustomVariable="removeCustomVariable"
                 :defaultHeaders="outputHeaders"
@@ -341,23 +341,19 @@ export default {
     },
     removeCustomVariable(variable){
       this.$delete(this.procedure.variables, variable);
-      console.log(this.procedure.variables[variable], variable)
     },
     changeCommand(index, command){
       this.custom_command[index] = command
     },
     addCustomElement(element){
-      console.log("element sent", element)
       this.$set(this.procedure.variables, element.name, element)
-      console.log(this.procedure.variables,"<")
     },
     reset(){
       this.$store.dispatch("clearCatalog", {
         procedure: this.procedureIdx, 
-        module: this.moduleIdx,
         catalog: this.module,
       })
-      let found = nestedProperty.get(this.$store.state,`configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`);
+      let found = nestedProperty.get(this.$store.state,`configs.${this.module}.procedures.${this.procedureIdx}`);
       if (found){
         this.loadProcedure(found)
       } else {
@@ -368,7 +364,6 @@ export default {
       const $this = this
       await FileService.cancelJob({
         procedure: $this.procedureIdx, 
-        module: $this.moduleIdx,
         catalog: $this.module,
         token: $this.$store.token,
       }).then((response)=>{
@@ -419,7 +414,6 @@ export default {
       })
       await FileService.startJob({
         procedure: $this.procedureIdx, 
-        module: $this.moduleIdx,
         catalog: $this.module,
         token: $this.$store.token,
         images: images,
@@ -453,11 +447,11 @@ export default {
           name: value.variable,
           source: value.src,
           option: value.option,
-          module: $this.moduleIdx, 
           catalog: $this.module, 
           procedure: $this.procedureIdx
         })
         this.procedure.variables[value.variable].source = value.src
+        console.log(this.module,"Vars")
         this.procedure.updates(value).then((f)=>{
           if (f){
             f.forEach((changed)=>{
@@ -474,18 +468,22 @@ export default {
     loadProcedure(proc){
       const $this = this;
       let procedure = new Configuration(cloneDeep(proc))
+      
       procedure.defineMapping()
+      
       procedure.create_intervalWatcher() 
       procedure.getProgress()
-      let found = nestedProperty.get(this.$store.state, `catalog.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
-      if (found){
-        try{
-          procedure.mergeInputs(found)
-        } catch (Err){
-          console.error(Err,"<<<") 
-        }
+      let found = nestedProperty.get(this.$store.state, `catalog.${this.module}.procedures.${this.procedureIdx}`)
+      
+      // if (found){
+      //   try{
+          
+      //     procedure.mergeInputs(found)
+      //   } catch (Err){
+      //     console.error(Err,"<<<") 
+      //   }
 
-      }
+      // }
       this.procedure = procedure
       this.watches  = this.procedure.watches
       
@@ -498,22 +496,14 @@ export default {
       }
     },
     async getProcedure(){
-      const $this = this
       try{
-        let response = await FileService.getProcedureConfig({
-          module: this.moduleIdx,
-          procedure: this.procedureIdx,
-          catalog: this.module
-        })
+        
         this.$store.dispatch("SAVE_PROCEDURE_DEFAULT", {
-          module: $this.moduleIdx, 
-          catalog: $this.module, 
-          procedure: $this.procedureIdx,
-          config: response.data.data
+          catalog: this.module, 
+          procedure: this.procedureIdx,
+          config: this.moduleObj
         })
-        console.log("next")
-
-        this.loadProcedure(cloneDeep(response.data.data))
+        this.loadProcedure(cloneDeep(this.moduleObj))
 
       } catch(err){
         this.initial=false
@@ -588,16 +578,20 @@ export default {
      
     }
   },
-  props: [ 'module', 'moduleIdx', 'procedureIdx', 'title', 'status' , "jobStatus" ],
+  props: [ 'module', 'moduleObj', 'procedureIdx', 'title', 'status' , "jobStatus" ],
   watch: {
     procedureIdx(newValue){
         this.services_to_use = {}
         this.getProcedure()
     },
+    moduleObj(newValue){
+      console.log("changed")
+        this.getProcedure()
+    }
   },
   computed: {
     procedureConfig(){
-      return nestedProperty.get(this.$store.state, `configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`)
+      return nestedProperty.get(this.$store.state, `configs.${this.module}.procedures.${this.procedureIdx}`)
     },
     serviceList(){
       let serviceList = []
@@ -637,21 +631,23 @@ export default {
   },
   mounted(){
     const $this = this
-    let found = nestedProperty.get(this.$store.state,`configs.${this.module}.modules.${this.moduleIdx}.procedures.${this.procedureIdx}`);
+    let found = nestedProperty.get(this.$store.state,`configs.${this.module}.procedures.${this.procedureIdx}`);
     if (!found){
       this.getProcedure()
     } else {
       this.getProcedure()
 
     }
-    $this.watcherInterval = setInterval(()=>{
-      let procedure = $this.procedure
-      if(procedure.watches){
-        procedure.watches.map((f,i)=>{
-          $this.$set($this.watches, i, f)
-        })
-      }
-    },1000)
+    console.log("new mount",found)
+
+    // $this.watcherInterval = setInterval(()=>{
+    //   let procedure = $this.procedure
+    //   if(procedure.watches){
+    //     procedure.watches.map((f,i)=>{
+    //       $this.$set($this.watches, i, f)
+    //     })
+    //   }
+    // },1000)
     
     
 

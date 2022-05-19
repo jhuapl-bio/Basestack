@@ -50,6 +50,7 @@
                 </template>
                 View Visualization in Browser. Ensure that the service is running first!
             </v-tooltip> 
+            
             <v-tooltip bottom v-if="item.source"> 
               <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon  @click="determineOpen(item)">
@@ -60,7 +61,7 @@
                 </v-btn>
                 
               </template>
-              {{item.source}}
+              {{item.target}}
             </v-tooltip>
             <v-tooltip bottom v-if="item.openSelf && item.source">
               <template v-slot:activator="{ on }">
@@ -156,7 +157,9 @@ export default {
             if (typeof item.source =='string'){
                 this.$electron.shell.openPath(path.dirname(item.source))
             } else {
-              if (item.path){
+              if (item.target){
+                this.$electron.shell.openPath(item.target)
+              } else if (item.path) {
                 this.$electron.shell.openPath(item.path)
               } else {
                 this.$electron.shell.openPath(path.dirname(item.source[0]))
@@ -174,7 +177,6 @@ export default {
           FileService.deleteOutputs({
               idx: outputs,
               catalog: this.catalog,
-              module: this.module, 
               procedure: this.procedure
           }).then((response2)=>{
               this.$swal({
@@ -206,7 +208,7 @@ export default {
           }
         },
 	},
-	props: ['defaultHeaders', 'progresses', 'status', 'catalog', 'module', 'procedure'],
+	props: ['defaultHeaders', 'progresses', 'status', 'catalog',  'procedure'],
     mounted(){
     },
     watch: {

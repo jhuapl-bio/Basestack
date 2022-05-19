@@ -11,7 +11,7 @@ const cloneDeep = require("lodash.clonedeep");
 const path = require("path")    
 var  { store }  = require("../../config/store/index.js")
 const { readFile, checkExists,  removeFile, downloadSource, decompress_file, itemType  } = require("../controllers/IO.js")
-const { remove_images, removeVolume, checkVolumeExists, pullImage, loadImage, createVolumes } = require("../controllers/post-installation.js")
+const { remove_images, removeVolume, checkVolumeExists, pullImage, loadImage, createVolumes, removeDep } = require("../controllers/post-installation.js")
 const {  check_image, fetch_external_dockers } = require("../controllers/fetch.js")
 const { Service }  = require("./service.js") 
 const { spawnLog } = require("../controllers/logger.js")
@@ -135,7 +135,6 @@ export class Procedure {
 
 	}  
     async init(){ 
-        // await this.defineDependencies() 
         this.dependencyCheck()
         await this.initServices()
         return  
@@ -143,11 +142,7 @@ export class Procedure {
     async defineDependencies(){
         const $this = this; 
         this.dependencies = [] 
-        // if (this.config.dependencies){
-        //     this.config.dependencies.forEach((dependency)=>{
-                
-        //     })
-        // }
+       
     }
     async initServices(token){
         this.services_config.forEach((service, i)=>{
@@ -231,10 +226,6 @@ export class Procedure {
             let building=false   
 			dependencies.forEach((dependency, index)=>{ 
 				if (dependency.type == "docker"){
-                    // let target = dependency.target
-                    // if (dependency.version){
-                    //     target = `${dependency.target}:${dependency.version}`
-                    // }
                     let target = dependency.fulltarget
 					promises.push(check_image(target))
                      
@@ -251,14 +242,23 @@ export class Procedure {
                     dependency.status.progress = cloneDeep(dependency.streamObj.status)
                 }
 			})
+            
 			Promise.allSettled(promises).then((response, err)=>{
                 let v = []
                 let uninstalled = []
                 let logs = []
+                
 				response.forEach((dependency, index)=>{
 					if (dependency.status == 'fulfilled'){
-						dependencies[index].status.exists = dependency.value
-						dependencies[index].status.version = dependency.value.version
+                        
+                        if (dependency.value.version){
+                            
+                            dependencies[index].status.version = dependency.value.version
+                            dependencies[index].status.exists = true
+                        } else {
+                            dependencies[index].status.exists = ( dependency.value && dependency.value.exists ? dependency.value.exists : dependency.value )
+                        }
+						
 					} else { 
 						dependencies[index].status.exists = false
 						dependencies[index].status.version = null
@@ -307,16 +307,15 @@ export class Procedure {
                         return false
                     }
                 })
-                // if ($this.name == 'nfcore_viralrecon_nanopore'){
-                //     console.log(dependencies)
-                // }
+               
                 $this.status.fully_installed = exists_all
                 $this.status.partial_install = exists_any
                 // $this.status.fully_installed = fully_installed
 				resolve()
 			}).catch((err)=>{
 				store.logger.error(`${err} Error in checking target dependencies`)
-				reject(`${err} ${$this.name} Error in checking target dependencies`)
+                reject(err)
+				// reject(`${err} ${$this.name} Error in checking target dependencies`)
 			})
 			
 		}) 
@@ -326,34 +325,7 @@ export class Procedure {
         let service = this.services
         try{
             await this.define_services()
-            // await $this.dependencyCheck()
-            // let complete = $this.service.dependencies.every((dependency)=>{
-            //     return dependency.status
-            // })
-            // $this.service.status = {
-            //     running: false,
-            //     errors: null,
-            //     stream: []
-            // }
-            // await $this.setOptions()
-            // $this.updateConfig()
-            // if ($this.service.force_init){
-            //     await $this.stop()
-            // }
-
-            // let state = await $this.statusCheck()
-            // if (state.running){
-            //     let err, stream = await state.container.logs({follow: true, stdout:true, stderr:true})
-            //     $this.log = spawnLog(stream, $this.logger)
-            //     $this.service.status.stream = $this.log
-            // }
-            // if ($this.service.init){
-            //     if ($this.service.variables){
-            //         await $this.check_then_start($this.service.variables)
-            //     } else {
-            //         await $this.check_then_start()
-            //     }
-            // }
+          
             return
         } catch (err){
             logger.error(`%o error inerror in initializing service ${this.name}`, err)
@@ -381,41 +353,6 @@ export class Procedure {
         }) 
 	}
 
-	// async statusCheck(){
-	// 	const $this = this;
-	// 	return new Promise(function(resolve,reject){ 
-    //         (async ()=>{
-    //             let status = await check_container($this.service.name)
-    //             $this.service.status.running = status.running
-    //             $this.service.status.exists = status.exists
-    //             resolve(status)
-    //         })().catch((err)=>{
-    //             resolve(false)
-    //         })
-    //     })
-	// }
-
-
-    // async checkProgress(variables){
-    //     const $this = this
-    //     return new Promise(function(resolve,reject){
-    //         let items = cloneDeep($this.service.progress)
-    //         let progresses = []
-    //         items.forEach((item)=>{
-    //             let variable = $this.replaceVariables(item.source, variables)
-    //             progresses.push(variable)
-    //         })
-    //         list_module_statuses(progresses).then((returned_data)=>{
-    //             returned_data.map((d,i)=>{
-    //                 items[i].status = d
-    //             })
-    //             resolve(items)
-    //         }).catch((err)=>{
-    //             reject(err)
-    //         })
-    //     })
-
-    // }
    
     async loadImage(dependency){
 		const $this = this  
@@ -578,7 +515,7 @@ export class Procedure {
 		const $this = this  
         return new Promise(function(resolve,reject){ 
             checkExists(dependency.source.target).then((exists)=>{
-                if (!exists || exists && overwrite){  
+                if (!exists.exists || exists && overwrite){  
                     if (dependency.streamObj){
                         dependency.streamObj.close() 
                         dependency.streamObj.end()
@@ -740,11 +677,12 @@ export class Procedure {
                     if (dependency_obj.overwrite){  
                         overwrite_idx = true
                     }
-                }   
+                }    
                 if (Array.isArray(overwrite) && overwrite[i]){ 
                     overwrite_idx = overwrite[i]
                 }
                 if (dependency_obj.type == 'docker' && !dependency_obj.build && !dependency_obj.local ){
+                    
                     promises.push($this.pullImage(dependency_obj))
                 }   else if (dependency_obj.type == 'docker-local' && dependency_obj.build ){
                     promises.push($this.buildImage(dependency_obj))
@@ -771,7 +709,7 @@ export class Procedure {
                             if (dependency_obj.decompress){ 
                                 store.logger.info("Decompressing required, doing so now for final target... %s", dependency_obj.target)
                                 checkExists(dependency_obj.target).then((exists)=>{
-                                    if (!exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
+                                    if (!exists.exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
                                         dependency_obj.status.building = true
                                         decompress_file(dependency_obj.decompress.source, path.dirname(dependency_obj.target)).then(()=>{
                                             dependency_obj.status.building = false
@@ -825,19 +763,8 @@ export class Procedure {
         selectedDep.map((dependency_obj, i)=>{            
             // dependency_obj.status.downloading = true
             objs.push(dependency_obj) 
-            if (dependency_obj.type == 'docker' || dependency_obj.type == 'docker-local'  ){
-                let target = dependency_obj.fulltarget
-                promises.push(remove_images(target)) 
-            } else if (dependency_obj.type == 'volume'){
-                console.log("remove module volume")
-                promises.push( removeVolume(dependency_obj.target)  )
-            }
-            else{
-                promises.push(removeFile(dependency_obj.target, dependency_obj.type, false) )
-                if (dependency_obj.decompress){
-                    promises.push(removeFile(dependency_obj.decompress.source, 'file', false))
-                }
-            }
+            promises.push(removeDep(dependency_obj))
+            
         })
         let settled_data = await Promise.allSettled(promises)
         let messages = []
@@ -886,36 +813,7 @@ export class Procedure {
                     
             })
             let linking = this.config.linking
-            // if (linking){
-            //     linking.forEach((link)=>{ 
-            //         let serviceInput = variables[link.input.service] //is the service getting info FROM the previous ones
-            //         let serviceOutput = variables[link.output.service] //is the service going INTO the next one
-                     
-            //         let serviceConfigInput = configVariables[link.input.service] //is the service getting info FROM the previous ones
-            //         let serviceConfigOutput = configVariables[link.output.service] //is the service going INTO the next one
-            //         if (! serviceInput ||   
-            //             serviceInput[link.input.variable].source == '' ||
-            //             !serviceInput[link.input.variable].source){ 
-                     
-                      
-            //             let targetAttr = serviceConfigOutput[link.output.target][link.output.variable]
-                        
-            //             let inner_variables = targetAttr.path.match(/(\${.+?\}){1}/g)
-            //             serviceInput = serviceConfigInput[link.input.target]
-                        
-            //             if (inner_variables && Array.isArray(inner_variables)){
-            //                 inner_variables.forEach((vari)=>{
-            //                     let id = vari.replace(/[\$\{\}]/g, "")
-            //                     let val = serviceOutput[id].source
-            //                     serviceInput[link.input.variable].source = targetAttr.path.replaceAll(vari, val)
-                        
-            //                 })
-            //             }
-            //             parsed_variables[link.input.service] =  serviceInput 
-            //         }
-            //     })
-            // }
-            // console.log(parsed_variables) 
+            
             return  parsed_variables
         } catch (err){
             logger.error(err)
@@ -923,52 +821,7 @@ export class Procedure {
         }
 
     }
-    // updateVariables(data){
-    //     const $this = this
-    //     try{
-    //         let variables = [];
-    //         if (!data || !this.service.variables || !Array.isArray(this.service.variables)){
-    //             return
-    //         }
-    //         // let returned_option =
-    //         variables = cloneDeep(this.service.variables )
-    //         const keys = this.service.variables.map((d)=>{return d.name})
-    //         data.forEach((value, key)=>{
-    //             const index = keys.indexOf(value.name)
-    //             if(index > -1){
-    //                 let option = ( value.option ? value.option : 0)
-    //                 if (value.source){
-    //                     value.value = value.source
-    //                 }
-    //                 variables[index].option = option
-    //                 if (variables[index].options){
-    //                     if (!value.value){
-    //                         if (value.options){
-    //                             variables[index].options[option].source = value.options[option].source
-    //                         }
-    //                     } else {
-    //                         variables[index].source = value.value
-    //                         if (value.option){
-    //                             variables[index].options[option].source = value.value
-    //                         }
-    //                     }
-
-    //                 } else {
-    //                     variables[index].source = ( value.value ? value.value : value )
-    //                 }
-    //             }
-
-
-    //         })
-    //         return variables
-    //     } catch(err){
-    //         logger.error("%o error in updating variables", err)
-    //         throw err
-    //     }
-    // }
-
-
-
+    
 
 
 

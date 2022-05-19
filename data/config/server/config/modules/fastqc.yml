@@ -2,8 +2,14 @@
   title: "FastQC"
   icon: "bolt"
   version: 1.0
+  schema_version: 1
   basestack_released: 2.0
   module: True
+  tags: 
+    - "Quality Check"
+    - "Sequencing"
+  description: "A quality control analysis tool for high throughput sequencing data"
+  url: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
   tooltip: "Run QC on your fastq run directory"
   procedures: 
     - name: fastqc #Top level is the left-hand selection of the menu and the major module to install 

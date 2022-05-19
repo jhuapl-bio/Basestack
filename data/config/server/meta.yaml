@@ -3,6 +3,7 @@ logs:
   error: "${writePath}/logs/serverError.log"
   info:  "${writePath}/logs/server.log"
   docker: "${writePath}/logs/docker.log"
+schema_version: 1.0
 configurationFile:
   "${writePath}/system.yml"
 shared: 
@@ -17,22 +18,23 @@ default:
       type: "yml"
 remotes:
   modules: "${writePath}/remote/modules/"
+
 modules:
-  - path: "${configPath}/config/modules"
-    format: "files" 
-    type: "yml"
-    local: True
-    custom: False
-  - path: "${writePath}/custom/modules/"
-    format: "files" 
-    type: "yml"
-    custom: True
-    local: True
-  - path: "${writePath}/remote/modules"
-    format: "files" 
-    type: "yml"
-    custom: False
-    local: False
+  importPath: 
+    - path: "${writePath}/imports/modules"
+      format: "files"
+      type: "yml"
+  savedPaths: 
+    - path: "${configPath}/config/modules"
+      format: "files" 
+      type: "yml"
+      local: True
+      custom: False
+    - path: "${writePath}/custom/modules/"
+      format: "files" 
+      type: "yml"
+      custom: True
+      local: True
 orchestrators:
   default:
     format: "single"

@@ -28,17 +28,28 @@
 					label="Backend Port" class="pr-5 pl-5"
 				>
 				</v-input>
-					<v-text-field class="pr-5 pl-5"
-						hint="Only change if the default port (5003) is in use"
-						label="Change the backend server port to connect to"
-						v-model="port" type="number"
-						min="1000" max="9999"
-						append-icon="$caret-square-up"
-						prepend-icon="$server"
-						@click:append="changePort(port)"
-						clearable shaped centered outlined
-					>
-					</v-text-field>
+				<v-text-field class="pr-5 pl-5"
+					hint="Only change if the default port (5003) is in use"
+					label="Change the backend server port to connect to"
+					v-model="port" type="number"
+					min="1000" max="9999"
+					append-icon="$caret-square-up"
+					prepend-icon="$server"
+					@click:append="changePort(port)"
+					clearable shaped centered outlined
+				>
+				</v-text-field>
+				<v-tooltip top class="ml-2" >
+					<template v-slot:activator="{ on }">
+						<v-btn color="primary" dark @click="restartServer" v-on="on"  >
+						<v-icon class="mr-3" medium>
+							$recycle
+						</v-icon>
+						Restart the server
+						</v-btn> 
+					</template> 
+					If your server experiences issues, try to restart it here
+				</v-tooltip>
 				</v-card>
 			</v-card>
 			
@@ -103,6 +114,10 @@ export default {
 	methods: {
       emitChange( data){
 		   this.$emit("emitChange", data)
+	  },
+	  restartServer(){ 
+		console.log("restartserver")
+		this.$electron.ipcRenderer.send('restartServer')
 	  },
 	  changePort(val){
         this.$electron.ipcRenderer.send("changePort", val)

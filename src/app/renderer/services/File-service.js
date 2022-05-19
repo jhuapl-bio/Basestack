@@ -36,14 +36,15 @@ class FileService {
   saveRemoteModule(params){  //Used
     return Api().post(`${baseEndpoint.get()}/remote/save/modules`, params)    
   }
-  getCatalog(){ // Used
-    return Api().get(`${baseEndpoint.get()}/catalog/all/get`)    
+  
+  getModule(param){ //Used
+    return Api().get(`${baseEndpoint.get()}/catalog/get/${param.catalog}`)    
   }
-  getModules(param){ //Used
-    return Api().get(`${baseEndpoint.get()}/modules/get/${param.catalog}`)    
+  getLibrary(){
+    return Api().get(`${baseEndpoint.get()}/library/versions/get`)   
   }
   getInstalledModules(){ // Used
-    return Api().get(`${baseEndpoint.get()}/catalog/installed/get`) 
+    return Api().get(`${baseEndpoint.get()}/modules/imported/all`) 
   }
   cancelBuild(params){ // Used
     return Api().post(`${baseEndpoint.get()}/module/build/cancel`, params)    
@@ -54,15 +55,17 @@ class FileService {
   buildProcedureDependency(params){ // Used
     return Api().post(`${baseEndpoint.get()}/procedure/build/dependency`, params)    
   }
-  
+  getProcedure(params){ // used
+    return Api().get(`${baseEndpoint.get()}/procedure/get/${params.catalog}/${params.procedure}/${params.token}`)    
+  }
   getProcedures(params){ // used
-    return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.module}/${params.token}`)    
+    return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.token}`)    
   }
   getProcedureConfig(params){ // Used
-    return Api().get(`${baseEndpoint.get()}/procedure/config/${params.catalog}/${params.module}/${params.procedure}`)    
+    return Api().get(`${baseEndpoint.get()}/procedure/config/${params.catalog}/${params.procedure}`)    
   }
   getJobStatus(params){ // Used
-    return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.module}/${params.procedure}`)    
+    return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.procedure}`)    
   }
   startJob(params){ // Used
     return Api().post(`${baseEndpoint.get()}/job/start`, params)    
@@ -85,6 +88,27 @@ class FileService {
   getResources(){ // Used
     return Api().get(`${baseEndpoint.get()}/status/fetch`)    
   }
+  getImportedModules(){
+    return Api().get(`${baseEndpoint.get()}/modules/imported/all`)    
+  }
+  getImportedModule(name){
+    return Api().get(`${baseEndpoint.get()}/modules/imported/${name}`)    
+  }
+  createModule(params){
+    return Api().post(`${baseEndpoint.get()}/module/create`, params)    
+  }
+  importModule(params){
+    return Api().post(`${baseEndpoint.get()}/module/import`, params)    
+  }
+  getCatalog(name){
+    return Api().get(`${baseEndpoint.get()}/catalog/get/${name}`)    
+  }
+  getCatalogs(name){
+    return Api().get(`${baseEndpoint.get()}/catalog/get`)    
+  }
+  getLibraryVersions(name){
+    return Api().get(`${baseEndpoint.get()}/library/versions/get/${name}`)    
+  }
   getDockerStats(){ // Used
     return Api().get(`${baseEndpoint.get()}/docker/status/get`)    
   }
@@ -100,8 +124,17 @@ class FileService {
   fetchRemoteCatalog(target, name){ // Used
     return Api().get(`${baseEndpoint.get()}/remote/get/${target}/${name}`)
   }
-  removeCatalog(params){  // Used
+  getInstallStatus(params){ // Used
+    return Api().get(`${baseEndpoint.get()}/install/status/get/${params.catalog}/${params.procedure}`)
+  }
+  getAllLatest(){
+    return Api().get(`${baseEndpoint.get()}/library/versions/get/latests`)
+  }
+  removeModule(params){  // Used
     return Api().post(`${baseEndpoint.get()}/catalog/remove`, params)
+  }
+  listFilesDirectory(dir){
+    return Api().post(`${baseEndpoint.get()}/files/get`, {dir:dir})
   }
   removeProcedureDependency(params){ // Used
     return Api().post(`${baseEndpoint.get()}/procedure/remove/dependency`, params)

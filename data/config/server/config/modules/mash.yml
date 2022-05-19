@@ -2,8 +2,14 @@
   title: "MASH"
   icon: "book"
   version: 1.0
+  schema_version: 1
   basestack_released: 2.0
+  description: "Fast genome and metagenome distance estimation using MinHash"
   module: True
+  tags: 
+    - "Pairwise Estimation"
+    - "Genome Distance"
+  url: https://github.com/marbl/Mash
   tooltip: "Run Pairwise distance estimation on 2 genomes"
   procedures: 
     - name: mash #Top level is the left-hand selection of the menu and the major module to install 

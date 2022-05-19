@@ -78,12 +78,20 @@ export default {
                 required: helpers.withMessage('This field cannot be empty', requiredIf((v)=>{
                     let item = this.item;
                     if (item.options){
-                        
-                        if (item.optional){
-                            return false
+                        if (item.optionValue){
+                            if(item.optionValue.element == null || item.optionValue.optional){
+                                return false
+                            } else {
+                                return true
+                            }
                         } else {
-                            return true
+                            if (item.optional || item.element == null){
+                                return false
+                            } else {
+                                return true
+                            }
                         }
+                            
                     } else {
                         if (item.optional){
                             return false

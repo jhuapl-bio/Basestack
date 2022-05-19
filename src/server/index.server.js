@@ -4,44 +4,44 @@
 
 /* eslint-disable */
 
-import { logger } from "../shared/logger.js"
 import { store } from "./config/store/index.js"
 
 let { Server } = require("./serverClass.js") 
 
-
- // let { open_server } = require("./server.js");
-// const { define_configuration } = require("./api/controllers/configurations.js")
-
-
 export async function create_server(port){ 
     return new Promise((resolve, reject)=>{ 
-        console.log("creating server........")
         
+        if (store.server ){
+            try{
+                store.server.close()
+            } catch (err){
+                console.error(err)
+            }
+        }        
         let server = new Server((port ? port : process.env.PORT_SERVER))
         store.server = server
-        server.server_configuration().then((response)=>{
         
-            server.initiate_cache().catch((err)=>{
-                store.logger.error("%o error in redis caching", err)
-            }).then(()=>{
-                console.log(response, "redis cacher successfully created server");
-                server.initiate(process.env.PORT_SERVER).then((response)=>{
-                    resolve()
+        server.server_configuration().then((response)=>{ /// define configuration setup based on the meta.yml file
+            store.logger.info("Server config done, %s", process.env)
+            server.initiate_cache().catch((err)=>{ // create  a cache on teh server to remember variables and configs
+                store.logger.info("%o error in redis caching", err)
+            }).then(()=>{ 
+                // store.logger.info(response, "redis cacher successfully created server");
+                server.initiate(process.env.PORT_SERVER).then((response)=>{ // start the server
+                    resolve() 
                 })
             })
             
         }).catch((err)=>{
-            console.error(err, "Error in server config or init")
+            console.error("%o Error in server config or init", err)
             reject(err)
         })
     })
-
+ 
 }
-console.log(process.env.NODE_ENV, "Node Environment")
 if (process.env.NODE_ENV == 'development' || process.env.serveProduction == 'true'){
      
-    create_server().catch((err)=>{
+    create_server().catch((err)=>{ // if the system is in dev mode, create the server because it isn't auto called like in prod mode from the client (electron)
         console.error(err) 
     }).then((e)=>{
         store.logger.info("Created development server success....")
@@ -49,37 +49,6 @@ if (process.env.NODE_ENV == 'development' || process.env.serveProduction == 'tru
 }
 
 
-
-// const {define_base}  = require("./api/controllers/configurations.js")
-// // const { define_base } = require("./api/controllers/init.js")
-// async function initiate_server(port){
-// 	console.log("initiating the server")
-// 	return new Promise((resolve, reject)=>{
-// 		(async ()=>{
-// 			await open_server(port);
-// 			console.log(port, "this is the port server");
-// 			resolve(port)
-// 		})().catch((err)=>{
-// 			console.error(err, "error in starting server")
-// 			reject(err)
-// 		});	
-// 	})
-// }
-
-// define_configuration().then((config)=>{
-// 	store.system  = { ...store.system, ...config }
-// 	store.logger = require("../shared/logger.js").logger(store.system.logs.error, store.system.logs.logfile)
-// 	define_base().then(()=>{
-// 		initiate_server(process.env.PORT_SERVER).catch((err)=>{
-// 			console.error(err, "Error  found in init wserver function")
-// 			throw (err)
-// 		}).then((res)=>{
-// 			console.log(res,"resolved successfully")
-// 			return(res)
-// 		})
-// 	})
-	
-// })
 
 
 
