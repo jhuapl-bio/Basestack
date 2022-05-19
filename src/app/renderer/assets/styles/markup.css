@@ -28,7 +28,7 @@
     .markup-label,
     .markup-label-sm,
     .markup-label-lg {
-        @apply font-mono font-light uppercase;
+        @apply font-body font-light;
     }
 
     .markup-label.strong,
