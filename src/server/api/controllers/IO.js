@@ -303,10 +303,10 @@ export async function removeFile(filepath, type, silentExists){
 			    } else {
 			    	rimraf(path.join(filepath), (err) => {
 					  if (err) {
-					  	store.logger.error("%s %s", "error in filepath", err)
+					  	store.logger.error("%s %s", "error in folderpath", err)
 					    reject(err)
 					  }
-					  resolve("Removed file: " + filepath)
+					  resolve("Removed folder: " + filepath)
 				    })
 			    }
 		    } else {

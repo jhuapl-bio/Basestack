@@ -4,9 +4,16 @@
   version: 1.0
   basestack_released: 2.0
   module: True
+  description: "IRMA was designed for the robust assembly, variant calling, and phasing of highly variable RNA viruses. Currently IRMA is deployed with modules for influenza, ebolavirus and coronavirus"
+  url: "https://wonder.cdc.gov/amd/flu/irma/"
   tooltip: "FLU, COVID, and EBOLA consensus generation pipeline"
+  tags: 
+    - "variants"
+    - "consensus"
+    - "cdc"
+    - "consensus"
   procedures:
-    - icon: "eye-dropper"
+    - icon: "eye-dropper" 
       name: "IRMA_FLU"
       title: "IRMA FLU"
       module: True
@@ -38,7 +45,7 @@
               hint: "Single end illumina or nanopore read(s) file"
               bind_parent_dir: true
               source: null
-              target: "/opt/data/<<basename(%{variables.fastq.source})>>"
+              target: "/opt/data/<<basename(%{variables.fastqs.source})>>"
               bind: "directory"
               class: "wb-100  p-3 mb-1" 
             - element: files
@@ -46,28 +53,13 @@
               hint: "Illumina paired end reads"
               bind:
                 from: "<<directory(%{variables.fastqs.source})>>"
-                to: "/opt/data"
-              target: "<<basename(%{variables.fastqs.source}"
+                to: "/opt/data/<<directory(%{variables.fastqs.source})>>" 
+              target: "/opt/data/<<directory(%{variables.fastqs.source})>>/<<basename(%{variables.fastqs.source})>>"
         samplename: 
-          source: test
+          source: test 
           target: "%{variables.samplename.source}"
           hint: "Sample name as output folder"
           label: "Samplename"
-        report:
-          label: "Output Directory"
-          element: "dir"
-          output: True
-          openSelf: True
-          hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
-          bind_parent_dir: false
-          type: file
-          pattern: ".fasta"
-          class: "wb-100  p-3 mb-1"
-          source: "<<directory(%{variables.fastq.source})>>/irma_output"
-          path: "<<directory(%{variables.fastq.source})>>/irma_output"
-          target: "%{variables.fastq.target}/irma_output"
-          define:
-            outputdir: "/opt/data/irma_output"
         outputDir:
           label: "Output Directory"
           element: "dir"
@@ -77,6 +69,18 @@
           bind: self
           source: null
           target: "/opt/output/%{variables.outputDir.source}"
+        report:
+          label: "Output Directory"
+          element: "dir"
+          output: True
+          openSelf: True
+          hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
+          bind_parent_dir: false
+          type: file
+          pattern: ".fasta"
+          source: "%{variables.outputDir.source}/%{variables.samplename.source}"
+          target: "%{variables.outputDir.source}/%{variables.samplename.source}"
+          path: "%{variables.outputDir.source}/%{variables.samplename.source}"
         protocol: 
           option: 0
           hint: "What target you are interested in"
@@ -96,6 +100,6 @@
           hideStatus: false
           label: "IRMA Consensus"
           force_restart: true
-          command: ["bash","-c", " cd $outputDir; rm -r ./$samplename; IRMA ${protcol} ${fastqs} ${samplename} " ]
+          command: ["bash","-c", "cd $outputDir; rm -r ./$samplename; IRMA ${protocol} ${fastqs} ${samplename} " ]
           workingdir: "/opt/output"
     

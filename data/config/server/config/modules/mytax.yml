@@ -1,11 +1,13 @@
-- version: 0
+- version: 1.0
   basestack_released: 2
   supported: 2.1.1
   schema_version: 1
   title: Mytax
-  description: A tool for 2metagenomic classification using fastq reads as input
+  date_added: '2022-05-06T11:40:13.131Z'
+  url: https://github.com/jhuapl-bio/mytax
+  description: A tool for the metagenomic classification using a single fastq file full of  reads as input
   member: mytax
-  hint: Mytax Module
+  hint: Mytax Module 
   icon: chart-pie
   name: mytax
   tags:
@@ -192,10 +194,7 @@
           init: false
           force_restart: false
           force_init: false
-          command:
-            - bash
-            - '-c'
-            - ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht $file; kraken2  --output ${report}.out  --report ${report}  ${file} '
+          command: [ "bash", '-c', "' export KRAKEN2_DEFAULT_DB=${db} && ls -lht $file; kraken2  --output ${report}.out  --report ${report}  ${file} '"]
         - name: mytax_create_json
           label: Create Report JSON
           depends:
@@ -207,10 +206,7 @@
           init: false
           force_restart: false
           force_init: false
-          command:
-            - bash
-            - '-c'
-            - ' python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes} && bash krakenreport2json.sh -i ${report}.fullstring -o ${report}.json '
+          command: [bash, "-c", ' python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes} && bash krakenreport2json.sh -i ${report}.fullstring -o ${report}.json ' ]
     - name: mytax_visualization
       title: Kraken2 Mytax Visualization
       icon: chart-pie
@@ -252,16 +248,5 @@
           post-run-tab: render
           ports:
             - 8086
-          command:
-            - bash
-            - '-c'
-            - echo 'Running Mytax Visualization' && python3 -m http.server ${port}
-  date_added: '2022-05-06T11:40:13.131Z'
-  url: https://github.com/jhuapl-bio/mytax
-  remote: false
-  local: true
-  idx: 0
-  imported: false
-  path: >-
-    /Users/merribb1/Documents/Projects/Basestack/git/Basestack/data/userdata/imports/modules/mytax_0_default.yml
-  custom: false
+          command: [ "bash", "-c", "echo 'Running Mytax Visualization' && python3 -m http.server ${port}"]
+  

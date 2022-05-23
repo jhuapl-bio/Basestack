@@ -38,6 +38,7 @@ const {
 	readFile, 
 	writeFile,
 	getFiles,
+	removeFile,
 } = require("../controllers/IO.js")
 const crypto  = require("crypto")
 
@@ -138,7 +139,7 @@ router.post("/docker/socket", (req,res,next)=>{ //this method needs to be rework
 		try {
 			await updateDockerSocket(req.body.socket) // Update socket, only used for Linux really
 			res.status(200).json({status: 200, message: "Updated Docker Socket!", data: null });
-		} catch(err2){   
+		} catch(err2){     
 			logger.error("%s %s", "Error in changing docker socket", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
 		}	  
@@ -195,11 +196,11 @@ router.get("/server/status/fetch", (req,res,next)=>{
 router.get("/defaults/get", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		res.status(200).json({status: 200, message: "retrieved module information", data: store.default    });
-	} catch(err2){
+	} catch(err2){  
 		logger.error("%s %s", "Error in loading images2", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
-}) 
+})       
   
 //Used
 // Remove a catalog from being runnable on teh system, mainly used to conserve resources
@@ -419,11 +420,11 @@ router.get("/catalog/get/:catalog", (req,res,next)=>{ // build workflow accordin
 		res.status(419).send({status: 419, message: error_alert(err2)});
 	}	
 })
-//Used
+//Used 
 router.get("/catalog/get", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		let catalog = cloneDeep(store.library.catalog)		
-		let data = [] 
+		let data = []   
 		for(let [key, module] of Object.entries(catalog)){
 			let { procedures, ...config } = module.config
 			procedures = module.procedures.map((d, i)=>{
@@ -562,11 +563,10 @@ router.get("/procedure/get/:catalog/:procedure/:token", (req,res,next)=>{ // bui
 			returnable.cached_variables = cached_variables
 			
 		} 
-		
+
 		catch (err){
 			store.logger.error("Could not get procedure build loaded for... %o %o", data, err)
 		} 
-		
 		res.status(200).json({status: 200, message: "retrieved module information", data: returnable });
 	} catch(err2){ 
 		logger.error("%s %s", "Error in getting procedure status from library", err2)
@@ -784,25 +784,23 @@ router.post("/module/create", (req,res,next)=>{ // build workflow according to n
 
 // USED
 router.post("/module/import", (req,res,next)=>{ // build workflow according to name and index
-	(async function(){
-		try {
+	(async function(){ 
+		try {  
 			let library = store.library.all
 			let data = library[req.body.catalog].choices
-			let index = req.body.index
-			let module = data[index]
-			let d="new"
-			console.log(module,"<<<<")
+			let index = req.body.index 
+			let module = data[index]  
+			let d="new" 
 			if (!module.version){
 				d = dateFormat.asString('dd_mm_yy_hh:mm:ss', new Date()); // just the time
 				module.version = 0
 			}
-			console.log("module created!")
 			let basename = module.name + "_"+ module.version + (d.remote ? "_remote" : "_default")
 			let endpath = path.join(store.system.modules.importPath[0].path, basename+".yml")
 			module.path = endpath 
 			await writeFile( endpath, YAML.dump(module))
 			let found= nestedProperty.get(store.library.catalog, module.name)
-			try{
+			try{  
 				if (found){
 					found.cleanup()   
 					delete store.library.catalog[req.body.catalog]
@@ -917,7 +915,7 @@ router.get("/remote/get/:target/:catalog", (req,res,next)=>{ // build workflow a
 		try { 
 			let library = store.library
 			let data = await library.getRemotes(req.params.target, req.params.catalog)
-			logger.info("%s cache %o", req.params.target, data)
+			logger.info("%s get remotes ", req.params.target)
 			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
 		
 		} catch(err2){
@@ -940,17 +938,17 @@ router.get("/library/versions/get/latests", (req,res,next)=>{ // build workflow 
 			res.status(419).send({status: 419, message: error_alert(err2)});
 		}	 
 	})()
-})
+}) 
 router.get("/library/versions/get/all", (req,res,next)=>{ // build workflow according to name and index
-	(async function(){
-		try {
+	(async function(){  
+		try {   
 			let library = store.library.all
 			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: library });
-		} catch(err2){
+		} catch(err2){  
 			logger.error( "Error  %o in getting config target remotely %s", err2, req.params.catalog)
 			res.status(419).send({status: 419, message: error_alert(err2)});
-		}	 
-	})()
+		}	  
+	})()  
 })
 router.get("/library/versions/get/:catalog", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
@@ -1062,26 +1060,40 @@ router.post("/procedure/build/cancel/dependency", (req,res,next)=>{ //this metho
 })
 
 //Used
-router.post("/output/remove", (req,res,next)=>{ // build workflow according to name and index
-	(async function(){
-		try {
-			// let module = store.library.catalog[req.body.catalog].modules[req.body.module]
-			// let procedure = module.procedures[req.body.procedure]
-			let job = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`)
-			if (job){
-				let response = await job.removeOutputs( req.body.idx ) 
-				logger.info(`Success in beginning to building of procedure output for: ${req.body.catalog}`)
-				res.status(200).json({status: 200, message: "Completed removal of output", data: response });
-			} else {
-				logger.error("Error in removing output for job")
-				res.status(419).send({status: 419, message:  'No Job available'});
-			}
-		} catch(err2){
-			logger.error("%s %s", "Error in removing output", err2)
-			res.status(419).send({status: 419, message: error_alert(err2)});
-		}	
-	})()
-}) 
+// router.post("/output/remove", (req,res,next)=>{ // build workflow according to name and index
+// 	(async function(){
+// 		try {
+// 			// let module = store.library.catalog[req.body.catalog].modules[req.body.module]
+// 			// let procedure = module.procedures[req.body.procedure]
+// 			// let job = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`)
+// 			let promises = []
+// 			req.body.paths.forEach((pathh)=>{
+// 				if (pathh.type == 'dir'){
+// 					promises.push(removeFile(pathh.path, pathh.type))
+// 				} else {
+// 					promises.push(removeFile(pathh.path))
+// 				}
+// 			})
+// 			Promise.allSettled(promises).then((response)=>{
+// 				res.status(200).json({status: 200, message: "Completed removal of output", data: 'Removed files' });
+// 			}).catch((err2)=>{
+// 				logger.error("%s %s", "Error in removing output", err2)
+// 				res.status(419).send({status: 419, message: error_alert(err2)});
+// 			})
+// 			// if (job){
+// 			// 	let response = await job.removeOutputs( req.body.idx ) 
+// 			// 	logger.info(`Success in beginning to building of procedure output for: ${req.body.catalog}`)
+// 			// 	res.status(200).json({status: 200, message: "Completed removal of output", data: response });
+// 			// } else {
+// 			// 	logger.error("Error in removing output for job")
+// 			// 	res.status(419).send({status: 419, message:  'No Job available'});
+// 			// }
+// 		} catch(err2){
+// 			logger.error("%s %s", "Error in removing output", err2)
+// 			res.status(419).send({status: 419, message: error_alert(err2)});
+// 		}	
+// 	})()
+// }) 
 
 
 //Used
@@ -1187,12 +1199,12 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			
 			if (!token){         
 				token = 'development'     
-			}      
+			}        
 			let services = req.body.services    
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`)
-			if (found){        
+			if (found){         
 				store.logger.info("found job, cleaning it up") 
-				found.cleanup()        
+				found.cleanup()         
 				delete store.jobs.catalog[req.body.catalog][req.body.procedure]
 				store.logger.info("found job, cleaned up")  
 			}  
@@ -1202,6 +1214,8 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
 			let skip = await job.start(req.body) 
 			store.logger.info("Completed or Exited Job!")
+			// let skip = false
+
 			if (!skip){
 				res.status(200).json({status: 200, message: "Initiated job " + procedure.name, skip: skip });
 			} else {

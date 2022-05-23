@@ -22,7 +22,7 @@ export async function create_server(port){
         store.server = server
         
         server.server_configuration().then((response)=>{ /// define configuration setup based on the meta.yml file
-            store.logger.info("Server config done, %s", process.env)
+            store.logger.info("Server config done")
             server.initiate_cache().catch((err)=>{ // create  a cache on teh server to remember variables and configs
                 store.logger.info("%o error in redis caching", err)
             }).then(()=>{ 
@@ -31,7 +31,7 @@ export async function create_server(port){
                     resolve() 
                 })
             })
-            
+             
         }).catch((err)=>{
             console.error("%o Error in server config or init", err)
             reject(err)

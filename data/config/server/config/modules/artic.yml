@@ -4,12 +4,13 @@
   version: 1.0
   basestack_released: 2.0
   module: True
+  url: https://github.com/artic-network/fieldbioinformatics
   tags: 
     - "consensus"
     - "SARS-CoV-2"
     - "nanopolish"
     - "medaka"
-  tooltip: "Consensus Building and Analysis of SARS-CoV-2"
+  description: "Consensus Building and Analysis of SARS-CoV-2"
   shared:
     variables:
       sequencing_summary:

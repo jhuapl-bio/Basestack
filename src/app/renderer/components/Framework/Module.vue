@@ -27,22 +27,43 @@
       
       
       
-      <v-select 
+      <v-autocomplete 
         v-model="selectedVersion"
         :items="libraryVersions" 
         @change="updateStagedVersion($event)"
         item-text="version"
         item-value="idx"
+        clearable dense
         class="mx-auto "
-        style="max-width: 23%;"
+        style="max-width: 50%;"
         label="Select Item"
         :return-object="true"
         single-line
       >
         <template v-slot:selection="{ item }">
-          <v-chip >
-            <span>{{ item.version }}</span>
-          </v-chip>
+            <v-list-item-title >{{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}</v-list-item-title>
+            <v-list-item-subtitle>v{{ item.version }}</v-list-item-subtitle>
+        </template>
+        <template v-slot:item="{ item }">
+          <v-list-item-avatar
+          >
+            <v-icon v-if="item.version == latest" small color="green">$check-circle
+            </v-icon>
+            <v-icon v-else color="orange" small > $exclamation-triangle
+            </v-icon>
+          </v-list-item-avatar>
+          <v-list-item-content>
+            <v-list-item-title >{{`v${item.version}`}}, {{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}</v-list-item-title>
+            <v-list-item-subtitle v-text="(!item.imported && !item.local ? 'Not Imported' : 'Local' )"></v-list-item-subtitle>
+          </v-list-item-content>
+          <v-list-item-action>
+            <v-list-item-subtitle v-if="item.local">
+              Base Version
+            </v-list-item-subtitle>
+            <v-list-item-subtitle v-else>
+              Not Base Version
+            </v-list-item-subtitle>
+          </v-list-item-action>
         </template>
         <template v-slot:append>
           <v-tooltip top class="ml-2" >
@@ -57,7 +78,7 @@
           <v-subheader>Version</v-subheader>
           <v-icon medium color="primary">$tags</v-icon>
         </template>
-      </v-select>
+      </v-autocomplete>
       <template v-slot:extension >
         <v-subheader>Procedures
         </v-subheader>
@@ -87,7 +108,7 @@
           </v-icon>
         Reset Default</v-btn>
       </template>
-      <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.imported">
+      <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.removable">
         <template v-slot:activator="{ on }">
           <v-btn @click="removeModule(selectedVersion.idx, selectedVersion.name)" v-on="on" icon >
             <v-icon color="orange" medium>
@@ -297,6 +318,7 @@
               class="configure"
           >
             <template v-for="(entry, key) in services"  >
+              
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
                     :key="key+'-entry'"
@@ -412,6 +434,7 @@
           :job="job"
           :catalog="module"
           :procedure="procedureIdx"
+          :removal_override="procedure.removal_override"
           @removeCustomVariable="removeCustomVariable"
           :defaultHeaders="outputHeaders"
         >
@@ -607,12 +630,25 @@ export default {
     },
     removeCustomVariable(variable){
       this.$delete(this.procedure.variables, variable);
+      this.$store.dispatch('REMOVE_VAR_CUSTOM', {
+        name: variable.name,
+        catalog: this.selected.name, 
+        procedure: this.procedureIdx
+      })
     },
     changeCommand(index, command){
       this.custom_command[index] = command
     },
     addCustomElement(element){
       this.$set(this.procedure.variables, element.name, element)
+      element.custom = true
+      this.$store.dispatch('ADD_VARIABLE_CUSTOM', {
+        name: element.name,
+        variable: element,
+        catalog: this.selected.name, 
+        procedure: this.procedureIdx
+      })
+      
     },
     reset(){
       this.$store.dispatch("clearCatalog", {
@@ -621,6 +657,7 @@ export default {
       })
       let found = nestedProperty.get(this.$store.state,`configs.${this.selectedVersion.name}.procedures.${this.procedureIdx}`);
       if (found){
+        
         this.loadProcedure(found)
       } else {
         this.getProcedure()
@@ -635,6 +672,7 @@ export default {
         })
        this.procedure.job = response.data.data
        this.job = response.data.data
+       this.status = this.job.services
       } catch(err){
         this.initial=false
         console.error(`${err} error in getting status`)
@@ -752,6 +790,7 @@ export default {
     },
     async updateValue(value){
       const $this = this;
+      console.log("update value")
       $this.$store.dispatch('UPDATE_VARIABLE', {
         name: value.variable,
         source: value.src,
@@ -787,7 +826,6 @@ export default {
       
       if (found){
         try{
-          
           procedure.mergeInputs(found)
         } catch (Err){
           console.error(Err,"<<<") 
@@ -961,12 +999,12 @@ export default {
                 sortable: true,
                 align:"center"
             },
-            {
-                text: "Remove",
-                value: "remove",
-                sortable: false,
-                align:"center"
-            }
+            // {
+            //     text: "Remove",
+            //     value: "remove",
+            //     sortable: false,
+            //     align:"center"
+            // }
             
         ],
         headers: [
@@ -1054,6 +1092,7 @@ export default {
     },
     additionals(){
         let ta= []
+        console.log(this.procedure.variables)
         if (this.procedure && this.procedure.variables){
             for (let [key, value ] of Object.entries(this.procedure.variables)){
                 if (!value.output){

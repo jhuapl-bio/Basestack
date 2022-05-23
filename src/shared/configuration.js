@@ -1,4 +1,6 @@
+import { match } from "assert";
 import nestedProperty from "nested-property"
+import { remove } from "winston";
 const cloneDeep = require("lodash.clonedeep"); 
 const path = require("path")   
 const lodash = require("lodash")    
@@ -98,12 +100,14 @@ export  class Configuration {     // Make the main procedure class for configura
                     this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`) // convert the store stored value for a variable to the new source
                 } else {
                     if (custom_variable){ 
+                        
                         nestedProperty.set($this, `${path}.${key}`, custom_variable)
                     }
                 }
             }
             
         }
+        
     }
     async getProgress(){ // Find out how many outputs are done
         const $this = this; 
@@ -149,18 +153,7 @@ export  class Configuration {     // Make the main procedure class for configura
     //
     // Define the getting and setting based on parsing the ${} of the yaml files
     //
-    defineMapping(){ 
-        let newTarget = this.findObjectByLabel(this, "(\%\{.+?\})") 
         
-
-        // for (let [key, value] of Object.entries(mapping)){
-        //     let match
-        // }
-        
-        
-        // let newTarget = this.findObjectByReference(this, "(\&\{.+?\})") 
-        // newTarget  = this.findObjectByTarget(this, "(\&\{.+?\})")
-    }      
     async updates(params){ // If a variable change causes other variables to change, do so here
         let variable = params.variable
         let value = params.src
@@ -252,15 +245,18 @@ export  class Configuration {     // Make the main procedure class for configura
                     if (res.status == 'fulfilled'){ // If the processes completed successfully 
                         changed_variables.push(res.value) // add the success variable to changed variables list 
                         try{
-                            if (res.value.value){ // If a source value is available
+                            
+                            // if (res.value.value ){ // If a source value is available
+                            if (res.value.value.source){
                                 $this.variables[res.value.key].source = res.value.value.source
-                                if ($this.variables[res.value.key].optionValue){ // If there is a multi choice option for variable, set source 
-                                    $this.variables[res.value.key].optionValue = res.value.value
-                                }
                             } else {
-                                //Otherwise, set default source format 
-                                $this.variables[res.value.key].source  = res.value
+                                $this.variables[res.value.key].source = null
                             }
+                                
+                            if ($this.variables[res.value.key].optionValue){ // If there is a multi choice option for variable, set source 
+                                $this.variables[res.value.key].optionValue = res.value.value
+                            }
+                            
                         } catch(err){
                             console.error(err)
                         }
@@ -326,21 +322,19 @@ export  class Configuration {     // Make the main procedure class for configura
                                 }
                                 else if (d == 'join'){ // If you need to join the array of src vals
                                     if (matched_string && Array.isArray(matched_string)){
-                                        target = matched_string.join(" ")
+                                        result = matched_string.join(" ")
                                     }
                                 }
                                 else if (d == 'length'){  // get the length of target
                                     result = matched_string.length
-                                    
                                 } else {
                                     if (Array.isArray(matched_string)){
-                                        matched_string = matched_string.join("")
+                                        result = matched_string.join("")
                                     }
-                                    result = functions[d](matched_string)
                                     if (d == 'trim'){ // get the name of the path without ext
-                                        matched_string = path.join(result.dir, result.name)
+                                        result = path.join(result.dir, result.name)
                                     } else {
-                                        matched_string = result
+                                        result=matched_string
                                     }
 
                                 }
@@ -425,84 +419,11 @@ export  class Configuration {     // Make the main procedure class for configura
                             }, 
                             get: function(){  // set getter that will update on all value changes if needed
                                 let fullstring = cloneDeep(original)  
-                                
-                                let mapping = {}
-                                fo.forEach((match,i)=>{   // for all times you find ${}
-                                    // matches.forEach((match)=>{
-                                    let id = match.replace(/[\%\{\}]/g, "") 
-                                    let val = nestedProperty.get($this, id)
-                                    mapping[match] = val
-                                    // })
-                                    
-                                })
-                                let replace = "(?<=\<\<).*?(?=\>\>)"
-                                let re = new RegExp(replace,"gs");
-                                let matches = fullstring.match(re)
-                                let functions = { 
-                                    "directory": path.dirname, // return dirname of source
-                                    "notExists": null, // Check if the path doesnt exist
-                                    "exists": null, // Cehck if path exists
-                                    "join": null, //  Join the array to a string
-                                    "firstIndex": null, // Get the first element of an array 
-                                    "length": null, // Get the length of the source 
-                                    "basename": path.basename, // Get the basename of the path
-                                    "trim": path.parse // get the name without the ext of the path
-                                }
-                                if (matches && matches.length >=1){
-                                    let mapping2 = {}
-                                    matches.forEach((vari)=>{
-                                        let function_identified = vari.match(/.*?(?=\()/gs); // Match the function (before the << ) 
-                                        let matched_string = vari.match(/(?<=\().*?(?=\))/gs)[0];  // Match the values between << >>
-                                        function_identified  = lodash.filter(function_identified, Boolean); // Conver the array to a string if is an arr
-                                        let sstring = matched_string
-                                        if (mapping[matched_string]){
-                                            sstring = mapping[matched_string]
-                                        }
-                                        function_identified.forEach((d)=>{
-                                            if (d == 'notExists'){ // If the value doesnt exist
-                                                if (Array.isArray(sstring)){
-                                                    sstring = sstring.join("")
-                                                }
-                                                sstring  = ( sstring ? false : true )
-                                            }
-                                            else if (d == 'firstIndex'){  // If you need to grab the first element of an array
-                                                if (Array.isArray(sstring)){
-                                                    sstring = sstring.join("")
-                                                }
-                                                sstring = sstring.target                                
-                                            }
-                                            else if (d == 'join'){ // If you need to join the array of src vals
-                                                if (sstring && Array.isArray(sstring)){
-                                                    sstring = sstring.join(" ")
-                                                }
-                                            }
-                                            else if (d == 'length'){  // get the length of target
-                                                sstring = sstring.length
-                                                
-                                            } else {
-                                                if (Array.isArray(sstring)){
-                                                    sstring = sstring.join("")
-                                                }
-                                                let result = functions[d](sstring)
-                                                if (d == 'trim'){ // get the name of the path without ext
-                                                    sstring = path.join(result.dir, result.name)
-                                                } 
-            
-                                            }
-                                        })
-                                        mapping2[`<<${vari}>>`] = sstring
-                                        fullstring = fullstring.replace(`<<${vari}>>`,sstring)
-                                    })    
-                                    
-                                }
-                                for (let [key, value] of Object.entries(mapping))
-                                {
-                                    fullstring = fullstring.replace(key, value)
-                                }
-                                if (fullstring == 'undefined'){
+                                let final = $this.mapVariable(fullstring)
+                                if (final == 'undefined'){
                                     return null
                                 } else { 
-                                    return fullstring
+                                    return final
                                 }
                             }
                         })
@@ -544,7 +465,200 @@ export  class Configuration {     // Make the main procedure class for configura
             return obj
         }
     }
-    
+    defineMapping(){ 
+        let final = this.findObjectByLabel(this, "(\%\{.+?\})") 
+        // console.log(this.variables.fastqs.options[1].bind.from,"end")
+
+
+        
+        // this.variables = {
+        //     fastqs: {
+        //         source: ["/Users/1", "/Users/2" ]
+        //     },
+        //     outputDir: {
+        //         source: "/Users/merribb1/Desktop/test-data2/metagenome/flu_illumina"
+        //     },
+        //     file: {
+        //         source: ["/Users/merribb1/Desktop/test-data2/metagenome/flu_illumina/test2.fastq",
+        //         "/Users/merribb1/Desktop/test-data2/metagenome/flu_illumina/test1.fastq" ]
+        //     },
+        //     samplename: {
+        //         source: "sample"
+        //     }
+        // }
+        // let string = "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report.json"
+        // let final = this.mapVariable(string)
+
+
+        
+    }  
+    mapVariable(fullstring){
+        let $this  = this
+        let split = fullstring.match(/(\%\{.*?\})|((?<=\}).*?(?=\%\{))|^.*?(?=\%\{)|(.+$)/g)
+        let mapping = []
+        if (split){
+            split = split.filter((f)=>{
+                return f && f!==''
+            })
+            split.forEach((id)=>{
+                let pattern = "(\%\{.+?\})"
+                var replace = `${pattern}`   
+                var re = new RegExp(replace,"g");
+                let fo = id.match(re)
+                if (fo){
+                    let d = fo[0].replace(/[\%\{\}]/g, "") 
+                    let found = nestedProperty.get($this, d)
+                    if (Array.isArray(found)){
+                        d = found
+                    } else {
+                        d = found
+                    }
+                    mapping.push(d)
+                } else {
+                    mapping.push(id)
+                }
+            })
+        } else {
+            mapping.push(fullstring)
+        }
+        let final = mapping
+        let length_called = false
+        let maxlen = Math.max(...final.map((f)=>{
+            if ("<<length(" == f){
+                length_called = true
+            }
+            return (Array.isArray(f) ? f.length : 1)
+        }))
+        
+        if (maxlen == 1){
+            final = final.join("")
+        } else {
+            let truefinal = []
+            for (let i = 0; i < maxlen; i++){
+                let f = final.map((k)=>{
+                    if (!Array.isArray(k) || k.length < i+1){
+                        return k
+                    } else {
+                        return k[i]
+                    }
+                })
+                truefinal.push(f.join(""))
+            }
+            final = truefinal
+        }
+        let mapping2 = []
+        if (!Array.isArray(final)){
+            final = [ final ]
+        }
+        
+        let functions = { 
+            "directory": path.dirname, // return dirname of source
+            "notExists": null, // Check if the path doesnt exist
+            "exists": null, // Cehck if path exists
+            "join": null, //  Join the array to a string
+            "firstIndex": null, // Get the first element of an array 
+            "length": null, // Get the length of the source 
+            "basename": path.basename, // Get the basename of the path
+            "trim": path.parse // get the name without the ext of the path
+        } 
+        let returnable =[]
+        let combined_maps = {}
+        final.forEach((entry)=>{
+            let split = entry.match(/(\<\<.*?\>\>)|(?<=\>\>).*?(?=\<\<)|(^.*?(?=\<\<)|((?<=\>\>).*?$))/g)
+            if (split){
+                split = split.filter((f)=>{
+                    return f && f!==''
+                })
+                let idxReturnable = []
+                split.forEach((id)=>{
+                    let function_identified = id.match(/(?<=\<\<).*?(?=\()/gs); // Match the function (before the << ) 
+                    let matched_string = id.match(/(?<=\().*?(?=\))/gs);  // Match the values between << >>
+                    function_identified  = lodash.filter(function_identified, Boolean)[0];
+                    if (function_identified){
+                        let single_functions = function_identified.split(",")
+                        matched_string = matched_string[0]
+                        let result = matched_string
+                        single_functions.forEach((d)=>{
+                            if (d == 'notExists'){ // If the value doesnt exist
+                                result  = ( result ? false : true )
+                            }
+                            else if (d == 'firstIndex'){  // If you need to grab the first element of an array
+                                result = result[0]                              
+                            }
+                            else if (d == 'join'){ // If you need to join the array of src vals
+                                if (result && Array.isArray(result)){
+                                    result = result.join(" ")
+                                }
+                            }
+                            else if (d == 'length'){  // get the length of target
+                                result = result.length
+                            } else if ( d == 'basename'){
+                                
+                                if (Array.isArray(result)){
+                                    result = result.map((f)=>{
+                                        return path.basename(f)
+                                    })
+                                } else {
+                                    result = path.basename(result)
+                                }
+                                
+                            } else if ( d == 'directory'){
+                                if (Array.isArray(result)){
+                                    result = result.map((f)=>{
+                                        return path.dirname(f)
+                                    })
+                                } else {
+                                    result = path.dirname(result)
+                                }
+                                
+                            } else if ( d == 'parse'){
+                                if (Array.isArray(result)){
+                                    result = result.map((f)=>{
+                                        let result = path.parse(f)
+                                        return path.join(result.dir, result.name)
+                                    })
+                                } else {
+                                    let result = path.parse(result)
+                                    result = path.join(result.dir, result.name)
+                                }
+                            } 
+                            else {
+                                if (Array.isArray(result)){
+                                    result = result.join("")
+                                }
+                                
+                                result = functions[d](result)
+                                if (d == 'trim'){ // get the name of the path without ext
+                                    result = path.join(result.dir, result.name)
+                                } 
+                            }
+                        })
+                            idxReturnable.push(result)
+                        } else {
+                            idxReturnable.push(id)
+                        }
+                        
+                })
+                
+                returnable.push(idxReturnable)
+                
+            }  else {
+                returnable.push([entry])
+            }
+        })
+        
+        returnable = returnable.map((f)=>{
+            return f.join("")
+        })
+        
+        if (returnable.length == 1){
+            returnable = returnable[0]
+        }
+        return returnable
+        
+        
+
+    }
     findObjectByLabelOld(obj, pattern) {
         const $this  = this
         
@@ -701,16 +815,12 @@ export  class Configuration {     // Make the main procedure class for configura
                                                 
                                     } catch(err)  { 
                                         console.error("error in matching", match, id, found, "origina:", original)
-                                        console.log(err)
                                     }
                                     
                                 })
                                 
                            
-                                if (fullstring){
-                                    // console.log(fullstring)
-                                    // fullstring= $this.mapFunctions(fullstring, obj.formatting) // next match all %<<>> which are functions
-                                }
+                                
                                 
                                 
                                 if (fullstring == 'undefined'){

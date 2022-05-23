@@ -5,6 +5,8 @@
   icon: "dna"
   module: True
   init: false 
+  description: Automated Genomics Application for Variant Exploration (AGAVE)
+  url: https://github.com/jhuapl-bio/AGAVE
   version: 1.0
   tags: 
     - "virus"

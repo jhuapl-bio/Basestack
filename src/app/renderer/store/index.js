@@ -105,7 +105,12 @@ export default new Vuex.Store({
       commit("SAVE_PROCEDURE_DEFAULT", params)
       
     },
-    
+    ADD_VARIABLE_CUSTOM ({ commit }, params) {
+      commit("ADD_CUSTOM", params)
+    },
+    REMOVE_VAR_CUSTOM ({ commit }, params) {
+      commit("RM_CUSTOM", params)
+    },
     UPDATE_VARIABLE ({ commit }, params) {
       commit("UPDATE_VARIABLE", params)
     },
@@ -141,6 +146,18 @@ export default new Vuex.Store({
     },
     UPDATE_VARIABLE (state, variable){
       nestedProperty.set(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${variable.name}.source`, variable.source)
+    },
+    ADD_CUSTOM (state, variable){
+      console.log(variable)
+      nestedProperty.set(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${variable.name}`, variable.variable)
+      
+    },
+    RM_CUSTOM (state, variable){
+      let name = (variable.name ? variable.name : 'null')
+      let vari = nestedProperty.get(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${name}`)
+      if (vari && vari.custom){
+        nestedProperty.set(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${name}`, null)
+      }
     },
     // SET_WATCHER (state, watcher){
     //   nestedProperty.set(state,`catalog.${watcher.catalog}.modules.${watcher.module}.procedures.${watcher.procedure}.watcher`, watcher.watcher)

@@ -145,29 +145,29 @@ export async function init_base_modules(){
 			store.library.addLocal(module, module.name)
 		}
 
-		 
+		  
 		return 
 	} catch(err){
 		store.ogger.error("%s %o", "error in init modules", err)
-		throw err 
+		throw err  
 	} 
-}  
+}    
   
-export async function init_modules(){  
-	try{  
-		store.logger.info("Initiating catalog modules .........................")
+export async function init_modules(){    
+	try{     
+		store.logger.info("Initiating catalog modules .........................",">")
 		for (let [key, module] of Object.entries(store.library.all)) { //Loop through all modules and their respective services. Many services can be a part of modules
-			try{
+			try{ 
 				if (module.imported){
-					let latest = module.latest
+					// console.log(key,"<<<<<<<")
+					let latest = store.library.all[key].latest
 					let modl = store.library.create_module(latest)			
-					
-				}		
-			} catch(err){
+				}		 
+			} catch(err){ 
 				store.logger.error("%s error in creating module %s", err, key)
-			}
+			} 
 		}
-		store.logger.info("Done initiating modules...")
+		store.logger.info("Done initiating")
 		return 
 	} catch(err){
 		logger.error("%s %o", "error in init modules", err)

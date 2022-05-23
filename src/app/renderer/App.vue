@@ -321,11 +321,11 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "artic_consensus_jhuapl",
+      selectedCatalogName: "mytax",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
-			selected: 'procedures',
+			selected: 'defaults',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 

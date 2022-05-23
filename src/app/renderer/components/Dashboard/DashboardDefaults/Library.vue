@@ -56,7 +56,7 @@
                         <v-list-item-subtitle class="mb-2" v-html="item.description"></v-list-item-subtitle>
                         <v-chip
                             small label
-                            v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
+                            v-for="(tag, tagKey) in item.tags" :key="`${tag}${tagKey}`" class="mr-1"
                         >
                         {{tag}}
                         </v-chip>
@@ -76,9 +76,10 @@
                         <span v-if="importedLibrary[item.name]">Installed Versions</span>
                         <v-chip
                             small label
-                            v-for="choice in importedLibrary[item.name].choices" :key="choice.version" class="mr-1"
+                            v-for="choice in uniqueVersions(item.name)" :key="`${choice}-${item.name}`" class="mr-1"
                         >
-                        {{choice.version}}
+                            {{choice}}
+                            
                         </v-chip>
                     </div>
                 </v-list-item-action>
@@ -123,6 +124,12 @@
 	    methods: {
             importModule(name){
                 this.$emit("importModule", {name:name, jump:false })
+            },
+            uniqueVersions(name){
+                let versions=this.importedLibrary[name].choices.map((f)=>{
+                    return f.version ? f.version : 0
+                })
+                return [ ... new Set(versions)]
             },
             async fetchRemoteCatalog(name){
                 const $this = this

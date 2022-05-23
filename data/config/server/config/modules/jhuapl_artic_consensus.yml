@@ -200,6 +200,7 @@
             target: "%{variables.dir.source}/manifest.txt"
             sep: "tab"
             type: "list"
+            header: false
           validations:
             - type: "contains"
               error: "Must have 1 NTC in the id slot. Select NB00 and NTC for barcode and id, respectively, if not using a NTC"
@@ -256,8 +257,8 @@
           type: files
           pattern: ".complete"
           path: "%{variables.dir.source}/artic-pipeline/2-length-filter"
-          total:  
-            target: "<<length(%{variables.manifest.source})>>" 
+          # total:  
+          #   target: "<<length(%{variables.manifest.source})>>" 
           source: "%{variables.dir.source}/artic-pipeline/2-length-filter"
           target: "%{variables.dir.target}/artic-pipeline/2-length-filter"
         normalizations:
@@ -268,8 +269,8 @@
           type: files
           path: "%{variables.dir.source}/artic-pipeline/3-normalization"
           pattern: ".complete"
-          total: 
-            target: "<<length(%{variables.manifest.source})>>" 
+          # total: 
+          #   target: "<<length(%{variables.manifest.source})>>" 
           source: "%{variables.dir.source}/artic-pipeline/3-normalization"
           target: "%{variables.dir.target}/artic-pipeline/3-normalization"
         consensuses:
@@ -278,8 +279,8 @@
           type: files
           label: "Consensus"
           hint: "Consensus file(s) folder in .complete or .partial (incomplete) FASTA format"
-          total: 
-            target: "<<length(%{variables.manifest.source})>>" 
+          # total: 
+          #   target: "<<length(%{variables.manifest.source})>>" 
           pattern: ".complete"
           path: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"
           source: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"

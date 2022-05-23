@@ -68,6 +68,7 @@ export  class Job {
     defineConfiguration (config) {
         let configuration = new Configuration(cloneDeep(config)) 
         configuration.defineMapping(); 
+        // console.log(configuration.variables.outputDir.target,"created!")
         return  configuration
     } 
     setValueVariable(value, obj, key){ 
@@ -443,7 +444,7 @@ export  class Job {
         let response = await Promise.allSettled(promises)
         return 
     }
-    async loopServices(){     
+    async loopServices(){      
         const $this  = this 
         let cancelled_or_skip = false
         let end = false  
@@ -502,7 +503,13 @@ export  class Job {
         store.logger.info("%s setting variables", $this.baseConfig.name)
         // this.mergeInputs(params, 'mergedConfig'  )
         this.runningConfig = this.defineConfiguration(this.mergedConfig)
-        this.setVariables(params.variables)
+        
+        this.setVariables(params.variables) 
+        // console.log(this.runningConfig.variables.outputDir.target,
+        //     this.services[0].config.variables.outputDir.target,
+        //     "target",
+        //     this.services[0].config.variables.fastqs.target)
+        // return
         store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{
             if (service && service.streamObj){

@@ -4,6 +4,13 @@
   version: 1.0
   basestack_released: 2.0
   module: True
+  url: https://nf-co.re/viralrecon
+  description: "nf-core/viralrecon is a bioinformatics analysis pipeline used to perform assembly and intra-host/low-frequency variant calling for viral samples."
+  tags: 
+    - "Nextflow"
+    - "viral assembly"
+    - "nanopore"
+    - "amplicon assembly"
   shared:
     services:
       orchestrator:

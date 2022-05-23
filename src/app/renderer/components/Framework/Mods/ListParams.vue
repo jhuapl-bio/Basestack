@@ -24,7 +24,6 @@
         </v-btn>
       </template>
     </v-snackbar>
-    {{typeof items}}
     <v-list height="70vh" class="scroll fill-height fill-width"  two-line v-if="items&&items.length > 0">
         
         <v-list-item  v-for="(item, key) in items.filter((d)=>{

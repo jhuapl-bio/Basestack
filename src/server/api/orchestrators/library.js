@@ -20,54 +20,13 @@ export  class Library {
         this.catalog = {} 
         this.locals = store.config.imported
         this.customs = {}
+        const $this = this
         
         Object.defineProperty(this, "all", {
             enumerable: true,   
             get: function(){
                 let base = {}
                 let seen = {}
-                
-                for (let [key,value] of Object.entries(this.imported)){
-                    if (!base[key]){
-                        base[key] = {
-                            choices: []
-                        }
-                    }
-                    seen[key] = 1
-                    value.choices.forEach((choice)=>{
-                        let idx = base[key].choices.findIndex((f)=>{
-                            return f.version == choice.version
-                        })
-                        
-                        if (idx == -1){
-                            base[key].choices.push(choice)
-                        } else {
-                            base[key].choices[idx] = choice
-                        }  
-                    })    
-                }   
-                for (let [key,value] of Object.entries(this.locals)){
-                    if (!base[key]){
-                        base[key] = {
-                            choices: []
-                        }
-                    }
-                    seen[key] = 1
-                    
-                    value.forEach((choice)=>{
-                        let idx = base[key].choices.findIndex((f)=>{
-                            return f.version == choice.version
-                        }) 
-                        
-                        if (idx == -1){
-                            base[key].choices.push(choice)
-                        } else {
-                            base[key].choices[idx] = choice 
-                        }
-                    })
-                }
-                
-                
                 for (let [key,value] of Object.entries(this.remotes)){
                     if (!base[key]){
                         base[key] = {
@@ -80,13 +39,59 @@ export  class Library {
                             return f.version == choice.version
                         })
                         
-                        if (idx == -1){
+                        // if (idx == -1){
                             base[key].choices.push(choice)
-                        } else {
-                            base[key].choices[idx] = choice
-                        }
+                        // } else {
+                        //     base[key].choices[idx] = choice
+                        // }
                     })
                 }
+                
+                for (let [key,value] of Object.entries($this.locals)){
+                    if (!base[key]){
+                        base[key] = {
+                            choices: []
+                        }
+                    }
+                    seen[key] = 1
+                    
+                    value.forEach((choice)=>{
+                        let idx = base[key].choices.findIndex((f)=>{
+                            return f.version == choice.version
+                        }) 
+                        
+                        // if (idx == -1){
+                            base[key].choices.push(choice)
+                        // } else {
+                            
+                            // choice.imported = true
+                            // base[key].choices[idx] = choice 
+                        // }
+                    })
+                }
+                for (let [key,value] of Object.entries($this.imported)){
+                    if (!base[key]){
+                        base[key] = {
+                            choices: []
+                        }
+                    }
+                    seen[key] = 1
+                    value.forEach((choice)=>{
+                        let idx = base[key].choices.findIndex((f)=>{
+                            return f.version == choice.version
+                        })
+                        
+                        // if (idx == -1){
+                            base[key].choices.push(choice)
+                        // } else {
+                        //     base[key].choices[idx] = choice
+                        // }  
+                    })   
+                    
+                } 
+                
+                
+                
                 for (let [key,value] of Object.entries(this.customs)){
                     if (!base[key]){
                         base[key] = {
@@ -99,9 +104,9 @@ export  class Library {
                         let idx = base[key].choices.findIndex((f)=>{
                             return f.version == choice.version
                         })
-                        if (idx == -1){ 
+                        // if (idx == -1){ 
                             base[key].choices.push(choice)
-                        }  
+                        // }  
                     })
                     
                 }
@@ -228,68 +233,50 @@ export  class Library {
         }
         return indx
     }
-    addImported(config, name){
+    addImported(config, name, removable){
+        
         if (!this.imported[name]){
-            this.imported[name] = {
-                choices: [],
-                selected: null, 
-                latest: null
-            }
-            
+            this.imported[name]  =[]
             const $this = this
-            Object.defineProperty(this.imported[name], 'latest', {
-                enumerable: true,   
-                get: function(){
-                    let sorted = $this.getLatestImported(name)
-                    
-                    return sorted
-
-                }
-            })
-            Object.defineProperty(this.imported[name], 'selected', {
-                enumerable: true,   
-                get: function(){
-                    let sorted = $this.getIndexVersion(name)
-                    return sorted
-
-                }
-            })
-            
         }
         if (Array.isArray(config)){
-            let maxIdx = this.imported[name].choices.length - 1
+            let maxIdx = this.imported[name].length - 1
             config.forEach((con)=>{
-                let idx = this.imported[name].choices.findIndex((f)=>{
+                let idx = this.imported[name].findIndex((f)=>{
                     return f.version == con.version
                 })
                 
                 if (idx == -1){
                     con.idx = maxIdx + 1
                     maxIdx +=1
+                    con.removable = removable
                     con.imported = true
-                    this.imported[name].choices.push(con)
+                    this.imported[name].push(con)
                 } else {
                     con.idx = maxIdx + 1
                     maxIdx +=1
+                    config.removable = removable
                     con.imported = true
-                    this.imported[name].choices[idx] = con
+                    this.imported[name][idx] = con
                 }
                   
             })
             
         } else { 
-            let maxIdx = this.imported[name].choices.length - 1
-            let idx = this.imported[name].choices.findIndex((f)=>{
+            let maxIdx = this.imported[name].length - 1
+            let idx = this.imported[name].findIndex((f)=>{
                 return f.version == config.version
             })
             if (idx == -1){
                 config.idx = maxIdx + 1
                 config.imported = true 
-                this.imported[name].choices.push(config) 
+                config.removable = removable
+                this.imported[name].push(config) 
             } else {
                 config.idx = maxIdx + 1
+                config.removable = removable
                 config.imported = true 
-                this.imported[name].choices[idx] = config
+                this.imported[name][idx] = config
             }
             
         }   
@@ -350,21 +337,31 @@ export  class Library {
                     return f.version == con.version
                 })
                 
-                if (idx == -1){
-                    con.idx = maxIdx + 1
-                    maxIdx +=1
-                    con.imported = false
-                    con.local = true
-                    con.remote = false
-                    this.locals[name].push(con)
-                } else {
-                    con.idx = maxIdx + 1
-                    maxIdx +=1
-                    con.imported = false
-                    con.local = true
-                    con.remote = false
-                    this.locals[name][idx] = con
-                }
+                con.idx = maxIdx + 1
+                maxIdx +=1
+                con.imported = false
+                con.local = true
+                con.remote = false 
+                con.removable = false
+                this.locals[name].push(con)
+                // if (idx == -1){
+                //     con.idx = maxIdx + 1
+                //     maxIdx +=1
+                //     con.imported = false
+                //     con.local = true
+                //     con.remote = false 
+                //     con.removable = false
+                //     this.locals[name].push(con)
+                // } else {
+                //     con.idx = maxIdx + 1
+                //     maxIdx +=1
+                //     con.imported = false
+                //     con.local = true
+                //     con.removable = false
+                //     con.remote = false
+                //     this.locals[name][idx] = con
+                // }
+                
                   
             })
             
@@ -373,20 +370,21 @@ export  class Library {
             let idx = this.locals[name].findIndex((f)=>{
                 return f.version == config.version
             })
-            if (idx == -1){
-                config.idx = maxIdx + 1
-                config.imported = false 
-                config.remote = false
-                config.local = true
-                this.locals[name].push(config) 
-            } else {
-                config.idx = maxIdx + 1
-                config.imported = false 
-                config.local = true
-                config.remote = false
-                this.locals[name][idx] = config
-            }
-            
+            // if (idx == -1){
+            config.idx = maxIdx + 1
+            config.imported = false 
+            config.remote = false
+            config.removable = false
+            config.local = true
+            this.locals[name].push(config) 
+            // } else {
+            //     config.idx = maxIdx + 1
+            //     config.imported = false 
+            //     config.local = true
+            //     config.remote = false
+            //     config.removable = false
+            //     this.locals[name][idx] = config
+            // }
         }  
     }
     addRemote(config, name){
@@ -400,48 +398,47 @@ export  class Library {
                     return f.version == con.version
                 })
                 
-                if (idx == -1){
+                // if (idx == -1){
                     con.idx = maxIdx + 1
                     maxIdx +=1
                     con.imported = false
                     con.remote = true
+                    con.removable = false
                     this.remotes[name].push(con)
-                } else {
-                    con.idx = maxIdx + 1
-                    maxIdx +=1
-                    con.imported = false
-                    con.remote = true
-                    this.remotes[name][idx] = con
-                }
-                  
-            })
-            
+                // } else {
+                //     con.idx = maxIdx + 1
+                //     maxIdx +=1
+                //     con.imported = false
+                //     con.removable = false
+                //     con.remote = true
+                //     this.remotes[name][idx] = con
+                // }
+            })            
         } else { 
             let maxIdx = this.remotes[name].length - 1
             let idx = this.remotes[name].findIndex((f)=>{
                 return f.version == config.version
             })
-            if (idx == -1){
+            // if (idx == -1){
                 config.idx = maxIdx + 1
                 config.imported = false 
                 config.remote = true
+                config.removable = false
                 this.remotes[name].push(config) 
-            } else {
-                config.idx = maxIdx + 1
-                config.imported = false 
-                config.remote = true
-                this.remotes[name][idx] = config
-            }
+            // } else {
+            //     config.idx = maxIdx + 1
+            //     config.imported = false 
+            //     config.removable = false
+            //     config.remote = true
+            //     this.remotes[name][idx] = config
+            // }
             
         }   
         return
     }
     async getRemotes(target, catalog){
         const $this = this;
-        // return new Promise((resolve, reject)=>{
         let modules = await fetch_external_config(target)
-        // .then((modules)=>{ 
-        store.logger.info("modules: %o", modules)
         modules = parseConfigVariables(JSON.stringify(modules), store.system)
         modules.forEach((module)=>{
             if (module ){
@@ -451,12 +448,7 @@ export  class Library {
             }  
         })
         return $this.remotes
-        // })
-            // .catch((err)=>{
-            //     store.logger.error("Could not get modules externally, check connections %o", err)
-            //     reject(err)
-            // })
-        // })
+       
         
     }
     removeDependencies(choices){
@@ -492,10 +484,13 @@ export  class Library {
             } 
         }
         try{  
-           
             if (idx >=0 && this.all[name] ){
-                try{
-                    if (this.all[name] && this.all[name].choices[idx] && this.all[name].choices[idx].path ){ 
+                try{ 
+                    if (this.all[name] && 
+                        this.all[name].choices[idx] && 
+                        this.all[name].choices[idx].path && 
+                        this.all[name].choices[idx].removable
+                    ){ 
                         removeFile(this.all[name].choices[idx].path)
                         this.all[name].choices[idx].path = null
                         this.all[name].choices[idx].imported = false
@@ -505,9 +500,9 @@ export  class Library {
                     store.logger.error("%s error in removing path to yaml file %s", er, name)
                 } 
             } else if (this.all[name]) {   
-                try{ 
+                try{  
                     this.all[name].choices.forEach((m,i)=>{
-                        if (m && m.path && m.path){ 
+                        if (m && m.path && m.path && m.removable){ 
                             removeFile(m.path) 
                             m.path = null
                             m.imported = false
@@ -571,18 +566,19 @@ export  class Library {
         results_default.forEach((result, index)=>{
             if (result.status == 'fulfilled'){ 
                 result.value.forEach((config)=>{
-                    let localIdx = -1
+                    let localIdx = -1 
                     if (this.locals[config.name]){
                         localIdx = this.locals[config.name].findIndex((f)=>{
                             return f.version == config.version
                         })
                     }
-                    if (localIdx == -1){
-                        this.addImported(config, config.name)
-                    } else {
-                        this.addImported(this.locals[config.name][localIdx], config.name)
-                    }
-                })
+                    // if (localIdx == -1){
+                        this.addImported(config, config.name,  true)
+                    // } 
+                    // else {
+                    //     this.addImported(this.locals[config.name][localIdx], config.name, false)
+                    // } 
+                })  
             }
         })
         return 
