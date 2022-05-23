@@ -59,17 +59,15 @@
               https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz
             type: file
             remove: true
-            target: >-
-              /Users/merribb1/Documents/Projects/Basestack/git/Basestack/data/userdata/workflows/mytax/flukraken2.tar.gz
+            target: "${writePath}/workflows/mytax/flukraken2.tar.gz"
+              
           type: download
           format: file
           decompress:
             format: tgz
-            source: >-
-              /Users/merribb1/Documents/Projects/Basestack/git/Basestack/data/userdata/workflows/mytax/flukraken2.tar.gz
+            source: "${writePath}/workflows/mytax/flukraken2.tar.gz"
           label: 2021 Flukraken database
-          target: >-
-            /Users/merribb1/Documents/Projects/Basestack/git/Basestack/data/userdata/workflows/mytax/flukraken2
+          target: "${writePath}/workflows/mytax/flukraken2"
           overwrite: true
         - source:
             url: ftp.ccb.jhu.edu
@@ -79,17 +77,14 @@
             password: null
             protocol: ftp
             remove: false
-            target: >-
-              /Users/merribb1/Documents/Projects/Basestack/git/Basestack/data/userdata/workflows/mytax/minikraken2.tar.gz
+            target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           label: Minikraken2
           type: download
           format: dir
           decompress:
             format: tgz
-            source: >-
-              /Users/merribb1/Documents/Projects/Basestack/git/Basestack/data/userdata/workflows/mytax/minikraken2.tar.gz
-          target: >-
-            /Users/merribb1/Documents/Projects/Basestack/git/Basestack/data/userdata/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE
+            source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
           overwrite: false
       variables:
         file:
@@ -149,8 +144,7 @@
           options:
             - element: null
               name: Minikraken2
-              source: >-
-                /Users/merribb1/Documents/Projects/Basestack/git/Basestack/data/userdata/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE
+              source: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
               target: /opt/databases/minikraken2
               warning: >-
                 Requires roughly 7.5 GB of free RAM to load. If limited in RAM
@@ -162,8 +156,7 @@
                 to: /opt/databases/minikraken2
             - element: null
               name: Flukraken2-2021
-              source: >-
-                /Users/merribb1/Documents/Projects/Basestack/git/Basestack/data/userdata/workflows/mytax/flukraken2
+              source: "${writePath}/workflows/mytax/flukraken2"
               target: /opt/databases/flukraken2
               bind:
                 from: '%{variables.db.source}'
