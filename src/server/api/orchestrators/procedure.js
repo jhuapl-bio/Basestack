@@ -256,7 +256,11 @@ export class Procedure {
                             dependencies[index].status.version = dependency.value.version
                             dependencies[index].status.exists = true
                         } else {
-                            dependencies[index].status.exists = ( dependency.value && dependency.value.exists ? dependency.value.exists : dependency.value )
+                            if ($this.name == 'mytax_kraken2_report'){
+
+                                console.log("fulfilled", dependency.value,"<<<<")
+                            }
+                            dependencies[index].status.exists = ( dependency.value  ? dependency.value.exists : dependency.value )
                         }
 						
 					} else { 
@@ -267,7 +271,7 @@ export class Procedure {
                     if (dependencies[index].status && dependencies[index].status.stream && Array.isArray(dependencies[index].status.stream.info)){
                             
                         logs.push(...dependencies[index].status.stream.info)
-                    }
+                    } 
                     
                     if (dependencies[index].status.building){
                         building = true

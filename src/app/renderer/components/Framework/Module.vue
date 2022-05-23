@@ -458,7 +458,6 @@ import {LoopingRhombusesSpinner, FulfillingBouncingCircleSpinner } from 'epic-sp
 import Progresses  from '@/components/Framework/Progresses.vue';
 import Docker from "@/components/Dashboard/System/Docker";
 import SubLibrary from "@/components/Dashboard/DashboardDefaults/SubLibrary"
-import Logs from '../../../../../../../Basestack/client/src/renderer/components/NavbarModules/Logs/Logs.vue';
 import Customize  from '@/components/Framework/Customize.vue';
 
 export default {
@@ -472,7 +471,6 @@ export default {
     SubLibrary,
     LoopingRhombusesSpinner,
     FulfillingBouncingCircleSpinner,
-    Logs,
   },
   beforeDestroy: function(){
     if (this.interval){
