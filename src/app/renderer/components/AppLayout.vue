@@ -58,9 +58,10 @@ export default {
   mounted() {
     this.getStatus();
 
-    setInterval(() => {
-      this.getStatus();
-    }, 4000);
+    // used to ensure AppMenu is up to date with installed modules
+    // setInterval(() => {
+    //   this.getStatus();
+    // }, 4000);
   },
   methods: {
     async getStatus() {

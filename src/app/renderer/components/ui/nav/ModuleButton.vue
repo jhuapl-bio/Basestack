@@ -28,15 +28,15 @@
 
 <script>
 export default {
-  props: { moduleName: String },
+  props: { module: Object },
   computed: {
     slotFallback: (props) => {
-      return props.moduleName.charAt(0);
+      return props.module.name.charAt(0);
     },
   },
   methods: {
     goToModule() {
-      this.$router.push(`/module/${this.moduleName}`);
+      this.$router.push(`/module/${this.module.name}`);
     },
   },
 };

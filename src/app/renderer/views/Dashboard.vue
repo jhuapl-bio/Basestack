@@ -7,7 +7,7 @@
   - # **********************************************************************
   -->
 <template>
-  <app-layout hasSidebar="true">
+  <app-layout :hasSidebar="true">
     <template #title>
       <h2 class="text-blue-900 markup-h1">Your Basestack</h2>
     </template>
