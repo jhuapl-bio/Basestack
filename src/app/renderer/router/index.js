@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Router from "vue-router";
 
-import Module from "@/components/Framework/Module";
+import Module from "@/views/Module";
 import Dashboard from "@/views/Dashboard";
 import Library from "@/views/Library";
 import Logs from "@/views/Logs";
@@ -23,7 +23,7 @@ let router = new Router({
       component: Library,
     },
     {
-      path: "/module/:id",
+      path: "/module/:name",
       component: Module,
       props: true,
     },
