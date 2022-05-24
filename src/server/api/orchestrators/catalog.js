@@ -11,8 +11,9 @@ export class Catalog {
         this.modules = []  
         this.interval = {
             checking: false, 
-            interval: this.create_interval() 
+            
         }    
+        this.create_interval() 
         this.status =  {    
             installed: false, // At least one module is installed in this catalog specification
             latest: null,    
@@ -65,9 +66,7 @@ export class Catalog {
                         latest_version = module.config.version
                         latest_key = key
                     }
-                    if ($this.name == 'agave'){
-                        // console.log(module.status)
-                    } 
+                    
                     if (module.status.building){ 
                         building = true 
                     }
@@ -106,9 +105,13 @@ export class Catalog {
                 resolve($this.status)
         }) 
 	}
+    cleanup(){
+        clearInterval(this.interval.interval) 
+        return
+    }
     async create_interval (){
         const $this = this
-        let interval = setInterval(()=>{
+        this.interval.interval = setInterval(()=>{
             if (!$this.interval.checking){
                 $this.interval.checking = true
                 $this.statusCheck().then((state)=>{
@@ -119,9 +122,9 @@ export class Catalog {
                 }) 
             }
         }, 1500)   
+        
 
-
-        return interval
+        return 
  
     }
 

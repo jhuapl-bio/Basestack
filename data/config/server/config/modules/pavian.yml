@@ -2,8 +2,11 @@
   title: "Pavian"
   icon: "tree"
   basestack_released: 2.0
+  schema_version: 1
   version: 1.0
+  description: "🌈 Interactive analysis of metagenomics data"
   module: True
+  url: https://github.com/fbreitwieser/pavian
   tags: 
     - "sankey"
     - "visualization"

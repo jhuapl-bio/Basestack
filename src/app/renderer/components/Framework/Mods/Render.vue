@@ -9,10 +9,6 @@
 <template>
   <div  class="render ">
 	<v-divider></v-divider>
-	<v-btn small class="mb-4 mr-2" v-on:click="forceRerender()"
-		> Refresh
-		<v-icon class="ml-3" small >$sync</v-icon>
-	</v-btn>
 	<v-subheader>
 		Ports exposed
 	</v-subheader>
@@ -65,7 +61,24 @@
 			>
 			</v-text-field>
 		</template>
-		<template v-slot:item.open="{ item, index }">
+		<template v-slot:item.openBasestack="{ item, index }">
+			
+			<v-tooltip bottom >
+				<template v-slot:activator="{ on }">
+					<v-btn
+						color="secondary"
+						class="text-caption" v-on="on"
+						@click="open_local_link(item, $event)"  
+					>
+						<v-icon class="mr-3" small color="primary lighten-2" >
+							$external-link-alt
+						</v-icon>
+						Open Local</v-btn>
+				</template>
+				View in Local Instance of the App
+			</v-tooltip>
+		</template>
+		<template v-slot:item.openBrowser="{ item, index }">
 			<v-tooltip bottom >
 				<template v-slot:activator="{ on }">
 				<v-btn
@@ -80,21 +93,6 @@
 				</template>
 				Open in Browser
 			</v-tooltip>  
-			
-			<v-tooltip bottom >
-				<template v-slot:activator="{ on }">
-					<v-btn
-						color="secondary"
-						class="text-caption" v-on="on"
-						@click="open_local_link(item, $event)"  
-					>
-						<v-icon class="mr-3" small color="primary lighten-2" >
-							$external-link-alt
-						</v-icon>
-						Open Locally</v-btn>
-				</template>
-				View in Local Instance of the App
-			</v-tooltip>
 		</template>
 	</v-data-table>
 	<br>
@@ -138,8 +136,14 @@ export default {
 					align:"center"
 				},
 				{
-					text: "Openable Port",
-					value: "open",
+					text: "Browser Open",
+					value: "openBrowser",
+					sortable: false,
+					align:"center"
+				},
+				{
+					text: "Basestack Open",
+					value: "openBasestack",
 					sortable: false,
 					align:"center"
 				},

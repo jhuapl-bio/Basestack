@@ -77,6 +77,7 @@ export var store = {
 		services: [],
 		modules: [],
 		catalog: [],
+		imported: []
 	},
 	default: [],
 	logger: null

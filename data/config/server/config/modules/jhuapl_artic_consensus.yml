@@ -2,9 +2,12 @@
   title: "JHUAPL - Artic Consensus"
   icon: "dna"
   version: 1.0
+  schema_version: 1
   basestack_released: 2.0
+  description: "This repository is a Dockerized pipeline for creating consensus viral genomes from Oxford Nanopore data. This pipeline leverages the ARTIC Network bioinformatics pipeline and couples many annotation and reporting tools, resulting in an automatically generated PDF report. The pipeline is built to be deployed in the Basestack platform (https://github.com/jhuapl-bio/Basestack) so that anyone, regardless of bioinformatics expertise, can run it and make use of its automated consensus genomes and reports."
+  url: https://github.com/jhuapl-bio/basestack_consensus
   module: True
-  tags: 
+  tags:  
     - "consensus"
     - "coronavirus"
     - "sequencing"  
@@ -197,6 +200,7 @@
             target: "%{variables.dir.source}/manifest.txt"
             sep: "tab"
             type: "list"
+            header: false
           validations:
             - type: "contains"
               error: "Must have 1 NTC in the id slot. Select NB00 and NTC for barcode and id, respectively, if not using a NTC"
@@ -253,8 +257,8 @@
           type: files
           pattern: ".complete"
           path: "%{variables.dir.source}/artic-pipeline/2-length-filter"
-          total:  
-            target: "<<length(&{variables.manifest.source})>>" 
+          # total:  
+          #   target: "<<length(%{variables.manifest.source})>>" 
           source: "%{variables.dir.source}/artic-pipeline/2-length-filter"
           target: "%{variables.dir.target}/artic-pipeline/2-length-filter"
         normalizations:
@@ -265,8 +269,8 @@
           type: files
           path: "%{variables.dir.source}/artic-pipeline/3-normalization"
           pattern: ".complete"
-          total: 
-            target: "<<length(&{variables.manifest.source})>>" 
+          # total: 
+          #   target: "<<length(%{variables.manifest.source})>>" 
           source: "%{variables.dir.source}/artic-pipeline/3-normalization"
           target: "%{variables.dir.target}/artic-pipeline/3-normalization"
         consensuses:
@@ -275,8 +279,8 @@
           type: files
           label: "Consensus"
           hint: "Consensus file(s) folder in .complete or .partial (incomplete) FASTA format"
-          total: 
-            target: "<<length(&{variables.manifest.source})>>" 
+          # total: 
+          #   target: "<<length(%{variables.manifest.source})>>" 
           pattern: ".complete"
           path: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"
           source: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"

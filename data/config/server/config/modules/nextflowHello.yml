@@ -4,6 +4,7 @@
   version: 1.0
   basestack_released: 2.0
   module: True
+  schema_version: 1
   procedures: 
     - name: nextflow_base #Top level is the left-hand selection of the menu and the major module to install 
       title: "NF Base"

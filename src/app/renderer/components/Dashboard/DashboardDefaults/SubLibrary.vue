@@ -10,47 +10,7 @@
   <v-card dense tile id="sublibrary" >
     <v-spacer></v-spacer>
     <v-toolbar flat  class="pb-10 mb-5">
-        <v-autocomplete
-            v-model="selectedModule"
-            :items="catalog.modules"
-            icon-color="primary"
-            dense outlined
-            class="mr-5  pt-3 mt-3"
-            style="max-width: 25%"
-            item-text="version"
-            label="Loaded Versions"
-            :hint="`Choose Installed Module Version`"
-            persistent-hint
-            return-object
-        >
-            <template v-slot:item="{ item }" >
-                <v-list-item-avatar left >
-                <v-icon  :color="( item.version >= latest ? 'green' : '')" x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
-                </v-list-item-avatar>
-                
-                <v-list-item-content    >
-                    <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
-                    
-                    <v-spacer></v-spacer>
-                    <v-list-item-subtitle>
-                        <v-chip
-                        x-small
-                        v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
-                        >
-                        {{tag}}
-                        </v-chip>
-                    </v-list-item-subtitle>
-                
-                </v-list-item-content>
-                <v-list-item-action>
-                    <v-subheader v-if="item.remote">Remote</v-subheader>
-                    <v-subheader v-else-if="item.custom">Custom Made</v-subheader>
-                    <v-subheader v-else-if="item.local">Local, Default</v-subheader>
-                    <strong  style="color: #2b57b9" v-if="item.version == latest">Latest</strong>
-                </v-list-item-action>
-            </template>
-        </v-autocomplete>
-        <v-tooltip bottom  v-if="!selectedModule.local">
+        <!-- <v-tooltip bottom  v-if="!selectedProcedure.local">
             <template v-slot:activator="{ on }">
                 <v-btn small icon class="mr-3">
                     <v-icon
@@ -62,7 +22,7 @@
                 </v-btn>
             </template>
             Unload or Remove the Module (Custom or Remote)
-        </v-tooltip>
+        </v-tooltip> -->
         <v-badge   class="mt-5" v-if="selectedProcedure.status" overlap x-small :color="(selectedProcedure.status  && selectedProcedure.status.fully_installed ? 'green' : 'orange darken-2')">
             <template v-slot:badge>
                 <v-tooltip bottom>
@@ -75,64 +35,28 @@
                     {{ selectedProcedure.status.fully_installed  ? 'Fully Installed ' : 'Procedure not fully installed'  }}
                 </v-tooltip>
             </template>
-            
-            <v-autocomplete
-                v-model="selectedProcedure"
-                :items="procedures"
-                icon-color="primary"
-                item-text="title"
-                class="mx-auto pr-2"
-                style="max-width: 105%"
-                :hint="`Choose procedure dependencies to install`"
-                label="Procedure"
-                persistent-hint outlined dense
-                return-object
-                >
-                <template v-slot:item="{ item }" >
-                    <v-list-item-avatar left>
-                    <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
-                    </v-list-item-avatar>
-                    
-                    <v-list-item-content outlined>
-                    <v-list-item-title >{{ item.title ? item.title : item.name }}</v-list-item-title>
-                    <v-list-item-subtitle>
-                        <v-chip
-                        x-small
-                        v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
-                        >
-                        {{tag}}
-                        </v-chip>
-                    </v-list-item-subtitle>
-                    
-                    </v-list-item-content>
-                </template>
-            </v-autocomplete>
-            
-        </v-badge>
-        
-        <v-spacer>
-        </v-spacer>
+        </v-badge>        
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-                <v-icon medium color="primary" v-on="on" class="configure mr-3 ml-3 " @click="buildModule(catalog.name)">$download</v-icon>
+                <v-icon medium color="primary" v-on="on" class="configure mr-3 ml-3 " @click="buildModule(version.name)">$download</v-icon>
             </template>
             Build Entire Module
         </v-tooltip>
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-                <v-icon v-on="on" medium color="indigo "  v-on:click="fetchRemoteCatalog(catalog.name)" style="text-align:right" class="configure ml-2 mr-3">$external-link-alt</v-icon>
+                <v-icon v-on="on" medium color="indigo "  v-on:click="fetchRemoteCatalog(version.name)" style="text-align:right" class="configure ml-2 mr-3">$external-link-alt</v-icon>
             </template>
             Fetch Versions for Module
         </v-tooltip>
-        <v-tooltip bottom v-if="catalog.status.building">
+        <v-tooltip bottom v-if="selected.status && selected.status.building">
             <template v-slot:activator="{ on }">    
-                <v-icon v-on="on" medium color="light " v-on:click="cancelModule(catalog.name)"   style="text-align:right" class="configure ml-2 mr-3">$times-circle</v-icon>
+                <v-icon v-on="on" medium color="light " v-on:click="cancelModule(version.name)"   style="text-align:right" class="configure ml-2 mr-3">$times-circle</v-icon>
             </template>
             Cancel Module Build
         </v-tooltip>
         <v-tooltip bottom >
             <template v-slot:activator="{ on }">
-                <v-icon v-on="on"  color="orange darken-2"    medium v-on:click="deleteModule(selectedModule.name)" style="" class="configure ml-4 mr-3">$trash-alt</v-icon>
+                <v-icon v-on="on"  color="orange darken-2"    medium v-on:click="deleteModule(version)" style="" class="configure ml-4 mr-3">$trash-alt</v-icon>
             </template>
             Delete Entire Module and its dependencies 
         </v-tooltip>
@@ -308,7 +232,7 @@
             <template v-slot:item.build="{ item, index }">
                 <v-icon  class="configure" small color="primary" 
                     style="" v-if="item.status.dependComplete"
-                    @click="buildModuleDependency(catalog.name, index)">$download
+                    @click="buildModuleDependency(version.name, index)">$download
                 </v-icon>
                 <v-tooltip bottom v-else>
                     <template v-slot:activator="{ on }">
@@ -328,13 +252,13 @@
             <template v-slot:item.remove="{ item, index }">
                 <v-icon class="configure" small color="orange darken-1" 
                     style=""
-                    @click="removeModuleDependency(catalog.name, index)">$trash-alt
+                    @click="removeModuleDependency(version.name, index)">$trash-alt
                 </v-icon>
             </template>
             <template v-slot:item.cancel="{ item, index }">
                 <v-icon class="configure" small color="light" 
                     style="" v-if="item.status.building"
-                    @click="cancelModuleDependency(catalog.name, index)">$times-circle
+                    @click="cancelModuleDependency(version.name, index)">$times-circle
                 </v-icon>
             </template>
         
@@ -356,6 +280,15 @@ export default {
         
     },
 	computed: {
+        procedureLogs(){
+            let logs = []
+            try{
+                logs = this.status.buildStream
+            } catch(err){
+                console.log(err)
+            }
+            return logs
+        },
         procedureIdx (){
             if (this.selectedProcedure && this.selectedProcedure.name){
                 return   ( this.selectedProcedure.idx && this.selectedProcedure.idx >= 0 ? this.selectedProcedure.idx : 0 )
@@ -372,9 +305,7 @@ export default {
             }
         },
         
-        dependencies(){
-            return this.selectedProcedure.dependencies
-        }
+        
         
 	},
 	data(){
@@ -384,9 +315,9 @@ export default {
             procedures: [],
             selectedModule: {},
             defaultProcedure:0,
-            procedureLogs: [],
+            
             procedures: [],
-            status: null,
+            selected: {},
             overwrites: [],
             stored: {},
             fields: [
@@ -451,31 +382,9 @@ export default {
 			
 		}
 	},
-    props: [ 'catalog', 'module' , 'latest'],
+    props: [ 'version', 'procedure', 'dependencies', 'status' ],
     watch: {
-       
-        selectedModule(newValue){
-            this.selectedProcedure = {}
-            this.procedures = []
-            this.getStatus()            
-        },
-        selectedProcedure(newValue){
-            if (newValue.dependencies){
-                this.overwrites = newValue.dependencies.map((f,i)=>{
-                    return f.overwrite
-                })
-            }
-          
-        },
-        catalog(newValue){
-            if (  this.stored[newValue.name] ){
-                this.selectedModule = this.stored[newValue.name].module
-                this.selectedProcedure = this.stored[newValue.name].selected
-                this.procedures =   this.stored[newValue.name].procedures
-            } else {
-                this.getStatus()
-            }
-        }
+        
     },
 	methods:{
         async error_alert(err, title){
@@ -535,12 +444,11 @@ export default {
                 }
             })
         },
-        async removeCatalog(){
-            FileService.removeCatalog({
-                catalog: this.selectedModule.name,
-                module: this.selectedModule.idx,
+        async removeCatalog(idx){
+            FileService.removeModule({
+                catalog: this.version.name,
+                index: idx
             }).then((response)=>{
-                console.log(response,"done")
                 this.selectedModule = {}
                 this.selectedProcedure = {}
 
@@ -571,8 +479,8 @@ export default {
                     });
                     FileService.removeProcedureDependency({
                         module: $this.moduleIdx,
-                        catalog: $this.catalog.name,
-                        procedure: procedureIdx,
+                        catalog: $this.version.name,
+                        procedure: procedure,
                     }).then((response)=>{
                         this.$swal({
                             title: "Module deletion completed!",
@@ -595,11 +503,11 @@ export default {
             
         },
         async cancelModule(name){
-            let procedureIdx  = this.selectedProcedure.idx
+            let procedureIdx  = this.procedure
             const $this = this
             FileService.cancelBuild({
                 module: $this.moduleIdx,
-                catalog: $this.catalog.name,
+                catalog: $this.version.name,
                 procedure: procedureIdx
             })
             .then((response)=>{
@@ -623,10 +531,10 @@ export default {
         },
         async buildModule(){
             const $this = this
-            let procedureIdx  = this.selectedProcedure.idx
+            let procedureIdx  = this.procedure
             FileService.buildProcedure({
                 module: $this.moduleIdx,
-                catalog: $this.catalog.name,
+                catalog: $this.version.name,
                 procedure: procedureIdx,
                 overwrite: this.overwrites
             })
@@ -684,77 +592,13 @@ export default {
             })
           }
         },
-        async getStatus(){
-            const $this = this
-            try{
-
-                let response = await FileService.getProcedures({
-                    module: this.moduleIdx,
-                    catalog: this.catalog.name,
-                    token: this.$store.token
-                })
-                let status_obj = response.data.data
-                this.procedures = response.data.data
-                this.procedures.map((d,i)=>{
-                    d.idx = i
-                    if (d.dependencies){
-                        d.dependencies.filter((f)=>{
-                            return f.type == 'docker'
-                        }).forEach((f)=>{
-                            if (!this.custom_images[f.label]){
-                                this.custom_images[f.label] = ( f.tag ? f.tag : 'latest')
-                            }
-                        })
-                    }
-                })
-                
-                if (!this.selectedModule.name || this.selectedModule.name !== this.catalog.name){
-                    this.selectedModule = this.catalog.modules[0]
-                    this.selectedProcedure = {}
-                }
-                if (!this.selectedProcedure.name){
-                    this.selectedProcedure = this.procedures[this.defaultProcedure]
-                    
-                }
-                this.stored[this.catalog.name] = {
-                    module: this.selectedModule,
-                    selected: this.selectedProcedure,
-                    procedures: this.procedures
-                }
-                this.$set(this.selectedProcedure , 'dependencies', this.procedures[this.selectedProcedure.idx].dependencies)
-                this.$set(this.selectedProcedure , 'status', this.procedures[this.selectedProcedure.idx].status)
-                
-                if (this.selectedProcedure.status && this.selectedProcedure.status.buildStream){
-                    this.selectedProcedure.status.buildStream.forEach((entry, i)=>{
-                        this.procedureLogs.push(entry)
-                    })
-
-                }
-                this.procedureLogs = []
-                try{
-                    this.procedureLogs = this.procedures[this.selectedProcedure.idx].status.buildStream
-                } catch(err){
-                    console.log(err)
-                }
-                if (!this.procedures){
-                    clearInterval(this.interval)
-                }
-                
-            } catch(err){
-                this.initial=false
-                this.selectedModule.idx=0
-                console.error(`${err} error in getting status`)
-            } finally {
-                this.intervalChecking = false
-            }
-        },
+       
         async buildModuleDependency(name, index){
-            let procedureIdx  = this.selectedProcedure.idx
+            let procedureIdx  = this.procedure
             const $this = this
             let overwrite = this.overwrites[index]
             FileService.buildProcedureDependency({
-                module: $this.moduleIdx,
-                catalog: $this.catalog.name,
+                catalog: $this.version.name,
                 procedure: procedureIdx,
                 overwrite: [  overwrite ],
                 dependency: index 
@@ -780,11 +624,10 @@ export default {
         },
 
         async removeModuleDependency(name, index){
-            let procedureIdx  = this.selectedProcedure.idx
+            let procedureIdx  = this.procedure
             FileService.removeProcedureDependency({
-                module: this.moduleIdx,
-                catalog: this.catalog.name,
-                procedure:procedureIdx,
+                catalog: this.version.name,
+                procedure: procedureIdx,
                 dependency: index
             })
             .then((response)=>{
@@ -808,9 +651,8 @@ export default {
         },
         async cancelModuleDependency(name, index){
             FileService.cancelProcedureDependency({
-                module: this.moduleIdx,
-                catalog: this.catalog.name,
-                procedure: this.selectedProcedure.idx,
+                catalog: this.version.name,
+                procedure: this.procedure,
                 dependency: index
             })
             .then((response)=>{
@@ -835,11 +677,6 @@ export default {
 	},
 	
 	mounted() {
-        this.getStatus()
-        const $this  = this
-        this.interval = setInterval(()=>{
-            $this.getStatus()
-        }, 3000)
     },
 	beforeDestroy: function() {
         clearInterval(this.interval)

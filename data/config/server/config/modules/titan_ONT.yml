@@ -1,10 +1,17 @@
 - name: titan_ONT
   title: "Titan ONT"
   icon: "times"
+  schema_version: 1
   version: 1.0
   basestack_released: 2.0
   module: True
-  tooltip: "Run Stats on a single BAM file"
+  tags: 
+    - "Quality Check"
+    - "Stats"
+    - "BAM"
+    - "Alignment Stats"
+  description: "Bioinformatics workflows for genomic characterization, submission preparation, and genomic epidemiology of viral pathogens of concern, especially the SARS-CoV-2 virus" 
+  url: https://dockstore.org/workflows/github.com/theiagen/public_health_viral_genomics/Titan_ONT:fja-quasitools-dev?tab=info
   procedures: 
     - name: titan_ont #Top level is the left-hand selection of the menu and the major module to install 
       title: "Titan ONT"

@@ -206,56 +206,19 @@ export function save_remote_module(config){
 		config.remote = true
 		config.local = false
 		config.custom = false
-		// config.loaded = true
 		let parsed_item = parseConfigVariables(JSON.stringify(config), store.system)
 		let modl = create_module(parsed_item)
 		modl.version = config.version
 		modl.remote = config.remote 
 		modl.local = config.local
 		modl.custom = config.custom
-		store.catalog[config.name].modules.push(modl)
+		store.library.catalog[config.name].modules.push(modl)
 	} catch(err){
-		store.logger.error(err)
+		store.logger.error(err) 
 		return
 	}
 }
 
-export function set_stored(key, items){
-	try{
-		let remotes = {}
-		if (items && Array.isArray(items)){
-			
-			items.forEach((item)=>{
-				if (!store.remotes[item.name]){
-					store.remotes[item.name] = []
-				} 
-				 
-				
-				let g = item
-				Object.defineProperty(g, 'loaded', {
-					enumerable: true,
-					get: ()=>{ 
-						let idx  = store.config.modules.findIndex((data)=>{
-							return data.name == item.name   && data.version == item.version
-						}) 
-						if (idx > -1){
-							return true
-						} else {
-							return false
-						}
-
-
-					}
-				})
-				store.remotes[item.name].push(g)
-				
-			})
-		} 
-	} catch(err){
-		store.logger.error(err)
-		return
-	}
-}
 export async function fetch_external_config_target(key,catalog){
 	try{
 		let url = `https://basestack-support.herokuapp.com/db/get/${key}/${catalog}`
@@ -278,27 +241,24 @@ export async function fetch_external_config_target(key,catalog){
 		throw err
 	} 
 }
-export async function fetch_external_config(key){
-	try{
+export  function fetch_external_config(key){
+	return new Promise((resolve,reject)=>{
 		let url = `https://basestack-support.herokuapp.com/db/get/${key}`
 		logger.info("%s %s", "Getting url: ", url)
-		let json =  await axios.get(`${url}`)
-		logger.info("returned json: %s", url)
-		try{
+		axios.get(`${url}`).then((json)=>{
+			logger.info("returned json: %s", url)
 			json.data.data.map((d)=>{
-				d.remote = true
+				d.remote = true 
 				d.local = false
 			})
-			return json.data.data
-		} catch(err){
-			logger.error(`${err} error in fetching external url____________`)
-			throw err
-		}
+			resolve(json.data.data)
+		}).catch((err)=>{
+			logger.error("Error in fetching remote url modules %s", err)
+			reject(err)
+		})
 		
-	} catch(err){
-		logger.error(`${err} error in fetching external url____________`)
-		throw err
-	} 
+	}) 
+	
 }
 
 
@@ -615,13 +575,7 @@ export async function fetch_docker_stats(){
 			DockerRootDir: docker_info.DockerRootDir,
 			MemTotal: docker_info.MemTotal
 		}
-		// let df_docker = await store.docker.df()
-		// let filtered = df_docker.Volumes.filter((f)=>{
-		// 	return f.Name == "basestack-docker-viralrecon"
-		// })
-		// console.log(filtered,"<<<")
-
-
+		
 		return docker
 	} catch(err){
 		logger.error(`${err} <-- error in fetching docker version`)

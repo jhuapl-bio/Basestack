@@ -19,8 +19,8 @@ body {
   font-family: Myriad Pro Light SemiExtended !important;
   font-size: 1.0em;
   /*font-family:  Baskerville !important;*/
-  overflow-y:hidden;
-  overflow-x:hidden;
+  /* overflow-y:hidden;
+  overflow-x:hidden; */
 }
 
 #body-container{

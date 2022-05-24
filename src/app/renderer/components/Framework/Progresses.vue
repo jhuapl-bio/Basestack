@@ -23,13 +23,13 @@
       </div>
       <v-spacer>
       </v-spacer>
-      <v-btn icon-and-text color="orange darken-2" v-if="progresses && progresses.length > 0" @click="deleteOutputs()">
+      <!-- <v-btn icon-and-text color="orange darken-2" v-if="progresses && progresses.length > 0" @click="deleteOutputs()">
         <v-icon
           small
         > $trash-alt
         </v-icon>
         Delete Outputs
-      </v-btn>
+      </v-btn> -->
     </v-toolbar>
   	<v-data-table
         v-if="progresses && progresses.length > 0"
@@ -50,6 +50,7 @@
                 </template>
                 View Visualization in Browser. Ensure that the service is running first!
             </v-tooltip> 
+            
             <v-tooltip bottom v-if="item.source"> 
               <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon  @click="determineOpen(item)">
@@ -87,13 +88,13 @@
           </v-tooltip>
             
         </template>
-        <template v-slot:item.remove="{ item, index }">
+        <!-- <template v-slot:item.remove="{ item, index }">
             <v-icon 
-                @click="deleteOutputs(index)"
+                @click="deleteOutputs(item)"
                 v-if="(item.source && !Array.isArray(item.source)) || (Array.isArray(item.source) && item.source.length > 0)"
                 small> $trash-alt
             </v-icon>
-        </template>
+        </template> -->
         <template v-slot:item.element="{ item }">
             <v-icon 
                 v-if="item.type == 'files'"
@@ -158,6 +159,8 @@ export default {
             } else {
               if (item.path){
                 this.$electron.shell.openPath(item.path)
+              } else if (item.target) {
+                this.$electron.shell.openPath(item.target)
               } else {
                 this.$electron.shell.openPath(path.dirname(item.source[0]))
               }
@@ -171,10 +174,37 @@ export default {
           }
         },
         deleteOutputs(outputs){
+          if (outputs && !Array.isArray(outputs)){
+            outputs=[
+              {
+                path: outputs.source,
+                type: ( outputs.type ? outputs.type : outputs.element)
+              } 
+            ]
+          }
+          else if (!outputs){
+            outputs = this.progresses.map((f)=>{
+              return {
+                path: f.source,
+                type: ( f.type ? f.type : f.element)
+              }
+            })
+          }
+          if (this.removal_override){
+            outputs  = 
+              [{
+                path: this.removal_override.source,
+                type: ( this.removal_override.type ? this.removal_override.type : this.removal_override.element)
+              }]
+            
+          }
+          
+          
+          
+          console.log(outputs)
           FileService.deleteOutputs({
-              idx: outputs,
+              paths: outputs,
               catalog: this.catalog,
-              module: this.module, 
               procedure: this.procedure
           }).then((response2)=>{
               this.$swal({
@@ -206,7 +236,7 @@ export default {
           }
         },
 	},
-	props: ['defaultHeaders', 'progresses', 'status', 'catalog', 'module', 'procedure'],
+	props: ['defaultHeaders', 'removal_override', 'progresses', 'status', 'catalog',  'procedure'],
     mounted(){
     },
     watch: {

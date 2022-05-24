@@ -105,7 +105,12 @@ export default new Vuex.Store({
       commit("SAVE_PROCEDURE_DEFAULT", params)
       
     },
-    
+    ADD_VARIABLE_CUSTOM ({ commit }, params) {
+      commit("ADD_CUSTOM", params)
+    },
+    REMOVE_VAR_CUSTOM ({ commit }, params) {
+      commit("RM_CUSTOM", params)
+    },
     UPDATE_VARIABLE ({ commit }, params) {
       commit("UPDATE_VARIABLE", params)
     },
@@ -128,20 +133,31 @@ export default new Vuex.Store({
 
   mutations: {
     CREATE_PROCEDURE (state, meta){
-      let found = nestedProperty.get(state,`catalog.${meta.catalog}.modules.${meta.module}.procedures.${meta.procedure}`);
-      nestedProperty.set(state,`catalog.${meta.catalog}.modules.${meta.module}.procedures.${meta.procedure}`, cloneDeep(meta.obj))
+      let found = nestedProperty.get(state,`catalog.${meta.catalog}.procedures.${meta.procedure}`);
+      nestedProperty.set(state,`catalog.${meta.catalog}.procedures.${meta.procedure}`, cloneDeep(meta.obj))
       
     },
     SAVE_PROCEDURE_DEFAULT (state, meta){
-      // let found = nestedProperty.get(state,`configs.${meta.catalog}.modules.${meta.module}.procedures.${meta.procedure}`);
-      nestedProperty.set(state,`configs.${meta.catalog}.modules.${meta.module}.procedures.${meta.procedure}`, cloneDeep(meta.config))
+      nestedProperty.set(state,`configs.${meta.catalog}.procedures.${meta.procedure}`, cloneDeep(meta.config))
       
     },
     UPDATE_AMOUNT (state, variable){
       state.amount++ 
     },
     UPDATE_VARIABLE (state, variable){
-      nestedProperty.set(state,`catalog.${variable.catalog}.modules.${variable.module}.procedures.${variable.procedure}.variables.${variable.name}.source`, variable.source)
+      nestedProperty.set(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${variable.name}.source`, variable.source)
+    },
+    ADD_CUSTOM (state, variable){
+      console.log(variable)
+      nestedProperty.set(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${variable.name}`, variable.variable)
+      
+    },
+    RM_CUSTOM (state, variable){
+      let name = (variable.name ? variable.name : 'null')
+      let vari = nestedProperty.get(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${name}`)
+      if (vari && vari.custom){
+        nestedProperty.set(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${name}`, null)
+      }
     },
     // SET_WATCHER (state, watcher){
     //   nestedProperty.set(state,`catalog.${watcher.catalog}.modules.${watcher.module}.procedures.${watcher.procedure}.watcher`, watcher.watcher)
@@ -151,7 +167,7 @@ export default new Vuex.Store({
     },
     clearCatalog (state, params){
       try{
-        delete state.catalog[params.catalog].modules[params.module].procedures[params.procedure] 
+        delete state.catalog[params.catalog].procedures[params.procedure] 
       } catch(err){
         console.error(err)
       }

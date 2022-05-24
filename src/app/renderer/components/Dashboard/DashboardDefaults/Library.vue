@@ -1,176 +1,220 @@
 <template>
-    <v-row   style="height: 10vh">
-        <v-col sm="12" height="10vh" >
-        <v-expansion-panels  height="10vh"  style="text-align:left;"  v-model="panel">
-            <v-col  :sm="(isHovered.name !== catalog.name ? 4 : 4 )"   v-for="(catalog, key) in catalog" :key="catalog.name ">
-                <v-card dense class="configure mx-0 elevation-4 " >
-                    <v-expansion-panel  v-model="panel" expand  @click="isHovered = catalog">
-                                <v-expansion-panel-header 
-                                    :color="(isHovered.name == catalog.name ? 'grey' : 'light')">
-                                    <v-toolbar-title  class=" pl-0 " v-bind:style="{ color: getColor(key, 0.95, (isHovered.name == catalog.name  ), false), fontSize: '0.9em' }">
-                                        {{ catalog.title ? catalog.title : catalog.name }}
-                                    </v-toolbar-title>
-                                    <v-spacer></v-spacer> 
-                                    <v-badge v-if="catalog.status && catalog.status.installed"  x-small :color="(catalog.status  && catalog.status.latest_installed ? 'green' : 'orange darken-2')">
-                                        <template v-slot:badge>
-                                            <v-tooltip bottom>
-                                                <template v-slot:activator="{ on }">
-                                                    <v-icon 
-                                                        x-small   v-on="on">
-                                                        {{ ( catalog.status.latest_installed && catalog.status.latest_installed ? '$check' : '$exclamation' ) }}
-                                                    </v-icon>
-                                                </template>
-                                                {{ catalog.status.latest_installed  ? 'Latest Installed' : 'Module not at the latest or not fully installed'  }}
-                                            </v-tooltip>
-                                        </template>
-                                    </v-badge>
-                                </v-expansion-panel-header>
-                                <v-expansion-panel-content>                                
-                                <v-card-actions >
-                                    <v-autocomplete
-                                        v-model="stagedRemote"
-                                        :items="catalog.remotes"
-                                        :disabled="!(catalog.remotes && catalog.remotes.length > 0)"
-                                        outlined
-                                        :hint="`Choose remote version to load`"
-                                        persistent-hint
-                                        item-text="version"
-                                        item-value="version"
-                                        :item-disabled="'loaded'"
-                                        :item-color="'primary'"
-                                        dense 
-                                        :label="(catalog.remotes && catalog.remotes.length > 0 ? 'Remote Versions' : 'No Remote Versions')"
-                                    >
-                                        <template v-slot:item="{ item }" >
-                                            <v-list-item-avatar left>
-                                                <v-icon  x-small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
-                                            </v-list-item-avatar>
-                                            
-                                            <v-list-item-content outlined  class=" " >
-                                                <v-list-item-title >{{ item.version ? item.version : 'No Version Available' }}</v-list-item-title>
-                                                
-                                                <v-spacer></v-spacer>
-                                                <v-list-item-subtitle>
-                                                    <v-chip
-                                                    x-small
-                                                    v-for="(tag, tagKey) in item.tags" :key="tagKey" class="mr-1"
-                                                    >
-                                                    {{tag}}
-                                                    </v-chip>  
-                                                </v-list-item-subtitle>
-                                            
-                                            </v-list-item-content>
-                                            <v-list-item-action>
-                                                <v-subheader v-if="item.loaded">Installed</v-subheader>
-                                                <v-tooltip  bottom>
-                                                    <template v-slot:activator="{ on }">    
-                                                        <v-icon v-on="on" small color="light " v-on:click="loadRemoteModule(item)"   style="text-align:right" class="configure ml-2">$download</v-icon>
-                                                    </template>
-                                                    Load Remote Module
-                                                </v-tooltip>
-                                            </v-list-item-action>
-                                        </template>
-                                        <template  v-if="stagedRemote && !stagedRemote.loaded" v-slot:append>
-                                        <v-tooltip bottom>
-                                                <template v-slot:activator="{ on }">    
-                                                    <v-icon  v-on="on" small color="light " v-on:click="loadRemoteModule(stagedRemote)"   style="text-align:right" class="configure ml-2">$download</v-icon>
-                                                </template>
-                                                Load Remote Module
-                                            </v-tooltip>
-                                        </template>
-                                    </v-autocomplete>
-                                </v-card-actions>
-                                <v-card-actions>
-                                    
-                                    
-                                </v-card-actions>
-                            </v-expansion-panel-content>
-                    </v-expansion-panel>
-                </v-card>
-            </v-col>
-        </v-expansion-panels>
-        <v-col sm="12" height="10vh" >
-            <SubLibrary
-                :catalog="isHovered"
-                :latest="isHovered.latest_version"
-                v-if="selectedModule && selectedModule.name "
-            >
-            </SubLibrary>
-            <Docker/>
-        </v-col>
-    </v-col>
+    <v-row   style="">
+        <v-card height="70vh" style="width: 100%" class="overflow fill-height fill-width">
+          <v-list three-line>
+            <template v-for="item in Object.values(latestLibrary)">
+              <v-divider :key="`${item.name}-key`"></v-divider>
+
+              <v-list-item
+                :key="item.title"
+              >
+                <v-list-item-avatar left >
+                  <v-tooltip  top  >
+                        <template v-slot:activator="{ on }">
+                            <v-icon medium v-on="on" @click="importModule(item.name)" class="" color="primary">$download</v-icon>
+                        </template>
+                        Import module for offline use
+                    </v-tooltip>
+                </v-list-item-avatar>
+
+                <v-list-item-content>
+                    <v-list-item-title>
+                        <v-icon  small>{{ ( item.icon  ? '$' + item.icon : 'cog' ) }}</v-icon>
+                        {{item.title}}
+                        <v-tooltip bottom>
+                            <template v-slot:activator="{ on }">
+                                <v-icon v-if="item.url" v-on="on" small color="indigo "  v-on:click="open_external(item.url)" style="text-align:right" class="configure ml-2 ">$home</v-icon>
+                            </template>
+                            View Home
+                        </v-tooltip>
+                        <v-tooltip bottom>
+                            <template v-slot:activator="{ on }">
+                                <v-icon v-if="importedLibrary[item.name]" v-on="on" small color="goldenrod "  v-on:click="jump(item.name)" style="text-align:right" class="configure ml-2">$play-circle</v-icon>
+                            </template>
+                            Jump to Module
+                        </v-tooltip>
+                        <v-tooltip top class=""  v-if="importedLibrary[item.name]" >
+                            <template v-slot:activator="{ on }">
+                            <v-btn @click="removeModule(item.name)" v-on="on" icon >
+                                <v-icon color="orange" small class="configure ml-2">
+                                $trash-alt
+                                </v-icon>
+                            </v-btn>
+                            </template>
+                            Remove module from imported library 
+                        </v-tooltip>
+                        <v-tooltip bottom>
+                            <template v-slot:activator="{ on }">
+                                <v-icon v-on="on" small color="indigo "  v-on:click="fetchRemoteCatalog(item.name)" style="text-align:right" class="configure ml-2">$external-link-alt</v-icon>
+                            </template>
+                            Fetch Versions for Module
+                        </v-tooltip>
+                        
+                    </v-list-item-title>
+                    
+                    <div>
+                        <v-list-item-subtitle class="mb-2" v-html="item.description"></v-list-item-subtitle>
+                        <v-chip
+                            small label
+                            v-for="(tag, tagKey) in item.tags" :key="`${tag}${tagKey}`" class="mr-1"
+                        >
+                        {{tag}}
+                        </v-chip>
+                    </div>
+                </v-list-item-content>
+                <v-list-item-action>
+                    <v-divider></v-divider>
+                    
+                    <v-alert
+                        type="success" icon="$check-circle"  v-if="'latest' == latestImported(item.name, item.version)"
+                    >Latest version imported</v-alert>
+                    <v-alert
+                        type="warning" icon="$exclamation"  v-else-if="'notlatest' == latestImported(item.name, item.version)"
+                    >Newer version available</v-alert>
+                    <v-chip v-else label medium>Latest Version: {{item.version}}</v-chip>
+                    <div v-if="importedLibrary[item.name]">
+                        <span v-if="importedLibrary[item.name]">Installed Versions</span>
+                        <v-chip
+                            small label
+                            v-for="choice in uniqueVersions(item.name)" :key="`${choice}-${item.name}`" class="mr-1"
+                        >
+                            {{choice}}
+                            
+                        </v-chip>
+                    </div>
+                </v-list-item-action>
+              </v-list-item>
+            </template>
+          </v-list>
+        
+        </v-card>
     </v-row>
 </template>
 
 <script>
     const path = require("path")
     import FileService from '@/services/File-service.js'
-    import Docker from "@/components/Dashboard/System/Docker";
-    import SubLibrary from "@/components/Dashboard/DashboardDefaults/SubLibrary"
-
 	export default {
 		name: 'library',	 
         components: {
-            Docker,
-            SubLibrary
         },
 		data() {
 			return {
-                status: [],
-                panel: 0,
-                selectedModule: {},
-                stagedRemote: {},
-                stored: {},
-                update: 0,
-                select:null,
-                selected: {},
-                isHovered: {},
-                colorList: [
-                    "rgb((139,0,139",
-                    "rgb(112,128,144",
-                    "rgb(139,69,19",
-                   
-                   
-                ],
-                stored: {},
-                modules: [],
-                catalog: [],
-                modules_new: [],
+                remotelocation: (process.env.NODE_ENV == "development" ? "stagedModules" : "modules" )
                 
 			}
 	  	},
-		props: [],
+        beforeDestroy(){
+            if(this.interval){
+                clearInterval(this.interval)
+            }
+        },
+		props: ['latestLibrary', 'importedLibrary'],
 		computed: {
-            defaultModule(){
-                return this.panel
-            },
+            
 		},
 		
 	    mounted(){
-            this.getStatus()
             const $this = this
-            setInterval(()=>{
-                $this.getStatus()
-            },4000)    
+           
 	    },
 	    watch: { 
-            isHovered(newValue){
-                this.selectedModule = newValue.modules[0]
-                if (newValue.remotes){
-                    this.stagedRemote = newValue.remotes[0]
-                }  else {
-                    this.stagedRemote = null
-                }               
-            },
-            selectedModule(newValue){
-                if (newValue){
-                    this.stored[newValue.name] = newValue
-                }
-            }
-
 	    },
 		
 	    methods: {
+            importModule(name){
+                this.$emit("importModule", {name:name, jump:false })
+            },
+            uniqueVersions(name){
+                let versions=this.importedLibrary[name].choices.map((f)=>{
+                    return f.version ? f.version : 0
+                })
+                return [ ... new Set(versions)]
+            },
+            async fetchRemoteCatalog(name){
+                const $this = this
+                let location = this.remotelocation
+                FileService.fetchRemoteCatalog(location, name).catch((err)=>{
+                    this.$swal.fire({
+                        position: 'center',
+                        icon: 'error',
+                        showConfirmButton:true,
+                        title: err.response.data.message
+                    })
+                }) 
+            },
+            jump(name){
+                this.$emit("jumpTo", name)
+            },
+            async removeModule(name){
+                this.$swal({
+                    title: 'Are you sure you want to remove this library?',
+                    text: "All dependencies will remain, but the ",
+                    type: 'warning',
+                    showDenyButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: `Remove module & dependencies`,
+                    denyButtonText: `Remove from Imports`,
+                }).then((res) => {
+                    if (res.value !='cancel' && res.isConfirmed){
+                        FileService.removeModule({
+                            catalog: name,
+                            dependencies: true,
+                        }).then((response)=>{
+                            this.$swal.fire({
+                                position: 'center',
+                                icon: 'success',
+                                showConfirmButton:true,
+                                title:  response.data.message
+                            })
+                        })
+                        .catch((err)=>{
+                            console.error(err)
+                            this.$swal.fire({
+                                position: 'center',
+                                icon: 'error',
+                                showConfirmButton:true,
+                                title:  error.response.data.message
+                            })
+                        }) 
+                    }
+                    else if (res.value !='cancel' && res.isDenied){
+                        FileService.removeModule({
+                            catalog: name,
+                        }).then((response)=>{
+                            this.$swal.fire({
+                                position: 'center',
+                                icon: 'success',
+                                showConfirmButton:true,
+                                title:  response.data.message
+                            })
+                        })
+                        .catch((err)=>{
+                            console.error(err)
+                            this.$swal.fire({
+                                position: 'center',
+                                icon: 'error',
+                                showConfirmButton:true,
+                                title:  error.response.data.message
+                            })
+                        }) 
+                        
+                    }
+                }) 
+            },
+            open_external(url){
+			    this.$electron.shell.openExternal(url)
+            },
+            latestImported(name, version){
+                if (name && this.importedLibrary[name] && this.importedLibrary[name].latest.version == version){
+                    return 'latest'
+                } else if (name && this.importedLibrary[name] && this.importedLibrary[name].latest.version < version){
+                    return 'notlatest'
+                } 
+                else {
+                    return false
+                }
+            },
             open (link) {
                 try{        
                     this.$electron.shell.openPath(link)
@@ -183,42 +227,6 @@
                     })
                 }
             },
-            async loadRemoteModule(item){
-                console.log(item)
-                FileService.setRemoteModule({
-                    module: item.idx,
-                    catalog: this.isHovered.name,
-                }).then((response)=>{
-                    FileService.saveRemoteModule({
-                        module: item.idx,
-                        catalog: this.isHovered.name,
-                    }).then((response2)=>{
-                        this.$swal({
-                            title: "Loading completed!",
-                            icon: 'success',
-                            showConfirmButton: true,
-                            allowOutsideClick: true
-                        });
-                        this.stagedRemote = null
-                    }).catch((err)=>{
-                        this.$swal.fire({
-                            position: 'center',
-                            icon: 'error',
-                            showConfirmButton:true,
-                            title: err.response.data.message
-                        })
-                    })                     
-                }).catch((err)=>{
-                    this.$swal.fire({
-                        position: 'center',
-                        icon: 'error',
-                        showConfirmButton:true,
-                        title: err.response.data.message
-                    })
-                    
-                }) 
-            },
-           
             openDir(loc, format){
                 if (format == 'file'){
                     this.open(path.dirname(loc))
@@ -226,63 +234,6 @@
                     this.open(path.dirname(loc))
                 }
             },
-            getColor(key, opacity, selected, background){
-                const $this = this;
-                let max = this.colorList.length -1
-                let val = max % (key +1)
-                if (background){
-                    if (selected){
-                        return `${ this.colorList[0] }, ${opacity})`
-                    } else {
-                        let color = `${ this.colorList[1] }, ${opacity})`
-                        return color
-                    }
-                } else {
-                    if (selected){
-                        let color = `${ this.colorList[1] }, ${opacity})`
-                        return  'white'
-                    } else {
-                        let color = `${ this.colorList[0] }, ${opacity})`
-                        return 'grey'
-                    }
-                }
-            },
-            
-            
-            async getStatus(){
-                const $this = this
-                try{
-                    let response = await FileService.getCatalog()
-                    let status_obj = response.data.data
-                    let reported_status_obj = {}
-                    this.modules_new = [] 
-                    this.catalog = response.data.data
-                    this.catalog.map((d,i)=>{
-                        d.selected = d.modules[this.defaultModule]
-                        if (!this.stored[d.name]){
-                            this.stored[d.name] = d.modules[this.defaultModule]
-                        }
-                        d.idx = i
-                        d.modules.map((f, y)=>{
-                            f.idx = y
-                            return f
-                        })
-                        return d
-                    })
-                    if (!this.isHovered.name){
-                        this.isHovered = this.catalog[this.defaultModule]
-                    } else {
-                        this.isHovered = this.catalog[this.isHovered.idx]
-                    }       
-                } catch(err){
-                    this.initial=false
-                    console.error(`${err} error in getting status`)
-                } finally {
-                    this.intervalChecking = false
-                }
-            },
-			
-	    	
 	    }
 	};
 

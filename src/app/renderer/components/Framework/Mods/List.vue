@@ -169,8 +169,7 @@ export default {
       source: {
           deep: true,
           handler(newValue){
-              this.values = newValue.source
-              console.log("new value", newValue.source)
+              this.values = newValue
           }
 
       },

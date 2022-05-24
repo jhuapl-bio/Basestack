@@ -24,8 +24,8 @@ export  class Module {
         }
         this.interval = {
             checking: false,
-            interval: this.create_interval() 
         }
+        this.create_interval() 
         this.statusCheck()
 	} 
     async create_interval (){
@@ -40,10 +40,11 @@ export  class Module {
                     $this.interval.checking = false
                 })
             }
-        }, 1000)
+        }, 2000)
+        this.interval.interval = interval
 
 
-        return interval
+        return 
 
     }
     async statusCheck(){
@@ -73,9 +74,6 @@ export  class Module {
                     if (!procedure.status.fully_installed){
                         full_install = false
                     }
-                    if ($this.name == 'mytax'){
-                        // console.log(procedure.status, "<preocedure")
-                    }
                     if (procedure.status.building){
                         building = true
                     }
@@ -94,6 +92,10 @@ export  class Module {
             // })
         }) 
 	}
+    cleanup(){
+        clearInterval(this.interval.interval) 
+        return
+    }
     async initProcedures(){ 
         let promises = []   
         const $this = this;

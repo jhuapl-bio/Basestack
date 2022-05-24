@@ -56,14 +56,20 @@ async function files(validations, value,source){
                         if (validation.type == 'file'){
                             dir = path.dirname(value)
                         }
-                        let files = await FileService.listFilesDirectory(dir)
-                        files  = files.data.data                        
-                        var replace = `${validation.target.value}`;
-                        var re = new RegExp(replace,"g");
-                        const index = files.findIndex((value)=>{
-                            return value.match(re)
-                        });
-                        ( index >= 0 ? returnable.push(true) : returnable.push(false) );
+                        if (dir){
+                            let files = await FileService.listFilesDirectory(dir)
+                            files  = files.data.data                        
+                            var replace = `${validation.target.value}`;
+                            var re = new RegExp(replace,"g");
+                            const index = files.findIndex((value)=>{
+                                return value.match(re)
+                            });
+                            ( index >= 0 ? returnable.push(true) : returnable.push(false) );
+                        } else {
+                            returnable.push(false)
+                        }
+                        
+                        
                     }
                 })().catch((err)=>{
                     console.error(err)

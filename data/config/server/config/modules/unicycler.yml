@@ -2,8 +2,17 @@
   title: "Unicycler"
   icon: "bicycle"
   version: 1.0
+  schema_version: 1
   basestack_released: 2.0
   module: True
+  tags: 
+    - "Genome Assembly"
+    - "bacterial"
+    - "ONT"
+    - "Long Read"
+    - "FASTA"
+  description: "hybrid assembly pipeline for bacterial genomes"
+  url: https://github.com/rrwick/Unicycler
   tooltip: "Create bacterial genomes using assembly methods"
   procedures: 
     - name: unicycler_long #Top level is the left-hand selection of the menu and the major module to install 

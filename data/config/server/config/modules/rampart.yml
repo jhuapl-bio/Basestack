@@ -3,7 +3,10 @@
   icon: "campground"
   basestack_released: 2.0
   version: 1.0
+  schema_version: 1
+  description: "Read Assignment, Mapping, and Phylogenetic Analysis in Real Time"
   module: True
+  url: https://github.com/artic-network/rampart
   tags: 
     - "visualization"
     - "genomic annotation"

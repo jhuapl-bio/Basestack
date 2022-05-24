@@ -16,20 +16,20 @@ export class Updater {
         } 
         this.quitAndInstall = false
     }
+    // Check for any and all updates for basestack's electron versioning system  
     checkUpdates(){
-        console.log("check updates")
         try{
-            if(process.env.NODE_ENV == 'production'){
+            // Only check version if production mode!
+            if(process.env.NODE_ENV == 'production'){ 
                 this.releaseNotes.version = 0
                 this.releaseNotes.releaseNotes = "Fetching..."
-                console.log("Check for Basestack updates and notify")
                 this.autoUpdater.checkForUpdatesAndNotify()   
             } else {
-                console.log(`Development mode enabled, skipping check for updates`)
                 this.autoUpdater.checkForUpdatesAndNotify()   
             }
         } catch (error) {
             console.error(error)
+            
         }
     }
     defineUpdater(){
@@ -42,8 +42,8 @@ export class Updater {
         })
         this.autoUpdater.on('update-available', (info) => {
             try{
-                console.log(info)
-                console.log("update available")
+                // Ask the user to update the system 
+                // If yes, set options to auto restart or not. Also, send any release notes on completed install and download of package 
                 let message = 'Would you like to install it? You will need to restart Basestack to apply changes.';
                 const options = {
                     type: 'question',
@@ -57,20 +57,17 @@ export class Updater {
                 };
                 $this.releaseNotes  = info
                 $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
-                console.log($this.dialog)
                 $this.dialog.showMessageBox(null, options).then((response) => { 
-                console.log("%s update choice -> %s", response)
                 if (response.response == 0){
                     $this.autoUpdater.downloadUpdate()
-                    console.log("downloading Update")
-                    $this.mainWindow.webContents.send('mainNotification', {
-                    icon: '',
-                    loading: true,
-                    message: `Downloading Update`,
-                    disable_popup: true
+                        $this.mainWindow.webContents.send('mainNotification', {
+                        icon: '',
+                        loading: true,
+                        message: `Downloading Update`,
+                        disable_popup: true
                     })
                     if (response.checkboxChecked ){
-                    $this.quitUpdateInstall = true;
+                        $this.quitUpdateInstall = true;
                     }
                 } else {
                     console.log("Skipping update")
@@ -80,29 +77,31 @@ export class Updater {
                 console.error(error)
             }
         })
+        // When the update is downloaded, send notificaton that everything is set and restart (if auto selected)
         this.autoUpdater.on('update-downloaded', (info, err) => {
-            console.log("Update Downloaded")
             if (err){
                 console.log(err)
             }
             try{
                 $this.mainWindow.webContents.send('mainNotification', {
-                icon: 'success',
-                patchNotes: true,
-                message: `Update downloaded. Restart the application to apply install changes \n ${info.releaseNotes}`,
+                    icon: 'success',
+                    patchNotes: true,
+                    message: `Update downloaded. Restart the application to apply install changes \n ${info.releaseNotes}`,
                 }) 
+                // Set all release notes in the updater to be that found in the GitHub Releases markdown 
                 $this.releaseNotes=info
                 $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
+                // If the user selected to auto install the update AFTER download, do so now
                 $this.quitUpdateInstall ? $this.autoUpdater.quitAndInstall() : '';
             } catch(err) {
                 console.log(`Download update failed to finish. ${err}`)
                 // throw new Error("Could not download update, check error logs")
             }
         });
-        $this.autoUpdater.on('checking-for-update', () => {
+        $this.autoUpdater.on('checking-for-update', () => { // check github releases for the update version 
             console.log('Checking for Basestack update...');
         })
-        $this.autoUpdater.on('update-not-available', (info, err) => {
+        $this.autoUpdater.on('update-not-available', (info, err) => { // If version not found, report 
             if (err){
                 console.log(`${err} err in update not available messaging`)
             }
@@ -115,7 +114,7 @@ export class Updater {
                 console.error(error)
             }
         })     
-        $this.autoUpdater.on('download-progress', (progressObj) => {
+        $this.autoUpdater.on('download-progress', (progressObj) => { // while electron downloads the update, monitor to console 
             try{
                 let log_message = "Download speed: " + progressObj.bytesPerSecond;
                 log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
@@ -123,9 +122,9 @@ export class Updater {
                 console.log("%s <-- Update Download progress", log_message)
                 // sendStatusToWindow(log_message);
                 $this.mainWindow.webContents.send('mainNotification', {
-                type: 'info',
-                message: log_message,
-                disable_popup: true
+                    type: 'info',
+                    message: log_message,
+                    disable_popup: true
                 })
             } catch (error) {
                 console.error(error)

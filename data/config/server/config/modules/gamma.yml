@@ -4,7 +4,13 @@
   version: 1.0
   basestack_released: 2.0
   module: True
-  tooltip: "AMR resistance analysis Pipeline"
+  tags: 
+    - "allele"
+    - "gene"
+    - "staphb"
+    - "alignment"
+  description: "AMR resistance analysis Pipeline; Gene Allele Mutation Microbial Assessment"
+  url: https://github.com/rastanton/GAMMA
   procedures:
     - name: staphb_gamma #Top level is the left-hand selection of the menu and the major module to install 
       title: "Gamma"
@@ -26,7 +32,7 @@
           bind: "directory"
           class: "wb-100  p-3 mb-1" 
           target: "/opt/data/<<basename(%{variables.fasta.source})>>"
-          source: "/Users/merribb1/Desktop/test-data2/metagenome/DHQP1701672_complete_genome.fasta"
+          source: null
           validations:
             - type: "contains"
               target: 

@@ -4,6 +4,13 @@
   version: 1.0
   basestack_released: 2.0
   module: True
+  url: https://github.com/andersen-lab/ivar
+  description: "iVar is a computational package that contains functions broadly useful for viral amplicon-based sequencing."
+  tags: 
+    - "variants"
+    - "vrial"
+    - "staphb"
+    - "consensus"
   tooltip: "Viral and consensuses for viral reads"
   shared:
     variables:

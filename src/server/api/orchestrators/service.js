@@ -228,6 +228,7 @@ export class Service {
         return new Promise(function(resolve,reject){
             ( async ()=>{
                 let name = $this.name;
+                
                 store.logger.info(`starting container..${name}`)
                 let exists = await check_container($this.name)
                 if ( (  $this.config.force_restart) ||  exists.exists ){
@@ -239,7 +240,7 @@ export class Service {
                     }
                 }
                 $this.container = null
-                let skip = false
+                let skip = false 
                 skip = await $this.start(params, wait)
                 if ($this.status.cancelled){
                     skip = true
@@ -388,7 +389,7 @@ export class Service {
         return options
 
     }
-    createContentOutput(item, sep, header, newline, type){
+    createContentOutput(item, sep, header, newline, outputHeader, type){
         if (!sep){
             sep = ","
         }
@@ -409,7 +410,7 @@ export class Service {
             return full.join( ( sep == 'tab' ? "\t" : sep )  )
 
         })
-        if (header){
+        if (header && outputHeader){
             tsv_file_content.unshift(header.join(( sep == 'tab' ? "\t" : sep )))
         }
         
@@ -450,24 +451,30 @@ export class Service {
                     
                 }
             }
-        }
+        } 
         this.portbinds.push(...portbinds)
-        return portbinds
+        return portbinds 
     }  
+    removeQuotes(string){
+        string = string.replace(/[\'\"]/g, "")
+        return string
+    }
     defineBinds(){
         let binds = [] 
         const $this = this
         let seenTargetTos = []
         let defaultVariables = this.config.variables 
         if ($this.config.bind){ 
-            if (Array.isArray($this.config.bind)){                    
-                $this.config.bind.forEach((b)=>{
-                    if (typeof b == 'object'){
-                        binds.push(`${b.from}:${b.to}`)
-                    } else {
-                        binds.push(b) 
-                    }
-                })   
+            if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
+                
+                let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
+                    bnd.forEach((b)=>{
+                        if (typeof b == 'object'){
+                            binds.push(`${b.from}:${b.to}`)
+                        } else {
+                            binds.push(b) 
+                        }
+                    })   
             } else {
                 let b  = $this.config.bind
                 binds.push(`${b.from}:${b.to}`)
@@ -477,28 +484,25 @@ export class Service {
             // binds.push(`${path.join(store.system.writePath,  "workflows", this.name, "docker") }:/var/lib/docker`)
             binds.push(`basestack-docker-${$this.name}:/var/lib/docker`)
         }
+        
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (typeof selected_option == 'object' && selected_option.bind){
                     let from = selected_option.source
                     let to = selected_option.target
-                    
+                    if (selected_option.bind && selected_option.bind.from){
+                        from = selected_option.bind.from
+                    }
+                    if (selected_option.bind && selected_option.bind.to){
+                        to  = selected_option.bind.to
+                    }
+                      
                     if (Array.isArray(selected_option.source) && selected_option.element != 'list'){
-                        let s = from.map((f)=>{
-                            
-                            if (selected_option.bind == 'directory'){
-                                return path.dirname(f)
-                            }  else if (typeof selected_option.bind == 'object'){
-                                return selected_option.bind.from
-                            }  else {
-                                return f
-                            } 
-                        })   
-                        
-                        s.forEach((directory,i)=>{
-                            // let file = `${i}_file` 
-                            let finalpath = selected_option.target[i] 
+                        let s = from  
+                        s.forEach((directory,i)=>{ 
+                            let finalpath = to[i] 
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
+                                finalpath = $this.removeQuotes(finalpath)
                                 binds.push(`${directory}:${finalpath}`)
                             }  
                             seenTargetTos.push(finalpath)
@@ -507,16 +511,20 @@ export class Service {
                         if (selected_option.bind == 'directory'){
                             let finalpath = path.dirname(to)
                             if (seenTargetTos.indexOf(finalpath) == -1 && from){
+                                finalpath = $this.removeQuotes(finalpath)
                                 binds.push(`${path.dirname(from)}:${finalpath}`) 
                             } 
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
+                            selected_option.bind.to = $this.removeQuotes(selected_option.bind.to)
                             binds.push(`${selected_option.bind.from}:${selected_option.bind.to}`) 
                             seenTargetTos.push(selected_option.bind.to)
-                        }  else {
+                        }  else {  
                             if (seenTargetTos.indexOf(to) == -1 && from){
+                                to = $this.removeQuotes(to)
                                 binds.push(`${from}:${to}`) 
-                            }
+                            } 
+                            
                             seenTargetTos.push(to)
                         }
                     }
@@ -532,33 +540,39 @@ export class Service {
     }  
     
     defineEnv(){
-        let env = []
-        let bind = [] 
-        const $this = this; 
-        let seenTargetTos = [] 
-        let defaultVariables = $this.config.variables
-        if (defaultVariables){
+        let env = []  
+        let bind = []    
+        const $this = this;  
+        let seenTargetTos = []  
+        let defaultVariables = $this.config.variables  
+        if (defaultVariables){   
             for (let [key, selected_option ] of Object.entries(defaultVariables)){
                 if (selected_option.optionValue  && typeof selected_option.optionValue == 'object'){
                     selected_option = selected_option.optionValue
-                } 
+                }    
                 let full_item = cloneDeep(selected_option)
                 if (typeof selected_option == 'object'){ 
+                    
                     if (selected_option.output && !selected_option.target){
                         store.logger.info(`no defined target for variable: ${key}`) 
-                    } else {  
+                    } else {   
+                        
                         if (!Array.isArray(selected_option.target)){
                             if (selected_option.target || selected_option.source){
                                 env.push(`${key}=${( selected_option.target ? selected_option.target : selected_option.source)}`)                         
                             } 
                         } else {
+                            
                             if (selected_option.target ){
                                 let su  = selected_option.target.join( (selected_option.bindChar ? selected_option.bindChar : " " ) )
                                 env.push(`${key}=${su}`)
                             }
                         } 
                     }
+                } else if (Array.isArray(selected_option)){
+                    console.log("array!")
                 } else{
+                    
                     if (selected_option){
                         env.push(`${key}=${selected_option}`)
                     }
@@ -609,10 +623,11 @@ export class Service {
                 options = cloneDeep($this.updateConfig(options))
                 /////////////////////////////////////////////////
                 let custom_variables = params.variables 
-                let defaultVariables = {}   
+                let defaultVariables = {}    
                 let seenTargetTos = []  
                 let seenTargetFrom = []  
                 defaultVariables = $this.config.variables 
+                // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
                 if ($this.config.serve ){ 
                     let variable_port = defaultVariables[$this.config.serve] 
                     options = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
@@ -627,16 +642,16 @@ export class Service {
                   
                 if (defaultVariables &&  typeof defaultVariables == 'object'){
                     for (let [name, selected_option ] of Object.entries(defaultVariables)){
-
-                        
+  
+                               
                         if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
                             let targetBinding = selected_option
                             let full_item = cloneDeep(selected_option)   
-                              
+                                  
                             if (selected_option.framework){ 
                                 let validated_framework = validateFramework(selected_option.framework, defaultVariables)
                                 selected_option.source = validated_framework
-                            }     
+                            }      
                             if (selected_option.copy){    
                                 let filepath = ( selected_option.copy.basename ?
                                     path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
@@ -649,7 +664,7 @@ export class Service {
                             }  
                             if (selected_option.create){
                                 if (selected_option.create.type == 'list' ){
-                                    let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, 'list')
+                                    let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list')
                                     promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                                         logger.error(err)  
                                     }))
@@ -686,8 +701,6 @@ export class Service {
          
                                 } 
                             }
-
-                            // console.log(selected_option,"<<<<<")
                             // Define the command additions if needed  
                             if (selected_option.append && cmd && ( !selected_option.element ||  full_item.source ) ){ 
                                 if (!Array.isArray(selected_option.append)) {
@@ -725,12 +738,12 @@ export class Service {
                 if (! options.Image ){ 
                     throw new Error("No Image available")  
                 }   
-                    
+                     
                 if (typeof options.Cmd == "string"){    
                     options.Cmd = ['bash', '-c', options.Cmd]  
                 }     
                 if (!$this.config.command) 
-                {
+                {  
                     options.Cmd = null 
                 }  
                 if ($this.override.image){
@@ -739,8 +752,8 @@ export class Service {
                 options.Env = [...options.Env, ...$this.env ]  
                 options.HostConfig.Binds = [...options.HostConfig.Binds, ...$this.binds ]
                 options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
-                logger.info("%o _____ %o", options, $this.binds)
-                // logger.info(`starting the container ${options.name} `)
+                logger.info("%o _____ ", options)
+                logger.info(`starting the container ${options.name} `)
                 if ($this.config.dry){ 
                     resolve() 
                 } else {

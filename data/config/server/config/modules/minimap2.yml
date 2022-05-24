@@ -2,7 +2,10 @@
   title: "Minimap2"
   icon: "magic"
   version: 1.0
+  schema_version: 1
   basestack_released: 2.0
+  description: "A versatile pairwise aligner for genomic and spliced nucleotide sequences"
+  url: https://github.com/lh3/minimap2
   module: True
   tags: 
     - "minimap2"

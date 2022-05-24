@@ -2,15 +2,17 @@
 
 const { app, dialog } = require('electron')
 
+//Setup devtools package
 import { installVueDevTools } from 'electron-devtools-installer'
 
 
 
 
 
-import promiseIpc from 'electron-promise-ipc';
 const isMac = process.platform === 'darwin'
 const isWin = process.platform === "win32"
+
+
 
 if (!process.env.APPDATA){ 
   process.env.APPDATA = app.getPath('userData')
@@ -43,6 +45,8 @@ const {fs} = require("fs")
 let releaseNotes;
 
 let os = require("os")
+
+// If in prod move, setup the auto updater to set the current version of basestack to render
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
   process.env.version_basestack = autoUpdater.currentVersion
@@ -52,6 +56,7 @@ if (process.env.NODE_ENV !== 'development') {
     releaseDate: "NA"
   };
 } else {
+  // If in dev mode, skip versioning steps
   process.env.version_basestack = "Development"
   releaseNotes = {
     releaseNotes: "None Available",
@@ -59,14 +64,19 @@ if (process.env.NODE_ENV !== 'development') {
     releaseDate: "NA"
   };
 }
+
+//Set path where all non-editable files/folders are located
 process.env.resourcesPath = process.resourcesPath
   
+// Import the confiugrations object for downstream use 
 var {define_configuration } = require("../../shared/definitions.js")
-const { Client } = require("./client.js")
+const { Client } = require("./client.js") // Import main client class
 const client = new Client(app)
  
 let create_server; let close_server; let  cancel_container;
 if (process.env.NODE_ENV === 'production'){
+    // Since dev is separate in starting app and server, we prepackage the server in prod mode
+    // Import the function to start the server and then run it later .
     create_server = require("../../server/index.server.js").create_server
     // close_server = require("../../server/server.js").close_server
     // const { 
@@ -80,7 +90,7 @@ if (process.env.NODE_ENV === 'production'){
 let logger;
 
 
-
+// When the client is closed, close down all forked processes
 client.app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
@@ -89,30 +99,29 @@ client.app.on('window-all-closed', () => {
 
 client.app.on('activate', () => {
   if (client.mainWindow === null) {
-    client.createWindow()
-    client.createUpdater()
-    client.checkUpdates() 
-    client.createMenu()
+    client.createWindow() // Create the main electron window
+    client.createUpdater() // Set up the updater for electron 
+    client.checkUpdates()  // Check the update version of Basestack
+    client.createMenu() // Make a menu to utilize in Electron's app bar
   }
 })
 client.app.on('ready', async () => {
-    // if (process.env.NODE_ENV !== 'production') {
-    //   require('vue-devtools').install()
-    // }
+    
   
-  
+  // Set up the store for storing and retrieving global values
   var { store } = require("../store/store.js");
   client.store = store;
   if (process.env.NODE_ENV !== 'production') {
     try {
-      await installVueDevTools()
+      await installVueDevTools() // IF in dev mode, set up dev tools for easier debugging processes
     } catch (e) {
       console.error('Vue Devtools failed to install:', e.toString())
     }
-    // debugger
   }
+  // Set up the configuration object for all base configs of the system 
   define_configuration(store.system).then((config)=>{
     try{
+      // Set up the logging object for rendering to console AND filesystem log files 
       logger = require("./logger.js").logger(config.logs.error, config.logs.logfile)
       process.env.logfile = config.logs.logfile
       process.env.errorfile = config.logs.error
@@ -130,45 +139,51 @@ client.app.on('ready', async () => {
       
 
 
-      try{
-        (async () => {
-          try{
-            client.logger.info("Checking node env for server")
-            if (process.env.NODE_ENV == 'production'){
-              client.logger.info("Production Mode detected, starting backend server...")
-              let port =  await create_server() 
-              if (!port ){
-                port = 5003
-              }
-              process.env.PORT_SERVER = port
-              client.updatePort(port)
-              client.logger.info("Server started at port: %s", port)
-            }
-          } catch(error){
-            client.logger.info("%s error in readying the app", error)
-            client.logger.info(error)
-            // throw error
-          } 
-            
-          })().catch((err)=>{
-            client.logger.info("Error in ready app occurred somewhere, see above")
-            client.logger.info(err.message)
-            dialog.showMessageBox(client.mainWindow, {
-              type: 'error',
-              defaultId: 0,
-              buttons: ['Ok'],
-              title: 'Error',
-              message: (err.message ? err.message : JSON.stringify(err, null, 4)),
+      // Check if the node.js server is running
+      client.logger.info("Checking node env for server")
+      if (process.env.NODE_ENV == 'production'){
+        client.logger.info("Production Mode detected, starting backend server... at port: %s", process.env)
+        create_server().then((port)=>{
+          if (!port ){
+            port = 5003
+          }
+          client.logger.info("Server started at port: %s", port)
+          process.env.PORT_SERVER = port
+          client.updatePort(port)
+          
+        }).catch((err)=>{
+          client.logger.error("%o Error in starting server", err)
+          client.logger.info("Error in ready app occurred somewhere, see above")
+          client.logger.info(err.message)
+          dialog.showMessageBox(client.mainWindow, { // If the app ever failes to start up, report it 
+            type: 'error',
+            defaultId: 0,
+            buttons: ['Ok'],
+            title: 'Error',
+            message: (err.message ? err.message : JSON.stringify(err, null, 4)),
           });
         })
-      } catch(err){
-        console.error(err)
+        
       }
     } catch(err){
-      console.error(err)
+      client.logger.error("%o error in connecting to the server: ",err)
+      dialog.showMessageBox(client.mainWindow, { // If the app ever failes to start up, report it 
+        type: 'error',
+        defaultId: 0,
+        buttons: ['Ok'],
+        title: 'Error',
+        message: (err.message ? err.message : JSON.stringify(err, null, 4)),
+      });
     }
   }).catch((err)=>{
-    console.error(err)
+    client.logger.error("%o error in connecting to the server: ",err)
+    dialog.showMessageBox(client.mainWindow, { // If the app ever failes to start up, report it 
+      type: 'error',
+      defaultId: 0,
+      buttons: ['Ok'],
+      title: 'Error',
+      message: (err.message ? err.message : JSON.stringify(err, null, 4)),
+    });
   })
   
 })
