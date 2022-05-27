@@ -810,9 +810,11 @@ router.post("/module/import", (req,res,next)=>{ // build workflow according to n
 			} 
 			let modl = store.library.create_module(module)
 			store.library.catalog[module.name] = modl	
-			store.library.addImported(module, module.name)
+			console.log("addimported")
+			store.library.addImported(module, module.name,true)
+			console.log(store.library.all.mytax)
 			res.status(200).json({status: 200, message: `Completed module copy`, data: '' });
-		} catch(err2){
+		} catch(err2){ 
 			logger.error("%s %s", "Error in importing module", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
 		}	
