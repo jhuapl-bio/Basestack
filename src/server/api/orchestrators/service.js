@@ -239,6 +239,7 @@ export class Service {
                         store.logger.error("Err in stopping container %o", err)
                     }
                 }
+                
                 $this.container = null
                 let skip = false 
                 skip = await $this.start(params, wait)
@@ -623,22 +624,27 @@ export class Service {
                 options = cloneDeep($this.updateConfig(options))
                 /////////////////////////////////////////////////
                 let custom_variables = params.variables 
-                let defaultVariables = {}    
-                let seenTargetTos = []  
-                let seenTargetFrom = []  
+                let defaultVariables = {}     
+                let seenTargetTos = []    
+                let seenTargetFrom = []     
                 defaultVariables = $this.config.variables 
                 // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
-                if ($this.config.serve ){ 
+                if ($this.config.serve ){     
                     let variable_port = defaultVariables[$this.config.serve] 
-                    options = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
-                }    
+                    options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
+                }      
                 // $this.config.variables = defaultVariables  
-                let envs = {}
-                $this.defineEnv()
+                let envs = {}   
+                $this.defineEnv() 
                 $this.defineBinds()
                 $this.definePortBinds()
                 $this.updatePorts($this.portbinds,options)
-                
+                if (process.env.USER){  
+                    if (!options.Config){
+                        options.Config = {}
+                    }
+                    options.Config.User = process.env.USER
+                }
                   
                 if (defaultVariables &&  typeof defaultVariables == 'object'){
                     for (let [name, selected_option ] of Object.entries(defaultVariables)){

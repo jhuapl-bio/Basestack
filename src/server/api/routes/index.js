@@ -798,21 +798,19 @@ router.post("/module/import", (req,res,next)=>{ // build workflow according to n
 			let basename = module.name + "_"+ module.version + (d.remote ? "_remote" : "_default")
 			let endpath = path.join(store.system.modules.importPath[0].path, basename+".yml")
 			module.path = endpath 
-			await writeFile( endpath, YAML.dump(module))
+			await writeFile( endpath, YAML.dump(module))  
 			let found= nestedProperty.get(store.library.catalog, module.name)
 			try{  
 				if (found){
 					found.cleanup()   
 					delete store.library.catalog[req.body.catalog]
 				}  
-			} catch (err){ 
+			} catch (err){  
 				store.logger.error("err in cleaning up already loaded catalog: %s", err)
 			} 
 			let modl = store.library.create_module(module)
 			store.library.catalog[module.name] = modl	
-			console.log("addimported")
 			store.library.addImported(module, module.name,true)
-			console.log(store.library.all.mytax)
 			res.status(200).json({status: 200, message: `Completed module copy`, data: '' });
 		} catch(err2){ 
 			logger.error("%s %s", "Error in importing module", err2)

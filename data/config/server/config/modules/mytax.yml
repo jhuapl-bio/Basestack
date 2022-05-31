@@ -187,12 +187,13 @@
           init: false
           force_restart: false
           force_init: false
-          command: [ "bash", '-c', "' export KRAKEN2_DEFAULT_DB=${db} && ls -lht $file; kraken2  --output ${report}.out  --report ${report}  ${file} '"]
+          command: ['bash', '-c', ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report}  ${file}  ']
+          # command: [ "bash", '-c', "\" export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report}  ${file} \""]
         - name: mytax_create_json
           label: Create Report JSON
           depends:
             - type: module
-              id: mytax
+              id: mytax 
           image: jhuaplbio/basestack_mytax:v1.1.2
           workingdir: /opt/test-data
           orchestrated: false

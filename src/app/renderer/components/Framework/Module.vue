@@ -108,7 +108,7 @@
           </v-icon>
         Reset Default</v-btn>
       </template>
-      <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.removable">
+      <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.removable && selectedVersion.imported">
         <template v-slot:activator="{ on }">
           <v-btn @click="removeModule(selectedVersion.idx, selectedVersion.name)" v-on="on" icon >
             <v-icon color="orange" medium>
@@ -579,6 +579,7 @@ export default {
       }).then((f)=>{
         this.dependencies = f.data.data.dependencies
         this.installStatus = f.data.data.status
+        console.log("f.", f.data.data)
       })
       .catch((err)=>{
           console.error(err)
