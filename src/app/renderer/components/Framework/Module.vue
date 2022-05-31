@@ -579,7 +579,6 @@ export default {
       }).then((f)=>{
         this.dependencies = f.data.data.dependencies
         this.installStatus = f.data.data.status
-        console.log("f.", f.data.data)
       })
       .catch((err)=>{
           console.error(err)

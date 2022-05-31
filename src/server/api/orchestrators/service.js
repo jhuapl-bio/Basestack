@@ -662,7 +662,7 @@ export class Service {
                                 let filepath = ( selected_option.copy.basename ?
                                     path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
                                     selected_option.copy.to
-                                )  
+                                )   
                                 promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
                                     logger.error(err) 
                                 }))   
