@@ -471,13 +471,22 @@ export class Service {
                 let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
                     bnd.forEach((b)=>{
                         if (typeof b == 'object'){
+                            if (b.to){
+                                b.to = b.to.replace(/\\/g, '/')
+                            }
                             binds.push(`${b.from}:${b.to}`)
                         } else {
+                            if (b){
+                                b = b.replace(/\\/g, '/')
+                            }
                             binds.push(b) 
                         }
                     })   
             } else {
                 let b  = $this.config.bind
+                if (b.to){
+                    b.to = b.to.replace(/\\/g, '/')
+                }
                 binds.push(`${b.from}:${b.to}`)
             } 
         }
@@ -490,7 +499,7 @@ export class Service {
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (typeof selected_option == 'object' && selected_option.bind){
                     let from = selected_option.source
-                    let to = selected_option.target
+                    let to = selected_option.target  
                     if (selected_option.bind && selected_option.bind.from){
                         from = selected_option.bind.from
                     }
@@ -503,14 +512,14 @@ export class Service {
                         s.forEach((directory,i)=>{ 
                             let finalpath = to[i] 
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
-                                finalpath = $this.removeQuotes(finalpath)
+                                finalpath = $this.removeQuotes(finalpath).replace(/\\/g, '/')
                                 binds.push(`${directory}:${finalpath}`)
                             }  
                             seenTargetTos.push(finalpath)
                         })  
                     } else { 
                         if (selected_option.bind == 'directory'){
-                            let finalpath = path.dirname(to)
+                            let finalpath = path.dirname(to).replace(/\\/g, '/')
                             if (seenTargetTos.indexOf(finalpath) == -1 && from){
                                 finalpath = $this.removeQuotes(finalpath)
                                 binds.push(`${path.dirname(from)}:${finalpath}`) 
@@ -518,15 +527,15 @@ export class Service {
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
                             selected_option.bind.to = $this.removeQuotes(selected_option.bind.to)
-                            binds.push(`${selected_option.bind.from}:${selected_option.bind.to}`) 
-                            seenTargetTos.push(selected_option.bind.to)
+                            binds.push(`${selected_option.bind.from}:${selected_option.bind.to.replace(/\\/g, '/')}`) 
+                            seenTargetTos.push(selected_option.bind.to.replace(/\\/g, '/'))
                         }  else {  
                             if (seenTargetTos.indexOf(to) == -1 && from){
                                 to = $this.removeQuotes(to)
-                                binds.push(`${from}:${to}`) 
+                                binds.push(`${from}:${to.replace(/\\/g, '/')}`) 
                             } 
                             
-                            seenTargetTos.push(to)
+                            seenTargetTos.push(to.replace(/\\/g, '/'))
                         }
                     }
 
@@ -543,11 +552,18 @@ export class Service {
     defineEnv(){
         let env = []  
         let bind = []    
-        const $this = this;  
+        const $this = this;   
         let seenTargetTos = []  
         let defaultVariables = $this.config.variables  
         if (defaultVariables){   
             for (let [key, selected_option ] of Object.entries(defaultVariables)){
+                if (selected_option.define ){
+                    for( let [key, value] of Object.entries(selected_option.define)  ){
+                        if (value){
+                            env.push(`${key}=${value}`)
+                        }
+                    }
+                }  
                 if (selected_option.optionValue  && typeof selected_option.optionValue == 'object'){
                     selected_option = selected_option.optionValue
                 }    
@@ -627,7 +643,8 @@ export class Service {
                 let custom_variables = params.variables 
                 let defaultVariables = {}     
                 let seenTargetTos = []    
-                let seenTargetFrom = []     
+                let seenTargetFrom = []
+                 
                 defaultVariables = $this.config.variables 
                 // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
                 if ($this.config.serve ){     

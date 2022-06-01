@@ -65,7 +65,7 @@
               bind_parent_dir: true
               bind:  
                 from: "<<directory(%{variables.input.source})>>"
-                to: "/opt/summary"
+                to: "/opt/data"
               source: null
               target: "/opt/data/<<basename(%{variables.input.source})>>"
               append:
@@ -151,7 +151,7 @@
                 services: 
                   - 0
           define:
-            outdir: "<<directory(%{variables.input.target})>>/NanoPlot"        
+            outdir: "/opt/data/NanoPlot"        
         output:
           label: "Output Plots"
           element: "file"
