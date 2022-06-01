@@ -108,7 +108,7 @@
           </v-icon>
         Reset Default</v-btn>
       </template>
-      <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.removable">
+      <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.removable && selectedVersion.imported">
         <template v-slot:activator="{ on }">
           <v-btn @click="removeModule(selectedVersion.idx, selectedVersion.name)" v-on="on" icon >
             <v-icon color="orange" medium>
@@ -178,6 +178,7 @@
           label="Adjust service"
         >
         </v-select>
+        
         <v-card class="scroll fill-height" >
           <v-subheader>
             Adjust Cmd in Docker Pipeline
@@ -196,6 +197,8 @@
             @addCustomElement="addCustomElement"
             >
           </Customize>
+          
+          
         </v-card>
       </v-navigation-drawer>
     
@@ -412,9 +415,20 @@
                 ></v-divider>
             </template>
         </v-stepper-header>
+          
       </v-stepper>
+      <v-checkbox 
+          v-if="os == 'linux'"
+          v-model="setUser"
+          on-icon="$check-square"
+          label="Run job as current user (yes) or default (no)"
+          class="align-right justify-center text-xs-center" 
+          off-icon="$square"
+          color="primary"
+      ></v-checkbox>
     </v-col>
     <v-col sm="6" v-if="procedure && procedure.variables" class="overflow:auto; min-height:">
+      
       <ListParams
           :items="additionals"
           v-if="additionals.length > 0"
@@ -680,7 +694,6 @@ export default {
     },
     
     async rmCustomModule(selected){
-      console.log(selected,"<")
       await FileService.rmModule({
         module: this.selectedVersion.name,
         index: this.selectedVersion.idx,
@@ -757,6 +770,7 @@ export default {
           command: $this.custom_command[key]
         })
       })
+      const setUser = this.setUser
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         catalog: $this.selected.name,
@@ -765,6 +779,7 @@ export default {
         dry: $this.dry,
         services: services,
         command: custom_command,
+        setUser: setUser,
         variables: $this.procedure.variables
       }).then((response)=>{
         if (!response.data.skip){
@@ -938,6 +953,7 @@ export default {
       drawer: true,
       customDrawer: false,
       installStatus: {},
+      setUser: (process.env.platform_os == 'linux' ? true : false),
       stored: {},
       custom_images: {},
       mini: true,
@@ -1031,7 +1047,6 @@ export default {
   props: [ "title", "name", 'selected', "importedVersions", "moduleIndex",  ],
   watch: {
     procedureIdx(newValue){
-      console.log("procedure idx changed", newValue)
       if (this.selectedVersion.procedures ){
         this.selectedProcedure = this.selectedVersion.procedures[newValue]
       }
@@ -1050,7 +1065,6 @@ export default {
     },
     selectedProcedure(newValue){
       const $this = this
-      console.log("new value sleectedprocedure", newValue)
       if (newValue){
         this.services_selected = newValue.services
         this.loadProcedure(newValue)
@@ -1059,6 +1073,9 @@ export default {
 
   },
   computed: {
+    os(){
+      return process.env.platform_os
+    },
     showInstalled(){
       let returnable = `0 / 0`
       let installed = this.dependencies.filter((f)=>{
@@ -1090,7 +1107,6 @@ export default {
     },
     additionals(){
         let ta= []
-        console.log(this.procedure.variables)
         if (this.procedure && this.procedure.variables){
             for (let [key, value ] of Object.entries(this.procedure.variables)){
                 if (!value.output){

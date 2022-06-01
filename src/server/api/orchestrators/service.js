@@ -1,6 +1,6 @@
 import {  mapVariables } from '../controllers/mapper.js';
 const cloneDeep = require("lodash.clonedeep");
-
+const os = require("os")
 /*
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
@@ -239,6 +239,7 @@ export class Service {
                         store.logger.error("Err in stopping container %o", err)
                     }
                 }
+                
                 $this.container = null
                 let skip = false 
                 skip = await $this.start(params, wait)
@@ -602,6 +603,7 @@ export class Service {
     start(params, wait){  
 		const $this = this
         this.status.error = null
+        const setUser = $this.config.setUser
         this.status.running = true
         this.status.cancelled = false 
         return new Promise(function(resolve,reject){ 
@@ -623,22 +625,38 @@ export class Service {
                 options = cloneDeep($this.updateConfig(options))
                 /////////////////////////////////////////////////
                 let custom_variables = params.variables 
-                let defaultVariables = {}    
-                let seenTargetTos = []  
-                let seenTargetFrom = []  
+                let defaultVariables = {}     
+                let seenTargetTos = []    
+                let seenTargetFrom = []     
                 defaultVariables = $this.config.variables 
                 // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
-                if ($this.config.serve ){ 
+                if ($this.config.serve ){     
                     let variable_port = defaultVariables[$this.config.serve] 
-                    options = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
-                }    
+                    options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
+                }       
                 // $this.config.variables = defaultVariables  
-                let envs = {}
-                $this.defineEnv()
-                $this.defineBinds()
+                let envs = {}   
+                $this.defineEnv() 
+                $this.defineBinds() 
                 $this.definePortBinds()
                 $this.updatePorts($this.portbinds,options)
-                
+                const userInfo = os.userInfo();
+
+                // get uid property
+                // from the userInfo object
+                console.log(setUser,"<<<<")
+                if (setUser ){  
+                    const uid = userInfo.uid;
+                    if(uid){
+                        
+                        if (!options.Config){
+                            options.Config = {} 
+                        } 
+                        const gid = userInfo.gid;
+                        options['User'] = `${uid}:${gid}`
+
+                    }
+                }
                   
                 if (defaultVariables &&  typeof defaultVariables == 'object'){
                     for (let [name, selected_option ] of Object.entries(defaultVariables)){
@@ -656,7 +674,7 @@ export class Service {
                                 let filepath = ( selected_option.copy.basename ?
                                     path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
                                     selected_option.copy.to
-                                )  
+                                )   
                                 promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
                                     logger.error(err) 
                                 }))   

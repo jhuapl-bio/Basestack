@@ -256,10 +256,6 @@ export class Procedure {
                             dependencies[index].status.version = dependency.value.version
                             dependencies[index].status.exists = true
                         } else {
-                            if ($this.name == 'mytax_kraken2_report'){
-
-                                console.log("fulfilled", dependency.value,"<<<<")
-                            }
                             dependencies[index].status.exists = ( dependency.value  ? dependency.value.exists : dependency.value )
                         }
 						

@@ -286,7 +286,6 @@ export default {
 		  } 
 	  },
     selectedPort(){
-      console.log("port server", process.env)
       return process.env.PORT_SERVER
     },
 	  filtered_installed_modules(){
