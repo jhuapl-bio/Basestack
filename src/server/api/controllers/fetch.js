@@ -546,8 +546,8 @@ export async function fetch_histories(){
 	} 
 	return response
 }
-
-
+ 
+ 
  
 
 export async function fetch_resources(){

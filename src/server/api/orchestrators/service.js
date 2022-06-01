@@ -1,6 +1,6 @@
 import {  mapVariables } from '../controllers/mapper.js';
 const cloneDeep = require("lodash.clonedeep");
-
+const os = require("os")
 /*
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
@@ -603,6 +603,7 @@ export class Service {
     start(params, wait){  
 		const $this = this
         this.status.error = null
+        const setUser = $this.config.setUser
         this.status.running = true
         this.status.cancelled = false 
         return new Promise(function(resolve,reject){ 
@@ -639,11 +640,22 @@ export class Service {
                 $this.defineBinds()
                 $this.definePortBinds()
                 $this.updatePorts($this.portbinds,options)
-                if (process.env.USER){  
-                    if (!options.Config){
-                        options.Config = {}
+                const userInfo = os.userInfo();
+
+                // get uid property
+                // from the userInfo object
+                
+                if (setUser){  
+                    const uid = userInfo.uid;
+                    if(uid){
+                        
+                        if (!options.Config){
+                            options.Config = {} 
+                        } 
+                        const gid = userInfo.gid;
+                        options['User'] = `${uid}:${gid}`
+
                     }
-                    options.Config.User = process.env.USER
                 }
                   
                 if (defaultVariables &&  typeof defaultVariables == 'object'){

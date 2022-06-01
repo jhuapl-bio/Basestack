@@ -1,4 +1,4 @@
-- version: 1.0
+- version: 1.3
   basestack_released: 2
   supported: 2.1.1
   schema_version: 1
@@ -51,7 +51,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax
-          version: v1.1.2
+          version: v1.1.3
           type: docker
           format: docker
         - source:
@@ -181,12 +181,13 @@
       services:
         - name: mytax_kraken2_report
           label: Kraken2 Report
-          image: jhuaplbio/basestack_mytax:v1.1.2
+          image: jhuaplbio/basestack_mytax:v1.1.3
           workingdir: /opt/test-data
           orchestrated: false
           init: false
           force_restart: false
           force_init: false
+          setUser: true
           command: ['bash', '-c', ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report}  ${file}  ']
           # command: [ "bash", '-c', "\" export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report}  ${file} \""]
         - name: mytax_create_json
@@ -197,6 +198,7 @@
           image: jhuaplbio/basestack_mytax:v1.1.2
           workingdir: /opt/test-data
           orchestrated: false
+          setUser: true
           init: false
           force_restart: false
           force_init: false
@@ -226,7 +228,7 @@
             to: '%{variables.port.target}'
       dependencies:
         - target: jhuaplbio/basestack_mytax
-          version: v1.1.2
+          version: v1.1.3
           type: docker
           format: docker
       services:
@@ -237,7 +239,7 @@
           label: Visualization
           force_restart: false
           config: null
-          image: jhuaplbio/basestack_mytax:v1.1.2
+          image: jhuaplbio/basestack_mytax:v1.1.3
           workingdir: /opt/software/mytax/sunburst
           post-run-tab: render
           ports:

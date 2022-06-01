@@ -331,6 +331,7 @@ export  class Job {
                         command = params.command[commandsIndex].command
                     }
                 }
+                service.config.setUser = params.setUser
                 $this.updateCommand(service, command)
                 this.services.push(service)
             }
@@ -455,7 +456,7 @@ export  class Job {
                     let skip
                     store.logger.info("I: %s, Starting a new job service %s", i, service.name)
                     
-                    skip = await service.check_then_start({ variables: $this.variables}, true)
+                    skip = await service.check_then_start({ variables: $this.variables }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
                         cancelled_or_skip = skip
