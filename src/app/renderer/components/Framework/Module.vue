@@ -953,7 +953,7 @@ export default {
       drawer: true,
       customDrawer: false,
       installStatus: {},
-      setUser: true,
+      setUser: (process.env.platform_os == 'linux' ? true : false),
       stored: {},
       custom_images: {},
       mini: true,

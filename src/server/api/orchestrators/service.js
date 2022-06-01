@@ -633,19 +633,19 @@ export class Service {
                 if ($this.config.serve ){     
                     let variable_port = defaultVariables[$this.config.serve] 
                     options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
-                }      
+                }       
                 // $this.config.variables = defaultVariables  
                 let envs = {}   
                 $this.defineEnv() 
-                $this.defineBinds()
+                $this.defineBinds() 
                 $this.definePortBinds()
                 $this.updatePorts($this.portbinds,options)
                 const userInfo = os.userInfo();
 
                 // get uid property
                 // from the userInfo object
-                
-                if (setUser){  
+                console.log(setUser,"<<<<")
+                if (setUser ){  
                     const uid = userInfo.uid;
                     if(uid){
                         
