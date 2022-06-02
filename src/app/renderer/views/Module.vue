@@ -25,6 +25,7 @@
 <script>
 import AppLayout from "../components/AppLayout";
 import Module from "../components/Framework/Module.vue";
+import FileService from "../services/File-service";
 
 // import App from '../../App.vue';
 
@@ -39,37 +40,38 @@ export default {
     return {};
   },
   mounted() {
-    console.log(this.module);
+    console.log("the module: " + this.module);
+    this.getStatus();
   },
   methods: {
-    // async getStatus() {
-    //   const $this = this;
-    //   try {
-    //     let response = await FileService.getModules({
-    //       catalog: this.module.name,
-    //     });
-    //     this.modules = response.data.data.map((d, i) => {
-    //       d.idx = i;
-    //       return d;
-    //     });
-    //     try {
-    //       if (!this.selected.name) {
-    //         this.selected = this.modules[this.selected_index];
-    //       }
-    //       if (!this.selectedProcedure.name) {
-    //         this.selectedProcedure =
-    //           this.selected.procedures[this.selected_index];
-    //       }
-    //     } catch (err) {
-    //       console.error("Could not assign defaults in module, ", err);
-    //     }
-    //   } catch (err) {
-    //     this.initial = false;
-    //     console.error(`${err} error in getting status`);
-    //   } finally {
-    //     this.intervalChecking = false;
-    //   }
-    // },
+    async getStatus() {
+      try {
+        let response = await FileService.getModules({
+          catalog: this.module,
+        });
+        console.log(response);
+        // this.modules = response.data.data.map((d, i) => {
+        //   d.idx = i;
+        //   return d;
+        // });
+        // try {
+        //   if (!this.selected.name) {
+        //     this.selected = this.modules[this.selected_index];
+        //   }
+        //   if (!this.selectedProcedure.name) {
+        //     this.selectedProcedure =
+        //       this.selected.procedures[this.selected_index];
+        //   }
+        // } catch (err) {
+        //   console.error("Could not assign defaults in module, ", err);
+        // }
+      } catch (err) {
+        this.initial = false;
+        console.error(`${err} error in getting status`);
+      } finally {
+        this.intervalChecking = false;
+      }
+    },
   },
 };
 </script>

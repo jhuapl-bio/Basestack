@@ -109,27 +109,25 @@ export default {
       const $this = this;
       try {
         let response = await FileService.getCatalog();
-        let status_obj = response.data.data;
-        let reported_status_obj = {};
         this.modules_new = [];
         this.catalog = response.data.data;
-        this.catalog.map((d, i) => {
-          d.selected = d.modules[this.defaultModule];
-          if (!this.stored[d.name]) {
-            this.stored[d.name] = d.modules[this.defaultModule];
-          }
-          d.idx = i;
-          d.modules.map((f, y) => {
-            f.idx = y;
-            return f;
-          });
-          return d;
-        });
-        if (!this.isHovered.name) {
-          this.isHovered = this.catalog[this.defaultModule];
-        } else {
-          this.isHovered = this.catalog[this.isHovered.idx];
-        }
+        // this.catalog.map((d, i) => {
+        //   d.selected = d.modules[this.defaultModule];
+        //   if (!this.stored[d.name]) {
+        //     this.stored[d.name] = d.modules[this.defaultModule];
+        //   }
+        //   d.idx = i;
+        //   d.modules.map((f, y) => {
+        //     f.idx = y;
+        //     return f;
+        //   });
+        //   return d;
+        // });
+        // if (!this.isHovered.name) {
+        //   this.isHovered = this.catalog[this.defaultModule];
+        // } else {
+        //   this.isHovered = this.catalog[this.isHovered.idx];
+        // }
       } catch (err) {
         this.initial = false;
         console.error(`${err} error in getting status`);

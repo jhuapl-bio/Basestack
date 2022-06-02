@@ -23,7 +23,7 @@ let router = new Router({
       component: Library,
     },
     {
-      path: "/module/:name",
+      path: "/module/:module",
       component: Module,
       props: true,
     },
