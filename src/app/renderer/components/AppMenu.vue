@@ -107,27 +107,11 @@ export default {
   data() {
     return {
       showAllModules: false,
-      // activeModules: [
-      //     { name: "Alpha" },
-      //     { name: "Bravo" },
-      //     { name: "Charlie" },
-      //     { name: "Delta" },
-      //     { name: "Echo" },
-      //     { name: "Foxtrot" },
-      //     { name: "Golf" },
-      //     { name: "Alpha" },
-      //     { name: "Bravo" },
-      //     { name: "Charlie" },
-      //     { name: "Delta" },
-      //     { name: "Echo" },
-      //     { name: "Foxtrot" },
-      //     { name: "Golf" },
-      // ],
       views: [
-        { name: "Library", to: "library", icon: "book" },
-        { name: "Learn", to: "tutorials", icon: "chalkboard" },
-        { name: "Log", to: "logs", icon: "terminal" },
-        { name: "System", to: "system", icon: "cog" },
+        { name: "Library", to: "/library", icon: "book" },
+        { name: "Learn", to: "/tutorials", icon: "chalkboard" },
+        { name: "Log", to: "/logs", icon: "terminal" },
+        { name: "System", to: "/system", icon: "cog" },
       ],
     };
   },
