@@ -51,13 +51,26 @@ module.exports = {
         // 'ultradark': 'hsl(209, 87%, 30%)'
       },
       green: {
-        100: "hsl(138, 67%, 45%)", // green
-        200: "hsl(154, 52%, 37%)", // darkgreen
+          100: "hsl(148, 85%, 91%)",
+        DEFAULT: "hsl(138, 67%, 45%)", // green
+        900: "hsl(165, 61%, 24%)", // darkgreen
       },
-      mint: "hsl(175, 43%, 49%)",
-      orange: "hsl(34, 71%, 49%)",
+      mint: {
+          100: "hsl(174, 75%, 89%)",
+          DEFAULT: "hsl(175, 43%, 49%)",
+          900: "hsl(188, 60%, 23%)",
+      },
+      orange: {
+          100: "hsl(34, 85%, 89%)",
+          DEFAULT: "hsl(34, 71%, 49%)",
+          900: "hsl(20, 61%, 26%)",
+      },
       pink: "hsl(304, 51%, 60%)",
-      red: "hsl(350, 73%, 54%)",
+      red: {
+          100: "hsl(345, 80%, 91%)",
+          DEFAULT: "hsl(350, 73%, 54%)",
+          900: "hsl(340, 61%, 27%)"
+      },
     },
     fontFamily: {
       display: ['"DM Sans"', "Helvetica", "Arial", "sans-serif"],
