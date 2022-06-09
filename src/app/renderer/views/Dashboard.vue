@@ -40,7 +40,7 @@
               min-h-[290px]
               p-12
               bg-green-100/25
-              text-green-200
+              text-green
               rounded-xl
             "
           >
