@@ -49,7 +49,7 @@ export default {
         let response = await FileService.getModules({
           catalog: this.module,
         });
-        console.log(response);
+        console.log("module", response);
         // this.modules = response.data.data.map((d, i) => {
         //   d.idx = i;
         //   return d;
