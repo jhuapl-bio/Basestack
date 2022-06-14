@@ -132,6 +132,7 @@
         }
     },
     "dependencies": {
+        "@tailwindcss/forms": "^0.5.2",
         "axios": "^0.21.1",
         "bootstrap": "^4.6.0",
         "bootstrap-vue": "^2.21.2",
