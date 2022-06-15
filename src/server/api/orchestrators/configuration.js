@@ -1,14 +1,14 @@
 import nestedProperty from "nested-property"
 const cloneDeep = require("lodash.clonedeep"); 
 import { mapVariables } from '../controllers/mapper.js';
-const path = require("path")
+const path = require("path")   
 const { store }  = require("../../config/store/index.js")
-const lodash = require("lodash") 
-      
-export  class Configuration { 
-    constructor(config){         
-        this.variables = {} 
-        // this.config = config  
+const lodash = require("lodash")  
+       
+export  class Configuration {    
+    constructor(config){            
+        this.variables = {}  
+        // this.config = config   
         for(let[key, value] of Object.entries(config)){
             this[key] = value
         }
@@ -22,6 +22,8 @@ export  class Configuration {
     mapFunctions(target, functions_list){   
         let functions = { 
             "directory": path.dirname,
+            "notExists": null,
+            "exists": null,
             "length": null,
             "basename": path.basename,
             "trim": path.parse
@@ -40,7 +42,10 @@ export  class Configuration {
                     funcs.forEach((d)=>{ 
                         if (functions[d]){
                             let result;
-                            if (d == 'length'){ 
+                            if (d == 'notExists'){
+                                result  = ( matched_string ? false : true )
+                            }
+                            else if (d == 'length'){ 
                                 result = matched_string.length
                             } else {
                                 result = functions[d](matched_string)
@@ -201,15 +206,17 @@ export  class Configuration {
             }) 
         } 
     }
-    findObjectByLabel(obj, pattern) {
+    findObjectByLink(obj, pattern) {
         const $this  = this
         if (obj && typeof obj == 'object'){
             Object.keys(obj).forEach(function (key) {
                 if (typeof obj[key] === 'object') {
                     $this.findObjectByLabel(obj[key], pattern, $this) 
+                    
                      
                     // return null
                 } else if (typeof obj[key] == 'string'){
+                    
                     // findObjectByLabel(obj[key], pattern, $this.config) 
                         var replace = `${pattern}`   
                         var re = new RegExp(replace,"g");
@@ -232,14 +239,113 @@ export  class Configuration {
                                              
                                             id = match.replace(/[\%\{\}]/g, "")
                                             found =  nestedProperty.get($this, id)
-                                            fullstring  = fullstring.replaceAll(match, found)                                            
+                                            if (typeof found == 'string' || !found){
+                                                fullstring  = fullstring.replaceAll(match, found)                                            
+                                            } else {
+                                                fullstring = found
+                                            }
+                                            
                                             
                                         } catch(err)  {
                                             console.error("error in matching", match, id, found)
                                             store.logger.error(err)
                                         }
                                     })
-                                    fullstring= $this.mapFunctions(fullstring, obj.formatting)
+                                    if (typeof fullstring == 'string'){
+                                        fullstring= $this.mapFunctions(fullstring, obj.formatting)
+                                    }
+                                    if (fullstring == 'undefined'){
+                                        return null
+                                    } else { 
+                                        return fullstring
+                                    }
+                                }
+                            })
+                        }
+                } else {
+                    return 
+                }
+            }) 
+        } else if (typeof obj == 'string') { 
+            var replace = `${pattern}`   
+            var re = new RegExp(replace,"g");
+            let fo = obj.match(re)  
+            let fullstring = obj
+            if (fo && Array.isArray(fo)){  
+                fo.forEach((match)=>{  
+                    try{
+                        let id = match.replace(/[\%\{\}]/g, "")
+                        Object.defineProperty(obj, )
+                        obj = { 
+                            get: function(){
+                                let found =  nestedProperty.get($this, id)
+                                fullstring  = fullstring.replaceAll(match, found)
+                                if (fullstring == 'undefined'){
+                                    return null
+                                } else {
+                                    return fullstring
+                                }
+                            }
+                        }
+                    } catch(err)  {
+                        store.logger.error(err)
+                    }
+                })
+                return obj.get()
+            }  else {
+                return obj
+            }
+        } else {
+            return obj
+        }
+    }
+    findObjectByLabel(obj, pattern) {
+        const $this  = this
+        if (obj && typeof obj == 'object'){
+            Object.keys(obj).forEach(function (key) {
+                if (typeof obj[key] === 'object') {
+                    $this.findObjectByLabel(obj[key], pattern, $this) 
+                    
+                     
+                    // return null
+                } else if (typeof obj[key] == 'string'){
+                    
+                    // findObjectByLabel(obj[key], pattern, $this.config) 
+                        var replace = `${pattern}`   
+                        var re = new RegExp(replace,"g");
+                        let fo = obj[key].match(re)   
+                        if (fo && Array.isArray(fo)){ 
+                            
+                            let original = cloneDeep(obj[key])
+                            let saved_original = cloneDeep(obj[key])
+                            Object.defineProperty(obj, key, {
+                                enumerable: true,   
+                                set: function(value){
+                                    original = value
+                                },
+                                get: function(){ 
+                                    let fullstring = cloneDeep(original)  
+                                    fo.forEach((match,i)=>{  
+                                        let id; 
+                                        let found; 
+                                        try{  
+                                            id = match.replace(/[\%\{\}]/g, "")
+                                            found =  nestedProperty.get($this, id)
+                                            if (typeof found == 'string' || !found){
+                                                fullstring  = fullstring.replaceAll(match, found)                                            
+                                            } else {
+                                                fullstring = found
+                                            }
+                                            
+                                        } catch(err)  {
+                                            console.error("error in matching", match, id, found)
+                                            store.logger.error(err)
+                                        }
+                                    })
+                                    if (typeof fullstring == 'string'){
+                                        fullstring= $this.mapFunctions(fullstring, obj.formatting)
+                                    }
+                                    
                                     if (fullstring == 'undefined'){
                                         return null
                                     } else { 

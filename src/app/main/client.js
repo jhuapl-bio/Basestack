@@ -1,80 +1,73 @@
 
-import { ClientMenu } from "./menu"
-import { Updater } from "./updater"
-const { ipcMain, BrowserWindow, dialog, shell, Menu } = require('electron')
-const path = require("path")
- 
-export class  Client {
+import { ClientMenu } from "./menu" // Menu class (top of the app bar)
+import { Updater } from "./updater" // Updater class
+const { ipcMain, BrowserWindow, dialog, shell, Menu } = require('electron') // Basic electron processes
+const path = require("path") // Pathing module
+const { download } = require('electron-dl'); // For download electron package binaries and libs
+const { spawn } = require('child_process'); // used for spawning processes directly on host system
+
+export class  Client { // Create a class for the Electron main client
 	constructor(app){
-		this.logger = null
+		this.logger = null // Create a logger for sending to a text file at the writepath + console
         this.mainWindow = null
         this.app = app
-        const isMac = process.platform === 'darwin'
+        const isMac = process.platform === 'darwin' 
         const isWin = process.platform === "win32"
 
         if (!process.env.APPDATA){
-            process.env.APPDATA = this.app.getPath('userData')
+            process.env.APPDATA = this.app.getPath('userData')//If the env is production level
         }
-        if (isMac){
-            process.env.platform_os = "mac"
-        } else if(isWin){
-            process.env.platform_os = "win"
-        } else {
-            process.env.platform_os = "linux"
-        }
+        
         this.system={
             'isMac': isMac,
             'isWin': isWin
         }
         const $this = this
-        this.spawned_logs = function spawned_logs(bat, config){
-            bat.stderr.on('data', (data) => {
-              console.log(data.toString());
+        this.spawned_logs = function spawned_logs(bat, config){ // set function for making a log output for a spawned process piping process
+            bat.stderr.on('data', (data) => { // Whenever any stderr is found, send to string
               if (config.throwError){
                 throw new Error(data.toString())
               }
             });
-            bat.stdout.on('data', (data) => {
-              console.log(`${data.toString()}`)
+            bat.stdout.on('data', (data) => { // Whenever any stdout is found, send to string
+              this.logger.info(`${data.toString()}`)
             });
-            bat.on('exit', (code) => {
+            bat.on('exit', (code) => { // When process exits, log it and send main notification through IPC connection
               let message = `${config.process} exited with code: ${code}`
               if(config.throwExit){
-                $this.mainWindow.webContents.send('mainNotification', {
+                $this.mainWindow.webContents.send('mainNotification', { // Sends the main window the notification that the spawned process failed/exceeded
                     icon: (code == 0 ? `info` : `error`),
                     message: (code == 0 ? `${config.process} succeeded` : `${config.process} failed`),
                     disable_popup: true
                 })
               } 
-              console.log(message);
             });
         }
 	}
-    updatePort(port){
-      console.log(`updating port to ${port}`)
-      process.env.PORT_SERVER = port
-      this.mainWindow.webContents.send("changePort", port)
+    updatePort(port){ // Updates the port to connect to, a client can be in a separate location from the running server
+      process.env.PORT_SERVER = port 
+      this.mainWindow.webContents.send("changePort", port) // Send IPC channel message to update the port to connect to 
     } 
-    createMenu(){  
-        // let menu = makeMenu(this.this.logger)  
-        console.log("creating menu")
-         
+      
+    createMenu(){  // Make a menu object and the store (holds saved variables and configs)
         let menu = new ClientMenu(this.logger, this.mainWindow, dialog, this.app, this.system, this.spawned_logs, this.updater)
         menu.store = this.store
         let m = menu.makeMenu() 
+        this.menu = menu
     }
-    createUpdater(){ 
+    createUpdater(){  // Create the updater class
         this.updater = new Updater(this.logger, this.mainWindow, dialog)
-        this.updater.defineUpdater()
+        this.updater.defineUpdater() // Set up basic functions for the updater
     }
-    createWindow () {
+    createWindow () { // Make the main windows for Electron
         /**
          * Initial window options
          */
         const $this = this  
         
+        // Adjust the location of necessary files, based on OS and if in prod/dev environment
         if (process.env.NODE_ENV !== 'production'){
-            let icon = path.join(__dirname, "..", "static", "img")
+            let icon = path.join(__dirname, "..", "static", "img") // Set the necessary icon
             if (process.env.platform_os == "linux"){
               icon = path.join(icon, "/icon_1024x1024.png")
             } else if (process.env.platform_os == 'win'){
@@ -82,6 +75,7 @@ export class  Client {
             } else {
               icon = path.join(icon, "/basestack.icns")
             }
+          // instantiate the main Browser window
           this.mainWindow = new BrowserWindow({
             height: 1000,
             useContentSize: true,
@@ -90,8 +84,8 @@ export class  Client {
             webPreferences: { zoomFactor: 0.83, webSecurity: true,enableRemoteModule: true, nodeIntegration:true, worldSafeExecuteJavaScript: true},
             icon: icon
           }) 
-           console.log(icon,  __dirname)
         } else { 
+          //Set icon for a prod env
           let icon = path.join(__dirname, "icons")
             if (process.env.platform_os == "linux"){
               icon = path.join(icon, "/icon_1024x1024.png")
@@ -100,7 +94,6 @@ export class  Client {
             } else {
               icon = path.join(icon, "/basestack.icns")
             }
-            console.log(__dirname,"DIRNAME")
           this.mainWindow = new BrowserWindow({
             height: 1000, 
             useContentSize: true,
@@ -110,45 +103,113 @@ export class  Client {
             icon: icon
           })
         }
-       
-        this.mainWindow.webContents.session.clearCache()
 
-
-          const winURL = (process.env.NODE_ENV === 'development'
+        // If in dev, set to local host, otherwise render the packaged file
+        const winURL = (process.env.NODE_ENV === 'development'
         ? `http://localhost:9080`
         : `file://${__dirname}/index.html`);
     
-        console.log("winurl defined")
+        //IF there is a browser cache, delete it completely to allow updates to properly take hold
         this.mainWindow.webContents.session.clearCache(function(){
         //some callback.
         });
         try{
-          this.mainWindow.loadURL(winURL)
-          
+          this.mainWindow.loadURL(winURL) // Finally, load the packaged ejs file for rendering through electron
+          this.logger.info("loaded main window!")
         } catch(err){
-          console.log(err)
+          this.logger.error(err)
         }
-        ipcMain.on("changePort", (event, arg) => {
-          process.env.PORT_SERVER = arg
+        ipcMain.on("changePort", (event, arg) => { // When receive a message from the renderer (vue.js), change the port to connect to 
           event.reply('changePort', process.env.PORT_SERVER)
         })
-        ipcMain.on("queryRelease", (event, arg) => {
+        ipcMain.on("getStore", (event, arg) => { // When receive a message from the renderer (vue.js) for the store, send store 
+          event.reply('getStore', this.store)
+        })
+        if (process.env.NODE_ENV == 'production'){
+          ipcMain.on("restartServer", (event, arg) => {   
+            $this.logger.info("REstarting the server with port: %s", process.env.PORT_SERVER)
+            try{
+              const create_server = require("../../server/index.server.js").create_server
+              create_server(process.env.PORT_SERVER); 
+            } catch(err) {
+              $this.logger.error("Err in starting server: %s" ,err)
+              throw (err)
+            }
+          })
+        }
+        ipcMain.on('downloadDocker', async (event,  data   ) => { // In development
+          // Check the OS, and download the necessary binaries for Docker automatically to Downloads
+          const win2 = BrowserWindow.getFocusedWindow();
+          let bat;
+          if (data.platform == 'darwin'){ 
+            let url;
+            // determine the url to pull the binary from 
+            if (data.arch == 'x64'){
+              url ="https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-amd64"
+            } else {
+              url = "https://desktop.docker.com/mac/main/arm64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-arm64"
+            }
+            // Utilize the electron-download package properly to download a binary, report a progress bar
+            let downloading = download(win2, url, {
+              overwrite: true,
+              openFolderWhenDone: true
+            }); 
+            //Send to the renderer the download status starting
+            this.mainWindow.webContents.send("dockerDownloadStatus", {
+              "type": "info",
+              "message": `Downloading file now.. check toolbar for status. Please open the file when complete`
+            })
+            downloading.then((event)=>{ // At the end of the above download, send to renderer that it is done and should be executed manually 
+              let filepath = event.getSavePath()
+              this.mainWindow.webContents.send("dockerDownloadStatus", {
+                "type": "success",
+                "info": `Downloaded success to: ${ filepath }. `,
+                message: "Please open the .dmg (double-click) file to extract and complete installation"
+              })
+            })
+
+           
+          } else if (data.platform == 'linux') { // If linux, instead pull bash script and auto run it 
+            let url;
+            if (data.arch == 'x64'){
+              url = "curl -sSL https://get.docker.com/ | sh"
+            } else {
+              url = "curl -sSL https://get.docker.com/ | sh"
+            }            
+          } else {
+            let url = "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe"
+            let downloading = download(win2, url, {
+              overwrite: true,
+            });
+            downloading.then((event)=>{
+              this.mainWindow.webContents.send("dockerDownloadStatus", {
+                "type": "success",
+                "message": `Downloaded success to: ${event.getSavePath()}`
+              })
+            })
+          }
+          
+          
+        });
+        ipcMain.on("queryRelease", (event, arg) => { // If Electron finds the release notes, send to vue.js to render in html
           event.reply('releaseNotes', $this.updater.releaseNotes)
         })
-        ipcMain.on("openLogs", (event, arg) => {
+        // Open the log folder
+        ipcMain.on("openLogs", (event, arg) => { 
           shell.openPath($this.store.system.logPath ) 
         })
         
 
-
+        // Check for update to electron from Github releases 
         ipcMain.on("checkUpdates", (event, arg) => {
-          console.log("Checking updates")
-          $this.updater.checkUpdates() 
+          this.logger.info("Checking updates")
+          try{
+            $this.updater.checkUpdates() 
+          } catch (err){
+            this.logger.error(err)
+          }
         })
-        ipcMain.on("mainN", (event, arg) => {
-          // console.log(event)
-          console.log("event")
-        })
+        // Open the directory using electron's open dialog functionality 
         ipcMain.on("openDirSelect", (event, arg) => {
           dialog.showOpenDialog({
             properties: ['openDirectory']
@@ -156,6 +217,7 @@ export class  Client {
             if (err){
               throw err
             } else {
+              //Send the filepath of first file in the directory on selection
               this.mainWindow.webContents.send("getValue", val.filePaths[0])
             }
             
@@ -165,10 +227,9 @@ export class  Client {
           
         })
       
-      
+        // when electron finishes its loading process, notify with ipc message
         this.mainWindow.webContents.on('did-finish-load', function () {
           let quitUpdateInstall = false;
-          console.log("Basestack is finished loading")
           function sendStatusToWindow(text) {
             dialog.showMessageBox($this.mainWindow, {
               type: 'info',
@@ -186,7 +247,7 @@ export class  Client {
         
       
       
-      
+        /// deprecated
         this.mainWindow.on("close", (e)=>{
           // e.preventDefault();
           
@@ -251,14 +312,14 @@ export class  Client {
       
       
         })
-      
+        // When the user stops basestack, turn the main window to null 
         this.mainWindow.on('closed', (e) => {
           this.mainWindow= null
           
         })  
       }
-    checkUpdates(){
-        console.log("checking updates")
+    checkUpdates(){ // Check if the electron version has changed/updated
+        this.logger.info("checking updates")
         this.updater.checkUpdates()    
     }
 }

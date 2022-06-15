@@ -10,13 +10,15 @@
   <div id="string" > 
   	<v-text-field
         v-model="value"
-        :label="(source.hint ? source.hint : '' )"
+        :label="(variable.hint ? variable.hint : '' )"
     >
     </v-text-field>
+    
   </div>
 </template>
 
 <script>
+
 export default {
 	name: 'string',
     data() {
@@ -25,6 +27,7 @@ export default {
             test: "placeholder"
         }
     },
+  
     computed: {
         
     },
@@ -33,12 +36,14 @@ export default {
 	},
 	props: ['source', 'status', 'service', 'variable'],
     mounted(){
-        this.value = this.source.source
+        this.value = this.source
     },
     watch: {
         value(newValue, oldValue){
             this.$emit("updateValue", newValue )
+        
         }
+        
     }
     
 };

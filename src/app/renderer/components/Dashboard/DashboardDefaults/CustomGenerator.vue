@@ -58,14 +58,12 @@
 
 <script>
 import FileService from '@/services/File-service.js'
-const YAML = require("yaml") 
+const YAML = require("js-yaml") 
 export default {
 	name: 'customgenerator',
      
     data(){
         return {
-            // options: ['Module', 'Procedure', 'Service'],
-            // selected_option: 'Procedure',
             types: ['text', 'file'],
             text:null,
             file: null, 
@@ -78,17 +76,15 @@ export default {
 	methods: {
         addDropFile(e) { 
             this.file = e.dataTransfer.files[0]; 
-            console.log(this.file)
         },
         async save(){
             try{
                 if (this.selected_type == 'text'){
                     let text;
-                    console.log(this.text)
                     if (this.textType == 'YAML'){
-                        text = YAML.parse(this.text)
+                        text = YAML.load(this.text)
                     } else{
-                        text = JSON.parse(this.text)
+                        text = JSON.load(this.text)
                     }
                     console.log(this.textType, this.text)
                     await FileService.saveModuleText({

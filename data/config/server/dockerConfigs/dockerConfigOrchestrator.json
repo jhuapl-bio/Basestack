@@ -7,15 +7,16 @@
         "AutoRemove": true,
         "Privileged": true,
         "Binds": [
-            "basestack-docker2:/var/lib/docker",
             "basestack-docker-certs-ca:/certs/ca",
             "basestack-docker-certs-client:/certs/client"
         ],	 
         "PortBindings": {
-        }
+        },
+        "UsernsMode": "host"
     },
     "Volumes": {
     },  
+
     "Env": [
         "DOCKER_TLS_CERTDIR=/certs"
     ], 
@@ -26,7 +27,7 @@
             }
         }
     },
-    "Tty": true,
+    "Tty": false,
     "Image": "jhuaplbio/basestack_orchestrator",
     "Cmd": []
 }

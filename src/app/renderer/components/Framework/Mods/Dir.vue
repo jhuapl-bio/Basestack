@@ -7,94 +7,93 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="dir" class="wv-50 p-1" @drop.prevent="addDropFiles" @dragover.prevent >
-    <div  style="border: 1px solid grey">
-        <!-- <v-file-input 
-          :label="( directory ? directory : 'Directory input')"
-          v-model="directory"
-          multiple
-          variant="secondary"
-          style="cursor:pointer"
-        >
-        </v-file-input>
-        < -->
-        <v-btn
-            @click="electronOpenDir('data')"
-            color="light"
-            disabled
-            
-            variant="secondary"
-            append-icon="$archive"
-            x-small
-            class="mt-5 mb-5"
-            style="cursor:pointer"
-        >Drag Folder here 
-          <v-icon
-           small class="ml-2"
-          > $archive
-          </v-icon>
-        </v-btn>
-        <br><br>
-        <v-spacer></v-spacer>
-        <v-subheader  style="word-wrap: anywhere;" class="entry-label" v-if="directory" >{{directory}} </v-subheader>
-    </div>
-  </div>
+  <v-card >
+      
+      <v-sheet  elevation="1" 
+          height="50" :hint="hint" persistent-hint
+          max-width="600" class="px-8 pt-4" 
+          style="" @drop.prevent="addDropFiles" @dragover.prevent >
+          
+            <v-icon
+            small class="mr-2 "
+            > $upload
+            </v-icon>
+            Drag Folder here
+            <v-icon  v-if="directory" class="text--caption configure ml-5" @click="directory = null" color="grey" small>$times-circle
+            </v-icon>
+           
+      </v-sheet>
+      
+      <small class="text-caption" v-if="directory">
+        {{directory}}
+      </small>
+      
+      
+      
+  </v-card>
 </template>
 
 <script>
 const path = require("path")
+
+
 export default {
 	name: 'file',
-    data() {
-        return {
-            value: null,
-            valueDir: null,
-            directory: null,
-            test: "placeholder"
-        }
+  data() {
+      return {
+          value: null,
+          valueDir: null,
+          directory: null,
+          test: "placeholder",
+      }
+  },
+  computed: {
+      hint(){
+      let hint = ""
+      if (this.variable.target){
+        hint =`${this.variable.target}`
+      }
+      console.log(hint)
+      return hint
     },
-    computed: {
-        
-    },
+  },
+  
 	methods: {
     addDropFiles(e) {
       this.value = Array.from(e.dataTransfer.files);
       this.directory = this.value[0].path
     },
     formatNames(files) {
-      console.log(files)
       return files.length === 1 ? `Selected` : `${files.length} files selected`
     },
     electronOpenDir(key){
         const $this = this
         this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
             $this.directory = message
-            $this.source.source = message
-            console.log($this.source,"changed dir")
+            $this.source = message
         })
         this.$electron.ipcRenderer.send("openDirSelect", "")
 		},
 	},
 	props: ['source', 'status', 'service', 'variable'],
   mounted(){
+    this.directory = this.source 
   },
   watch: {
         directory(newValue, oldValue){
             this.$emit("updateValue", newValue )
         },
-        // directory(newValue, oldValue){
-        //     if (newValue){
-        //       this.value  = newValue.path.replace(newValue.name, "")
-        //     }
-        // },
+        source(newValue){
+          if (!newValue){
+            this.directory = null
+          }
+        },
         valueDir(newValue, oldValue){
             if (newValue && newValue.length > 0){   
     			if (newValue.length == 1){
     				newValue = newValue[0]
     			}		
 	    		const flat  = newValue.flat(2) //flatten up to 2 directories down
-                console.log(flat)
-    		 	// this.changeRunDir(flat, 'dir')
     		} 
         }
     }

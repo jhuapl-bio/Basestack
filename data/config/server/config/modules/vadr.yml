@@ -1,0 +1,146 @@
+- name: vadr
+  title: "Vadr"
+  schema_version: 1
+  icon: "chess-knight"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tags: 
+    - "Genome annotation"
+    - "viral"
+    - "classification"
+  description: "Viral Annotation DefineR: classification and annotation of viral sequences based on RefSeq annotation"
+  url: https://github.com/ncbi/vadr
+  tooltip: "Viral Annotation DefineR: classification and annotation of viral sequences based on RefSeq annotation"
+  procedures: 
+    - name: vadr #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Vadr SARS-CoV-2"
+      icon: "chess-knight"
+      module: True
+      init: false 
+      dependencies:
+        - target: "staphb/vadr"
+          label: "staphb/vadr"
+          type: "docker" 
+          format: "docker"
+        - source: 
+            url: "https://ftp.ncbi.nlm.nih.gov/pub/nawrocki/vadr-models/sarscov2/1.3-2/vadr-models-sarscov2-1.3-2.tar.gz"
+            type: "file"
+            user: anonymous 
+            protocol: "https"
+            remove: true
+            target: "${writePath}/workflows/vadr/vadr-models-sarscov2-1.3-2.tar.gz"
+          label: "Vadr model for SARS-CoV-2-1.3.2"
+          type: "download" 
+          format: "dir"
+          decompress: 
+            format: "tgz"
+            source: "${writePath}/workflows/vadr/vadr-models-sarscov2-1.3-2.tar.gz"
+          target: "${writePath}/workflows/vadr/vadr-models-sarscov2-1.3-2"
+          overwrite: true
+      tags: 
+        - "Genome annotation"
+        - "viral"
+        - "classification"
+      tooltip: "Generate annotations for SARS-CoV-2 from a FASTA file (consensus or otherwise)"
+      variables:
+        file:
+          label: "FASTA File"
+          hint: "One or more FASTA sequences (single file) that you want to annotate with the SARS-CoV-2 Annotation portion of Vadr"
+          bind_parent_dir: true
+          element: "file"
+          bind: "directory"
+          target: "/opt/data/<<basename(%{variables.file.source})>>"
+          class: "wb-100  p-3 mb-1"
+          source: null
+        model:
+          label: "Vadr Models"
+          class: "wb-100 p-3 mb-1"
+          option: 0 
+          options:
+            - element: null
+              name: "Default 1.3.2 for SARS-CoV-2"
+              source: "${writePath}/workflows/vadr/vadr-models-sarscov2-1.3-2"
+              target: "/opt/models/vadr-models-sarscov2-1.3-2"
+              bind:  "self"
+            - element: "dir"
+              name: "Custom Model Directory"
+              source: null
+              target: "/opt/models/<<basename(%{variables.mode.source})>>"
+              bind: "directory"
+        seqstat: 
+          label: "seqstat"
+          element: "file"
+          output: true   
+          openSelf: True       
+          watch: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file.source})>>/vadr_output/vadr_output.vadr.seqstat"
+          target: "<<directory(%{variables.file.target})>>/vadr_output/vadr_output.vadr.seqstat"
+        passed: 
+          label: "passed table"
+          element: "file"
+          output: true   
+          openSelf: True       
+          watch: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file.source})>>/vadr_output/vadr_output.vadr.pass.tbl"
+          target: "<<directory(%{variables.file.target})>>/vadr_output/vadr_output.vadr.pass.tbl"
+        fastaoutpass: 
+          label: "fasta seqs passed"
+          element: "file"
+          output: true   
+          openSelf: True       
+          watch: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file.source})>>/vadr_output/vadr_output.vadr.pass.fa"
+          target: "<<directory(%{variables.file.target})>>/vadr_output/vadr_output.vadr.pass.fa"
+        annotations: 
+          label: "annoations passed"
+          element: "file"
+          output: true   
+          openSelf: True       
+          watch: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file.source})>>/vadr_output/vadr_output.vadr.sqa"
+          target: "<<directory(%{variables.file.target})>>/vadr_output/vadr_output.vadr.sqa"
+        modelsummary: 
+          label: "models summary"
+          element: "file"
+          output: true   
+          openSelf: True       
+          watch: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file.source})>>/vadr_output/vadr_output.vadr.sgm"
+          target: "<<directory(%{variables.file.target})>>/vadr_output/vadr_output.vadr.sgm"
+        alignmentsummary: 
+          label: "alignment summary"
+          element: "file"
+          output: true   
+          openSelf: True       
+          watch: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file.source})>>/vadr_output/vadr_output.vadr.dcr"
+          target: "%{variables.file.bind.to}/vadr_output/vadr_output.vadr.dcr"
+        replaced: 
+          label: "replace Ns"
+          element: "file"
+          output: true   
+          openSelf: True       
+          watch: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file.source})>>/vadr_output/vadr_output.vadr.rpn"
+          target: "<<directory(%{variables.file.target})>>/vadr_output/vadr_output.vadr.rpn"
+      services:
+        - name: vadr
+          label: "Vadr"
+          image: "staphb/vadr"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "fasta-trim-terminal-ambigs.pl --minlen 50 --maxlen 30000 ${file} > sars-cov2.4.fa && 
+            v-annotate.pl --split --glsearch -s -r --nomisc --mkey sarscov2 -f --lowsim5seq 6 --lowsim3seq 6 --alt_fail lowscore,insertnn,deletinn --mdir ${model} sars-cov2.4.fa vadr_output
+          "]
+    

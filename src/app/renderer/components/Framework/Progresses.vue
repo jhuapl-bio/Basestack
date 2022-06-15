@@ -7,10 +7,9 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="progresses" >
-    <v-subheader></v-subheader>
+  <v-card id="progresses" >
     <v-toolbar
-      dark dense
+      dark dense class="elevation-6" style="width: 100%"
     >
       <v-toolbar-title>Output Locations</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -24,15 +23,14 @@
       </div>
       <v-spacer>
       </v-spacer>
-      <v-btn icon-and-text color="orange darken-2" v-if="progresses && progresses.length > 0" @click="deleteOutputs()">
+      <!-- <v-btn icon-and-text color="orange darken-2" v-if="progresses && progresses.length > 0" @click="deleteOutputs()">
         <v-icon
           small
         > $trash-alt
         </v-icon>
         Delete Outputs
-      </v-btn>
+      </v-btn> -->
     </v-toolbar>
-    
   	<v-data-table
         v-if="progresses && progresses.length > 0"
         small
@@ -41,33 +39,45 @@
         :items-per-page="5"
         class="elevation-1"					        
     >	
-      
+        <template v-slot:item.access="{ item }">
+            <v-tooltip bottom v-if="item.element == 'render'">
+                <template v-slot:activator="{ on }">
+                    <v-btn icon-and-text v-on="on" class="configure mt-5 mb-5 mr-5 ml-5" @click="open_link(item, $event)" color="info" medium>
+                        <v-icon   >$external-link-alt
+                        </v-icon>
+                        Click Me! 
+                    </v-btn>
+                </template>
+                View Visualization in Browser. Ensure that the service is running first!
+            </v-tooltip> 
+            
+            <v-tooltip bottom v-if="item.source"> 
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" icon  @click="determineOpen(item)">
+                  <v-icon 
+                    class="" color="primary" 
+                    medium>$archive
+                  </v-icon>
+                </v-btn>
+                
+              </template>
+              {{item.source}}
+            </v-tooltip>
+            <v-tooltip bottom v-if="item.openSelf && item.source">
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" icon  @click="determineOpen(item, true)">
+                  <v-icon 
+                    class="" color="primary" 
+                    medium>$file
+                  </v-icon>
+                </v-btn>
+              </template>
+              {{item.source}}
+            </v-tooltip>
+        </template>
         <template v-slot:item.label="{ item }">
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item)">
-                <v-icon 
-                  class="" color="primary" 
-                  small>$archive
-                </v-icon>
-              </v-btn>
-              {{item.label}}
-            </template>
-            {{item.path}}
-          </v-tooltip>
-          <v-tooltip bottom v-if="item.openSelf">
-            <template v-slot:activator="{ on }">
-              <v-btn v-on="on" icon v-if="item.source" @click="determineOpen(item, true)">
-                <v-icon 
-                  class="" color="primary" 
-                  small>$file
-                </v-icon>
-              </v-btn>
-              {{item.label}}
-            </template>
-            {{item.path}}
-          </v-tooltip>
-          <v-tooltip top>
+          {{item.label}}
+          <v-tooltip top v-if="item.hint">
             <template v-slot:activator="{ on }">
               <v-icon 
                 v-on="on" class="configure" color="info" 
@@ -78,17 +88,17 @@
           </v-tooltip>
             
         </template>
-        <template v-slot:item.remove="{ item, index }">
+        <!-- <template v-slot:item.remove="{ item, index }">
             <v-icon 
-                @click="deleteOutputs(index)"
+                @click="deleteOutputs(item)"
                 v-if="(item.source && !Array.isArray(item.source)) || (Array.isArray(item.source) && item.source.length > 0)"
                 small> $trash-alt
             </v-icon>
-        </template>
+        </template> -->
         <template v-slot:item.element="{ item }">
             <v-icon 
                 v-if="item.type == 'files'"
-                small> {{item.complete}} / {{item.total}}
+                small> {{item.complete}} {{ ( item.total ? ` / ${item.total}` : '' ) }}
             </v-icon>
             <v-icon 
                 v-else-if="item.total > item.complete" 
@@ -99,13 +109,13 @@
             <v-icon 
                 v-else
                 small> 
-                {{item.complete}} / {{item.total}}
+                {{item.complete}} {{ ( item.total ? ` / ${1}` : '' ) }}
             </v-icon>
         </template>
        
         
     </v-data-table>
-  </div>
+  </v-card>
 </template>
 
 <script>
@@ -122,7 +132,7 @@ export default {
     data() {
         return {
             value: null,
-            test: "placeholder",
+            test: "placeholder", 
             
            
         }
@@ -131,27 +141,70 @@ export default {
         
     },
 	methods: {
+        open_link (link, e) {
+          e.stopPropagation()
+          window.open(this.getUrl(link), "browser", 'top=500,left=200,frame=true,nodeIntegration=no')
+      	},
+        getUrl(link){ 
+            let url  = `http://localhost:${link.bind.to}`
+            if (link.suburl){
+                url = url +link.suburl
+            }
+            return url
+        },
         determineOpen(item, self){
-          console.log(item,"open")
           if (item.element != 'file'){
             if (typeof item.source =='string'){
-              this.open(path.dirname(item.source))
+                this.$electron.shell.openPath(path.dirname(item.source))
             } else {
-              this.open(path.dirname(item.source[0]))
+              if (item.path){
+                this.$electron.shell.openPath(item.path)
+              } else if (item.target) {
+                this.$electron.shell.openPath(item.target)
+              } else {
+                this.$electron.shell.openPath(path.dirname(item.source[0]))
+              }
             }
           } else{
             if (self){
-              this.open(item.source)
+              this.$electron.shell.openPath(item.source)
             } else {
-              this.open(path.dirname(item.source))
+              this.$electron.shell.openPath(path.dirname(item.source))
             }
           }
         },
         deleteOutputs(outputs){
+          if (outputs && !Array.isArray(outputs)){
+            outputs=[
+              {
+                path: outputs.source,
+                type: ( outputs.type ? outputs.type : outputs.element)
+              } 
+            ]
+          }
+          else if (!outputs){
+            outputs = this.progresses.map((f)=>{
+              return {
+                path: f.source,
+                type: ( f.type ? f.type : f.element)
+              }
+            })
+          }
+          if (this.removal_override){
+            outputs  = 
+              [{
+                path: this.removal_override.source,
+                type: ( this.removal_override.type ? this.removal_override.type : this.removal_override.element)
+              }]
+            
+          }
+          
+          
+          
+          console.log(outputs)
           FileService.deleteOutputs({
-              idx: outputs,
+              paths: outputs,
               catalog: this.catalog,
-              module: this.module, 
               procedure: this.procedure
           }).then((response2)=>{
               this.$swal({
@@ -183,11 +236,10 @@ export default {
           }
         },
 	},
-	props: ['defaultHeaders', 'progresses', 'status', 'catalog', 'module', 'procedure'],
+	props: ['defaultHeaders', 'removal_override', 'progresses', 'status', 'catalog',  'procedure'],
     mounted(){
     },
     watch: {
-        
     }
     
 };

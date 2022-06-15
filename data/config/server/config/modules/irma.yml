@@ -1,0 +1,105 @@
+- name: irma
+  title: "IRMA"
+  icon: "eye-dropper"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  description: "IRMA was designed for the robust assembly, variant calling, and phasing of highly variable RNA viruses. Currently IRMA is deployed with modules for influenza, ebolavirus and coronavirus"
+  url: "https://wonder.cdc.gov/amd/flu/irma/"
+  tooltip: "FLU, COVID, and EBOLA consensus generation pipeline"
+  tags: 
+    - "variants"
+    - "consensus"
+    - "cdc"
+    - "consensus"
+  procedures:
+    - icon: "eye-dropper" 
+      name: "IRMA_FLU"
+      title: "IRMA FLU"
+      module: True
+      init: false 
+      tooltip: "FLU Consensus from IRMA pipeline"
+      tags: 
+        - "variants"
+        - "consensus"
+        - "cdc"
+        - "consensus"
+      dependencies: 
+        - target: "jhuaplbio/irma"
+          label: "jhuaplbio/irma"
+          type: "docker-local"
+          build: 
+            path: ${configPath}/modules/irma/Dockerfile
+            file: Dockerfile
+          format: "dockerfile"
+      
+      variables:
+        
+        fastqs:
+          label: "Input  FASTAQ"
+          class: "wb-100 p-3 mb-1"
+          option: 0
+          options:
+            - name: "Single End"
+              element: "file"
+              hint: "Single end illumina or nanopore read(s) file"
+              bind_parent_dir: true
+              source: null
+              target: "/opt/data/<<basename(%{variables.fastqs.source})>>"
+              bind: "directory"
+              class: "wb-100  p-3 mb-1" 
+            - element: files
+              name: "Short reads - paired"
+              hint: "Illumina paired end reads"
+              bind:
+                from: "<<directory(%{variables.fastqs.source})>>"
+                to: "/opt/data/<<directory(%{variables.fastqs.source})>>" 
+              target: "/opt/data/<<directory(%{variables.fastqs.source})>>/<<basename(%{variables.fastqs.source})>>"
+        samplename: 
+          source: test 
+          target: "%{variables.samplename.source}"
+          hint: "Sample name as output folder"
+          label: "Samplename"
+        outputDir:
+          label: "Output Directory"
+          element: "dir"
+          output: True
+          openSelf: True
+          hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
+          bind: self
+          source: null
+          target: "/opt/output/%{variables.outputDir.source}"
+        report:
+          label: "Output Directory"
+          element: "dir"
+          output: True
+          openSelf: True
+          hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
+          bind_parent_dir: false
+          type: file
+          pattern: ".fasta"
+          source: "%{variables.outputDir.source}/%{variables.samplename.source}"
+          target: "%{variables.outputDir.source}/%{variables.samplename.source}"
+          path: "%{variables.outputDir.source}/%{variables.samplename.source}"
+        protocol: 
+          option: 0
+          hint: "What target you are interested in"
+          label: "Target"
+          options: 
+            - FLU
+            - EBOLA
+            - CoV
+            - FLU-utr
+            - FLU-pacbio
+            - FLU-pgm
+      services:
+        - name: "consensus" 
+          image: "jhuaplbio/irma:latest"
+          orchestrated: false #orchestrated means it r
+          init: false
+          hideStatus: false
+          label: "IRMA Consensus"
+          force_restart: true
+          command: ["bash","-c", "cd $outputDir; rm -r ./$samplename; IRMA ${protocol} ${fastqs} ${samplename} " ]
+          workingdir: "/opt/output"
+    

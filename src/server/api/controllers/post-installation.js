@@ -6,47 +6,85 @@
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
   */
-import Docker from 'dockerode';
-import  path  from "path"
-const fs  = require("fs")
-const zlib = require('zlib')
-const tar = require('tar-stream')
-const fs_promise = require("fs").promises
 const { store }  = require("../../config/store/index.js")      
 var  logger  = store.logger 
-// var { followStreamBuild } = require("./dockerLogs.js")
-const {copyFile, readFile, copyFolder, writeFolder, ammendJSON, writeFile,  } = require("./IO.js")
-let docker = store.docker
+const {removeFile,  } = require("./IO.js")
 
-export async function createNetworks(names){ 
+export async function createNetworks(names){  // Create any networks for orchestrated containers
 	return new Promise(function(resolve,reject){
 		try {  
-			logger.info(`${names}, creating network`)  
-			// let networks = await store.docker.listNetworks() 
-			// logger.info(`${JSON.stringify(networks, null, 4)}, networks`) 
+			store.logger.info(`${names}, creating network`)  
 			let promises = []
-			names.forEach((name)=>{
+			names.forEach((name)=>{ // For each network, use the Dockerode api to create them, avoiding duplicated if possible
 				promises.push(store.docker.createNetwork({Name: name, CheckDuplicate: true }))
 			})  
 			Promise.allSettled(promises).then((response)=>{    
 				resolve(response)
 			}).catch((err)=>{
-				// throw err
-				logger.error("%o %s", err, `error in creating network(s)`)
+				store.logger.error("%o %s", err, `error in creating network(s)`)
 				reject(err)
 			})
 		} catch(err){  
-			logger.error("%o %s", err, `error in creating network(s)`) 
+			store.logger.error("%o %s", err, `error in creating network(s)`) 
 			reject(err)
 		}  
 	})
 }
-export async function createVolumes(names){
+export async function removeDep(dependency_obj){ // remove a depe, be it a volume, image, or path
+	return new Promise(function(resolve,reject){
+		try {
+			// If the dep. is a docker image (local or pullable), remove that image
+			if (dependency_obj.type == 'docker' || dependency_obj.type == 'docker-local'  ){
+				let target = dependency_obj.target
+				if (dependency_obj.version){
+					target = `${target}:${dependency_obj.version}`
+				}
+				// Remove the images via dockerode api
+                remove_images(target).then((response)=>{
+					resolve()
+				}).catch((err)=>{
+					store.logger.error("Error in removing image dependency %o", err)
+				})
+            } else if (dependency_obj.type == 'volume'){ // If it is a docker volume, prune it from system using dockerode api
+                removeVolume(dependency_obj.target).then((response)=>{
+					resolve()
+				}).catch((err)=>{
+					store.logger.error("Error in removing volume dependency %o", err)
+					reject(err)
+				})
+            }
+            else{
+				// else do basic file services to remove the path from the system
+                removeFile(dependency_obj.target, dependency_obj.type, false).then((response)=>{
+					if (dependency_obj.decompress){
+						// If the path happens to also come with a tarball (like .tar.gz) downloaded before decompression, remove that too
+						removeFile(dependency_obj.decompress.source, 'file', false)
+							.then((response)=>{
+								resolve()
+							}).catch((err)=>{
+								store.logger.error("Error in removing decompressed dependency %o", err)
+								reject(err)
+							})
+					} else {
+						resolve()
+					}
+				}).catch((err)=>{
+					store.logger.error("Error in removing file dependency %o", err)
+					reject(err)
+				})
+                
+            }
+			resolve()
+		} catch (err){
+			store.logger.error("%s dep removal error", err)
+			reject()
+		}
+	})
+}
+export async function createVolumes(names){ // Create a docker volume
 	return new Promise(function(resolve,reject){
 		try { 
-			logger.info(`${names}, creating volumes`)
-			// let networks = await store.docker.listVolumes()
-			// logger.info(`${JSON.stringify(networks, null, 4)}, networks`)
+			store.logger.info(`${names}, creating volumes`)
 			let promises = []
 			names.forEach((name)=>{ 
 				promises.push(store.docker.createVolume({Name: name, CheckDuplicate: true }))
@@ -54,12 +92,44 @@ export async function createVolumes(names){
 			Promise.allSettled(promises).then((response)=>{
 				resolve(response)
 			}).catch((err)=>{ 
-				// throw err
-				logger.error("Error in creating volume, %o", err)
+				store.logger.error("Error in creating volume, %o", err)
 				reject(err)
 			}) 
 		} catch(err){
-			logger.error(`${err}, error in creating volume(s)`)
+			store.logger.error(`${err}, error in creating volume(s)`)
+			reject(err)
+		}
+	}) 
+}
+export async function checkVolumeExists(name){
+		// try { 
+		let volume = await store.docker.getVolume(name)
+		let inspected = await volume.inspect()
+		return ( inspected ? true : false)
+}
+
+export async function removeVolume(name){
+	return new Promise(function(resolve,reject){
+		try { 
+			logger.info(`${name}, removing  volumes`);
+			( async ()=>{
+				let volume = await store.docker.getVolume(name)
+				if (volume){
+					volume.remove().then((f)=>{
+						store.logger.info(f)
+						resolve(f)
+					}).catch((Err)=>{
+						store.logger.error("Error in removing volume %o", Err)
+						reject(Err)
+					})
+				} else {
+					reject()
+				}
+			})().catch((Err)=>{
+				reject(Err)
+			});
+		} catch(err){
+			logger.error(`${err}, error in removing volume(s)`)
 			reject(err)
 		}
 	})
@@ -127,7 +197,7 @@ export var install_images_offline = function(obj){
 		})
 	})
 }
-
+ 
 export var loadImage = function(obj){
   return new Promise(function(resolve,reject){
     store.docker.loadImage(
@@ -147,6 +217,7 @@ export var loadImage = function(obj){
 
 export var pullImage  = function(name){
 	return new Promise(function(resolve,reject){
+	console.log(name,"<<<< name pull")
     store.docker.pull(name)
       .then((stream, error)=>{
         if(error){

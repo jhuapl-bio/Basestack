@@ -10,20 +10,21 @@
    const { combine, timestamp, label, printf } = format;
    import path  from "path"
   //  const { store }  = require("../../config/store/index.js")
+  // Create a custom format for the log generation
    const myFormat = printf(({ level, message, label, timestamp }) => {
      try{
        if (message.constructor === Object || message.constructor === Array    ) {
-         message = JSON.stringify(message, null, 4)      
+         message = JSON.stringify(message, null, 4)      // Send the logs to a string in JSON styling 
        }
        
      } catch(err){
        console.log(err)
      }
-     return `${timestamp} [${level}]: ${message}`;
+     return `${timestamp} [${level}]: ${message}`; // Export the time, level (like verbose, info, err), and main msg
    });
    
    export function logger(errorFile, logFile){ 
-    let logger = createLogger({
+    let logger = createLogger({ // Make the logger objct info, and set up custom formatting 
       level: 'info',
       format: combine(
         label({ label: 'server log' }),
@@ -31,7 +32,7 @@
         format.json(),
         format.splat(),
         format.prettyPrint(),
-        myFormat
+        myFormat // <---- custom format function for stdout/stderr
       ),
       exitOnError: false,
       prettyPrint: true, 
@@ -40,6 +41,7 @@
         //
         // - Write to all logs with level `info` and below to `combined.log` 
         // - Write all logs error (and below) to `error.log`.
+        // - Write max size in MB as 2 MB
         //
         new transports.File({ filename: errorFile, maxsize: 2000000,  maxFiles: 1, level: 'error', tailable:true, options: { flags: 'a' } }),
         new transports.File({ filename: logFile, maxsize: 2000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
@@ -57,7 +59,8 @@
    }
    
    export function dockerlogger(dockerLogFile){
-     return createLogger({
+     // CURRENTLY NOT IN USE
+     return createLogger({ // All docker containers can be piped so that stdout/stderr goes to another file
       level: 'info',
       format: combine(
         label({ label: 'server log' }),
@@ -70,6 +73,7 @@
         //
         // - Write to all logs with level `info` and below to `combined.log` 
         // - Write all logs error (and below) to `error.log`.
+        // - Max size is 1MB
         //
         new transports.File({ filename: dockerLogFile, maxsize: 1000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
       ]
@@ -89,6 +93,7 @@
          //
          // - Write to all logs with level `info` and below to `combined.log` 
          // - Write all logs error (and below) to `error.log`.
+         // - Max size is 1MB
          //
          new transports.File({ filename: path.join(folderPath, `${name}.log`), maxsize: 1000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
        ]
@@ -97,18 +102,18 @@
    }
    
    const formatBuffer = function(data){
+      // Remove an unncessary chars for parsing purposes 
        return data.toString().replace(/\u?([\0\1])(\w{1})?/g, '' )
    }
    
-   
-   export const spawnLog =  function( stream, loggingObject ){
+   // Make a log from a process directly spawned on the system 
+   export const spawnLog =  function( stream, loggingObject ){ 
      let logCapture = {
        info: ["Initiating logging object...."]
      }
      stream.on("data", data => {
        let msg = `stdout: ${data}`
        msg = formatBuffer(msg)
-       console.log(msg);
        logCapture.info.push(msg)
        if (loggingObject){
          loggingObject.info(msg)
@@ -119,7 +124,6 @@
      stream.on('error', (error) => {
        let msg = `error: ${error.message}`
        msg = formatBuffer(msg)
-       console.log(msg);
        logCapture.info.push(msg)
        if (loggingObject){
          loggingObject.error(msg) 
@@ -130,7 +134,6 @@
        let msg = `child process exited with code ${code}`
        msg = formatBuffer(msg)
        logCapture.info.push(msg)
-       console.log(msg);
        if (loggingObject){
          loggingObject.info(msg)
        }

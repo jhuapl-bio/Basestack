@@ -16,7 +16,7 @@ const { getFiles, readFile,  writeFile, writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 const { spawn } = require("child_process")
 const axios = require("axios")
-const YAML = require("yaml") 
+const YAML = require("js-yaml") 
 const { parseConfigVariables } = require("../../../shared/definitions.js")
 
 export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathVersion){
@@ -26,7 +26,7 @@ export async function validatePrimerDir(fullpath, item, primerNameDir, fullpathV
 	    	if (err2){
 	    		console.error(err2)
 	    		reject()
-	    	} else{
+	    	} else{ 
 	    		if (!stats.isFile()){
 	    			(async ()=>{
 						let validVersion = await validatePrimerVersions(fullpath, primerNameDir,fullpathVersion)
@@ -174,23 +174,23 @@ export async function fetch_videos_meta(){
 		const key = keys[i]
 		const sections = meta[key].sections
 		for(let j = 0; j < sections.length; j++){
-			const section =  sections[j];
+			const section =  sections[j];  
 			meta[key].sections[j].fullpath = videoAddress +"/"+section.video
-			if (section.script){
+			if (section.script){ 
 				meta[key].sections[j].script =  resourceAddress + "/" +section.script
-			} 
-			if (section.pptx){
+			}  
+			if (section.pptx){ 
 				meta[key].sections[j].pptx = resourceAddress + "/" +section.pptx
-			} 
+			}   
 			if (section.pdf){
 				meta[key].sections[j].pdf = resourceAddress + "/" +section.pdf	
 			}
 		}
 	} 
-		
+		 
 	return meta
 	
-}
+} 
 
 export function save_remote_module(config){
 	try{
@@ -206,56 +206,19 @@ export function save_remote_module(config){
 		config.remote = true
 		config.local = false
 		config.custom = false
-		// config.loaded = true
 		let parsed_item = parseConfigVariables(JSON.stringify(config), store.system)
 		let modl = create_module(parsed_item)
 		modl.version = config.version
 		modl.remote = config.remote 
 		modl.local = config.local
 		modl.custom = config.custom
-		store.catalog[config.name].modules.push(modl)
+		store.library.catalog[config.name].modules.push(modl)
 	} catch(err){
-		store.logger.error(err)
+		store.logger.error(err) 
 		return
 	}
 }
 
-export function set_stored(key, items){
-	try{
-		let remotes = {}
-		if (items && Array.isArray(items)){
-			
-			items.forEach((item)=>{
-				if (!store.remotes[item.name]){
-					store.remotes[item.name] = []
-				} 
-				
-				
-				let g = item
-				Object.defineProperty(g, 'loaded', {
-					enumerable: true,
-					get: ()=>{ 
-						let idx  = store.config.modules.findIndex((data)=>{
-							return data.name == item.name   && data.version == item.version
-						}) 
-						if (idx > -1){
-							return true
-						} else {
-							return false
-						}
-
-
-					}
-				})
-				store.remotes[item.name].push(g)
-				
-			})
-		} 
-	} catch(err){
-		store.logger.error(err)
-		return
-	}
-}
 export async function fetch_external_config_target(key,catalog){
 	try{
 		let url = `https://basestack-support.herokuapp.com/db/get/${key}/${catalog}`
@@ -278,43 +241,40 @@ export async function fetch_external_config_target(key,catalog){
 		throw err
 	} 
 }
-export async function fetch_external_config(key){
-	try{
+export  function fetch_external_config(key){
+	return new Promise((resolve,reject)=>{
 		let url = `https://basestack-support.herokuapp.com/db/get/${key}`
 		logger.info("%s %s", "Getting url: ", url)
-		let json =  await axios.get(`${url}`)
-		logger.info("returned json: %s", url)
-		try{
+		axios.get(`${url}`).then((json)=>{
+			logger.info("returned json: %s", url)
 			json.data.data.map((d)=>{
-				d.remote = true
+				d.remote = true 
 				d.local = false
 			})
-			return json.data.data
-		} catch(err){
-			logger.error(`${err} error in fetching external url____________`)
-			throw err
-		}
+			resolve(json.data.data)
+		}).catch((err)=>{
+			logger.error("Error in fetching remote url modules %s", err)
+			reject(err)
+		})
 		
-	} catch(err){
-		logger.error(`${err} error in fetching external url____________`)
-		throw err
-	} 
+	}) 
+	
 }
 
 
 export async function getExternalSource(url){
 	try{
 		logger.info("%s %s", "Getting url: ", url)
-		let json =  await axios.get(`${url}`)
+		let json =  await axios.get(`${url}`) 
 		logger.info("%s %o", "returned json: ", json.data)
-		return json
-	} catch(err){
+		return json 
+	} catch(err){ 
 		logger.error(`${err} error in fetching external url`)
 		throw err
 	} 
-}
+} 
   
- 
+  
 export async function getRemoteConfigurations(url){
 	var clone = require("git-clone/promise");
 	try{
@@ -324,30 +284,43 @@ export async function getRemoteConfigurations(url){
 		return json
 	} catch(err){
 		logger.error(`${err} error in fetching external url`)
-		throw err 
-	} 
+		throw err  
+	}  
 }
  
 
 
 
 export async function fetch_external_dockers(key){
-	let url = `https://registry.hub.docker.com/v2/repositories/${key}/tags/latest`
+	let url = `https://registry.hub.docker.com/v2/repositories/${key}/tags`
 	try{
+		key = key.split(":")[0]
 		if (! store.images[key] ){
 			store.images[key] = {
 				fetching_available_images: {},
 				latest_digest: {},
 			}
-		}
+		} 
 		const element = store.images[key]
 		store.images[key].fetching_available_images.errors = null
 		store.images[key].fetching_available_images.status = true
 		let json =  await axios.get(url)
-		let latest = null;
-		console.log(json,"<")
-		latest = json.data
-		store.images[key].latest_digest = latest.images[0].digest
+		let latest = null; 
+		let full_tags = json.data
+		let full_names = []
+		// latest = json.data
+		if (full_tags && Array.isArray(full_tags.results))
+		{
+			full_tags.results.forEach((f)=>{
+				if (f.name == "latest"){
+					store.images[key].latest_digest = f.images[0].digest
+				}
+				full_names.push(f.name)
+
+			})
+		}
+		store.images[key].all_tags = full_names
+			
 		return store.images[key]
 	} catch(err){
 		logger.error(`${err} error in fetching external dockers ${key}`)
@@ -398,7 +371,7 @@ async function check_image_promise(image){
 				status: false
 			})
 		}
-
+ 
 	})
 
 }
@@ -411,12 +384,12 @@ export async function check_container(container_name){
 			let complete = false
 			let success = false
 			let running = false
-
 			let returnable = {
 				complete: false,
 				exists: false,
-				running: false, 
+				running: false,  
 				msg: null,
+				container: {},
 				success:false
 			}
 			await container.inspect((err,inspection)=>{ 
@@ -429,12 +402,11 @@ export async function check_container(container_name){
 						returnable.complete= true
 					} else if (!inspection){
 						returnable.complete= true
+						returnable.container = inspection.Config
 						returnable.running = false
 					} else if (inspection.State.Status == 'exited') {
 						returnable.exists = true
-						// if (container_name == 'mytax_kraken2_report'){
-						// 	console.log(inspection.State)
-						// }
+						returnable.container = inspection.Config
 						if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 127 ) || inspection.State.ExitCode == 1 ){
 							// logger.info(`${container_name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
 							returnable.err  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}. Check Logs!`
@@ -453,19 +425,21 @@ export async function check_container(container_name){
 						returnable.exists = true
 						returnable.running = true
 						returnable.complete = false
+						returnable.container = inspection.Config
 					} 
 				} catch(err2){
 					// logger.error("%o error in inspecting container on end", err2)
 				} finally{
+					if (returnable.container && returnable.container.Env && returnable.container.Env.length > 0){
+						let newEnv = {}
+						returnable.container.Env.forEach((f)=>{
+							const split = f.split("=")
+							newEnv[split[0]] = split[1]
+						})
+						returnable.container.env = newEnv
+					}
 					resolve(returnable)
 				}
-
-
-				// if (err){
-				// 	resolve({container: null, running: false, exists: false})
-				// } else if (info) { 
-				// 	resolve({container: container, running: info.State.Running, exists: true })
-				// } 
 			})
 		})().catch((error)=>{ 
 			logger.error("%s error checking if docker exists", error)  
@@ -483,15 +457,15 @@ export async function listImages(dind){
 			store.dind.listImages().then((images)=>{
 				console.log("images") 
 				resolve(images)
-
+ 
 			}) 
 		} else {
 			store.docker.listImages().then((images)=>{
 				console.log("images")
 				resolve(images)
 
-			})
-		}
+			}) 
+		}  
 	})
 }
 
@@ -504,13 +478,13 @@ export async function check_image(image){
 				let tags=[];
 				let digests = getImage.RepoDigests.map((d)=>{
 					return d.replace(image+"@", "")
-				})
+				}) 
 				for (const tag of getImage.RepoTags) {
-					if (tag.includes('latest')){
+					// if (tag.includes('latest')){
 						if(digests){
 							installed = digests[0]
 						}
-					}
+					// }
 				}
 				resolve({
 					version: installed
@@ -572,9 +546,9 @@ export async function fetch_histories(){
 	} 
 	return response
 }
-
-
-
+ 
+ 
+ 
 
 export async function fetch_resources(){
 	try{
@@ -584,7 +558,7 @@ export async function fetch_resources(){
 		let system = await si.system()
 		let os  = await si.osInfo()
 		return {cpu: cpu, mem: mem, disk: disk, system: system, os: os}
-	} catch(err){
+	} catch(err){ 
 		logger.error(`${err} <-- error in fetching resources`)
 		throw err
 	}
@@ -594,12 +568,14 @@ export async function fetch_docker_stats(){
 		let docker_info  = await store.docker.info()
 		let docker = {
 			KernelVersion: docker_info.KernelVersion,  
+			Socket: store.docker.modem.socketPath,
 			Driver: docker_info.Driver,
 			ContainersRunning: docker_info.ContainersRunning,
 			ServerVersion: docker_info.ServerVersion,
 			DockerRootDir: docker_info.DockerRootDir,
 			MemTotal: docker_info.MemTotal
 		}
+		
 		return docker
 	} catch(err){
 		logger.error(`${err} <-- error in fetching docker version`)

@@ -1,0 +1,377 @@
+- name: artic
+  title: "Artic"
+  icon: "mountain"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  url: https://github.com/artic-network/fieldbioinformatics
+  tags: 
+    - "consensus"
+    - "SARS-CoV-2"
+    - "nanopolish"
+    - "medaka"
+  description: "Consensus Building and Analysis of SARS-CoV-2"
+  shared:
+    variables:
+      sequencing_summary:
+        label: "Sequencing Summary File"
+        hint: Generated at the end of basecalling in the directory
+        warning: "Must be present in root level of directory"
+        option: 0
+        options:
+          - element: null
+            hidden: false
+            name: "sequencing_summary file default"
+            source: "/opt/data/sequencing*summ*" 
+            optional: true
+            target: "/opt/data/sequencing*summ*" 
+          - element: "file"
+            name: "Custom Sequencing Summary File"
+            bind_parent_dir: true
+            source: null
+            optional: false
+            target: "/opt/sequencing_summary/sequencing_summary.txt"
+            bind: "directory"  
+        
+        class: "wb-100  p-3 mb-1"
+        source: null
+      fastq_dir:
+        label: "FASTQ Dir"
+        element: "dir"
+        hint: "Directory containing your fastq files"
+        warning: All fastq files will be included, make sure demux has taken place before inputting
+        source: "%{variables.dir.source}/fastq_pass" 
+        target: "/opt/data/fastq_pass" 
+        optional: "<<notExists(%{variables.dir.source})>>"
+        bind: "self"
+        define:
+          out_prefix_nanopolish: consensus_nanopolish
+          out_prefix_medaka: consensus_medaka
+          out_prefix: "consensus"
+      fast5_dir:
+        label: "Fast5 directory"
+        element: "dir"
+        optional: "<<notExists(%{variables.dir.source})>>"
+        hint: "Select the fast5 pass directory from your run"
+        class: "wb-50 p-3 mb-1"
+        source: "%{variables.dir.source}/fast5_pass" 
+        target: "/opt/fast5/fast5_pass" 
+        bind: "self"
+      filter_min:
+        label: "Filter Min Length"
+        element: number
+        optional: true
+        class: "wb-50 p-3 mb-1"
+        source: null 
+        target: null
+        append:
+          command: " --min-length $filter_min"
+          placement: 2
+          services: 
+            - 1
+      filter_max:
+        label: "Filter Max Length"
+        element: number
+        optional: true
+        class: "wb-50 p-3 mb-1"
+        source: null 
+        target: null
+        append:
+          command: " --min-length $filter_max"
+          placement: 2
+          services: 
+            - 1
+      normalise:
+        label: "Normalise coverage"
+        element: number
+        warning: " Normalise down to moderate coverage to save runtime"
+        class: "wb-50 p-3 mb-1"
+        source: 1000000 
+        target: null
+      primers:
+        label: "Primer Configuration"
+        element: null
+        hint: "Default Primer Scheme to use for nanopolish"
+        option: 0
+        options:
+          - "nCoV-2019/3"
+          - "nCoV-2019/4"
+          - "nCoV-2019/2"
+          - "nCoV-2019/1"
+        define:
+          organism: "<<directory(%{variables.primers.source})>>"
+          scheme_version: "<<basename(%{variables.primers.source})>>"
+      barcoding:
+          label: "Barcode Configuration"
+          element: null
+          hint: "Which barcoding configuration you used. If no demux took place, select any"
+          link: run_config
+          option: 0
+          class: "wb-50 p-3 mb-1"
+          options:
+            - "barcode_arrs_nb96.cfg"
+            - "barcode_arrs_16s.cfg"
+            - "barcode_arrs_dual_nb24_pcr96.cfg"
+            - "barcode_arrs_lwb.cfg"
+            - "barcode_arrs_nb12.cfg"
+            - "barcode_arrs_nb24.cfg"
+            - "barcode_arrs_pcr12.cfg"
+            - "barcode_arrs_pcr96.cfg"
+            - "barcode_arrs_rab.cfg"
+            - "barcode_arrs_rbk096.cfg"
+            - "barcode_arrs_rbk4.cfg"
+            - "barcode_arrs_rbk.cfg"
+            - "barcode_arrs_rlb.cfg"
+            - "barcode_arrs_vmk2.cfg"
+            - "barcode_arrs_vmk.cfg"
+            - "configuration.cfg"
+            - "configuration_dual.cfg"
+      dir:
+        label: "Input Long-Reads Full Run Directory"
+        hint: "Directory that contains your fastq_pass, fast5_pass, and sequencing summary.txt file. Output directory from a Oxford Nanopore run"
+        element: "dir"
+        optional: false
+        bind_parent_dir: false
+        source: null
+        target: "/opt/data"
+        bind: "self"
+        class: "wb-50  p-3 mb-1"
+        define:
+          consensus_dir: /opt/data/consensus
+          barcode_dir: /opt/data/consensus/barcodes
+    services:
+      demultiplex:
+        name: "demultiplex"
+        label: "Demultiplex Barcodes"
+        image: "jhuaplbio/basestack_consensus"
+        workingdir: "/opt/data"
+        orchestrated: false #orchestrated means it r
+        init: false
+        force_restart: false
+        force_init: false
+        command: ["bash","-c", 
+          "source $(conda info --base)/etc/profile.d/conda.sh && 
+          conda activate jhu-ncov && mkdir -p $barcode_dir && 
+          cd $barcode_dir &&
+          guppy_barcoder 
+            --require_barcodes_both_ends 
+            -i $fastq_dir 
+            -s $barcode_dir
+            --recursive 
+            --arrangements_files $barcoding" ]
+      guppyplex:
+        name: "guppyplex"
+        label: "GuppyPlex"
+        image: "jhuaplbio/basestack_consensus"
+        workingdir: "/opt/data"
+        orchestrated: false #orchestrated means it r
+        init: false
+        force_restart: false
+        force_init: false
+        command: ["bash","-c", 
+          "echo $barcode_dir; source $(conda info --base)/etc/profile.d/conda.sh && 
+          conda activate artic-ncov2019 && mkdir -p $barcode_dir && 
+          cd $barcode_dir  &&
+          find ${barcode_dir}/* -type d -name \"*barcode*\"  | while read line; do 
+            echo $line; 
+            artic guppyplex 
+            --skip-quality-check 
+            --directory ${line} --prefix $out_prefix;  
+          done " ]
+              
+  procedures:
+    - name: nanopolish #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Nanopolish"
+      icon: "mountain"
+      module: True
+      init: false 
+      dependencies:
+        - target: "jhuaplbio/basestack_consensus"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "consensus"
+        - "nanopolish"
+        - "artic primers"
+        - "SARS-CoV-2"
+     
+      variables:
+        dir: 
+          target: "%{shared.variables.dir}"
+          shared: true
+        sequencing_summary: 
+          target: "%{shared.variables.sequencing_summary}"
+          shared: true
+        primers: 
+          target: "%{shared.variables.primers}"
+          shared: true
+        normalise: 
+          target: "%{shared.variables.normalise}"
+          shared: true
+        fast5_dir: 
+          target: "%{shared.variables.fast5_dir}"
+          shared: true
+        barcoding: 
+          target: "%{shared.variables.barcoding}"
+          shared: true
+        fastq_dir:
+          target: "%{shared.variables.fastq_dir}"
+          shared: true 
+          hidden: "<<notExists(%{variables.dir.source})>>"
+        bamfile:
+          label: "BAM file"
+          element: "files"
+          output: true
+          openSelf: False
+          bind_parent_dir: false
+          source: "%{variables.dir.source}/consensus/consensus_nanopolish"
+          type: files
+          pattern: "barcode.*consensus_nanopolish.sorted.bam$"
+        vcfs:
+          label: "Variants"
+          output: true
+          openSelf: false
+          bind_parent_dir: false
+          source: "%{variables.dir.source}/consensus/consensus_nanopolish"
+          type: files
+          pattern: "barcode.*consensus_nanopolish*.merged.vcf$"
+          # total:  
+            # # target: "<<length(${variables.manifest.source})>>"
+            # target: "<<length(&{variables.manifest.source})>>"
+        consensuses:
+          label: "Consensus"
+          element: "files"
+          output: true
+          openSelf: False
+          bind_parent_dir: false
+          source: "%{variables.dir.source}/consensus/consensus_nanopolish"
+          type: files
+          pattern: "barcode.*consensus_nanopolish.consensus.fasta$"
+      services:
+        - target: demultiplex
+          shared: True
+        - target: guppyplex
+          shared: True
+        - name: nanopolish
+          label: "Nanopolish"
+          image: "jhuaplbio/basestack_consensus"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", 
+            "source $(conda info --base)/etc/profile.d/conda.sh && 
+            conda activate artic-ncov2019 && mkdir -p ${consensus_dir}/${out_prefix_nanopolish} && 
+            cd ${consensus_dir}/${out_prefix_nanopolish} 
+            && find ${barcode_dir}/*  -type f -maxdepth 0  -name \"*.fastq\" -o -name \"*.fastq\"  | while read line; do 
+              
+              echo $line; 
+              barcode=$( echo $line | sed 's/\\(.*\\)_\\(barcode.*\\)\\.fastq/\\2/' )
+
+              artic minion 
+              --normalise $normalise
+              --read-file ${line}
+              --scheme-directory /opt/basestack_consensus/primer_schemes
+              --fast5-directory ${fast5_dir}
+              --sequencing-summary ${sequencing_summary}
+              --scheme-version $scheme_version
+              $organism ${barcode}_$out_prefix_nanopolish ;
+            done " ]
+    - name: medaka #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Medaka"
+      icon: "mountain"
+      module: True
+      init: false 
+      dependencies:
+        - target: "jhuaplbio/basestack_consensus"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "consensus"
+        - "medaka"
+        - "artic primers"
+        - "SARS-CoV-2"
+      variables:
+        dir: 
+          target: "%{shared.variables.dir}"
+          shared: true
+        primers: 
+          target: "%{shared.variables.primers}"
+          shared: true
+        normalise: 
+          target: "%{shared.variables.normalise}"
+          shared: true
+        barcoding: 
+          target: "%{shared.variables.barcoding}"
+          shared: true
+        fastq_dir:
+          target: "%{shared.variables.fastq_dir}"
+          shared: true 
+          hidden: "<<notExists(%{variables.dir.source})>>"
+        model:
+          label: "Medaka Model Configuration"
+          element: null
+          hint: "Medaka models to choose from"
+          option: 0
+          class: "wb-50 p-3 mb-1"
+          options:
+            - "r941_min_high_g360"
+            - "r941_min_fast_g303"
+        bamfile:
+          label: "BAM file"
+          element: "files"
+          output: true
+          openSelf: False
+          bind_parent_dir: false
+          source: "%{variables.dir.source}/consensus/consensus_medaka"
+          type: files
+          pattern: "barcode.*consensus_medaka.sorted.bam$"
+        vcfs:
+          label: "Variants"
+          output: true
+          openSelf: false
+          bind_parent_dir: false
+          source: "%{variables.dir.source}/consensus/consensus_medaka"
+          type: files
+          pattern: "barcode.*consensus_medaka*.merged.vcf$"
+        consensuses:
+          label: "Consensus"
+          element: "files"
+          output: true
+          openSelf: False
+          bind_parent_dir: false
+          source: "%{variables.dir.source}/consensus/consensus_medaka"
+          type: files
+          pattern: "barcode.*consensus_medaka.consensus.fasta$"
+      services:
+        - target: demultiplex
+          shared: True
+        - target: guppyplex
+          shared: True
+        - name: medaka
+          label: "Medaka"
+          image: "jhuaplbio/basestack_consensus"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", 
+            "source $(conda info --base)/etc/profile.d/conda.sh && 
+            conda activate artic-ncov2019 && mkdir -p ${consensus_dir}/${out_prefix_medaka} && 
+            cd ${consensus_dir}/${out_prefix_medaka}  
+            && find ${barcode_dir}/*  -type f -maxdepth 0  -name \"*.fastq\" -o -name \"*.fastq\"  | while read line; do 
+              echo $line; 
+              barcode=$( echo $line | sed 's/\\(.*\\)_\\(barcode.*\\)\\.fastq/\\2/' );
+              
+              artic minion --medaka 
+              --medaka-model $model 
+              --normalise $normalise
+              --read-file ${line}
+              --scheme-directory /opt/basestack_consensus/primer_schemes
+              --scheme-version $scheme_version
+              $organism ${barcode}_$out_prefix_medaka;
+            done " ]
+            
+      

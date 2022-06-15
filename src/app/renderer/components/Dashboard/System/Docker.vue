@@ -6,8 +6,13 @@
         <v-alert type="success" shaped icon="$check-circle"
           text v-else>Docker is running 
         </v-alert>
+        <v-btn
+          icon-and-text v-if="!docker"
+          color="primary"
+          @click="installDocker()"
+        >Install Docker
+        </v-btn>
         <v-list-item
-         
           v-for="entry in fields_docker"
           :key="entry.key"
           class="entry"
@@ -18,6 +23,22 @@
               <v-list-item-subtitle v-else v-text="docker[entry.key]  " ></v-list-item-subtitle>
             </v-list-item-content>
         </v-list-item>
+        <v-text-field
+          label="Docker Socket" 
+          v-model="dockerSocket" dense
+          persistent-hint solo
+          hint="Adjust docker socket location, used in Linux Rootless Deployment"
+        >
+          <template v-slot:append-outer>
+            <v-tooltip left  >
+              <template v-slot:activator="{ on }">
+                <v-icon  v-on="on"  class="configure" small @click="updateSocket()">$upload
+                </v-icon>
+              </template>
+              Submit new socket designation
+            </v-tooltip>
+          </template>
+        </v-text-field>
       </v-list>
       
     
@@ -25,7 +46,7 @@
 <script>
   import FileService from '@/services/File-service.js'
   export default {
-    props: ['serverStatus'],
+    props: ['serverStatus', "resources"],
     beforeDestroy: function(){
       if (this.intervalDocker){
         try{
@@ -59,6 +80,10 @@
             label: 'Data'
           },
           {
+            key: 'Socket',
+            label: 'Socket'
+          },
+          {
             key: 'MemTotal',
             label: 'MemAvailable (GB)'
           }
@@ -84,7 +109,7 @@
 
         ],
         port: null,
-        dockerSocket: '',
+        dockerSocket: null,
         advanced: true,
         docker : {},
         checkingDocker: false,
@@ -93,6 +118,7 @@
     mounted(){
       const $this = this;
       this.getDockerStats()
+      console.log(this.resources)
       this.intervalDocker = setInterval(()=>{
         if (!$this.checkingDocker){
           $this.checkingDocker = true
@@ -100,12 +126,43 @@
         }
       }, 3000)
     },
+    watch: {
+    },
     methods: {
+      async installDocker(){
+        console.log("install docker")
+        this.$electron.ipcRenderer.send("downloadDocker", { platform: this.resources.os.platform, arch: this.resources.os.arch } )
+        this.$electron.ipcRenderer.on('dockerDownloadStatus', (evt, message)=>{
+          this.$swal.fire({
+            position: 'center',
+            icon: (message.type ? message.type : 'info'),
+            showConfirmButton:true,
+            title:  message.message,
+            text:  message.info
+          })
+
+        })
+
+      },
+      async updateSocket(){
+        FileService.updateSocket(this.dockerSocket).catch((err)=>{
+          console.error(err)
+          this.$swal.fire({
+            position: 'center',
+            icon: 'error',
+            showConfirmButton:true,
+            title:  err.response.data.message
+          })
+        })
+      },
       async getDockerStats(){
         const $this = this
         FileService.getDockerStats().then((status)=>{
           $this.docker = status.data.data
           $this.checkingDocker= false
+          // if (!this.dockerSocket && response.data.data.Socket){
+          //   $this.dockerSocket = response.data.data.Socket
+          // }
           return 
         }).catch((err)=>{
           $this.checkingDocker = false

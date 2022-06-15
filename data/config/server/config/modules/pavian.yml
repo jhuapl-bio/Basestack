@@ -2,8 +2,11 @@
   title: "Pavian"
   icon: "tree"
   basestack_released: 2.0
+  schema_version: 1
   version: 1.0
+  description: "🌈 Interactive analysis of metagenomics data"
   module: True
+  url: https://github.com/fbreitwieser/pavian
   tags: 
     - "sankey"
     - "visualization"
@@ -28,9 +31,12 @@
           column: 12
           element: "render"
           port: true
-          bind:
-            from: "80"
-            to: "8087"
+          output: false
+          source: 8087
+          target: 80
+          portbind:
+            from: "%{variables.port.source}"
+            to: "%{variables.port.target}"
       tooltip: "View Kraken-style Classification Reports"
       dependencies:
         - target: "florianbw/pavian"
@@ -43,12 +49,12 @@
           continuous: true
           orchestrated: false #orchestrated means it r
           init: true
-          command: [ 'bash', '-c', 'Rscript -e  "host <- \"0.0.0.0\"; pavian::runApp(port=80,host=host,maxUploadSize=900*1024^2)" ' ]
+          command: [ 'bash', '-c', 'Rscript -e  "host <- \"0.0.0.0\"; pavian::runApp(port=${port},host=host,maxUploadSize=900*1024^2)" ' ]
           hideStatus: true
           label: "Pavian Default"
           force_restart: true
-          ports:  
-            - 8087:80
+          # ports:  
+          #   - 8087:80
           
         
         

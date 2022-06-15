@@ -5,13 +5,14 @@ import path from "path"
 const { Module } = require("../orchestrators/module.js")
 const { Catalog } = require("../orchestrators/catalog.js")
 const { Procedure } = require("../orchestrators/procedure.js")
-const { Service } = require("../orchestrators/service.js")
+const { Service } = require("../orchestrators/service.js") 
 const { createNetworks, createVolumes } = require("./post-installation.js")
 const Docker = require("dockerode")
-const { getFolders, readFile } = require("./IO.js")
+const {  readFile } = require("./IO.js")  
  
 export async function docker_init(params){
 	let config = null 
+	 
 	const meta  = store.dockerConfig
 	let dockerObj;
 	if (params){
@@ -26,20 +27,17 @@ export async function docker_init(params){
 
 export async function init_dind(){  
 	try{  
-		logger.info("Initiating dind networks and volumes....")    
+		store.logger.info("Initiating dind networks and volumes....")    
 		let responseNetworks = await createNetworks([
 			'basestack-network'   
 		]) 
 		let responseVolumes = await createVolumes([  
-			"basestack-docker",
-			"basestack-docker2",
-			"basestack-data",
 			"basestack-docker-certs-ca", 
 			"basestack-docker-certs-client" 
 		])
 		return   
 	} catch (err){
-		logger.error(`${err}, error in init procedure`)
+		store.logger.error(`${err}, error in init procedure`)
 		throw err
 	} 
 }  
@@ -53,11 +51,7 @@ export function define_service(name, service){
 }
  
 export function define_module(key, module){
-	// let module_obj = new Module(
-	// 	key,  
-	// 	module
-	// )
-	// return module_obj
+
 }
 export async function define_procedure(name, procedure){
 	return new Promise(function(resolve,reject){
@@ -70,7 +64,17 @@ export async function define_procedure(name, procedure){
 		}).catch((err)=>{
 			reject(err)
 		})
-	})  
+	})   
+}
+export async function import_configurations(){
+	try{
+		let data = await readFile(store.system.configurationFile)
+		data = JSON.parse(data)
+		return data  
+	} catch (err){
+		store.logger.error("Could not import config file %o ", err) 
+		throw err
+	}
 }
  
 export async function init_base_procedures(){
@@ -102,38 +106,7 @@ export function create_service(key, service){
 	service_obj.setOptions()
 	return service_obj
 }
-export  function create_module(module, key){
-	try{    
-		let modl = new Module(module, module.name, key)
-		modl.initProcedures()
-		if (!store.catalog[module.name]){
-			store.catalog[module.name] = new Catalog(module)
-			Object.defineProperty(store.catalog[module.name], 'tags', {
-				get: ()=>{
-					let allTags = store.catalog[module.name].modules.map((d)=>{ 
-						if (d.config && d.config.tags){
-							return d.config.tags
-						} else {
-							return []
-						}
-					}) 
-					let reducedAllTags = [].concat(...allTags);
-					reducedAllTags = [... new Set(reducedAllTags)]
-					return reducedAllTags
 
-
-				}
-			})
-				 
-
-			// })
-		}
-		return modl
-	} catch(err){
-		logger.error("%s %o", "error in init module", err)  
-		throw err 
-	}  
-}
 export async function create_procedure(procedures_default){
 	try{    
 		let promises = []
@@ -152,33 +125,53 @@ export async function create_procedure(procedures_default){
 	} catch(err){ 
 		logger.error("%s %o", "error in init procedures", err)  
 		throw err 
-	}  
-} 
-export async function init_base_services(){    
-	console.log(store.config.services) 
-		for (let [key, service] of store.config.services.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
-			try{ 
-				console.log(key,"llll")
-			} catch(err){   
-				logger.error("%o error in defining service %s", err, key)
-			}
-		}
-		return 
+	}      
+}    
+export async function init_base_services(){      
+		// for (let [key, service] of store.config.services.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
+		// 	try{   
+		// 	} catch(err){   
+		// 		logger.error("%o error in defining service %s", err, key)
+		// 	}
+		// }
+		// return 
 }
 
 export async function init_base_modules(){ 
 	try{ 
-		logger.info("Initiating status of modules and meta in fetch.........................") 
+		store.logger.info("Initiating status of modules and meta in fetch.........................") 
+		
 		for (let [key, module] of store.config.modules.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
-            let staged_module = []	 
-			let modl = create_module(module, key)
-			store.catalog[module.name].modules.push(modl)
+			store.library.addLocal(module, module.name)
 		}
+
+		  
+		return 
+	} catch(err){
+		store.ogger.error("%s %o", "error in init modules", err)
+		throw err  
+	} 
+}    
+  
+export async function init_modules(){    
+	try{     
+		store.logger.info("Initiating catalog modules .........................",">")
+		for (let [key, module] of Object.entries(store.library.all)) { //Loop through all modules and their respective services. Many services can be a part of modules
+			try{ 
+				if (module.imported){
+					// console.log(key,"<<<<<<<")
+					let latest = store.library.all[key].latest
+					let modl = store.library.create_module(latest)			
+				}		 
+			} catch(err){ 
+				store.logger.error("%s error in creating module %s", err, key)
+			} 
+		}
+		store.logger.info("Done initiating")
 		return 
 	} catch(err){
 		logger.error("%s %o", "error in init modules", err)
 		throw err
 	}
 }
-
 

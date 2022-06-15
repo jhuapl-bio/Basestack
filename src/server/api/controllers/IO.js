@@ -25,7 +25,9 @@ var Client = require('ftp');
 const extract = require('extract-zip')
 const clone = require('git-clone');
 const tar = require("tar")
-
+import glob from "glob"
+const  gunzip = require('gunzip-file');
+const YAML = require("js-yaml")    
 
 export function set(attribute, value, obj, type) {
     var depth_attributes = attribute.split('.');
@@ -72,6 +74,42 @@ export function get(attribute, obj, type) {
 		store.logger.error("Error in get attributes :%j", err)
 		throw err
 	}
+}
+
+export async function writeJSON(file, data){
+	// let exists = await fs.stat(file)
+	// console.log(file, exists)
+	return new Promise((resolve, reject)=>{
+		 fs.stat(file, function(err, exists){
+			 ( async ()=>{
+				if (err){
+					console.log("File Doesn't exist", err)
+					// await writeFile(file, "")
+				}
+				console.log("exists", data )
+				await writeFile(file, JSON.stringify(data,null,4) )
+				resolve()
+				// fs.readFile(obj.file, (err, data) => {
+				// 	if (err){
+				// 	store.logger.error("%s %s %s", "Error in reading file to ammend json: ", obj.file, err)
+				// 	reject(err)
+				// 	}
+				// 	let js = JSON.parse(data.toString())
+				// 	const depthAttribute = obj.attribute
+				// 	js = set(obj.attribute, obj.value, js, obj.type);
+				// 	// resolve()
+				// 	(async function(){
+				// 	await writeFile(obj.file, JSON.stringify(js,null,4))
+				// 	})().then(()=>{
+				// 		resolve(js)
+				// 	})
+				// });
+			 })().catch((err)=>{
+				 reject(err)
+			 })
+				
+		})
+	})
 }
 export async function ammendJSON(obj){
 	return new Promise((resolve, reject)=>{
@@ -177,41 +215,74 @@ export async function readTableFile(filepath, delimeter, header){
 						dataFull.push(data)
 						//perform the operation
 					}
-					catch(err) {
-						reject(err)
+					catch(err) { 
+						reject(err)  
 						//error handler
 					}
 				})
 				.on('end',function(){
-					resolve(dataFull)
+					resolve(dataFull) 
 				})
 				.on("error", function(err){
 					store.logger.error(err)
-				});  
+				});   
 			} else {
 				resolve(dataFull)
 			}
 		})
 	})
 }
-export async function checkExists(path){
+export async function checkExists(location, globSet){
 	return new Promise((resolve, reject)=>{
-		fs.stat(path, function(err, exists){
+		if (!globSet){
+			fs.stat(location, function(err, exists){
+				if (err){
+					resolve(
+						{location: location, exists: false}
+					)
+				}
+				if(exists){
+					// let size = 0 
+					// if (exists.size){
+					// 	size = bytesToSize(exists.size)
+					// 	console.log(size, path)
+					// }
+					resolve(
+						{location: location, exists: true}
+					)
+				} else {
+					resolve({
+						location: null,
+						exists: null
+					})
+				}
+			})
+		} else { 
+			glob(
+			path.basename(location),
+				{ cwd: path.dirname(location) },  // you want to search in parent directory
+				(err, files) => {
+					if (err) {
+						resolve(
+							{location: location, exists: false}
+						)
+					}
+					console.log(path.basename(location), path.dirname(location))
 				
-			if (err){
-				resolve(false)
-			}
-			if(exists){
-				// let size = 0
-				// if (exists.size){
-				// 	size = bytesToSize(exists.size)
-				// 	console.log(size, path)
-				// }
-				resolve(true)
-			} else {
-				resolve(false)
-			}
-		})
+					if (files && files.length) {
+						console.log(files,"<<<<<")
+						resolve(
+							{location: files, exists: true}
+						)
+					} else {
+						resolve(
+							{location: files, exists: false}
+						)
+					}
+				}
+			);
+		}
+		
 	})
 }
 
@@ -232,10 +303,10 @@ export async function removeFile(filepath, type, silentExists){
 			    } else {
 			    	rimraf(path.join(filepath), (err) => {
 					  if (err) {
-					  	store.logger.error("%s %s", "error in filepath", err)
+					  	store.logger.error("%s %s", "error in folderpath", err)
 					    reject(err)
 					  }
-					  resolve("Removed file: " + filepath)
+					  resolve("Removed folder: " + filepath)
 				    })
 			    }
 		    } else {
@@ -361,18 +432,22 @@ export async function downloadSource(url, target, params)  {
 					let fnct = https
 					if (url.startsWith("http:")){
 						fnct  = http
-					} 
+					}  
 					let request = fnct.get(url).on("response", (response)=>{
 						var len = parseInt(response.headers['content-length'], 10);
 						response.on('data', function(chunk) {
-							downloaded += chunk.length;
-							if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
-								let percent= (100 * downloaded/len ).toFixed(0)
-								store.logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
-					 			seen.start =  .02 + downloaded/len   
-								seen.end =  seen.end + .02  
-								writer.status = percent  
-							} 
+							if(chunk){
+								downloaded += chunk.length;
+								if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
+									let percent= (100 * downloaded/len ).toFixed(0)
+									store.logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
+									 seen.start =  .02 + downloaded/len   
+									seen.end =  seen.end + .02  
+									writer.status = percent
+								} 
+							}
+
+							
 							// reset timeout 
 							clearTimeout( timeoutId );  
 							timeoutId = setTimeout( fn, timeout );  
@@ -436,13 +511,14 @@ export async function decompress_file(file, outpath){
 					reject(err)
 				} else {
 					store.logger.info("Decompressed .tgz file: %s ", file)
-					resolve()
+					resolve()  
 				} 
 			});
-		} else if (ext == '.zip' || file.endsWith(".zip") ){
+		} else if (ext == 'zip' || ext == '.zip' || file.endsWith(".zip") ){
 			store.logger.info("Decompress file .zip: %s to: %s", file, outpath)
 			extract(file, { dir: outpath }, (err, stream)=>{
 				if(err) {
+					store.logger.error(err)
 					reject(err)
 				} else { 
 					store.logger.info("Decompressed .zip file: %s ", file)
@@ -453,8 +529,20 @@ export async function decompress_file(file, outpath){
 				reject(err) 
 
 			})
+			
+		} else if (ext == '.gzip' || file.endsWith(".gz") ) {
+			store.logger.info("Decompress file .gz: %s to: %s", file, outpath)
+			gunzip(file, path.join( outpath, path.parse(file).name) , (err, stream) => {
+				if(err) {
+					store.logger.error(err)
+					reject(err)
+				} else { 
+					store.logger.info("Decompressed .gz file: %s ", file)
+					resolve() 
+				} 
+			})
 		} else {
-			store.logger.error("Not proper format: tgz or .tar.gz")
+			store.logger.error("Not proper format: tgz or .tar.gz ")
 			// reject()
 			reject("Not proper format: tgz or .tar.gz")
 		}

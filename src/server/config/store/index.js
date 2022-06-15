@@ -32,7 +32,7 @@ if (process.getuid){
 	uid  = process.getuid() 
 }  
 if(process.getgid){
-	gid = process.getgid()    
+	gid = process.getgid()     
 }  
 const dockerStagePath = path.join(resourcePath, 'installation');
 export var store = { 
@@ -55,6 +55,9 @@ export var store = {
 		uid: uid,
 		OS: OS	
 	},
+	configurations: {
+
+	},
 	partition: "=".repeat(50),
 	modules: {},	
 	remotes: {},
@@ -74,6 +77,7 @@ export var store = {
 		services: [],
 		modules: [],
 		catalog: [],
+		imported: []
 	},
 	default: [],
 	logger: null
