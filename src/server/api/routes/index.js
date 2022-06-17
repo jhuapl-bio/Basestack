@@ -972,7 +972,7 @@ router.post("/procedure/build", (req,res,next)=>{ // build workflow according to
 		try {
 			let module = store.library.catalog[req.body.catalog]
 			let procedure = module.procedures[req.body.procedure]
-			let response = await procedure.build( req.body.overwrite, null)
+			let response = await procedure.build( req.body.skip, null)
 			logger.info(`Success in beginning to building of procedure dependencies for: ${req.body.catalog}: ${req.body.procedure}`)
 			res.status(200).json({status: 200, message: "Completed module build", data: response });
 		} catch(err2){
@@ -1011,7 +1011,7 @@ router.post("/procedure/build/dependency", (req,res,next)=>{ // build workflow a
 		try {
 			let module = store.library.catalog[req.body.catalog]
 			let procedure = module.procedures[req.body.procedure]
-			let response = await procedure.build( req.body.overwrite, req.body.dependency) 
+			let response = await procedure.build( req.body.skip, req.body.dependency) 
 			logger.info(`Success in beginning to building of procedure dependencies for: ${req.body.catalog}:  ${req.body.procedure}`)
 			res.status(200).json({status: 200, message: "Completed module build", data: response });
 		} catch(err2){
@@ -1032,7 +1032,7 @@ router.post("/procedure/build/cancel", (req,res,next)=>{ //this method needs to 
 			let response = await procedure.cancel_build()
 			logger.info("Cancel complete for procedure: %s",  req.body.catalog) 
 			res.status(200).json({status: 200, message: "Completely canceled the build process for procedure", data:  "" });
-		})().catch((err)=>{
+		})().catch((err)=>{ 
 			res.status(419).send({status: 419, message: error_alert(err) });
 		})
 	} catch(err2){

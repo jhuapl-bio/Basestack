@@ -599,9 +599,9 @@ export class Service {
                     for( let [key, value] of Object.entries(full_item.define)){
                         if (value){
                             env.push(`${key}=${value}`)
-                        }
-                    }
-                }   
+                        }    
+                    }    
+                }    
                 if (selected_option.define && full_item.source){
                     for( let [key, value] of Object.entries(selected_option.define)){
                         if (value){

@@ -475,17 +475,23 @@ export async function check_image(image){
 			(async ()=>{
 				let getImage = await store.docker.getImage(image).inspect()
 				let latest; let installed;
-				let tags=[];
+				let tags=[]; 
+				
 				let digests = getImage.RepoDigests.map((d)=>{
 					return d.replace(image+"@", "")
 				}) 
-				for (const tag of getImage.RepoTags) {
-					// if (tag.includes('latest')){
-						if(digests){
-							installed = digests[0]
-						}
-					// }
+				if (digests && digests.length > 0){
+					for (const tag of getImage.RepoTags) {
+						// if (tag.includes('latest')){
+							if(digests){
+								installed = digests[0]
+							}
+						// }
+					}
+				} else {
+					installed = ( getImage.RepoTags.indexOf(image) > -1 ? image : false)
 				}
+					
 				resolve({
 					version: installed
 				})

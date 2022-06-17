@@ -40,6 +40,7 @@
             <template v-slot:activator="{ on }">
                 <v-icon medium color="primary" v-on="on" class="configure mr-3 ml-3 " @click="buildModule(version.name)">$download</v-icon>
             </template>
+            
             Build Entire Module
         </v-tooltip>
         <v-tooltip bottom>
@@ -99,6 +100,7 @@
                         x-small> {{ (item.status.exists  ? '$check' : '$times-circle'  )}}
                     </v-icon>
                     </template>
+                    
                     Existence Status (Downloaded + Installed)
                 </v-tooltip>
             </template>
@@ -147,6 +149,7 @@
                 </v-tooltip>
             </template>
             <template v-slot:item.status.latest="{ item }">
+                
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
                         <v-icon x-small v-on="on"
@@ -217,10 +220,10 @@
                 
                     
             </template>
-            <template v-slot:item.overwrite="{ item,index }">
+            <template v-slot:item.skip="{ item,index }">
                 
                     <v-checkbox
-                        v-model="overwrites[index]"
+                        v-model="skips[index]"
                         on-icon="$check-square"
                         class="align-center justify-center text-xs-center" 
                         off-icon="$square"
@@ -234,6 +237,7 @@
                     style="" v-if="item.status.dependComplete"
                     @click="buildModuleDependency(version.name, index)">$download
                 </v-icon>
+                
                 <v-tooltip bottom v-else>
                     <template v-slot:activator="{ on }">
                     <v-icon v-on="on" class="" small color="warning" 
@@ -251,10 +255,10 @@
             </template>
             <template v-slot:item.remove="{ item, index }">
                 <v-icon class="configure" small color="orange darken-1" 
-                    style=""
+                    style="" 
                     @click="removeModuleDependency(version.name, index)">$trash-alt
                 </v-icon>
-            </template>
+            </template> 
             <template v-slot:item.cancel="{ item, index }">
                 <v-icon class="configure" small color="light" 
                     style="" v-if="item.status.building"
@@ -318,7 +322,7 @@ export default {
             
             procedures: [],
             selected: {},
-            overwrites: [],
+            skips: [],
             stored: {},
             fields: [
                 {
@@ -352,9 +356,9 @@ export default {
                     text: 'Building'
                 },
                 {
-                    value: 'overwrite',
+                    value: 'skip',
                     align: "center",
-                    text: 'Overwrite'
+                    text: 'Skip'
                 },
                 
                 {
@@ -384,7 +388,7 @@ export default {
 	},
     props: [ 'version', 'procedure', 'dependencies', 'status' ],
     watch: {
-        
+       
     },
 	methods:{
         async error_alert(err, title){
@@ -532,11 +536,12 @@ export default {
         async buildModule(){
             const $this = this
             let procedureIdx  = this.procedure
+            console.log(this.skips,"SKIP")
             FileService.buildProcedure({
                 module: $this.moduleIdx,
                 catalog: $this.version.name,
                 procedure: procedureIdx,
-                overwrite: this.overwrites
+                skip: this.skips
             })
             .then((response)=>{
                 this.$swal({
@@ -596,11 +601,11 @@ export default {
         async buildModuleDependency(name, index){
             let procedureIdx  = this.procedure
             const $this = this
-            let overwrite = this.overwrites[index]
+            let skip = this.skips[index]
             FileService.buildProcedureDependency({
                 catalog: $this.version.name,
                 procedure: procedureIdx,
-                overwrite: [  overwrite ],
+                skip: [  skip ],
                 dependency: index 
             })
             .then((response)=>{
@@ -677,6 +682,7 @@ export default {
 	},
 	
 	mounted() {
+        
     },
 	beforeDestroy: function() {
         clearInterval(this.interval)

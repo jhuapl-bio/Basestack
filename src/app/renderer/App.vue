@@ -324,7 +324,7 @@ export default {
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
-			selected: 'defaults',
+			selected: 'procedures',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 
@@ -562,6 +562,7 @@ export default {
         }
       }
       this.importedLibrary = importedLibrary
+      console.log("imported library", importedLibrary)
       if (!this.selectedCatalog){
         let name = (this.selectedCatalogName && importedLibrary[this.selectedCatalogName] ? this.selectedCatalogName : first)
         this.selectedCatalogName = name
