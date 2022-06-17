@@ -505,7 +505,7 @@ export  class Configuration {     // Make the main procedure class for configura
                 var replace = `${pattern}`   
                 var re = new RegExp(replace,"g");
                 let fo = id.match(re)
-                if (fo){
+                if (fo){ 
                     let d = fo[0].replace(/[\%\{\}]/g, "") 
                     let found = nestedProperty.get($this, d)
                     if (Array.isArray(found)){

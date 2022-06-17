@@ -1214,7 +1214,6 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
 			let skip = await job.start(req.body) 
 			store.logger.info("Completed or Exited Job!")
-			// let skip = false
 
 			if (!skip){
 				res.status(200).json({status: 200, message: "Initiated job " + procedure.name, skip: skip });

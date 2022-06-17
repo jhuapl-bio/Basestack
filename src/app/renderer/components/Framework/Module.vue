@@ -770,6 +770,15 @@ export default {
           command: $this.custom_command[key]
         })
       })
+      let variables = $this.procedure.variables
+      // for (let [key, value] of Object.entries($this.procedure.variables)){
+      //   variables[key] = {}
+      //   variables[key].source = value.source
+      //   variables[key].option = value.option
+      //   if (value.custom){
+      //     variables[key].target = value.target
+      //   }
+      // }
       const setUser = this.setUser
       await FileService.startJob({
         procedure: $this.procedureIdx, 
@@ -780,7 +789,7 @@ export default {
         services: services,
         command: custom_command,
         setUser: setUser,
-        variables: $this.procedure.variables
+        variables: variables
       }).then((response)=>{
         if (!response.data.skip){
             this.$swal.fire({
