@@ -1,0 +1,179 @@
+- name: nfcore_taxtriage
+  title: "TaxTriage"
+  icon: "virus"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  url: https://nf-co.re/viralrecon
+  description: "nf-core/viralrecon is a bioinformatics analysis pipeline used to perform assembly and intra-host/low-frequency variant calling for viral samples."
+  tags: 
+    - "Nextflow"
+    - "metagenomics"
+    - "Nanopore"
+    - "Illumina"
+  shared:
+    services:
+      orchestrator:
+        label: "Orchestrator"
+        name: "orchestrator"
+        image: "jhuaplbio/basestack_orchestrator:v1.0.0"
+        workingdir: "/opt/data"
+        orchestrated: false #orchestrated means it r
+        init: false
+        orchestrator: true
+        force_restart: false
+        continuous: true
+        force_init: false
+        command: []
+  procedures: 
+    - name: nfcore_taxtriage #Top level is the left-hand selection of the menu and the major module to install 
+      title: "TaxTriage"
+      icon: "virus"
+      module: True
+      init: false 
+      dependencies:
+        - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          label: jhuaplbio/basestack_orchestrator
+          type: "docker-local"
+          build: 
+            path: ${configPath}/modules/orchestrator/Dockerfile
+            file: Dockerfile
+          format: "dockerfile"
+        - target: "basestack-docker-taxtriage"
+          label: "TaxTriage Volume"
+          type: "volume"
+        - source:
+            url: ftp.ccb.jhu.edu
+            type: file
+            user: anonymous
+            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
+            password: null
+            protocol: ftp
+            remove: false
+            target: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+          label: Minikraken2
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+          target: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
+          overwrite: true
+      tags: 
+        - "Nextflow"
+        - "metagenomics"
+        - "nanopore"
+        - "illumina"
+      variables:
+        maxCPUs:
+          label: "Maximum CPUs"
+          element: "number"
+          source: null
+          optional: true
+          target: "%{variables.maxCPUs.source}"
+          append:
+            command: " --max_cpus \"${maxCPUs}\" "
+            placement: 2
+            position: "end"
+            services: 
+              - 1
+        maxMemory:
+          label: "Maximum Memory (GB)"
+          element: "number"
+          source: null
+          optional: true
+          target: "%{variables.maxMemory.source}"
+          append:
+            command: " --max_memory \"${maxMemory}\"GB "
+            placement: 2
+            position: "end"
+            services: 
+              - 1
+        db:
+          label: Classifier database
+          class: wb-100 p-3 mb-1
+          option: 0
+          options:
+            - element: null
+              name: Minikraken2
+              source: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
+              target: /opt/databases/minikraken2
+              warning: >-
+                Requires roughly 7.5 GB of free RAM to load. If limited in RAM
+                available, try to change Memory Mapping below to classify on the
+                local filesystem. If your input file is large, however, this can
+                take a long time
+              bind:
+                from: '%{variables.db.source}'
+                to: /opt/databases/minikraken2
+            - element: dir
+              name: Custom DB
+              source: null
+              target: /opt/databases/<<basename(%{variables.db.source})>>
+              bind: self
+        rundir:
+          label: "Run Directory"
+          element: "file"
+          source: null
+          hint: "Requires a Samplesheet.csv with all relevant data in the same folder in terms of pathing as well as things like your fastq files and sequencing summary files"
+          target: "/opt/data"
+          bind: "self"
+        samplesheet:
+            label: "Samplesheet"
+            warning: "Must be in the root (same level) of the run directory"
+            hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
+            element: "exists"
+            source:  null
+            validations:
+              - type: "files"
+                error: "Must have a Samplesheet.csv file in the root directory (directly in your run directory)"
+                target: 
+                  type: "value"
+                  minimum: 1
+                  path: "%{variables.rundir.source}"
+                  value: "Samplesheet.csv$"
+            update_on: 
+              depends:
+                - rundir
+              action: "exists"
+              source: "%{variables.rundir.source}"
+        profile:
+          label: "Profile"
+          options:
+            - "docker"
+            - "singularity"
+            - "conda"
+        outdir:
+          label: "Output Directory"
+          option: 0
+          options:
+          output: True
+          hint: "Directory to place your analysis results into"
+          source: null
+          name: "Output Folder"
+          target: "/opt/output"
+          bind: "self"
+      services:
+        - name: taxtriage
+          orchestrator: true
+          force_restart: false
+          continuous: true
+          force_init: false
+          label: "TaxTriage"
+          image: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          workingdir: "/opt/data"
+          warning: "This process requires internet in its current state"
+          command: [
+            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh pwd 'sleep 5; nextflow run ./main.nf 
+              --input /opt/data/Samplesheet.csv
+              --db ${db}  
+              --outdir /opt/output
+              --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
+              -profile ${profile} 
+              --save_output_fastqs 
+              --save_reads_assignment  
+              --assembly ${assembly}
+              --demux 
+              -resume' "
+          ]
+    

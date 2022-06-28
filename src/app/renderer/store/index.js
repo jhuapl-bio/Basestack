@@ -148,7 +148,6 @@ export default new Vuex.Store({
       nestedProperty.set(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${variable.name}.source`, variable.source)
     },
     ADD_CUSTOM (state, variable){
-      console.log(variable)
       nestedProperty.set(state,`catalog.${variable.catalog}.procedures.${variable.procedure}.variables.${variable.name}`, variable.variable)
       
     },

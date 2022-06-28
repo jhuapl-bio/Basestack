@@ -411,7 +411,12 @@ export default {
           service: key,
           command: $this.custom_command[key]
         })
-      })
+      })  
+      let variables = {}
+      for (let [key, value] of Object.entries($this.procedure.variables)){
+        variables[key].source = value.source
+        variables[key].option = value.option
+      }
       await FileService.startJob({
         procedure: $this.procedureIdx, 
         catalog: $this.module,
@@ -420,7 +425,7 @@ export default {
         dry: $this.dry,
         services: services,
         command: custom_command,
-        variables: $this.procedure.variables
+        variables: variables
       }).then((response)=>{
         if (!response.data.skip){
             this.$swal.fire({

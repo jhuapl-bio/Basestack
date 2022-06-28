@@ -15,6 +15,7 @@
     "buildOnly:linuxARM64": "electron-builder --arm64 --linux AppImage",
     "buildOnly:linux": "electron-builder --linux AppImage",
     "buildOnly:linuxAll": "electron-builder --arm64 --x64 --linux  AppImage",
+    "buildOnly:win": "electron-builder --win; zip build/win-unpacked",
     "buildOnly:mac": "electron-builder --mac dmg",
     "package:mac-zip": "electron-builder --mac zip",
     "package:mac": "electron-builder --mac",

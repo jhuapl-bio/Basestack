@@ -459,17 +459,17 @@ export class Procedure {
             if (dependency.workingdir){
                 service.config.workingdir = dependency.workingdir
             }
-            if (dependency.bind){ 
+            if (dependency.bind){  
                 if (!service.config.bind){
                     service.config.bind = []
                 }
                 service.config.bind.push(dependency.bind)
-            }
+            }  
             if (dependency.command){
                 if (Array.isArray(dependency.command)){
                     service.config.command = dependency.command
-                }else {
-                    service.config.command = [dependency.command]
+                }else { 
+                    service.config.command = [dependency.command] 
                 }
             }
             dependency.status.building = true
@@ -483,7 +483,7 @@ export class Procedure {
                     dependency.status.building = false
                     dependency.status.downloading= false
                     dependency.status.error = err 
-                }).then((stream)=>{
+                }).then((stream)=>{ 
                     if (service && service.stream){
                         dependency.streamObj = service.stream
                         let log = spawnLog(service.stream, $this.logger)
@@ -505,16 +505,14 @@ export class Procedure {
                     dependency.status.building = false
                     dependency.status.downloading= false
                     dependency.status.error = err 
-                })
-            }).catch((err)=>{
-                store.logger.error(err)
+                })   
+            }).catch((err)=>{  
+                store.logger.error(err) 
                 dependency.status.building = false
                 dependency.status.downloading= false
                 dependency.status.error = err 
             })
-                
-            resolve()
-           
+            resolve()             
         })
     } 
     downloadSource(dependency, idx){   

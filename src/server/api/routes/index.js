@@ -1148,7 +1148,7 @@ router.post("/images/prune", (req,res,next)=>{ //this method needs to be reworke
 	})()  
 })    
  
-
+ 
 //Used
 router.get("/procedure/config/:catalog/:procedure", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	(async function() {
@@ -1202,19 +1202,18 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			}        
 			let services = req.body.services    
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`)
-			if (found){         
-				store.logger.info("found job, cleaning it up") 
-				found.cleanup()         
+			if (found){          
+				store.logger.info("found job, cleaning it up")  
+				found.cleanup()           
 				delete store.jobs.catalog[req.body.catalog][req.body.procedure]
-				store.logger.info("found job, cleaned up")  
-			}  
+				store.logger.info("found job, cleaned up")    
+			}   
 			store.logger.info("Starting Job! with services: %s", services) 
   			let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
 			let skip = await job.start(req.body) 
 			store.logger.info("Completed or Exited Job!")
-			// let skip = false
 
 			if (!skip){
 				res.status(200).json({status: 200, message: "Initiated job " + procedure.name, skip: skip });
