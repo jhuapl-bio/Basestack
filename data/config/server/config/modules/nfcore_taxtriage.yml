@@ -80,7 +80,7 @@
         maxMemory:
           label: "Maximum Memory (GB)"
           element: "number"
-          source: 7
+          source: 10
           optional: true
           target: "%{variables.maxMemory.source}"
           append:
