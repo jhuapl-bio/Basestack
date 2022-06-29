@@ -154,7 +154,7 @@ export async function init_base_modules(){
 }    
    
 export async function init_modules(){    
-	try{     
+	try{      
 		store.logger.info("Initiating catalog modules .........................",">")
 		for (let [key, module] of Object.entries(store.library.all)) { //Loop through all modules and their respective services. Many services can be a part of modules
 			try{ 

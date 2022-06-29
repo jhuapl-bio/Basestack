@@ -225,6 +225,6 @@
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
               -profile ${profile} ${skip_plots}
               --assembly ${assembly} --demux 
-              ${resume} ${filter};pkill -9 -u $(id -u) ';  "
+              ${resume} ${filter};pkill -9 . ';  "
           ]
     
