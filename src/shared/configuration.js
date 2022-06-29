@@ -31,7 +31,8 @@ export  class Configuration {     // Make the main procedure class for configura
               }
               return this.log[this.log.length - 1];
             }
-          };
+          
+        };
         this.obj = obj
         
         if (config.shared && config.shared.variables){ // Shared variables are shared across one or more procedures to reduce coding needs/bloat
@@ -65,7 +66,7 @@ export  class Configuration {     // Make the main procedure class for configura
         for (let [key, custom_variable] of Object.entries(this.variables)){ // loop through variables
             if (!custom_variable.option && custom_variable.options){ // If no option selected for multi option variable, set to first index
                 custom_variable.option = 0
-            }
+            } 
             if (custom_variable.option >=0 && !custom_variable.source){
                 if (typeof custom_variable.options[custom_variable.option] == 'object'){ // if the variable has multiple choices of elements, set to the options source as source for variable
                     custom_variable.source = custom_variable.options[custom_variable.option].source
@@ -179,9 +180,9 @@ export  class Configuration {     // Make the main procedure class for configura
                             if (action == 'exists'){ // check if the element exists based on teh .source of it 
                                 let returnedVari = {
                                     key: key, 
-                                    value: null
+                                    value: null 
                                 }
-                                promises.push(
+                                promises.push( 
                                     
                                     checkExists(update_on.source, true).then((f)=>{ // run the IO.js check exists function for existence on filesystem 
                                         if(f.exists && f.location){ 
@@ -505,7 +506,7 @@ export  class Configuration {     // Make the main procedure class for configura
                 var replace = `${pattern}`   
                 var re = new RegExp(replace,"g");
                 let fo = id.match(re)
-                if (fo){
+                if (fo){ 
                     let d = fo[0].replace(/[\%\{\}]/g, "") 
                     let found = nestedProperty.get($this, d)
                     if (Array.isArray(found)){

@@ -405,7 +405,7 @@ export class Service {
                 })
                 // full = d
 
-            }  else {
+            }  else { 
                 full = d 
             }
             return full.join( ( sep == 'tab' ? "\t" : sep )  )
@@ -470,22 +470,24 @@ export class Service {
                 
                 let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
                     bnd.forEach((b)=>{
-                        if (typeof b == 'object'){
+                        if (typeof b == 'object' && b.from){
                             binds.push(`${b.from}:${b.to}`)
-                        } else {
+                        } else if (b) {
                             binds.push(b) 
                         }
                     })   
             } else {
                 let b  = $this.config.bind
-                binds.push(`${b.from}:${b.to}`)
+                if (b.from)
+                {
+                    binds.push(`${b.from}:${b.to}`)
+                }
             } 
         }
         if (this.config.orchestrator){
             // binds.push(`${path.join(store.system.writePath,  "workflows", this.name, "docker") }:/var/lib/docker`)
             binds.push(`basestack-docker-${$this.name}:/var/lib/docker`)
         }
-        
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (typeof selected_option == 'object' && selected_option.bind){
@@ -497,7 +499,9 @@ export class Service {
                     if (selected_option.bind && selected_option.bind.to){
                         to  = selected_option.bind.to
                     }
-                      
+                    if (from == '.'){
+                        from = null
+                    }
                     if (Array.isArray(selected_option.source) && selected_option.element != 'list'){
                         let s = from  
                         s.forEach((directory,i)=>{ 
@@ -541,7 +545,7 @@ export class Service {
     }  
     
     defineEnv(){
-        let env = []  
+        let env = []   
         let bind = []    
         const $this = this;  
         let seenTargetTos = []  
@@ -578,22 +582,23 @@ export class Service {
                         env.push(`${key}=${selected_option}`)
                     }
                 }
-            
+
                 if (selected_option.define && selected_option.source){
                     for( let [key, value] of Object.entries(full_item.define)){
                         if (value){
                             env.push(`${key}=${value}`)
                         }
                     }
-                }   
+                }  
+                
                 if (selected_option.define && full_item.source){
                     for( let [key, value] of Object.entries(selected_option.define)){
                         if (value){
                             env.push(`${key}=${value}`)
                         }
-                    } 
+                    }  
                 }  
-            
+              
             } 
         }  
         this.env.push(...env)
@@ -605,7 +610,7 @@ export class Service {
         this.status.error = null
         const setUser = $this.config.setUser
         this.status.running = true
-        this.status.cancelled = false 
+        this.status.cancelled = false
         return new Promise(function(resolve,reject){ 
             try{
                 let options = cloneDeep($this.options)
@@ -630,21 +635,20 @@ export class Service {
                 let seenTargetFrom = []     
                 defaultVariables = $this.config.variables 
                 // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
-                if ($this.config.serve ){     
+                if ($this.config.serve ){      
                     let variable_port = defaultVariables[$this.config.serve] 
                     options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
                 }       
                 // $this.config.variables = defaultVariables  
                 let envs = {}   
                 $this.defineEnv() 
-                $this.defineBinds() 
+                $this.defineBinds()  
                 $this.definePortBinds()
                 $this.updatePorts($this.portbinds,options)
                 const userInfo = os.userInfo();
 
                 // get uid property
                 // from the userInfo object
-                console.log(setUser,"<<<<")
                 if (setUser ){  
                     const uid = userInfo.uid;
                     if(uid){
@@ -701,7 +705,7 @@ export class Service {
                             function append_commands(appendable){  
                                 let serviceFound = appendable.services.findIndex(data => data == $this.serviceIdx)
                                 if (serviceFound >= 0){ 
-                                    let service = appendable
+                                    let service = appendable 
                                        
                                     if (service.placement >= 0){ 
                                         if (appendable.position == 'start'){
@@ -715,7 +719,7 @@ export class Service {
                                         } else {
                                             options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   appendable.append.command
                                         }
-                                    }
+                                     }
          
                                 } 
                             }

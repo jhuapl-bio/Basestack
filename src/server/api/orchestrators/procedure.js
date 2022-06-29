@@ -241,22 +241,20 @@ export class Procedure {
                 if (dependency.streamObj && dependency.streamObj.status){
                     dependency.status.progress = cloneDeep(dependency.streamObj.status)
                 }
-			})
-            
+			}) 
 			Promise.allSettled(promises).then((response, err)=>{
-                let v = []
-                let uninstalled = []
-                let logs = []
+                let v = []    
+                let uninstalled = []  
+                let logs = [] 
                 
 				response.forEach((dependency, index)=>{
 					if (dependency.status == 'fulfilled'){
-                        
                         if (dependency.value.version){
                             
                             dependencies[index].status.version = dependency.value.version
                             dependencies[index].status.exists = true
                         } else {
-                            dependencies[index].status.exists = ( dependency.value  ? dependency.value.exists : dependency.value )
+                            dependencies[index].status.exists = ( dependency.value && typeof dependency.value == 'object'  ? true : dependency.value )
                         }
 						
 					} else { 
@@ -453,17 +451,17 @@ export class Procedure {
             if (dependency.workingdir){
                 service.config.workingdir = dependency.workingdir
             }
-            if (dependency.bind){ 
+            if (dependency.bind){  
                 if (!service.config.bind){
                     service.config.bind = []
                 }
                 service.config.bind.push(dependency.bind)
-            }
+            }  
             if (dependency.command){
                 if (Array.isArray(dependency.command)){
                     service.config.command = dependency.command
-                }else {
-                    service.config.command = [dependency.command]
+                }else { 
+                    service.config.command = [dependency.command] 
                 }
             }
             dependency.status.building = true
@@ -477,7 +475,7 @@ export class Procedure {
                     dependency.status.building = false
                     dependency.status.downloading= false
                     dependency.status.error = err 
-                }).then((stream)=>{
+                }).then((stream)=>{ 
                     if (service && service.stream){
                         dependency.streamObj = service.stream
                         let log = spawnLog(service.stream, $this.logger)
@@ -499,16 +497,14 @@ export class Procedure {
                     dependency.status.building = false
                     dependency.status.downloading= false
                     dependency.status.error = err 
-                })
-            }).catch((err)=>{
-                store.logger.error(err)
+                })   
+            }).catch((err)=>{  
+                store.logger.error(err) 
                 dependency.status.building = false
                 dependency.status.downloading= false
                 dependency.status.error = err 
             })
-                
-            resolve()
-           
+            resolve()             
         })
     } 
     downloadSource(dependency, overwrite){   
@@ -519,13 +515,13 @@ export class Procedure {
                     if (dependency.streamObj){
                         dependency.streamObj.close() 
                         dependency.streamObj.end()
-                    }
+                    } 
                     downloadSource(dependency.source.url, dependency.source.target, dependency.source ).then((stream, error)=>{
                         dependency.status.stream = spawnLog(stream, $this.logger)
                         dependency.streamObj = stream
-                        if (error){
+                        if (error){   
                             console.error(error)
-                        }
+                        }       
                         $this.buildlog = spawnLog(stream, $this.logger)
                         stream.on("close", ()=>{ 
                             store.logger.info("Completed download of %o", dependency.source)

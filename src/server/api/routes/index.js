@@ -1109,11 +1109,11 @@ router.post("/procedure/remove/dependency", (req,res,next)=>{ //this method need
 			logger.error("%s %s", "Error in removing module dependency", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
 		}	
-	})()
-})
+	})()    
+}) 
+ 
 
-
-//Used
+//Used 
 router.post("/module/build/cancel", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
 	
 	(async function(){
@@ -1148,11 +1148,11 @@ router.post("/images/prune", (req,res,next)=>{ //this method needs to be reworke
 	})()  
 })    
  
-
+  
 //Used
 router.get("/procedure/config/:catalog/:procedure", (req,res,next)=>{ //this method needs to be reworked for filesystem watcher
-	(async function() {
-		try {  
+	(async function() {     
+		try {        
 			let found = nestedProperty.get(store, `catalog.${req.params.catalog}.procedures.${req.params.procedure}`)
 			let returnable = {}	
 			res.status(200).json({status: 200, message: "Got procedure configuration", data: found.config });
@@ -1160,7 +1160,7 @@ router.get("/procedure/config/:catalog/:procedure", (req,res,next)=>{ //this met
 			logger.error("%s %s", "Error in getting procedure config", err2)
 			res.status(419).send({status: 419, message: error_alert(err2) });
 		}	
-	})()  
+	})()   
 
 
 })
@@ -1214,7 +1214,6 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
 			let skip = await job.start(req.body) 
 			store.logger.info("Completed or Exited Job!")
-			// let skip = false
 
 			if (!skip){
 				res.status(200).json({status: 200, message: "Initiated job " + procedure.name, skip: skip });

@@ -1,4 +1,4 @@
-- version: 1.3
+- version: 1.4
   basestack_released: 2
   supported: 2.1.1
   schema_version: 1
@@ -23,7 +23,7 @@
         hint: .json file, to be uploaded to the Mytax Visualization Service
         source: >-
           <<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report.json
-        target: <<trim(%{variables.file.target})>>.report.json
+        target: /opt/data/<<basename,trim(%{variables.file.source})>>.report.json
       report:
         label: Report From classification, in kraken-style
         element: file
@@ -32,7 +32,7 @@
         class: wb-100  p-3 mb-1
         source: >-
           <<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report
-        target: <<trim(%{variables.file.target})>>.report
+        target: /opt/data/<<basename,trim(%{variables.file.source})>>.report
   procedures:
     - name: mytax_kraken2_report
       title: Kraken2 Mytax2
@@ -88,14 +88,29 @@
           overwrite: false
       variables:
         file:
-          label: FASTA/Q file (Single file)
-          element: file
-          optional: false
-          bind_parent_dir: true
-          bind: directory
-          class: wb-100  p-3 mb-1
-          source: null
-          target: /opt/data/<<basename(%{variables.file.source})>>
+          - label: FASTA/Q File(s)
+            element: files
+            optional: false
+            bind_parent_dir: true
+            bind: directory
+            name: "Fastq files"
+            class: wb-100  p-3 mb-1
+            source: null
+            target: /opt/data/<<basename(%{variables.file.source})>>
+            # - element: dir 
+            #   optional: false
+            #   bind_parent_dir: true
+            #   bind: self
+            #   name: "Directory"
+            #   class: wb-100  p-3 mb-1
+            #   source: null
+            #   target: /opt/data/
+            #   append:
+            #     command: ' mkdir -p /opt/tmp; cat /opt/data/*fastq* > /opt/tmp/full.fastq; wc -l /opt/tmp/full.fastq; export file="/opt/tmp/full.fastq"; '
+            #     placement: 2
+            #     position: "start"
+            #     services:
+            #       - 0
         memory_mapping:
           label: Memory Load Database
           hint: >-
@@ -194,7 +209,7 @@
           depends:
             - type: module
               id: mytax 
-          image: jhuaplbio/basestack_mytax:v1.1.2
+          image: jhuaplbio/basestack_mytax:v1.1.3
           workingdir: /opt/test-data
           orchestrated: false
           init: false
