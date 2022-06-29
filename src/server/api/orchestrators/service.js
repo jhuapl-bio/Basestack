@@ -610,7 +610,7 @@ export class Service {
         this.status.error = null
         const setUser = $this.config.setUser
         this.status.running = true
-        this.status.cancelled = false 
+        this.status.cancelled = false
         return new Promise(function(resolve,reject){ 
             try{
                 let options = cloneDeep($this.options)
@@ -635,21 +635,20 @@ export class Service {
                 let seenTargetFrom = []     
                 defaultVariables = $this.config.variables 
                 // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
-                if ($this.config.serve ){     
+                if ($this.config.serve ){      
                     let variable_port = defaultVariables[$this.config.serve] 
                     options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
                 }       
                 // $this.config.variables = defaultVariables  
                 let envs = {}   
                 $this.defineEnv() 
-                $this.defineBinds() 
+                $this.defineBinds()  
                 $this.definePortBinds()
                 $this.updatePorts($this.portbinds,options)
                 const userInfo = os.userInfo();
 
                 // get uid property
                 // from the userInfo object
-                console.log(setUser,"<<<<")
                 if (setUser ){  
                     const uid = userInfo.uid;
                     if(uid){

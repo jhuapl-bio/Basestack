@@ -183,15 +183,17 @@
           <v-subheader>
             Adjust Cmd in Docker Pipeline
           </v-subheader>
-          <v-textarea
-            v-model="services[el-1].command[index]"
-            v-for="(item, index) in services[el-1].command"
-            :key="`${index}-commandIndex`"
-            :disabled="index <=1"
-            :hidden="index <=1"
-            @change="changeCommand(el-1, services[el-1].command[index] )"
-          >
-          </v-textarea>
+          <div v-if="services.length > 0" >
+            <v-textarea
+              v-model="services[el-1].command[index]"
+              v-for="(item, index) in services[el-1].command"
+              :key="`${index}-commandIndex`"
+              :disabled="index <=1"
+              :hidden="index <=1"
+              @change="changeCommand(el-1, services[el-1].command[index] )"
+            >
+            </v-textarea>
+          </div>
           <Customize
             style="max-height: 200px"
             @addCustomElement="addCustomElement"
@@ -967,7 +969,7 @@ export default {
       custom_images: {},
       mini: true,
       el: 1,
-      services: null,
+      services: [],
       dialog: false,
       dependencies:[],
       updates: 0,
