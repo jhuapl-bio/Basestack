@@ -10,7 +10,7 @@ export default {
     },
     color: {
         control: { type: 'select' },
-        options: ['black', 'blue', 'blue-light', 'green', 'green-light'],
+        options: ['black', 'blue', 'blue-light', 'green', 'green-light', 'gray', 'orange'],
     },
   }
 };
@@ -18,7 +18,7 @@ export default {
 const Template = (args, { argTypes }) => ({
   props: Object.keys(argTypes),
   components: { Tag },
-  template: `<tag v-bind="$props"></tag>`,
+  template: `<tag v-bind="$props"><template v-slot>{{text}}</template></tag>`,
 });
 
 export const Black = Template.bind({});
@@ -49,4 +49,16 @@ export const GreenLight = Template.bind({});
 GreenLight.args = {
     text: 'Tag',
     color: 'green-light'
+}
+
+export const Gray = Template.bind({});
+Gray.args = {
+    text: 'Tag',
+    color: 'gray'
+}
+
+export const Orange = Template.bind({});
+Orange.args = {
+    text: 'Tag',
+    color: 'orange'
 }
