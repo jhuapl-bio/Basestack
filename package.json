@@ -46,6 +46,7 @@
         "dev:app": "node .electron-vue/dev-runner.js",
         "dev:up": "docker compose up basestack_orchestrator",
         "dev:down": "docker compose down basestack_orchestrator",
+        "dev-tools": "vue-devtools",
         "install_modules": "npm install --force",
         "e2e": "npm run pack && mocha test/e2e",
         "lint": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter src",
