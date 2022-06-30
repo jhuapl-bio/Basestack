@@ -5,8 +5,6 @@
                 <h2 class="text-blue-900 markup-h1">
                     Library
                 </h2>
-
-                <SearchModulesField />
             </div>
 		</template>
 
@@ -24,7 +22,7 @@
                     </tab>
 
                     <tab name="My Modules" class="flex flex-col space-y-12">
-                        <h4 class="text-blue-900 markup-h4">My Modules</h4>
+                        <SearchModulesField />
                         
                         <section class="grid grid-cols-3 gap-4">
                             <module-library-card 
