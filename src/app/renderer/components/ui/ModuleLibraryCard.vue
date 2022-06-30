@@ -1,49 +1,48 @@
 <template>
-    <div 
-        class="flex card hoverable"
-        :class="[isNotCompact ? 'flex-col' : 'flex-row space-x-4']"
-    >
+    <div class="flex flex-col card hoverable">
         <div class="flex items-center justify-between">
-            <div class="rounded-lg bg-blue-100 w-[37px] h-[37px] inline-flex justify-center items-center">
-                <font-awesome-icon icon="cube" class="text-lg text-blue-700" />
+
+            <div class="flex items-start space-x-4">
+                
+                <div class="rounded-lg bg-blue-100 w-[37px] h-[37px] inline-flex justify-center items-center">
+                    <font-awesome-icon icon="cube" class="text-lg text-blue-700" />
+                </div>
+
+                <div class="flex flex-col space-y-1">
+                    <h2 class="leading-none text-gray-700 markup-h4 strong">{{moduleName}}</h2>
+
+                    <div class="flex space-x-4">
+                        <span class="text-gray-600 markup-label-sm">{{`V${version}`}}</span>
+                        <span v-if="hasUpdateAvailable" class="font-medium text-blue-900 markup-label-sm">
+                            Update Available
+                        </span>
+                    </div>
+                </div>
             </div>
             
-            <circle-button v-if="isNotCompact" icon="ellipsis-v" class="uncontained" />
+            <div class="flex items-center">
+                <tag color="green-light">New</tag>
+                <circle-button icon="ellipsis-v" class="uncontained" />
+            </div>
         </div>
 
         <div>
-            <h2 class="text-gray-700 markup-h4 strong" :class="{'mt-4': isNotCompact}">{{moduleName}}</h2>
-
-            <div v-if="isNotCompact" class="flex items-center justify-start space-x-2">
-                <span class="text-gray-600 markup-label-sm">{{`V${version}`}}</span>
-
-                <span 
-                    v-if="hasUpdateAvailable" 
-                    class="font-medium text-blue-900 markup-label-sm"
-                >
-                    Update Available
-                </span>
-            </div>
-
-            <p class="text-left text-gray-800 markup-body-sm" :class="{'mt-2': isNotCompact }">
+        
+            <p class="mt-2 text-left text-gray-800 markup-body-sm">
                 {{description}}
             </p>
 
             
-            <a v-if="isNotCompact" :href="link" class="font-bold text-blue-900 markup-body-sm">Read more</a>
+            <a :href="link" class="font-bold text-blue-900 markup-body-sm">Read more</a>
         </div>
     </div>
 </template>
 
 <script>
 import CircleButton from './buttons/CircleButton.vue'
+import Tag from './Tag.vue'
 export default {
-    components: {'circle-button': CircleButton},
-    props: ['moduleName', 'version', 'hasUpdateAvailable', 'description', 'compactView', 'link'],
-    computed: {
-        isNotCompact: (props) => {
-            return !props.compactView
-        }
-    }
+    components: {'circle-button': CircleButton, 'tag': Tag},
+    props: ['moduleName', 'version', 'hasUpdateAvailable', 'description', 'link'],
 }
 </script>
