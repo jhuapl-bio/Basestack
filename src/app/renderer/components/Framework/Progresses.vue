@@ -51,7 +51,8 @@
                 View Visualization in Browser. Ensure that the service is running first!
             </v-tooltip> 
             
-            <v-tooltip bottom v-if="item.source"> 
+            <v-tooltip bottom v-if="item.source "> 
+              
               <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon  @click="determineOpen(item)">
                   <v-icon 
@@ -61,7 +62,7 @@
                 </v-btn>
                 
               </template>
-              {{item.source}}
+              {{item.path ? item.path : item.source}}
             </v-tooltip>
             <v-tooltip bottom v-if="item.openSelf && item.source">
               <template v-slot:activator="{ on }">

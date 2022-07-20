@@ -73,7 +73,7 @@ export  class Job {
     } 
     setValueVariable(value, obj, key){ 
         const $this = this;
-        try{  
+        try{   
             if (obj && obj.options){
                 if (obj.options ){
                     if (!obj.option){
@@ -83,7 +83,7 @@ export  class Job {
             }
             
             
-            if (value.source){
+            if (value.source || typeof value == 'object' && 'source' in value){
                 if (typeof value.source == 'string' || typeof value.source == 'number' || !typeof value.source){
                     obj.source = value.source
                 } else if (typeof value.source == 'object') {

@@ -250,12 +250,11 @@ export class Procedure {
                     
                     dependency.status.progress = cloneDeep(dependency.streamObj.progress)
                 }
-			})
-            
+			}) 
 			Promise.allSettled(promises).then((response, err)=>{
-                let v = []
-                let uninstalled = []
-                let logs = []
+                let v = []    
+                let uninstalled = []  
+                let logs = [] 
                 
 				response.forEach((dependency, index)=>{
 					if (dependency.status == 'fulfilled'){
@@ -264,7 +263,7 @@ export class Procedure {
                             dependencies[index].status.version = dependency.value.version
                             dependencies[index].status.exists = true
                         } else {
-                            dependencies[index].status.exists = ( dependency.value  ? dependency.value.exists : dependency.value )
+                            dependencies[index].status.exists = ( dependency.value && typeof dependency.value == 'object'  ? true : dependency.value )
                         }
 						
 					} else { 

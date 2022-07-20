@@ -152,7 +152,7 @@ export async function init_base_modules(){
 		throw err  
 	} 
 }    
-  
+   
 export async function init_modules(){    
 	try{     
 		store.logger.info("Initiating catalog modules .........................",">")

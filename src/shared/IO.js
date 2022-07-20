@@ -39,10 +39,12 @@ export async function checkExists(location, globSet){ // location to check for e
 				}
 			})
 		} else { 
+			console.log(location,"<<<<<<")
 			glob(
 			path.basename(location), // if you need to check for a pattern, glob for a path
 				{ cwd: path.dirname(location) },  // you want to search in parent directory
 				(err, files) => { // list array of files that match the glob pattern 
+					
 					if (err) {
 						resolve(
 							{location: location, exists: null}

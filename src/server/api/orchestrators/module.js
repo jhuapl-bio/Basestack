@@ -1,13 +1,13 @@
 const { Service } = require('./service.js');
-const { Procedure } = require("./procedure.js")
-const { store } = require('../../config/store/index.js')
-const path = require("path") 
-const cloneDeep = require("lodash.clonedeep"); 
+const { Procedure } = require("./procedure.js") 
+const { store } = require('../../config/store/index.js')  
+const path = require("path")     
+const cloneDeep = require("lodash.clonedeep");   
 const { check_image, fetch_external_dockers } = require("../controllers/fetch.js")
 const {  removeFile, decompress_file, checkExists } = require("../controllers/IO.js")
-const { spawnLog } = require("../controllers/logger.js") 
+const { spawnLog } = require("../controllers/logger.js")  
 const {  remove_images, removeVolume } = require("../controllers/post-installation.js")
-export  class Module {      
+export  class Module {       
 	constructor(module, catalog, moduleIdx){       
         this.name= module.name 
         this.module = moduleIdx

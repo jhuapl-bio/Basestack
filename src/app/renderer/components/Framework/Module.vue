@@ -183,9 +183,8 @@
           <v-subheader>
             Adjust Cmd in Docker Pipeline
           </v-subheader>
-          <div v-if="services.length > 0">
+          <div v-if="services.length > 0" >
             <v-textarea
-              
               v-model="services[el-1].command[index]"
               v-for="(item, index) in services[el-1].command"
               :key="`${index}-commandIndex`"

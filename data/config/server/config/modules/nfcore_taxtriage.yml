@@ -5,7 +5,11 @@
   basestack_released: 2.0
   module: True
   url: https://nf-co.re/viralrecon
+<<<<<<< HEAD
   description: "nf-core/viralrecon is a bioinformatics analysis pipeline used to perform assembly and intra-host/low-frequency variant calling for viral samples."
+=======
+  # description: "nf-core/viralrecon is a bioinformatics analysis pipeline used to perform assembly and intra-host/low-frequency variant calling for viral samples."
+>>>>>>> main
   tags: 
     - "Nextflow"
     - "metagenomics"
@@ -68,7 +72,11 @@
         maxCPUs:
           label: "Maximum CPUs"
           element: "number"
+<<<<<<< HEAD
           source: null
+=======
+          source: 3
+>>>>>>> main
           optional: true
           target: "%{variables.maxCPUs.source}"
           append:
@@ -80,7 +88,11 @@
         maxMemory:
           label: "Maximum Memory (GB)"
           element: "number"
+<<<<<<< HEAD
           source: null
+=======
+          source: 10
+>>>>>>> main
           optional: true
           target: "%{variables.maxMemory.source}"
           append:
@@ -111,6 +123,46 @@
               source: null
               target: /opt/databases/<<basename(%{variables.db.source})>>
               bind: self
+<<<<<<< HEAD
+=======
+        codedir: 
+          label: "Code Directory"
+          element: "dir"
+          source: null
+          hint: "Directory containing your offline source code"
+          target: "/opt/code"
+          bind: "self"
+        skip_plots:
+          label: "Skip QC Plotting"
+          element: "checkbox"
+          source: true
+          hint: "Skip QC plotting"
+          define: 
+            skip_plots: "--skip_plots"
+        resume:
+          label: "Resume Nextflow"
+          element: "checkbox"
+          source: true
+          hint: "pick up where you left off, useful if piplines are lenghty or you're debugging issues with a failed midrun submission"
+          define: 
+            resume: "-resume"
+        assembly: 
+          label: "Assembly File"
+          element: "file"
+          source: null
+          hint: "File containing assembly refseq"
+          target: "/opt/assembly/<<basename(%{variables.assembly.source})>>"
+          bind: "directory"
+        filter_db:
+          label: "Filter Database"
+          element: "dir"
+          source: null
+          hint: "Database to extract reads out of"
+          target: "/opt/database_filter"
+          bind: "self"
+          define:
+            filter: " --filter %{variables.filter_db.target} "
+>>>>>>> main
         rundir:
           label: "Run Directory"
           element: "file"
@@ -137,6 +189,24 @@
                 - rundir
               action: "exists"
               source: "%{variables.rundir.source}"
+        # fastqs:
+        #   label: "Input Reads"
+        #   hint: "Folder(s) that contains 1 or more fastq files in COMPRESSED (.gz) format"
+        #   class: "wb-50  p-3 mb-1"
+        #   warning: "Ensure that all fastq files you want to analyze are compressed"
+        #   update_on: 
+        #       depends:
+        #         - rundir
+        #       action: "exists"
+        #       source: "%{variables.rundir.source}/*"
+        #   validations:
+        #     - type: "files"
+        #       error: "Must have 1 or more .fastq.gz files"
+        #       target: 
+        #         type: "value"
+        #         minimum: 1
+        #         path: "%{variables.rundir.source}"
+        #         value: ".*(fastq|fq).gz"
         profile:
           label: "Profile"
           options:
@@ -145,11 +215,10 @@
             - "conda"
         outdir:
           label: "Output Directory"
-          option: 0
-          options:
           output: True
           hint: "Directory to place your analysis results into"
-          source: null
+          source: "%{variables.rundir.source}/taxtriage_output"
+          path: "%{variables.rundir.source}/taxtriage_output"
           name: "Output Folder"
           target: "/opt/output"
           bind: "self"
@@ -164,16 +233,13 @@
           workingdir: "/opt/data"
           warning: "This process requires internet in its current state"
           command: [
-            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh pwd 'sleep 5; nextflow run ./main.nf 
+            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep 5; nextflow run /opt/code/main.nf 
               --input /opt/data/Samplesheet.csv
               --db ${db}  
               --outdir /opt/output
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
-              -profile ${profile} 
-              --save_output_fastqs 
-              --save_reads_assignment  
-              --assembly ${assembly}
-              --demux 
-              -resume' "
+              -profile ${profile} ${skip_plots}
+              --assembly ${assembly} --demux 
+              ${resume} ${filter};pkill -9 -u $(id -u) ';  "
           ]
     
