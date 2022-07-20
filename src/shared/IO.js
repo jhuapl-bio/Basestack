@@ -1,7 +1,7 @@
 const fs  = require("fs")
 import glob from "glob"
 import  path  from "path"
-
+import { parse } from 'csv-parse';
 
 export async function readFile(filepath, split){ // 1st argument is filepath, second is whetehr or not to split the data into a tsv with a string/char
 	return new Promise((resolve, reject)=>{

@@ -14,7 +14,7 @@ const path = require("path")
 var  { store }  = require("../../config/store/index.js")
 
 const {  validateFramework } = require("../controllers/validate.js")
-const { readFile, writeFile, copyFile } = require("../controllers/IO.js")
+const { readFile, readCsv, writeFile, copyFile } = require("../controllers/IO.js")
 const { check_container,   } = require("../controllers/fetch.js")
 const { spawnLog } = require("../controllers/logger.js")
 const { Configuration }  = require("./configuration.js")
@@ -467,7 +467,6 @@ export class Service {
         let defaultVariables = this.config.variables 
         if ($this.config.bind){ 
             if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
-                
                 let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
                     bnd.forEach((b)=>{
                         if (typeof b == 'object' && b.from){
@@ -498,18 +497,18 @@ export class Service {
                     }
                     if (selected_option.bind && selected_option.bind.to){
                         to  = selected_option.bind.to
-                    }
+                    } 
                     if (from == '.'){
                         from = null
-                    }
+                    }  
                     if (Array.isArray(selected_option.source) && selected_option.element != 'list'){
-                        let s = from  
+                        let s = from   
                         s.forEach((directory,i)=>{ 
-                            let finalpath = to[i] 
+                            let finalpath = to[i]    
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
                                 finalpath = $this.removeQuotes(finalpath)
-                                binds.push(`${directory}:${finalpath}`)
-                            }  
+                                binds.push(`${directory}:${finalpath}`) 
+                            }   
                             seenTargetTos.push(finalpath)
                         })  
                     } else { 
@@ -540,9 +539,53 @@ export class Service {
             }
         }
         this.binds.push(...binds)
-
         return 
-    }  
+    } 
+    reformatPath(selected_path){
+        return selected_path.replaceAll(/\\/g, "/")
+    }
+    async defineReads(){
+        let promises = []
+        let binds = []
+        let defaultVariables = this.config.variables 
+        if (defaultVariables){
+            for (let [name, selected_option ] of Object.entries(defaultVariables)){
+                if (selected_option.read){
+                    selected_option.read.forEach((read)=>{
+                        promises.push(readCsv(read.source, read.sep).then((f)=>{
+                            f.forEach((row)=>{
+                                let bind = ""
+                                if (read.bind == 'directory'){
+                                    bind = `${path.dirname(row[read.column])}:${path.dirname(this.reformatPath(row[read.column]))}`
+                                } else {
+                                    bind = `${row[read.column]}:${this.reformatPath(row[read.column])}`
+                                }
+                                if(row[read.column] && binds.indexOf(bind) == -1){
+                                    if (read.bind == 'directory'){
+                                        binds.push(bind)
+                                    } else {
+                                        binds.push(bind)
+                                    }
+                                }    
+                            }) 
+                        }).catch((err)=>{
+                            store.logger.error(`${err}, error in reading csv file`)
+                        }))
+                    })
+                }
+            }
+            let results = await Promise.allSettled((promises))
+            if (binds.length > 0)
+            {
+                binds  = [... new Set (binds)]
+                binds.forEach((bind)=>{
+                    this.binds.push(... binds)
+                })
+            }
+            return
+        }
+        
+    }
     
     defineEnv(){
         let env = []   
@@ -605,317 +648,321 @@ export class Service {
         return 
     }  
 
-    start(params, wait){  
+    async start(params, wait){  
 		const $this = this
         this.status.error = null
         const setUser = $this.config.setUser
         this.status.running = true
         this.status.cancelled = false
         return new Promise(function(resolve,reject){ 
-            try{
-                let options = cloneDeep($this.options)
-                store.logger.info("Starting.. %s", $this.name) 
-                let env = []
-                if (!params){ 
-                    params = {} 
-                } 
-                
-                let cmd = $this.config.command 
-                if (cmd){  
-                    options.Cmd = $this.config.command
-                } 
-                let promises = [];  
-                let promisesInside = []
-                let values = [] 
-                options = cloneDeep($this.updateConfig(options))
-                /////////////////////////////////////////////////
-                let custom_variables = params.variables 
-                let defaultVariables = {}     
-                let seenTargetTos = []    
-                let seenTargetFrom = []     
-                defaultVariables = $this.config.variables 
-                // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
-                if ($this.config.serve ){      
-                    let variable_port = defaultVariables[$this.config.serve] 
-                    options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
-                }       
-                // $this.config.variables = defaultVariables  
-                let envs = {}   
-                $this.defineEnv() 
-                $this.defineBinds()  
-                $this.definePortBinds()
-                $this.updatePorts($this.portbinds,options)
-                const userInfo = os.userInfo();
-
-                // get uid property
-                // from the userInfo object
-                if (setUser ){  
-                    const uid = userInfo.uid;
-                    if(uid){
-                        
-                        if (!options.Config){
-                            options.Config = {} 
-                        } 
-                        const gid = userInfo.gid;
-                        options['User'] = `${uid}:${gid}`
-
-                    }
-                }
-                  
-                if (defaultVariables &&  typeof defaultVariables == 'object'){
-                    for (let [name, selected_option ] of Object.entries(defaultVariables)){
-  
-                               
-                        if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
-                            let targetBinding = selected_option
-                            let full_item = cloneDeep(selected_option)   
-                                  
-                            if (selected_option.framework){ 
-                                let validated_framework = validateFramework(selected_option.framework, defaultVariables)
-                                selected_option.source = validated_framework
-                            }      
-                            if (selected_option.copy){    
-                                let filepath = ( selected_option.copy.basename ?
-                                    path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
-                                    selected_option.copy.to
-                                )   
-                                promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
-                                    logger.error(err) 
-                                }))   
-  
-                            }  
-                            if (selected_option.create){
-                                if (selected_option.create.type == 'list' ){
-                                    let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list')
-                                    promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
-                                        logger.error(err)  
-                                    }))
-
-                                } else if (selected_option.create.type == 'json' ) {
-                                    promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
-                                        logger.error(err) 
-                                    }))      
-                                } else {   
-                                    promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
-                                        logger.error(err)    
-                                    }))        
-                                }                      
-                            }    
-                                 
-                            function append_commands(appendable){  
-                                let serviceFound = appendable.services.findIndex(data => data == $this.serviceIdx)
-                                if (serviceFound >= 0){ 
-                                    let service = appendable 
-                                       
-                                    if (service.placement >= 0){ 
-                                        if (appendable.position == 'start'){
-                                            options.Cmd[service.placement] =  appendable.command + " " + options.Cmd[service.placement]  +  " "
-                                        }else {    
-                                            options.Cmd[service.placement] =  options.Cmd[service.placement]  +  appendable.command + " "
-                                        } 
-                                    } else{ 
-                                        if (appendable.position == 'start'){
-                                            options.Cmd[options.Cmd.length - 1] =  appendable.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
-                                        } else {
-                                            options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   appendable.append.command
-                                        }
-                                     }
-         
-                                } 
-                            }
-                            // Define the command additions if needed  
-                            if (selected_option.append && cmd && ( !selected_option.element ||  full_item.source ) ){ 
-                                if (!Array.isArray(selected_option.append)) {
-                                    append_commands(selected_option.append)
-                                } else{
-                                    selected_option.append.forEach((appendable)=>{
-                                        append_commands(appendable)
-                                    })
-                                }
-                                    
+            ( async ()=>{
+                // try{
+                    let options = cloneDeep($this.options)
+                    store.logger.info("Starting.. %s", $this.name) 
+                    let env = []
+                    if (!params){ 
+                        params = {} 
+                    } 
+                    
+                    let cmd = $this.config.command 
+                    if (cmd){  
+                        options.Cmd = $this.config.command
+                    } 
+                    let promises = [];  
+                    let promisesInside = []
+                    let values = [] 
+                    options = cloneDeep($this.updateConfig(options))
+                    /////////////////////////////////////////////////
+                    let custom_variables = params.variables 
+                    let defaultVariables = {}     
+                    let seenTargetTos = []    
+                    let seenTargetFrom = []     
+                    defaultVariables = $this.config.variables 
+                    // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
+                    if ($this.config.serve ){      
+                        let variable_port = defaultVariables[$this.config.serve] 
+                        options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
+                    }       
+                    // $this.config.variables = defaultVariables  
+                    let envs = {}   
+                    $this.defineEnv() 
+                    await $this.defineReads()
+                    $this.defineBinds()  
+                    $this.definePortBinds()
+                    await $this.updatePorts($this.portbinds,options)
+                    const userInfo = os.userInfo();
+    
+                    // get uid property
+                    // from the userInfo object
+                    if (setUser ){  
+                        const uid = userInfo.uid;
+                        if(uid){
+                            
+                            if (!options.Config){
+                                options.Config = {} 
                             } 
+                            const gid = userInfo.gid;
+                            options['User'] = `${uid}:${gid}`
+    
+                        } 
+                    }
+                      
+                    if (defaultVariables &&  typeof defaultVariables == 'object'){
+                        for (let [name, selected_option ] of Object.entries(defaultVariables)){
+                            if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
+                                let targetBinding = selected_option
+                                let full_item = cloneDeep(selected_option)   
+                                      
+                                if (selected_option.framework){ 
+                                    let validated_framework = validateFramework(selected_option.framework, defaultVariables)
+                                    selected_option.source = validated_framework
+                                }      
+                                if (selected_option.copy){    
+                                    let filepath = ( selected_option.copy.basename ?
+                                        path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
+                                        selected_option.copy.to
+                                    )   
+                                    promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
+                                        logger.error(err) 
+                                    }))   
+      
+                                }  
+                                if (selected_option.create){
+                                    if (selected_option.create.type == 'list' ){
+                                        let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list')
+                                        promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
+                                            logger.error(err)  
+                                        }))
+    
+                                    } else if (selected_option.create.type == 'json' ) {
+                                        promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
+                                            logger.error(err) 
+                                        }))      
+                                    } else {   
+                                        promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
+                                            logger.error(err)    
+                                        }))        
+                                    }                      
+                                }    
+                                     
+                                function append_commands(appendable){  
+                                    let serviceFound = appendable.services.findIndex(data => data == $this.serviceIdx)
+                                    if (serviceFound >= 0){ 
+                                        let service = appendable 
+                                           
+                                        if (service.placement >= 0){ 
+                                            if (appendable.position == 'start'){
+                                                options.Cmd[service.placement] =  appendable.command + " " + options.Cmd[service.placement]  +  " "
+                                            }else {    
+                                                options.Cmd[service.placement] =  options.Cmd[service.placement]  +  appendable.command + " "
+                                            } 
+                                        } else{ 
+                                            if (appendable.position == 'start'){
+                                                options.Cmd[options.Cmd.length - 1] =  appendable.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
+                                            } else {
+                                                options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   appendable.append.command
+                                            }
+                                         }
+             
+                                    } 
+                                }
+                                // Define the command additions if needed  
+                                if (selected_option.append && cmd && ( !selected_option.element ||  full_item.source ) ){ 
+                                    if (!Array.isArray(selected_option.append)) {
+                                        append_commands(selected_option.append)
+                                    } else{
+                                        selected_option.append.forEach((appendable)=>{
+                                            append_commands(appendable)
+                                        })
+                                    }
+                                        
+                                } 
+                            }  
+                        }
+                    }
+                    let append = $this.config.append
+                    if (append){
+                        if (append.placement || append.placement == 0){
+                            if (append.position == 'start'){
+                                options.Cmd[append.placement] =  append.command + " " + options.Cmd[append.placement]  +  " "
+                            }else {
+                                options.Cmd[append.placement] =  options.Cmd[append.placement]  +  append.command + " "
+                            } 
+                        } else{  
+                            if (append.position == 'start'){ 
+                                options.Cmd[options.Cmd.length - 1] =  append.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
+                            } else { 
+                                options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   append.command
+                            }   
                         }  
                     }
-                }
-                let append = $this.config.append
-                if (append){
-                    if (append.placement || append.placement == 0){
-                        if (append.position == 'start'){
-                            options.Cmd[append.placement] =  append.command + " " + options.Cmd[append.placement]  +  " "
-                        }else {
-                            options.Cmd[append.placement] =  options.Cmd[append.placement]  +  append.command + " "
-                        } 
-                    } else{  
-                        if (append.position == 'start'){ 
-                            options.Cmd[options.Cmd.length - 1] =  append.command  + " && " +   options.Cmd[options.Cmd.length - 1] 
-                        } else { 
-                            options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   append.command
-                        }   
+                    if ($this.config.image){
+                        let img = $this.config.image
+                        options.Image = img   
+                    }   
+                    if (! options.Image ){ 
+                        throw new Error("No Image available")  
+                    }   
+                         
+                    if (typeof options.Cmd == "string"){    
+                        options.Cmd = ['bash', '-c', options.Cmd]  
+                    }     
+                    if (!$this.config.command) 
+                    {  
+                        options.Cmd = null 
                     }  
-                }
-                if ($this.config.image){
-                    let img = $this.config.image
-                    options.Image = img   
-                }   
-                if (! options.Image ){ 
-                    throw new Error("No Image available")  
-                }   
-                     
-                if (typeof options.Cmd == "string"){    
-                    options.Cmd = ['bash', '-c', options.Cmd]  
-                }     
-                if (!$this.config.command) 
-                {  
-                    options.Cmd = null 
-                }  
-                if ($this.override.image){
-                    options.Image = $this.override.image
-                } 
-                options.Env = [...options.Env, ...$this.env ]  
-                options.HostConfig.Binds = [...options.HostConfig.Binds, ...$this.binds ]
-                options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
-                logger.info("%o _____ ", options)
-                logger.info(`starting the container ${options.name} `)
-                if ($this.config.dry){ 
-                    resolve() 
-                } else {
-                    Promise.all(promises).then((response)=>{
-                    $this.status.stream.info.push(JSON.stringify(options, null, 4))
-                    $this.status.success = false 
-                    $this.status.error = false 
-                    $this.status.complete = false 
-                    store.docker.createContainer(options,  function (err, container) {
-                        $this.container = container 
-                        if (err ){
-                            logger.error("%s %s %o","Error in creating the docker container for: ", options.name , err)
-                            // if (err.reason && err.reason == 'no such container'){
-                            //     store.docker.pull(options.Image)
-                            // }
-                            $this.status.running = false 
-                            // $this.status.error = err
-                            if (err.json && err.json.message){
-                                $this.status.error = err.json.message
-                            } else {
-                                $this.status.error = err
-                            }
-                            $this.status.success= false
-                            $this.status.stream.info.push(err)
-                            reject(err)
-                        } 
-                        try{
-                            function inspect(container){
-                                return new Promise((resolve, reject)=>{
-                                    container.inspect((err, inspection)=>{
-                                        try{
-                                            if (err){
-                                                logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
-                                                $this.status.error  = err
-                                            } else if (!inspection){
-                                                $this.status.complete= true
-                                                $this.status.running = false
-                                            } else if (inspection.State.exited) {
-                                                logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
-                                                if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 137 ) || inspection.State.ExitCode == 1 ){
-                                                    $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}`
-                                                    $this.status.success = false
-                                                } else { 
-                                                    $this.status.success = true
-                                                }
-                                                $this.status.complete = true
-                                                $this.status.running = false
-                                                $this.status.exit_code = inspection.State.ExitCode
-                                            } else {  
-                                                $this.status.running = true
-                                                $this.status.complete = false
-                                            }
-                                        } catch(err2){
-                                            logger.error("%o error in inspecting container on end", err2)
-                                        } finally{
-                                            if(inspection){
-                                                resolve(inspection.State.Running)
-                                            } else {
-                                                resolve(false)
-                                            }
-                                        } 
-
-                                    })
-                                })
+                    if ($this.override.image){
+                        options.Image = $this.override.image
+                    } 
+                    options.Env = [...options.Env, ...$this.env ]  
+                    options.HostConfig.Binds = [...options.HostConfig.Binds, ...$this.binds ]
+                    options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
+                    logger.info("%o _____ ", options)
+                    // logger.info(`starting the container ${options.name} `)
+                    if ($this.config.dry){ 
+                        resolve() 
+                    } else {
+                        Promise.all(promises).then((response)=>{
+                        $this.status.stream.info.push(JSON.stringify(options, null, 4))
+                        $this.status.success = false 
+                        $this.status.error = false 
+                        $this.status.complete = false 
+                        store.docker.createContainer(options,  function (err, container) {
+                            $this.container = container 
+                            if (err ){
+                                logger.error("%s %s %o","Error in creating the docker container for: ", options.name , err)
+                                // if (err.reason && err.reason == 'no such container'){
+                                //     store.docker.pull(options.Image)
+                                // }
+                                $this.status.running = false 
+                                // $this.status.error = err
+                                if (err.json && err.json.message){
+                                    $this.status.error = err.json.message
+                                } else {
+                                    $this.status.error = err
+                                }
+                                $this.status.success= false
+                                $this.status.stream.info.push(err)
+                                reject(err)
                             } 
-                            store.logger.info("Attaching stream %s", $this.name)
-                            container.attach({stream: true, stdout: true, stdin:true, stderr: true}, function (err, stream){
-                                $this.log = spawnLog(stream, $this.logger)
-                                $this.status.stream =  $this.log
-                                $this.status.stream.info.push("%s", JSON.stringify(options, null, 4))
-                                $this.status.stream.info.push(`starting the container ${options.name} `)
-                                $this.stream = stream 
-                                container.start(function (err, data) {
-                                    store.logger.info("Starting... %s", $this.name)
-                                    if (err){  
-                                        logger.error("%o  error in container name: %s", err, $this.name)
-                                        if (err.json && err.json.message){
-                                            $this.status.error = err.json.message
-                                        } else {
-                                            $this.status.error = err
-                                        } 
-                                        reject(err)  
-                                    }  
-                                    if (!wait || $this.config.continuous){
-                                        resolve( false )
-                                    } else {   
-                                        
-                                        // if (process.platform == 'win32'){
-                                        let ended = false
-                                        $this.jobInterval = setInterval(()=>{
-                                            if (ended){
-                                                clearInterval($this.jobInterval)
-                                            }  
-                                            if ($this.status.complete){
-                                                ended = true
-                                                clearInterval($this.jobInterval)
-                                                if ($this.status.error){
-                                                    resolve(true)
+                            try{
+                                function inspect(container){
+                                    return new Promise((resolve, reject)=>{
+                                        container.inspect((err, inspection)=>{
+                                            try{
+                                                if (err){
+                                                    logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
+                                                    $this.status.error  = err
+                                                } else if (!inspection){
+                                                    $this.status.complete= true
+                                                    $this.status.running = false
+                                                } else if (inspection.State.exited) {
+                                                    logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
+                                                    if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 137 ) || inspection.State.ExitCode == 1 ){
+                                                        $this.status.error  = `ERROR: exit code: ${inspection.State.ExitCode}; ${inspection.State.Error}`
+                                                        $this.status.success = false
+                                                    } else { 
+                                                        $this.status.success = true
+                                                    }
+                                                    $this.status.complete = true
+                                                    $this.status.running = false
+                                                    $this.status.exit_code = inspection.State.ExitCode
+                                                } else {  
+                                                    $this.status.running = true
+                                                    $this.status.complete = false
+                                                }
+                                            } catch(err2){
+                                                logger.error("%o error in inspecting container on end", err2)
+                                            } finally{
+                                                if(inspection){
+                                                    resolve(inspection.State.Running)
                                                 } else {
                                                     resolve(false)
-
                                                 }
-                                            }
-                                        },1000)
-                                        // }
-                                    } 
-                                    stream.on("close",()=>{ 
-                                        store.logger.info("Stream Closed!")
-                                        
+                                            } 
+    
+                                        })
                                     })
-                                    stream.on("error",(err)=>{ 
-                                        $this.status.error  = err
-                                        reject()
+                                } 
+                                store.logger.info("Attaching stream %s", $this.name)
+                                container.attach({stream: true, stdout: true, stdin:true, stderr: true}, function (err, stream){
+                                    $this.log = spawnLog(stream, $this.logger)
+                                    $this.status.stream =  $this.log
+                                    $this.status.stream.info.push("%s", JSON.stringify(options, null, 4))
+                                    $this.status.stream.info.push(`starting the container ${options.name} `)
+                                    $this.stream = stream 
+                                    container.start(function (err, data) {
+                                        store.logger.info("Starting... %s", $this.name)
+                                        if (err){  
+                                            logger.error("%o  error in container name: %s", err, $this.name)
+                                            if (err.json && err.json.message){
+                                                $this.status.error = err.json.message
+                                            } else {
+                                                $this.status.error = err
+                                            } 
+                                            reject(err)  
+                                        }  
+                                        if (!wait || $this.config.continuous){
+                                            resolve( false )
+                                        } else {   
+                                            
+                                            // if (process.platform == 'win32'){
+                                            let ended = false
+                                            $this.jobInterval = setInterval(()=>{
+                                                if (ended){
+                                                    clearInterval($this.jobInterval)
+                                                }  
+                                                if ($this.status.complete){
+                                                    ended = true
+                                                    clearInterval($this.jobInterval)
+                                                    if ($this.status.error){
+                                                        resolve(true)
+                                                    } else {
+                                                        resolve(false)
+    
+                                                    }
+                                                }
+                                            },1000)
+                                            // }
+                                        } 
+                                        stream.on("close",()=>{ 
+                                            store.logger.info("Stream Closed!")
+                                            
+                                        })
+                                        stream.on("error",(err)=>{ 
+                                            $this.status.error  = err
+                                            reject()
+                                        })
                                     })
                                 })
-                            })
-                        } catch(err){
-                            store.logger.error("Error in running container: %s %o", $this.name, err)
-                            $this.status.running = false
-                            // $this.status.error = err 
-                            $this.status.success= false  
-                            $this.status.complete = true 
-                            if (err.json && err.json.message){ 
-                                $this.status.stream.info.push(err.json.message)
-                            } else {
-                                $this.status.stream.info.push(err)
-                            }  
-                                
-                            reject() 
-                        } 
-                    })
-                    }).catch((err)=>{ 
-                        store.logger.error(err)
-                        reject(err)
-                    })
-                }
-            } catch (err){
-                store.logger.error(err)
+                            } catch(err){
+                                store.logger.error("Error in running container: %s %o", $this.name, err)
+                                $this.status.running = false
+                                // $this.status.error = err 
+                                $this.status.success= false  
+                                $this.status.complete = true 
+                                if (err.json && err.json.message){ 
+                                    $this.status.stream.info.push(err.json.message)
+                                } else {
+                                    $this.status.stream.info.push(err)
+                                }  
+                                    
+                                reject() 
+                            } 
+                        })
+                        }).catch((err)=>{ 
+                            store.logger.error(err)
+                            reject(err)
+                        })
+                    }
+                // } catch (err){
+                //     store.logger.error(err)
+                //     reject(err)
+                // }
+            })().catch((err)=>{ 
                 reject(err)
-            }
+            })
+            
             
             
         });

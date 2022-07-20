@@ -1,4 +1,4 @@
-- version: 1.4
+- version: 1.5
   basestack_released: 2
   supported: 2.1.1
   schema_version: 1
@@ -88,29 +88,16 @@
           overwrite: false
       variables:
         file:
-          - label: FASTA/Q File(s)
-            element: files
-            optional: false
-            bind_parent_dir: true
-            bind: directory
-            name: "Fastq files"
-            class: wb-100  p-3 mb-1
-            source: null
-            target: /opt/data/<<basename(%{variables.file.source})>>
-            # - element: dir 
-            #   optional: false
-            #   bind_parent_dir: true
-            #   bind: self
-            #   name: "Directory"
-            #   class: wb-100  p-3 mb-1
-            #   source: null
-            #   target: /opt/data/
-            #   append:
-            #     command: ' mkdir -p /opt/tmp; cat /opt/data/*fastq* > /opt/tmp/full.fastq; wc -l /opt/tmp/full.fastq; export file="/opt/tmp/full.fastq"; '
-            #     placement: 2
-            #     position: "start"
-            #     services:
-            #       - 0
+          label: FASTA/Q File(s)
+          element: file
+          optional: false
+          bind_parent_dir: true
+          bind: directory
+          name: "Fastq files"
+          class: wb-100  p-3 mb-1
+          source: null
+          target: /opt/data/<<basename(%{variables.file.source})>>
+           
         memory_mapping:
           label: Memory Load Database
           hint: >-
@@ -149,9 +136,9 @@
             - name: file
               label: Report From classification, in kraken-style
               element: file
-              bind_parent_dir: true
-              bind: self
+              bind: directory
               source: null
+              target: "/opt/databases/flukraken2/taxonomy/<<basename(%{variables.nodes.source})>>"
         db:
           label: Classifier database
           class: wb-100 p-3 mb-1

@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "2.2.3",
+  "version": "2.3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -144,6 +144,7 @@
     "@vuelidate/validators": "^2.0.0-alpha.28",
     "axios": "^0.21.1",
     "cors": "^2.8.5",
+    "csv-parse": "^5.3.0",
     "csv-parser": "^2.3.3",
     "date-format": "^4.0.3",
     "dockerode": "^3.2.0",
