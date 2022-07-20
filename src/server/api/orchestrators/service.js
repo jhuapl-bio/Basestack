@@ -469,24 +469,18 @@ export class Service {
             if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
                 let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
                     bnd.forEach((b)=>{
-                        if (typeof b == 'object'){
-                            if (b.to){
-                                b.to = b.to.replace(/\\/g, '/')
-                            }
+                        if (typeof b == 'object' && b.from){
                             binds.push(`${b.from}:${b.to}`)
-                        } else {
-                            if (b){
-                                b = b.replace(/\\/g, '/')
-                            }
+                        } else if (b) {
                             binds.push(b) 
                         }
                     })   
             } else {
                 let b  = $this.config.bind
-                if (b.to){
-                    b.to = b.to.replace(/\\/g, '/')
+                if (b.from)
+                {
+                    binds.push(`${b.from}:${b.to}`)
                 }
-                binds.push(`${b.from}:${b.to}`)
             } 
         }
         if (this.config.orchestrator){
@@ -497,7 +491,7 @@ export class Service {
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (typeof selected_option == 'object' && selected_option.bind){
                     let from = selected_option.source
-                    let to = selected_option.target  
+                    let to = selected_option.target
                     if (selected_option.bind && selected_option.bind.from){
                         from = selected_option.bind.from
                     }
@@ -512,20 +506,14 @@ export class Service {
                         s.forEach((directory,i)=>{ 
                             let finalpath = to[i]    
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
-<<<<<<< HEAD
                                 finalpath = $this.removeQuotes(finalpath)
                                 binds.push(`${directory}:${finalpath}`) 
                             }   
-=======
-                                finalpath = $this.removeQuotes(finalpath).replace(/\\/g, '/')
-                                binds.push(`${directory}:${finalpath}`)
-                            }  
->>>>>>> 9be92d2457ca93975b0c2b4c764f40a998e95720
                             seenTargetTos.push(finalpath)
                         })  
                     } else { 
                         if (selected_option.bind == 'directory'){
-                            let finalpath = path.dirname(to).replace(/\\/g, '/')
+                            let finalpath = path.dirname(to)
                             if (seenTargetTos.indexOf(finalpath) == -1 && from){
                                 finalpath = $this.removeQuotes(finalpath)
                                 binds.push(`${path.dirname(from)}:${finalpath}`) 
@@ -533,15 +521,15 @@ export class Service {
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
                             selected_option.bind.to = $this.removeQuotes(selected_option.bind.to)
-                            binds.push(`${selected_option.bind.from}:${selected_option.bind.to.replace(/\\/g, '/')}`) 
-                            seenTargetTos.push(selected_option.bind.to.replace(/\\/g, '/'))
+                            binds.push(`${selected_option.bind.from}:${selected_option.bind.to}`) 
+                            seenTargetTos.push(selected_option.bind.to)
                         }  else {  
                             if (seenTargetTos.indexOf(to) == -1 && from){
                                 to = $this.removeQuotes(to)
-                                binds.push(`${from}:${to.replace(/\\/g, '/')}`) 
+                                binds.push(`${from}:${to}`) 
                             } 
                             
-                            seenTargetTos.push(to.replace(/\\/g, '/'))
+                            seenTargetTos.push(to)
                         }
                     }
 
@@ -602,18 +590,11 @@ export class Service {
     defineEnv(){
         let env = []   
         let bind = []    
-        const $this = this;   
+        const $this = this;  
         let seenTargetTos = []  
         let defaultVariables = $this.config.variables  
         if (defaultVariables){   
             for (let [key, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.define ){
-                    for( let [key, value] of Object.entries(selected_option.define)  ){
-                        if (value){
-                            env.push(`${key}=${value}`)
-                        }
-                    }
-                }  
                 if (selected_option.optionValue  && typeof selected_option.optionValue == 'object'){
                     selected_option = selected_option.optionValue
                 }    
@@ -649,9 +630,10 @@ export class Service {
                     for( let [key, value] of Object.entries(full_item.define)){
                         if (value){
                             env.push(`${key}=${value}`)
-                        }    
-                    }    
-                }    
+                        }
+                    }
+                }  
+                
                 if (selected_option.define && full_item.source){
                     for( let [key, value] of Object.entries(selected_option.define)){
                         if (value){
@@ -673,7 +655,6 @@ export class Service {
         this.status.running = true
         this.status.cancelled = false
         return new Promise(function(resolve,reject){ 
-<<<<<<< HEAD
             ( async ()=>{
                 // try{
                     let options = cloneDeep($this.options)
@@ -723,52 +704,6 @@ export class Service {
                             const gid = userInfo.gid;
                             options['User'] = `${uid}:${gid}`
     
-=======
-            try{
-                let options = cloneDeep($this.options)
-                store.logger.info("Starting.. %s", $this.name) 
-                let env = []
-                if (!params){ 
-                    params = {} 
-                } 
-                
-                let cmd = $this.config.command 
-                if (cmd){  
-                    options.Cmd = $this.config.command
-                } 
-                let promises = [];  
-                let promisesInside = []
-                let values = [] 
-                options = cloneDeep($this.updateConfig(options))
-                /////////////////////////////////////////////////
-                let custom_variables = params.variables 
-                let defaultVariables = {}     
-                let seenTargetTos = []    
-                let seenTargetFrom = []
-                 
-                defaultVariables = $this.config.variables 
-                // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
-                if ($this.config.serve ){      
-                    let variable_port = defaultVariables[$this.config.serve] 
-                    options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
-                }       
-                // $this.config.variables = defaultVariables  
-                let envs = {}   
-                $this.defineEnv() 
-                $this.defineBinds()  
-                $this.definePortBinds()
-                $this.updatePorts($this.portbinds,options)
-                const userInfo = os.userInfo();
-
-                // get uid property
-                // from the userInfo object
-                if (setUser ){  
-                    const uid = userInfo.uid;
-                    if(uid){
-                        
-                        if (!options.Config){
-                            options.Config = {} 
->>>>>>> 9be92d2457ca93975b0c2b4c764f40a998e95720
                         } 
                     }
                       
