@@ -57,7 +57,7 @@ export  class Procedure {  // Make the main procedure class for configurations r
                     let funcs = f.split(",")  // split the functions individually to arr
                     funcs.forEach((d)=>{ // for all functions
                         if (functions[d]){ 
-                            let result;
+                            let result;    
                             if (d == 'notExists'){ // If the value doesnt exist
                                 result  = ( matched_string ? false : true )
                             }  

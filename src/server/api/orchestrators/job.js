@@ -109,19 +109,22 @@ export  class Job {
                     obj.option = value.option
                 }
                 $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
+                $this.runningConfig.variables[key].define  = obj.define
                 $this.runningConfig.variables[key].option = obj.option
                 if (obj.source ){ 
                     $this.runningConfig.variables[key].source = obj.source
                 } 
                 if (obj.target){
+                   
                     $this.runningConfig.variables[key].target = obj.target
                 }
-                
-
                
             }  else {
                 $this.runningConfig.variables[key].source = obj.source
             }  
+            if (obj.element == 'file' || obj.element == 'dir'){
+                obj.target = obj.target.replace(/\\/g, '/')
+            }
         } catch (Err){
             store.logger.error(Err)
         }
@@ -137,6 +140,7 @@ export  class Job {
             let obj = this.runningConfig.variables[variable]
             this.setValueVariable(data, obj, variable)
             let variables = this.runningConfig.variables
+            console.log(this.runningConfig.variables,"<<<<<<<<<<<<<<<<<<<<<")
             let promises = []
             
             if (variables){

@@ -5,7 +5,11 @@
   basestack_released: 2.0
   module: True
   url: https://nf-co.re/viralrecon
+<<<<<<< HEAD
+  description: "nf-core/viralrecon is a bioinformatics analysis pipeline used to perform assembly and intra-host/low-frequency variant calling for viral samples."
+=======
   # description: "nf-core/viralrecon is a bioinformatics analysis pipeline used to perform assembly and intra-host/low-frequency variant calling for viral samples."
+>>>>>>> main
   tags: 
     - "Nextflow"
     - "metagenomics"
@@ -68,7 +72,11 @@
         maxCPUs:
           label: "Maximum CPUs"
           element: "number"
+<<<<<<< HEAD
+          source: null
+=======
           source: 3
+>>>>>>> main
           optional: true
           target: "%{variables.maxCPUs.source}"
           append:
@@ -80,7 +88,11 @@
         maxMemory:
           label: "Maximum Memory (GB)"
           element: "number"
+<<<<<<< HEAD
+          source: null
+=======
           source: 10
+>>>>>>> main
           optional: true
           target: "%{variables.maxMemory.source}"
           append:
@@ -111,6 +123,8 @@
               source: null
               target: /opt/databases/<<basename(%{variables.db.source})>>
               bind: self
+<<<<<<< HEAD
+=======
         codedir: 
           label: "Code Directory"
           element: "dir"
@@ -148,6 +162,7 @@
           bind: "self"
           define:
             filter: " --filter %{variables.filter_db.target} "
+>>>>>>> main
         rundir:
           label: "Run Directory"
           element: "file"

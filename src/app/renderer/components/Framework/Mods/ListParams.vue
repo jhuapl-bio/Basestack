@@ -38,7 +38,6 @@
                 <v-list-item-subtitle class="text-wrap" v-if="item.hint">
                     {{item.hint}}
                 </v-list-item-subtitle>
-                
                 <v-container v-if="item.options"    width="10px">
                     <v-select
                         v-model="item.optionValue" 

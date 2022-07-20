@@ -134,7 +134,7 @@ export  class Configuration {     // Make the main procedure class for configura
                                     ...resp.value.status
                                 }
                             } else {
-                                console.error("Error in getting status for watched location: %o", resp.reason )
+                                // console.error("Error in getting status for watched location: %o", resp.reason )
                                 watches[index] = 
                                 { 
                                     ...filtered_outputs[index]
@@ -186,7 +186,9 @@ export  class Configuration {     // Make the main procedure class for configura
                                     
                                     checkExists(update_on.source, true).then((f)=>{ // run the IO.js check exists function for existence on filesystem 
                                         if(f.exists && f.location){ 
-                                            vari.source = path.join(update_on.source)// If it exists, update the source of the variable IF location needed from yaml file
+                                            if (update_on.source){
+                                                vari.source = path.join(update_on.source)// If it exists, update the source of the variable IF location needed from yaml file
+                                            }
                                         } else {
                                             vari.source = f.exists // Otherwise, just return true as a boolean element
                                         }
@@ -332,7 +334,7 @@ export  class Configuration {     // Make the main procedure class for configura
                                     if (Array.isArray(matched_string)){
                                         result = matched_string.join("")
                                     }
-                                    if (d == 'trim'){ // get the name of the path without ext
+                                    if (d == 'trim' &&result.dir && result.name){ // get the name of the path without ext
                                         result = path.join(result.dir, result.name)
                                     } else {
                                         result=matched_string
@@ -600,7 +602,9 @@ export  class Configuration {     // Make the main procedure class for configura
                                         return path.basename(f)
                                     })
                                 } else {
-                                    result = path.basename(result)
+                                    if (result){
+                                        result = path.basename(result)
+                                    }
                                 }
                                 
                             } else if ( d == 'directory'){
@@ -609,7 +613,9 @@ export  class Configuration {     // Make the main procedure class for configura
                                         return path.dirname(f)
                                     })
                                 } else {
-                                    result = path.dirname(result)
+                                    if (result){
+                                        result = path.dirname(result)
+                                    }
                                 }
                                 
                             } else if ( d == 'parse'){
@@ -619,17 +625,20 @@ export  class Configuration {     // Make the main procedure class for configura
                                         return path.join(result.dir, result.name)
                                     })
                                 } else {
-                                    let result = path.parse(result)
-                                    result = path.join(result.dir, result.name)
+                                    if (result){
+                                        result = path.parse(result)
+                                        result = path.join(result.dir, result.name)    
+                                    }
                                 }
                             } 
                             else {
                                 if (Array.isArray(result)){
                                     result = result.join("")
                                 }
-                                
-                                result = functions[d](result)
-                                if (d == 'trim'){ // get the name of the path without ext
+                                if (result){
+                                    result = functions[d](result)
+                                }
+                                if (d == 'trim' && result.dir && result.name){ // get the name of the path without ext
                                     result = path.join(result.dir, result.name)
                                 } 
                             }

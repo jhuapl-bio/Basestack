@@ -991,6 +991,7 @@ export default {
         'string': "String",
         "file": "File",
         "list": "List",
+        "files": "MultiFile",
         "configuration-file": "ConfigurationFile", 
         "render": "Render"
 
@@ -1097,7 +1098,7 @@ export default {
     serviceList(){
       let serviceList = []
       this.services.map((f,i)=>{
-        serviceList.push(i+1)
+          serviceList.push(i+1)
       })
       return serviceList
     },
@@ -1112,6 +1113,7 @@ export default {
 
     },
     latest(){
+      console.log("__", this.libraryVersions)
       return Math.max(...this.libraryVersions.map((f)=>{
         return f.version
       }))

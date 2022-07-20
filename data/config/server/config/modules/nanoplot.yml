@@ -161,8 +161,7 @@
                 command: " --bam ${input} "
                 placement: 2
                 services: 
-                  - 0
-                
+                  - 0                
         output:
           label: "Output Plots"
           element: "file"

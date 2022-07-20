@@ -44,18 +44,19 @@
 			</v-text-field>
 		</template>
 		<template v-slot:item.to="{ item, index }">
+			
 			<v-text-field
 				v-if="Array.isArray(variable.target)"
-				single-line
+				single-line :key="`${variable.target}-port`"
 				type="number" disabled
 				v-model="variable.target[index]"  
 				hint="Port Rendering in pipeline"
 			>
 			</v-text-field>
 			<v-text-field
-				v-else
+				v-else :key="`${variable.target}-port`"
 				single-line
-				type="number" disabled
+				 disabled
 				v-model="variable.target"  
 				hint="Port Rendering in pipeline"
 			>
