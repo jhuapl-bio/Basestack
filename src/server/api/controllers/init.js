@@ -151,10 +151,10 @@ export async function init_base_modules(){
 		store.ogger.error("%s %o", "error in init modules", err)
 		throw err  
 	} 
-}    
+}     
    
 export async function init_modules(){    
-	try{      
+	try{       
 		store.logger.info("Initiating catalog modules .........................",">")
 		for (let [key, module] of Object.entries(store.library.all)) { //Loop through all modules and their respective services. Many services can be a part of modules
 			try{ 

@@ -1,0 +1,97 @@
+- version: 1.0
+  basestack_released: 2.2.4
+  supported: 2.2.4
+  schema_version: 1
+  title: Mytax Dashboard v2
+  date_added: '2022-07-19T11:40:13.131Z'
+  url: https://github.com/jhuapl-bio/mytax
+  description: Real time reporting dashboard for kraken2 classifications
+  member: mytax2
+  hint: Mytax2 Module 
+  icon: chart-pie
+  name: mytax2
+  tags:
+    - kraken2
+    - metagenomic
+    - dashboard
+    - metagenome
+  procedures:
+    - name: mytax2
+      title: Kraken2 Mytax2
+      icon: binoculars
+      init: false
+      tooltip: >-
+        Run dashboard
+      force_restart: true
+      config: null
+      tags:
+        - kraken2
+        - taxonomy
+        - kmer
+        - metagenomic
+        - metagenome
+      dependencies:
+        - target: jhuaplbio/basestack_mytax2
+          version: latest
+          type: docker
+          format: docker
+      variables:
+        csv:
+          label: CSV File(s)
+          element: file
+          optional: false
+          bind_parent_dir: true
+          bind: directory
+          name: "Samplesheet"
+          class: wb-100  p-3 mb-1
+          read:
+            - type: "file"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "directory"
+              column: "path_1"
+            - type: "file"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "directory"
+              column: "path_2"
+            - type: "file"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "self"
+              column: "database"
+          source: null
+          target: /MYTAX/data/<<basename(%{variables.csv.source})>>
+        port:
+          element: render
+          label: Mytax2 Dashboard Service
+          column: 12
+          output: false
+          target: 80 
+          source: 8098
+          port: true
+          portbind:
+            from: '%{variables.port.source}'
+            to: '%{variables.port.target}'
+        serverport:
+          element: render
+          label: Mytax2 Server Service
+          column: 12
+          output: false
+          target: 3000
+          source: 3000
+          port: true
+          portbind:
+            from: '%{variables.serverport.source}'
+            to: '%{variables.serverport.target}'
+      services:
+        - name: mytax_kraken2_report2
+          label: Kraken2 Report2
+          image: jhuaplbio/basestack_mytax2:latest
+          workingdir: /opt/test-data
+          orchestrated: false
+          init: false
+          force_restart: false
+          force_init: false
+          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; source /opt/conda/etc/profile.d/conda.sh; conda activate mytax2; npm run server   ']
+        

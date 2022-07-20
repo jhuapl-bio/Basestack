@@ -50,6 +50,33 @@ export function set(attribute, value, obj, type) {
 	}
 }
 
+export async function readCsv(filepath, sep){ // 1st argument is filepath, second is whetehr or not to split the data into a tsv with a string/char
+	return new Promise((resolve, reject)=>{
+				
+		const csvData = []; 
+			fs.exists(filepath,(exists)=>{
+				if (exists){
+					fs.createReadStream(filepath)
+					.pipe(parse({delimiter: sep}))
+					.on('data', function(csvrow) {
+						//do something with csvrow
+						csvData.push(csvrow);        
+					})
+					.on("error", function(err){
+						reject(err)
+					})
+					.on('end',function() {
+						resolve(csvData)
+					});
+				} else {
+					reject(new Error(`${filepath} doesn't exist`))
+				}
+				
+			})
+			
+		
+	}) 
+}
 export function get(attribute, obj, type) {
     let depth = obj; 
     const typeMap = {
