@@ -41,8 +41,7 @@
           element: file
           optional: false
           fallback: "${writePath}/workflows/mytax2/Samplesheet.csv"
-          bind_parent_dir: true
-          bind: directory
+          # bind: directory
           name: "Samplesheet"
           class: wb-100  p-3 mb-1
           read:
@@ -61,6 +60,12 @@
               source: "%{variables.csv.source}"
               bind: "self"
               column: "database"
+          set:
+            - target: "variables.manifest.source"
+              header: ['sample','path_1','path_2','format','platform','database','compressed']
+              reformat: ['database', 'path_1', 'path_2']
+              source: "%{variables.csv.source}"
+              sep: "," 
           source: null
           target: /MYTAX/data/<<basename(%{variables.csv.source})>>
         manifest:

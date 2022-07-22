@@ -1,3 +1,4 @@
+import nestedProperty from 'nested-property';
 import { resolve } from 'path';
 import {  mapVariables } from '../controllers/mapper.js';
 const cloneDeep = require("lodash.clonedeep");
@@ -395,7 +396,7 @@ export class Service {
         if (!sep){
             sep = ","
         }
-        
+
         let tsv_file_content = item.map((d)=>{ 
             let full = []
              
@@ -524,7 +525,7 @@ export class Service {
                             selected_option.bind.to = $this.removeQuotes(selected_option.bind.to)
                             binds.push(`${selected_option.bind.from}:${selected_option.bind.to}`) 
                             seenTargetTos.push(selected_option.bind.to)
-                        }  else {  
+                        }  else {   
                             if (seenTargetTos.indexOf(to) == -1 && from){
                                 to = $this.removeQuotes(to)
                                 binds.push(`${from}:${to}`) 
@@ -577,6 +578,7 @@ export class Service {
                     }))   
 
                 }   
+                console.log(selected_option.name,"<")
                 if (selected_option.create){
                     if (selected_option.create.type == 'list' && selected_option.source.length > 0){
                         console.log("creation!")
@@ -599,6 +601,52 @@ export class Service {
         }
         await Promise.allSettled((promises))
         return
+    }
+    async defineSet(){ 
+        let promises = []
+        const $this=this
+        let binds = []
+        let defaultVariables = this.config.variables 
+        if (defaultVariables){
+            for (let [name, selected_option ] of Object.entries(defaultVariables)){
+                if (selected_option.set){
+                    for (let i = 0; i < selected_option.set.length; i++){
+                        // selected_option.read.forEach(async (read)=>{
+                        let set  = selected_option.set[i]
+                        // promises.push(
+                        let exists = await fs.existsSync(set.source)
+                        if (exists){
+                            try{
+                                let f = await readCsv(set.source, set.sep)
+                                if (selected_option.set){ 
+                                    store.logger.info(`${selected_option.set}`)
+                                }
+                                store.logger.info(`${exists}, set csv done`)
+                                let updates = []
+                                f.forEach((row)=>{ 
+                                    let rowupdate = []
+                                    set.header.forEach((head)=>{
+                                        if (set.reformat && set.reformat.indexOf(head) !=-1){
+                                            rowupdate.push($this.reformatPath(row[head]))
+                                        }else {
+                                            rowupdate.push(row[head])
+                                        }
+                                    })
+                                    updates.push(rowupdate) 
+                                }) 
+                                console.log(updates,set)
+                                nestedProperty.set($this.config, set.target, updates)
+                                set.target = updates
+                                console.log($this.config.variables.manifest.source, ",,,,,,,,,")
+                            } catch (err){
+                                store.logger.error(`${err}, error in reading csv to set file`)
+                            }
+                        }
+                    }
+                }
+            }
+            return
+        }
     }
     async defineReads(){
         let promises = []
@@ -756,7 +804,9 @@ export class Service {
                     // $this.config.variables = defaultVariables  
                     let envs = {}   
                     $this.defineEnv() 
+                    await $this.defineSet()
                     await $this.defineCopies()
+                    console.log("done", $this.config.variables.manifest.source)
                     let mounts = await $this.defineReads()
                     $this.defineBinds()  
                     $this.definePortBinds()
