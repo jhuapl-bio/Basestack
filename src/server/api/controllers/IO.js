@@ -52,11 +52,9 @@ export function set(attribute, value, obj, type) {
 
 export async function readCsv(filepath, sep){ // 1st argument is filepath, second is whetehr or not to split the data into a tsv with a string/char
 	return new Promise((resolve, reject)=>{
-		store.logger.info("read csv")
 		const csvData = []; 
 		( async ()=>{
 			let exists = await fs.existsSync(filepath)
-			store.logger.info(`${filepath}, exists`)
 			if (exists){
 				fs.createReadStream(filepath)
 				.pipe(parse({delimiter: sep}))
@@ -68,7 +66,6 @@ export async function readCsv(filepath, sep){ // 1st argument is filepath, secon
 					reject(err)
 				})
 				.on('close',function() {
-					store.logger.info(`${filepath}, done reading`)
 					resolve(csvData)
 				});
 			} else {

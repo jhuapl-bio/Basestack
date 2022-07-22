@@ -79,7 +79,6 @@
             skip_header: true
             source: "%{variables.csv.source}"
           create:
-            # target: null
             target: "<<directory(%{variables.csv.source})>>/Samplesheet.csv"
             sep: ","
             type: "list"

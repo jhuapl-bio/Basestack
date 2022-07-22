@@ -391,7 +391,7 @@ export class Service {
         return options
 
     }
-    createContentOutput(item, sep, header, newline, outputHeader, type){
+    createContentOutput(item, sep, header, newline, outputHeader, type, resolve){
         if (!sep){
             sep = ","
         }
@@ -415,8 +415,8 @@ export class Service {
         if (header && outputHeader){
             tsv_file_content.unshift(header.join(( sep == 'tab' ? "\t" : sep )))
         }
-        
         tsv_file_content = tsv_file_content.join('\n') 
+        console.log(tsv_file_content,"<<<<")
         if (newline){
             tsv_file_content = tsv_file_content + "\n"
         }
@@ -544,7 +544,6 @@ export class Service {
     } 
     reformatPath(selected_path){
         if (!selected_path.startsWith("/")){
-            console.log("this.options",this.options)
             if (this.config.workingdir){
                 selected_path = `${this.config.workingdir}${selected_path}`
             } else {
@@ -580,7 +579,8 @@ export class Service {
                 }   
                 if (selected_option.create){
                     if (selected_option.create.type == 'list' && selected_option.source.length > 0){
-                        let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list')
+                        console.log("creation!")
+                        let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list', selected_option.resolve)
                         promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                             logger.error(err)  
                         }))
@@ -613,10 +613,8 @@ export class Service {
                         // promises.push(
                         let exists = await fs.existsSync(read.source)
                         if (exists){
-                            // console.log(exists,",")
                             try{
                                 let f = await readCsv(read.source, read.sep)
-                                store.logger.info(`${exists}, read csv done`)
                                 f.forEach((row)=>{ 
                                     let bind = {
                                         Source: "",
@@ -626,7 +624,6 @@ export class Service {
                                     if (read.bind == 'directory'){
                                         bind.Source = path.dirname(row[read.column])
                                         bind.Target = path.dirname(this.reformatPath(row[read.column]))
-
                                         // bind = `${path.dirname(row[read.column])}:"${path.dirname(this.reformatPath(row[read.column]))}"`
                                     } else {  
                                         // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
@@ -752,7 +749,6 @@ export class Service {
                     let seenTargetTos = []    
                     let seenTargetFrom = []     
                     defaultVariables = $this.config.variables 
-                    // console.log(defaultVariables.report.source,defaultVariables.outputDir.source,"<<<inservice")
                     if ($this.config.serve ){      
                         let variable_port = defaultVariables[$this.config.serve] 
                         options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
@@ -760,18 +756,12 @@ export class Service {
                     // $this.config.variables = defaultVariables  
                     let envs = {}   
                     $this.defineEnv() 
-                    console.log("definereads")
                     await $this.defineCopies()
-                    console.log("define copie done")
                     let mounts = await $this.defineReads()
-                    // options.Mounts.push(... mounts)
-                    // console.log("mounts", mounts)
-                    console.log("definereas2end")
                     $this.defineBinds()  
                     $this.definePortBinds()
                     await $this.updatePorts($this.portbinds,options)
                     const userInfo = os.userInfo();
-                    // console.log(defaultVariables,"<<<<")
                     // get uid property
                     // from the userInfo object
                     if (setUser ){  
@@ -867,11 +857,10 @@ export class Service {
                     options.Env = [...options.Env, ...$this.env ]  
                     options.HostConfig.Binds = [...options.HostConfig.Binds, ...$this.binds ]
                     options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
-                    console.log(mounts)
                     mounts.forEach((m)=>{
                         options.HostConfig.Mounts.push(m)
                     })
-                    logger.info("%o _____ ", options)
+                    logger.info("%o _____ ", options.HostConfig.Mounts)
                     // logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 
                         resolve()  
