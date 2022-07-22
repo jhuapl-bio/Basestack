@@ -1,3 +1,4 @@
+import { resolve } from 'path';
 import {  mapVariables } from '../controllers/mapper.js';
 const cloneDeep = require("lodash.clonedeep");
 const os = require("os")
@@ -544,6 +545,51 @@ export class Service {
     reformatPath(selected_path){
         return selected_path.replaceAll(/\\/g, "/")
     }
+    async defineCopies(){
+        const $this = this;
+        let promises = []
+        let defaultVariables = this.config.variables
+        for (let [name, selected_option ] of Object.entries(defaultVariables)){
+            if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
+                let targetBinding = selected_option
+                let full_item = cloneDeep(selected_option)   
+                      
+                if (selected_option.framework){ 
+                    let validated_framework = validateFramework(selected_option.framework, defaultVariables)
+                    selected_option.source = validated_framework
+                }      
+                if (selected_option.copy){    
+                    let filepath = ( selected_option.copy.basename ?
+                        path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
+                        selected_option.copy.to
+                    )   
+                    promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
+                        logger.error(err) 
+                    }))   
+
+                }   
+                if (selected_option.create){
+                    if (selected_option.create.type == 'list' && selected_option.source.length > 0){
+                        let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list')
+                        promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
+                            logger.error(err)  
+                        }))
+
+                    } else if (selected_option.create.type == 'json' ) {
+                        promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
+                            logger.error(err)  
+                        }))      
+                    } else if (selected_option.source.length > 0) {   
+                        promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
+                            logger.error(err)    
+                        }))        
+                    }                      
+                }
+            }
+        }
+        await Promise.allSettled((promises))
+        return
+    }
     async defineReads(){
         let promises = []
         let binds = []
@@ -551,36 +597,42 @@ export class Service {
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (selected_option.read){
-                    selected_option.read.forEach((read)=>{
-                        promises.push(readCsv(read.source, read.sep).then((f)=>{
-                            f.forEach((row)=>{
-                                let bind = ""
-                                if (read.bind == 'directory'){
-                                    bind = `${path.dirname(row[read.column])}:${path.dirname(this.reformatPath(row[read.column]))}`
-                                } else {
-                                    bind = `${row[read.column]}:${this.reformatPath(row[read.column])}`
-                                }
-                                if(row[read.column] && binds.indexOf(bind) == -1){
+                    for (let i = 0; i < selected_option.read.length; i++){
+                        // selected_option.read.forEach(async (read)=>{
+                        let read  = selected_option.read[i]
+                        // promises.push(
+                        let exists = await fs.existsSync(read.source)
+                        if (exists){
+                            // console.log(exists,",")
+                            try{
+                                let f = await readCsv(read.source, read.sep)
+                                store.logger.info(`${exists}, read csv done`)
+                                f.forEach((row)=>{ 
+                                    let bind = ""
                                     if (read.bind == 'directory'){
-                                        binds.push(bind)
-                                    } else {
-                                        binds.push(bind)
+                                        bind = `${path.dirname(row[read.column])}:${path.dirname(this.reformatPath(row[read.column]))}`
+                                    } else {  
+                                        bind = `${row[read.column]}:${this.reformatPath(row[read.column])}`
                                     }
-                                }    
-                            }) 
-                        }).catch((err)=>{
-                            store.logger.error(`${err}, error in reading csv file`)
-                        }))
-                    })
+                                    if(row[read.column] && binds.indexOf(bind) == -1){
+                                        if (read.bind == 'directory'){
+                                            binds.push(bind)
+                                        } else {
+                                            binds.push(bind)
+                                        }
+                                    }   
+                                })
+                            } catch (err){
+                                store.logger.error(`${err}, error in reading csv file`)
+                            }
+                        }
+                    }
                 }
             }
-            let results = await Promise.allSettled((promises))
             if (binds.length > 0)
             {
                 binds  = [... new Set (binds)]
-                binds.forEach((bind)=>{
-                    this.binds.push(... binds)
-                })
+                this.binds.push(... binds)
             }
             return
         }
@@ -686,12 +738,16 @@ export class Service {
                     // $this.config.variables = defaultVariables  
                     let envs = {}   
                     $this.defineEnv() 
+                    console.log("definereads")
+                    await $this.defineCopies()
+                    console.log("define copie done")
                     await $this.defineReads()
+                    console.log("definereas2end")
                     $this.defineBinds()  
                     $this.definePortBinds()
                     await $this.updatePorts($this.portbinds,options)
                     const userInfo = os.userInfo();
-    
+                    // console.log(defaultVariables,"<<<<")
                     // get uid property
                     // from the userInfo object
                     if (setUser ){  
@@ -713,37 +769,7 @@ export class Service {
                                 let targetBinding = selected_option
                                 let full_item = cloneDeep(selected_option)   
                                       
-                                if (selected_option.framework){ 
-                                    let validated_framework = validateFramework(selected_option.framework, defaultVariables)
-                                    selected_option.source = validated_framework
-                                }      
-                                if (selected_option.copy){    
-                                    let filepath = ( selected_option.copy.basename ?
-                                        path.join( selected_option.copy.to, path.basename(selected_option.copy.from)   ) :
-                                        selected_option.copy.to
-                                    )   
-                                    promises.push(copyFile(selected_option.copy.from, filepath).catch((err)=>{
-                                        logger.error(err) 
-                                    }))   
-      
-                                }  
-                                if (selected_option.create){
-                                    if (selected_option.create.type == 'list' ){
-                                        let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list')
-                                        promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
-                                            logger.error(err)  
-                                        }))
-    
-                                    } else if (selected_option.create.type == 'json' ) {
-                                        promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
-                                            logger.error(err) 
-                                        }))      
-                                    } else {   
-                                        promises.push(writeFile(selected_option.create.target, JSON.stringify(selected_option.source,null, 4)).catch((err)=>{
-                                            logger.error(err)    
-                                        }))        
-                                    }                      
-                                }    
+                                 
                                      
                                 function append_commands(appendable){  
                                     let serviceFound = appendable.services.findIndex(data => data == $this.serviceIdx)
@@ -820,7 +846,7 @@ export class Service {
                     logger.info("%o _____ ", options)
                     // logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 
-                        resolve() 
+                        resolve()  
                     } else {
                         Promise.all(promises).then((response)=>{
                         $this.status.stream.info.push(JSON.stringify(options, null, 4))
@@ -946,7 +972,7 @@ export class Service {
                                 } else {
                                     $this.status.stream.info.push(err)
                                 }  
-                                    
+                                       
                                 reject() 
                             } 
                         })

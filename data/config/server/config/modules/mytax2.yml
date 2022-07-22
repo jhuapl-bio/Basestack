@@ -32,7 +32,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: latest
+          version: v2.0.0
           type: docker
           format: docker
       variables:
@@ -40,6 +40,7 @@
           label: CSV File(s)
           element: file
           optional: false
+          fallback: "${writePath}/workflows/mytax2/Samplesheet.csv"
           bind_parent_dir: true
           bind: directory
           name: "Samplesheet"
@@ -62,6 +63,31 @@
               column: "database"
           source: null
           target: /MYTAX/data/<<basename(%{variables.csv.source})>>
+        manifest:
+          label: "Input Samplsheet contents"
+          element: "list"
+          hint: "Samplesheet contents"
+          columns: 2
+          column: 12
+          sep: ","
+          bind_parent_dir: true
+          tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
+          update_on: 
+            depends:
+              - csv
+            action: "read"
+            skip_header: true
+            source: "%{variables.csv.source}"
+          create:
+            # target: null
+            target: "<<directory(%{variables.csv.source})>>/Samplesheet.csv"
+            sep: ","
+            type: "list"
+            header: ['sample','path_1','path_2','format','platform','database','compressed']
+          class: "wb-50  p-3 mb-1"
+          source: []
+          header: ['sample','path_1','path_2','format','platform','database','compressed']
+          append_newline: true
         port:
           element: render
           label: Mytax2 Dashboard Service
@@ -87,7 +113,7 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:latest
+          image: jhuaplbio/basestack_mytax2:v2.0.0
           workingdir: /opt/test-data
           orchestrated: false
           init: false

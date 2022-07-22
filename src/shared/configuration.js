@@ -208,21 +208,35 @@ export  class Configuration {     // Make the main procedure class for configura
                                         let header = vari.header // IF header defined, set first row as so
                                         f  = f.filter(function (el) {
                                             return el != null && el !== '';
-                                        });
+                                        }); 
                                         if (header){
-                                            vari.source = f.map((d)=>{ // split the header as tabular format (only supported one right now)
-                                                let p  = d.split("\t")
-                                                let returned = { }
-                                                header.map((head,i)=>{
-                                                    returned[head] = p[i]
-                                                }) // Define the keys for the header
-                                                return returned
+                                            vari.source = f.map((d,i)=>{ // split the header as tabular format (only supported one right now)
+                                                if (update_on.skip_header && i ==0){
+                                                    console.log("skipping header", vari.header)
+                                                } else { 
+                                                    let p  = d.split((vari.sep ? vari.sep : "\t"))
+                                                    let returned = { }
+                                                    header.map((head,i)=>{
+                                                        returned[head] = p[i]
+                                                    }) // Define the keys for the header
+                                                    return returned
+                                                }
+                                                
                                             })
                                         } else {
-                                            vari.source = f.map((d)=>{
-                                                return d.split("\t")
+                                            vari.source = f.map((d,i)=>{
+                                                if (update_on.skip_header && i ==0){
+                                                    console.log("skipping header", vari.header)
+                                                } else {
+                                                    return d.split((vari.sep ? vari.sep : "\t"))
+                                                }
                                             }) // Otherwise, assume the splitting type if tabular
+                                            
                                         }
+                                        vari.source = vari.source.filter((f)=>{
+                                            return f
+                                        })
+                                        console.log(returnedVari,"returned")
                                         returnedVari.value = vari
                                         // return the key of the variable, and the value of it (source)
                                         return returnedVari 

@@ -76,7 +76,7 @@ export  class Job {
         try{   
             if (obj && obj.options){
                 if (obj.options ){
-                    if (!obj.option){
+                    if (!obj.option){ 
                         obj.option = 0
                     } 
                 }
@@ -84,7 +84,7 @@ export  class Job {
             
             
             if (value.source || typeof value == 'object' && 'source' in value){
-                if (typeof value.source == 'string' || typeof value.source == 'number' || !typeof value.source){
+                if (typeof value.source == 'string' || typeof value.source == 'number' || ! value.source){
                     obj.source = value.source
                 } else if (typeof value.source == 'object') {
                     for (let [key, v] of Object.entries(value.source)){
@@ -93,6 +93,9 @@ export  class Job {
                 } else {
                     obj.source = value.source
                 }
+                if (!obj.source && obj.fallback){
+                    obj.source = obj.fallback
+                } 
             } 
             
             
@@ -300,7 +303,7 @@ export  class Job {
         for(let [key, value] of Object.entries(variables)){
             if (!$this.runningConfig.variables[key] && value.custom){
                 $this.runningConfig.variables[key] = value
-            }
+            } 
             let obj = $this.runningConfig.variables[key]
             this.setValueVariable(value, obj, key)
         }
