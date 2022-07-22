@@ -111,14 +111,17 @@ export  class Job {
                 } else { 
                     obj.option = value.option
                 }
-                $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
-                $this.runningConfig.variables[key].option = obj.option
-                if (obj.source ){ 
-                    $this.runningConfig.variables[key].source = obj.source
-                } 
-                if (obj.target){
-                    $this.runningConfig.variables[key].target = obj.target
+                if (typeof obj.options[obj.option] == "object"){
+                    $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
                 }
+                $this.runningConfig.variables[key].option = obj.option
+                // if (obj.source ){ 
+                //     $this.runningConfig.variables[key].source = obj.source
+                // } 
+                // if (obj.target){
+                //     $this.runningConfig.variables[key].target = obj.target
+                // }
+                
                 
 
                
@@ -127,10 +130,7 @@ export  class Job {
             }  
         } catch (Err){
             store.logger.error(Err)
-        }
-
-       
-        
+        }        
     } 
     async setVariable(value, variable, target){
         
@@ -141,12 +141,11 @@ export  class Job {
             this.setValueVariable(data, obj, variable)
             let variables = this.runningConfig.variables
             let promises = []
-            
             if (variables){
                 for (let [key, vari] of Object.entries(variables)){
-                    if (vari.options && vari.option >=0 ){
-                        vari = vari.optionValue
-                    }
+                    // if (vari.options && vari.option >=0 ){
+                    //     vari = vari.optionValue
+                    // }
                     if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
                         let update_on = vari.update_on
                         let action  = update_on.action
@@ -305,12 +304,18 @@ export  class Job {
                 $this.runningConfig.variables[key] = value
             } 
             let obj = $this.runningConfig.variables[key]
+            if (key == 'primers'){
+                console.log($this.runningConfig.variables.primers,"<se122t")
+            }
             this.setValueVariable(value, obj, key)
+                console.log($this.runningConfig.variables.primers,"<seendt",key)
+            
         }
           
         this.services.forEach((service)=>{ 
             service.config.variables = $this.runningConfig.variables
         })
+        console.log($this.runningConfig.variables.primers,"<set")
         
         return 
     }

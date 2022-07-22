@@ -417,7 +417,6 @@ export class Service {
             tsv_file_content.unshift(header.join(( sep == 'tab' ? "\t" : sep )))
         }
         tsv_file_content = tsv_file_content.join('\n') 
-        console.log(tsv_file_content,"<<<<")
         if (newline){
             tsv_file_content = tsv_file_content + "\n"
         }
@@ -555,6 +554,9 @@ export class Service {
             }
             selected_path = selected_path.replaceAll(/\\/g, "/")
         }
+        if (selected_path == '/'){ 
+            selected_path = "/junk"
+        }
         return `${selected_path}`
     }
     async defineCopies(){
@@ -580,10 +582,8 @@ export class Service {
                     }))   
 
                 }   
-                console.log(selected_option.name,"<")
                 if (selected_option.create){
                     if (selected_option.create.type == 'list' && selected_option.source.length > 0){
-                        console.log("creation!")
                         let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list', selected_option.resolve)
                         promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                             logger.error(err)  
@@ -671,7 +671,6 @@ export class Service {
                                     }
                                     if(row[read.column] !== ''){
                                         if (read.bind == 'directory'){
-                                            console.log(row[read.column], "file to write!", read.column) 
                                             bind.Source = path.resolve(path.dirname(row[read.column]))
                                             bind.Target = path.dirname(this.reformatPath(row[read.column]))
                                             // bind = `${path.dirname(row[read.column])}:"${path.dirname(this.reformatPath(row[read.column]))}"`
@@ -715,12 +714,12 @@ export class Service {
         let defaultVariables = $this.config.variables  
         if (defaultVariables){   
             for (let [key, selected_option ] of Object.entries(defaultVariables)){
+                let full_item = cloneDeep(selected_option)
                 if (selected_option.optionValue  && typeof selected_option.optionValue == 'object'){
                     selected_option = selected_option.optionValue
                 }    
-                let full_item = cloneDeep(selected_option)
                 if (typeof selected_option == 'object'){ 
-                    
+                     
                     if (selected_option.output && !selected_option.target){
                         store.logger.info(`no defined target for variable: ${key}`) 
                     } else {   
@@ -747,15 +746,14 @@ export class Service {
                 }
 
                 if (selected_option.define && selected_option.source){
-                    for( let [key, value] of Object.entries(full_item.define)){
+                    for( let [key, value] of Object.entries(selected_option.define)){
                         if (value){
                             env.push(`${key}=${value}`)
                         }
                     }
                 }  
-                
-                if (selected_option.define && full_item.source){
-                    for( let [key, value] of Object.entries(selected_option.define)){
+                if (full_item.define && full_item.source){
+                    for( let [key, value] of Object.entries(full_item.define)){
                         if (value){
                             env.push(`${key}=${value}`)
                         }
@@ -811,7 +809,6 @@ export class Service {
                     let mounts = await $this.defineReads()
                     await $this.defineSet()
                     await $this.defineCopies()
-                    console.log("done", $this.config.variables.manifest.source)
                     $this.defineBinds()  
                     $this.definePortBinds()
                     await $this.updatePorts($this.portbinds,options)
@@ -914,7 +911,7 @@ export class Service {
                     mounts.forEach((m)=>{
                         options.HostConfig.Mounts.push(m)
                     })
-                    logger.info("%o _____ ", options.HostConfig)
+                    logger.info("%o _____ ", options)
                     // logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 
                         resolve()  
