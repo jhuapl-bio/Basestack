@@ -528,14 +528,14 @@ export class Service {
                             if (seenTargetTos.indexOf(to) == -1 && from){
                                 to = $this.removeQuotes(to)
                                 binds.push(`${from}:${to}`) 
-                            } 
+                            }  
                             
                             seenTargetTos.push(to)
-                        }
+                        } 
                     }
 
                     
-                     
+                      
                 }
             }
         }
@@ -543,10 +543,20 @@ export class Service {
         return 
     } 
     reformatPath(selected_path){
-        return selected_path.replaceAll(/\\/g, "/")
+        if (!selected_path.startsWith("/")){
+            console.log("this.options",this.options)
+            if (this.config.workingdir){
+                selected_path = `${this.config.workingdir}${selected_path}`
+            } else {
+                selected_path = `/${selected_path}`
+            }
+            
+        }
+        selected_path = selected_path.replaceAll(/\\/g, "/")
+        return `${selected_path}`
     }
     async defineCopies(){
-        const $this = this;
+        const $this = this; 
         let promises = []
         let defaultVariables = this.config.variables
         for (let [name, selected_option ] of Object.entries(defaultVariables)){
@@ -608,11 +618,20 @@ export class Service {
                                 let f = await readCsv(read.source, read.sep)
                                 store.logger.info(`${exists}, read csv done`)
                                 f.forEach((row)=>{ 
-                                    let bind = ""
+                                    let bind = {
+                                        Source: "",
+                                        Type: "bind",
+                                        Target: ""
+                                    }
                                     if (read.bind == 'directory'){
-                                        bind = `${path.dirname(row[read.column])}:${path.dirname(this.reformatPath(row[read.column]))}`
+                                        bind.Source = path.dirname(row[read.column])
+                                        bind.Target = path.dirname(this.reformatPath(row[read.column]))
+
+                                        // bind = `${path.dirname(row[read.column])}:"${path.dirname(this.reformatPath(row[read.column]))}"`
                                     } else {  
-                                        bind = `${row[read.column]}:${this.reformatPath(row[read.column])}`
+                                        // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
+                                        bind.Source = row[read.column]
+                                        bind.Target = this.reformatPath(row[read.column])
                                     }
                                     if(row[read.column] && binds.indexOf(bind) == -1){
                                         if (read.bind == 'directory'){
@@ -629,12 +648,12 @@ export class Service {
                     }
                 }
             }
-            if (binds.length > 0)
-            {
-                binds  = [... new Set (binds)]
-                this.binds.push(... binds)
-            }
-            return
+            // if (binds.length > 0)
+            // {
+            //     binds  = [... new Set (binds)]
+            //     this.binds.push(... binds)
+            // }
+            return binds
         }
         
     }
@@ -710,6 +729,9 @@ export class Service {
             ( async ()=>{
                 // try{
                     let options = cloneDeep($this.options)
+                    if (!options.HostConfig.Mounts){
+                        options.HostConfig.Mounts = []
+                    }
                     store.logger.info("Starting.. %s", $this.name) 
                     let env = []
                     if (!params){ 
@@ -741,7 +763,9 @@ export class Service {
                     console.log("definereads")
                     await $this.defineCopies()
                     console.log("define copie done")
-                    await $this.defineReads()
+                    let mounts = await $this.defineReads()
+                    // options.Mounts.push(... mounts)
+                    // console.log("mounts", mounts)
                     console.log("definereas2end")
                     $this.defineBinds()  
                     $this.definePortBinds()
@@ -843,6 +867,10 @@ export class Service {
                     options.Env = [...options.Env, ...$this.env ]  
                     options.HostConfig.Binds = [...options.HostConfig.Binds, ...$this.binds ]
                     options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
+                    console.log(mounts)
+                    mounts.forEach((m)=>{
+                        options.HostConfig.Mounts.push(m)
+                    })
                     logger.info("%o _____ ", options)
                     // logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 

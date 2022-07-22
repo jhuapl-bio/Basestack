@@ -114,10 +114,10 @@
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
           image: jhuaplbio/basestack_mytax2:v2.0.0
-          workingdir: /opt/test-data
+          workingdir: /
           orchestrated: false
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; source /opt/conda/etc/profile.d/conda.sh; conda activate mytax2; npm run server   ']
+          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; source /opt/conda/etc/profile.d/conda.sh; conda activate mytax2; echo $PWD; cd /opt; npm run server   ']
         
