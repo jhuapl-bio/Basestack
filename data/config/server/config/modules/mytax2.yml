@@ -67,7 +67,6 @@
               source: "%{variables.csv.source}"
               sep: "," 
           source: null
-          target: /MYTAX/data/<<basename(%{variables.csv.source})>>
         manifest:
           label: "Input Samplsheet contents"
           element: "list"
@@ -83,8 +82,11 @@
             action: "read"
             skip_header: true
             source: "%{variables.csv.source}"
+          bind:
+            from:  "<<directory(%{variables.csv.source})>>/mytax2/Samplesheet.csv"
+            to: "/MYTAX/data/Samplesheet.csv"
           create:
-            target: "<<directory(%{variables.csv.source})>>/Samplesheet.csv"
+            target: "<<directory(%{variables.csv.source})>>/mytax2/Samplesheet.csv"
             sep: ","
             type: "list"
             header: ['sample','path_1','path_2','format','platform','database','compressed']

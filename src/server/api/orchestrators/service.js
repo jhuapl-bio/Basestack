@@ -472,7 +472,7 @@ export class Service {
                 let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
                     bnd.forEach((b)=>{
                         if (typeof b == 'object' && b.from){
-                            binds.push(`${b.from}:${b.to}`)
+                            binds.push(`${path.resolve(b.from)}:${this.reformatPath(b.to)}`)
                         } else if (b) {
                             binds.push(b) 
                         }
@@ -481,7 +481,7 @@ export class Service {
                 let b  = $this.config.bind
                 if (b.from)
                 {
-                    binds.push(`${b.from}:${b.to}`)
+                    binds.push(`${path.resolve(b.from)}:${this.reformatPath(b.to)}`)
                 }
             } 
         }
@@ -509,7 +509,7 @@ export class Service {
                             let finalpath = to[i]    
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
                                 finalpath = $this.removeQuotes(finalpath)
-                                binds.push(`${directory}:${finalpath}`) 
+                                binds.push(`${path.resolve(directory)}:${this.reformatPath(finalpath)}`) 
                             }   
                             seenTargetTos.push(finalpath)
                         })  
@@ -518,17 +518,17 @@ export class Service {
                             let finalpath = path.dirname(to)
                             if (seenTargetTos.indexOf(finalpath) == -1 && from){
                                 finalpath = $this.removeQuotes(finalpath)
-                                binds.push(`${path.dirname(from)}:${finalpath}`) 
+                                binds.push(`${path.resolve(path.dirname(from))}:${this.reformatPath(finalpath)}`) 
                             } 
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
                             selected_option.bind.to = $this.removeQuotes(selected_option.bind.to)
-                            binds.push(`${selected_option.bind.from}:${selected_option.bind.to}`) 
+                            binds.push(`${path.resolve(selected_option.bind.from)}:${this.reformatPath(selected_option.bind.to)}`) 
                             seenTargetTos.push(selected_option.bind.to)
                         }  else {   
                             if (seenTargetTos.indexOf(to) == -1 && from){
                                 to = $this.removeQuotes(to)
-                                binds.push(`${from}:${to}`) 
+                                binds.push(`${path.resolve(from)}:${this.reformatPath(to)}`) 
                             }  
                             
                             seenTargetTos.push(to)
@@ -544,15 +544,17 @@ export class Service {
         return 
     } 
     reformatPath(selected_path){
-        if (!selected_path.startsWith("/")){
-            if (this.config.workingdir){
-                selected_path = `${this.config.workingdir}${selected_path}`
-            } else {
-                selected_path = `/${selected_path}`
+        if (selected_path && selected_path !==''){
+            if (!selected_path.startsWith("/")){
+                if (this.config.workingdir){
+                    selected_path = `${this.config.workingdir}${selected_path}`
+                } else {
+                    selected_path = `/${selected_path}`
+                }
+                
             }
-            
+            selected_path = selected_path.replaceAll(/\\/g, "/")
         }
-        selected_path = selected_path.replaceAll(/\\/g, "/")
         return `${selected_path}`
     }
     async defineCopies(){
@@ -634,10 +636,8 @@ export class Service {
                                     })
                                     updates.push(rowupdate) 
                                 }) 
-                                console.log(updates,set)
                                 nestedProperty.set($this.config, set.target, updates)
                                 set.target = updates
-                                console.log($this.config.variables.manifest.source, ",,,,,,,,,")
                             } catch (err){
                                 store.logger.error(`${err}, error in reading csv to set file`)
                             }
@@ -655,7 +655,7 @@ export class Service {
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (selected_option.read){
-                    for (let i = 0; i < selected_option.read.length; i++){
+                    for (let i = 0; i < selected_option.read.length; i++){ 
                         // selected_option.read.forEach(async (read)=>{
                         let read  = selected_option.read[i]
                         // promises.push(
@@ -663,28 +663,32 @@ export class Service {
                         if (exists){
                             try{
                                 let f = await readCsv(read.source, read.sep)
-                                f.forEach((row)=>{ 
+                                f.forEach((row)=>{  
                                     let bind = {
                                         Source: "",
                                         Type: "bind",
                                         Target: ""
                                     }
-                                    if (read.bind == 'directory'){
-                                        bind.Source = path.dirname(row[read.column])
-                                        bind.Target = path.dirname(this.reformatPath(row[read.column]))
-                                        // bind = `${path.dirname(row[read.column])}:"${path.dirname(this.reformatPath(row[read.column]))}"`
-                                    } else {  
-                                        // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
-                                        bind.Source = row[read.column]
-                                        bind.Target = this.reformatPath(row[read.column])
-                                    }
-                                    if(row[read.column] && binds.indexOf(bind) == -1){
+                                    if(row[read.column] !== ''){
                                         if (read.bind == 'directory'){
-                                            binds.push(bind)
-                                        } else {
-                                            binds.push(bind)
+                                            console.log(row[read.column], "file to write!", read.column) 
+                                            bind.Source = path.resolve(path.dirname(row[read.column]))
+                                            bind.Target = path.dirname(this.reformatPath(row[read.column]))
+                                            // bind = `${path.dirname(row[read.column])}:"${path.dirname(this.reformatPath(row[read.column]))}"`
+                                        } else {  
+                                            // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
+                                            bind.Source = path.resolve(row[read.column])
+                                            bind.Target = this.reformatPath(row[read.column])
                                         }
-                                    }   
+                                        if(row[read.column] && binds.indexOf(bind) == -1){
+                                            if (read.bind == 'directory'){
+                                                binds.push(bind)
+                                            } else {
+                                                binds.push(bind)
+                                            }
+                                        }  
+                                    }
+                                     
                                 })
                             } catch (err){
                                 store.logger.error(`${err}, error in reading csv file`)
@@ -804,10 +808,10 @@ export class Service {
                     // $this.config.variables = defaultVariables  
                     let envs = {}   
                     $this.defineEnv() 
+                    let mounts = await $this.defineReads()
                     await $this.defineSet()
                     await $this.defineCopies()
                     console.log("done", $this.config.variables.manifest.source)
-                    let mounts = await $this.defineReads()
                     $this.defineBinds()  
                     $this.definePortBinds()
                     await $this.updatePorts($this.portbinds,options)
@@ -910,7 +914,7 @@ export class Service {
                     mounts.forEach((m)=>{
                         options.HostConfig.Mounts.push(m)
                     })
-                    logger.info("%o _____ ", options.HostConfig.Mounts)
+                    logger.info("%o _____ ", options.HostConfig)
                     // logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 
                         resolve()  
