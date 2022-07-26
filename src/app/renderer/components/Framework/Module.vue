@@ -814,7 +814,6 @@ export default {
     },
     async updateValue(value){
       const $this = this;
-      console.log("update value")
       $this.$store.dispatch('UPDATE_VARIABLE', {
         name: value.variable,
         source: value.src,
@@ -823,15 +822,16 @@ export default {
         procedure: $this.procedureIdx
       })
       this.procedure.variables[value.variable].source = value.src
-      this.procedure.updates(value).then((f)=>{
-        if (f){
-          f.forEach((changed)=>{
-            if ($this.procedure[changed.key]){
-              $this.procedure.variables[changed.key] = changed.value.source
-            }
-          })
-        }
-      })
+      // this.procedure.updates(value).then((f)=>{
+      //   if (f){
+      //     f.forEach((changed)=>{
+      //       if ($this.procedure[changed.key]){
+      //         $this.procedure.variables[changed.key] = changed.value.source
+      //       }
+      //     })
+      //   }
+      // })
+      console.log("update value", this.procedure.variables.files.source,"<")
     },
     
 		loadProcedure(proc){

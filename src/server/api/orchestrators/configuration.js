@@ -15,6 +15,7 @@ export  class Configuration {
     }   
     defineMapping(){ 
         let newTarget = this.findObjectByLabel(this, "(\%\{.+?\})") 
+        console.log("define mapping!")
         newTarget  = this.findObjectByTarget(this, "(\&\{.+?\})")
     }     
  
@@ -253,6 +254,11 @@ export  class Configuration {
                                     })
                                     if (typeof fullstring == 'string'){
                                         fullstring= $this.mapFunctions(fullstring, obj.formatting)
+                                    } else if (Array.isArray(fullstring)){
+                                        console.log("isarray")
+                                        fullstring = fullstring.map((f)=>{
+                                            return $this.mapFunctions(f, obj.formatting)
+                                        })
                                     }
                                     if (fullstring == 'undefined'){
                                         return null

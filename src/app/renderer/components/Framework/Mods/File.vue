@@ -67,12 +67,12 @@ export default {
 	props: ['source', 'variable'],
   mounted(){
     if (!this.value && typeof(this.source) == 'string'){
-        var file = new File([this.source], this.source, {
-          type: "text/plain",
-        });
-        this.value = file
-        this.cached = true
-      }
+      var file = new File([this.source], this.source, {
+        type: "text/plain",
+      });
+      this.value = file
+      this.cached = true
+    }
   },
   
   watch: {

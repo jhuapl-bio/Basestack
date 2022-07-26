@@ -1,6 +1,4 @@
 import nestedProperty from 'nested-property';
-import { resolve } from 'path';
-import {  mapVariables } from '../controllers/mapper.js';
 const cloneDeep = require("lodash.clonedeep");
 const os = require("os")
 /*
@@ -20,11 +18,10 @@ const { readFile, readCsv, writeFile, copyFile } = require("../controllers/IO.js
 const { check_container,   } = require("../controllers/fetch.js")
 const { spawnLog } = require("../controllers/logger.js")
 const { Configuration }  = require("./configuration.js")
-var logger = store.logger
-// var docker = new Docker();
-const fs = require("file-system") 
+var logger = store.logger  
+const fs = require("file-system")     
 let dockerObj; 
-
+ 
 export class Service {
 	constructor(service, serviceIdx, orchestrated){
 		this.name = service.name
@@ -39,6 +36,7 @@ export class Service {
             interval: this.create_interval()
         }
         this.env = []
+        this.mounts = []
         this.binds = []
         this.portbinds = []
         this.status = { 
@@ -458,29 +456,53 @@ export class Service {
         return portbinds 
     }  
     removeQuotes(string){
-        string = string.replace(/[\'\"]/g, "")
-        return string
+        if (string){
+            string = string.replace(/[\'\"]/g, "")
+            return string    
+        } else {
+            return null
+        }
     }
     defineBinds(){
         let binds = [] 
+        let mounts = []
         const $this = this
         let seenTargetTos = []
+        function formatBind(source, target){
+            return {
+               Source: source,
+               Type: "bind",
+               Target: target
+           }
+       }
         let defaultVariables = this.config.variables 
         if ($this.config.bind){ 
             if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
                 let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
                     bnd.forEach((b)=>{
                         if (typeof b == 'object' && b.from){
-                            binds.push(`${path.resolve(b.from)}:${this.reformatPath(b.to)}`)
+                            mounts.push(formatBind(
+                                path.resolve(b.from),
+                                this.reformatPath(b.to)
+                            ))
                         } else if (b) {
-                            binds.push(b) 
+                            let y = b.split(":")
+                            mounts.push(formatBind(
+                                path.resolve(b[0]),
+                                this.reformatPath(b[1])
+                            ))
+
                         }
                     })   
             } else {
                 let b  = $this.config.bind
+                
                 if (b.from)
                 {
-                    binds.push(`${path.resolve(b.from)}:${this.reformatPath(b.to)}`)
+                    mounts.push(
+                        path.resolve(b.from),
+                        this.reformatPath(b.to)
+                    )
                 }
             } 
         }
@@ -488,6 +510,7 @@ export class Service {
             // binds.push(`${path.join(store.system.writePath,  "workflows", this.name, "docker") }:/var/lib/docker`)
             binds.push(`basestack-docker-${$this.name}:/var/lib/docker`)
         }
+        
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (typeof selected_option == 'object' && selected_option.bind){
@@ -508,7 +531,10 @@ export class Service {
                             let finalpath = to[i]    
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
                                 finalpath = $this.removeQuotes(finalpath)
-                                binds.push(`${path.resolve(directory)}:${this.reformatPath(finalpath)}`) 
+                                mounts.push(formatBind(
+                                    path.resolve(directory), 
+                                    this.reformatPath(finalpath)))
+                                // binds.push(`${path.resolve(directory)}:${this.reformatPath(finalpath)}`) 
                             }   
                             seenTargetTos.push(finalpath)
                         })  
@@ -517,17 +543,29 @@ export class Service {
                             let finalpath = path.dirname(to)
                             if (seenTargetTos.indexOf(finalpath) == -1 && from){
                                 finalpath = $this.removeQuotes(finalpath)
-                                binds.push(`${path.resolve(path.dirname(from))}:${this.reformatPath(finalpath)}`) 
+                                mounts.push(
+                                    formatBind(
+                                        path.resolve(path.dirname(from)), 
+                                        this.reformatPath(finalpath)
+                                    )
+                                )
+                                // binds.push(`${path.resolve(path.dirname(from))}:${this.reformatPath(finalpath)}`) 
                             } 
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
-                            selected_option.bind.to = $this.removeQuotes(selected_option.bind.to)
-                            binds.push(`${path.resolve(selected_option.bind.from)}:${this.reformatPath(selected_option.bind.to)}`) 
+                            selected_option.bind.to = $this.removeQuotes(selected_option.bind.to, selected_option.bind.from)
+                            mounts.push(formatBind(
+                                path.resolve(selected_option.bind.from),
+                                this.reformatPath(selected_option.bind.to)
+                            ))
+                            // binds.push(`${path.resolve(selected_option.bind.from)}:${this.reformatPath(selected_option.bind.to)}`) 
                             seenTargetTos.push(selected_option.bind.to)
                         }  else {   
                             if (seenTargetTos.indexOf(to) == -1 && from){
+                                
                                 to = $this.removeQuotes(to)
-                                binds.push(`${path.resolve(from)}:${this.reformatPath(to)}`) 
+                                mounts.push(formatBind(path.resolve(from), this.reformatPath(to)))
+                                // binds.push(`${path.resolve(from)}:${this.reformatPath(to)}`) 
                             }  
                             
                             seenTargetTos.push(to)
@@ -540,6 +578,7 @@ export class Service {
             }
         }
         this.binds.push(...binds)
+        this.mounts.push(...mounts)
         return 
     } 
     reformatPath(selected_path){
@@ -658,7 +697,6 @@ export class Service {
                     for (let i = 0; i < selected_option.read.length; i++){ 
                         // selected_option.read.forEach(async (read)=>{
                         let read  = selected_option.read[i]
-                        // promises.push(
                         let exists = await fs.existsSync(read.source)
                         if (exists){
                             try{
@@ -696,12 +734,9 @@ export class Service {
                     }
                 }
             }
-            // if (binds.length > 0)
-            // {
-            //     binds  = [... new Set (binds)]
-            //     this.binds.push(... binds)
-            // }
             return binds
+        } else {
+            return []
         }
         
     }
@@ -774,7 +809,7 @@ export class Service {
         this.status.cancelled = false
         return new Promise(function(resolve,reject){ 
             ( async ()=>{
-                // try{
+                try{
                     let options = cloneDeep($this.options)
                     if (!options.HostConfig.Mounts){
                         options.HostConfig.Mounts = []
@@ -806,12 +841,19 @@ export class Service {
                     // $this.config.variables = defaultVariables  
                     let envs = {}   
                     $this.defineEnv() 
+                    console.log("define env done")  
                     let mounts = await $this.defineReads()
-                    await $this.defineSet()
+                    console.log("define reads done")
+                    await $this.defineSet() 
+                    console.log("defineset done")
                     await $this.defineCopies()
+                    console.log("define copies doen")
                     $this.defineBinds()  
+                    console.log("define binds done")
                     $this.definePortBinds()
+                    console.log("define port binds done")
                     await $this.updatePorts($this.portbinds,options)
+                    console.log("update ports done")
                     const userInfo = os.userInfo();
                     // get uid property
                     // from the userInfo object
@@ -871,6 +913,7 @@ export class Service {
                             }  
                         }
                     }
+                    console.log("append commands done")
                     let append = $this.config.append
                     if (append){
                         if (append.placement || append.placement == 0){
@@ -911,6 +954,10 @@ export class Service {
                     mounts.forEach((m)=>{
                         options.HostConfig.Mounts.push(m)
                     })
+                    $this.mounts.forEach((m)=>{
+                        options.HostConfig.Mounts.push(m)
+                    })
+                    console.log("mounts done")
                     logger.info("%o _____ ", options)
                     // logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 
@@ -1049,16 +1096,13 @@ export class Service {
                             reject(err)
                         })
                     }
-                // } catch (err){
-                //     store.logger.error(err)
-                //     reject(err)
-                // }
+                } catch (err){
+                    store.logger.error(err)
+                    reject(err)
+                }
             })().catch((err)=>{ 
-                reject(err)
-            })
-            
-            
-            
+                reject(err)  
+            }) 
         });
 	}
 }

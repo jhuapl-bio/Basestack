@@ -63,15 +63,18 @@ export async function readCsv(filepath, sep){ // 1st argument is filepath, secon
 					csvData.push(csvrow);        
 				})
 				.on("error", function(err){
+					store.logger.error(err)
 					reject(err)
 				})
-				.on('close',function() {
+				.on('end',function() {
+					store.logger.info(`closed the reading`)
 					resolve(csvData)
 				});
 			} else {
 				reject(new Error(`${filepath} doesn't exist`))
 			}
 		})().catch((err)=>{
+			store.logger.error(err)
 			reject(err)
 		})
 	}) 

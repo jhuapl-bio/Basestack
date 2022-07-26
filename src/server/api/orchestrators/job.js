@@ -8,7 +8,7 @@ const { readFile, removeFile, removeFolder, checkExists } = require("../controll
 const { store }  = require("../../config/store/index.js")
 const path = require("path")
 var logger = store.logger
-
+ 
 export  class Job {  
     constructor(procedure, config){         
         this.config = null  
@@ -121,7 +121,7 @@ export  class Job {
                 // if (obj.target){
                 //     $this.runningConfig.variables[key].target = obj.target
                 // }
-                
+                 
                 
 
                
@@ -140,8 +140,8 @@ export  class Job {
             let obj = this.runningConfig.variables[variable]
             this.setValueVariable(data, obj, variable)
             let variables = this.runningConfig.variables
-            let promises = []
-            if (variables){
+            let promises = [] 
+            if (variables){ 
                 for (let [key, vari] of Object.entries(variables)){
                     // if (vari.options && vari.option >=0 ){
                     //     vari = vari.optionValue
@@ -149,7 +149,7 @@ export  class Job {
                     if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
                         let update_on = vari.update_on
                         let action  = update_on.action
-                        if (action == 'exists'){ 
+                        if (action == 'exists'){  
                             let returnedVari = { 
                                 key: key,  
                                 value: null
@@ -222,7 +222,7 @@ export  class Job {
             }).catch((err)=>{
                 store.logger.error(err)
                 resolve(changed_variables)
-            })
+            }) 
         })
        
     }
@@ -259,11 +259,11 @@ export  class Job {
                         let watch = $this.status.watches[i]
                         if (typeof watch.source == 'string'){
                             promises.push(removeFile(watch.source))
-                        } else {
+                        } else { 
                             watch.source.forEach((w)=>{
                                 promises.push(removeFile(w))
                             })
-                        } 
+                        }  
                     }
                 } 
             } 
@@ -304,19 +304,13 @@ export  class Job {
                 $this.runningConfig.variables[key] = value
             } 
             let obj = $this.runningConfig.variables[key]
-            if (key == 'primers'){
-                console.log($this.runningConfig.variables.primers,"<se122t")
-            }
             this.setValueVariable(value, obj, key)
-                console.log($this.runningConfig.variables.primers,"<seendt",key)
             
         }
           
         this.services.forEach((service)=>{ 
             service.config.variables = $this.runningConfig.variables
         })
-        console.log($this.runningConfig.variables.primers,"<set")
-        
         return 
     }
     async defineServices (services, params ) {
@@ -372,6 +366,7 @@ export  class Job {
                                     ...resp.value.status
                                 }
                             } else {
+                                console.log(resp,index, filtered_outputs[index].source, filtered_outputs[index].target)
                                 store.logger.error("Error in getting status for watched location: %o", resp.reason )
                                 $this.status.watches[index] = 
                                 { 
@@ -435,7 +430,7 @@ export  class Job {
                 
                 
                 
-                
+                 
                 $this.getProgress()
 
 
@@ -457,18 +452,18 @@ export  class Job {
         const $this  = this 
         let cancelled_or_skip = false
         let end = false  
-        try{
+        try{ 
             for (let i = 0; !end && i < $this.services.length; i++){
                 let service = $this.services[i]
-                try{
-                    let skip
+                try{  
+                    let skip        
                     store.logger.info("I: %s, Starting a new job service %s", i, service.name)
-                    
+                        
                     skip = await service.check_then_start({ variables: $this.variables }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
                         cancelled_or_skip = skip
-                        end = true
+                        end = true 
                     }
                 } catch(err){
                     logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
@@ -476,7 +471,6 @@ export  class Job {
                     cancelled_or_skip = true
                     $this.status.error = err
                 }
-                // }
             }
             store.logger.info("Job completed or skipped/exited")
             return cancelled_or_skip
