@@ -30,12 +30,17 @@
         sam:
           label: "SAM File"
           element: "file"
-          hint: "Alignment SAM file to be converted to BAM"
-          bind_parent_dir: true
-          target: "/opt/data/<<basename(%{variables.sam.source})>>"
           bind: "directory"
+          hint: "Alignment SAM file to be converted to BAM"
+          target: "/opt/data/<<basename(%{variables.sam.source})>>"
           class: "wb-100  p-3 mb-1"
           source: null
+        only:
+          label: "Filter only alignments present"
+          element: "checkbox"
+          source: false
+          define: 
+            only: " -F4 "
         bam:
           label: "BAM File"
           element: "file"
@@ -63,7 +68,7 @@
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "samtools view -S -F4 -b ${sam} | samtools sort > ${bam}"]
+          command: ["bash","-c", "samtools view -S ${only} -b ${sam} | samtools sort > ${bam}"]
         - name: samtools_index
           label: "Samtools Index"
           image: "staphb/samtools"

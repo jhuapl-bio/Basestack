@@ -268,7 +268,7 @@
               >
             </Customize>
           </v-col> -->
-          <v-col sm="6" v-if="procedure && procedure.variables" class="overflow:auto; min-height:">
+          <v-col :sm="!procedure.full_orientation ? 6 : 12" v-if="procedure && procedure.variables" class="overflow:auto; min-height:">
             <ListParams
                 :items="additionals"
                 v-if="additionals.length > 0"
@@ -279,8 +279,8 @@
             </ListParams>
             {{this.procedure.variables}}---
             
-          </v-col>
-          <v-col sm="6" v-if="headers.length > 0 && procedure "  >
+          </v-col> 
+          <v-col :sm="!procedure.full_orientation ? 6 : 12" v-if="headers.length > 0 && procedure "  >
             <v-card height="90vh" class="scroll fill-height">
               <Progresses
                 :progresses="procedure.watches"

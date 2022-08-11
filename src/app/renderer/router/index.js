@@ -8,11 +8,6 @@ Vue.use(Router)
 
 let router = new Router({
   routes: [
-    // {
-    //     path: '/catalog/:id', 
-    //     component: Module,
-    //     props: true
-    // },
     {
       path: '/',
       name: 'main', 
@@ -24,5 +19,4 @@ let router = new Router({
     }
   ]
 })
-// router.replace({ path: '*', redirect: '/' })
 export default router 

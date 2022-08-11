@@ -32,6 +32,7 @@
           element: "render"
           port: true
           output: false
+          main: true
           source: 8087
           target: 80
           portbind:

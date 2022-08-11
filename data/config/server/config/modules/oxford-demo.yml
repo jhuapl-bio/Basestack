@@ -30,6 +30,7 @@
           target: 8089
           source": 8089
           port: true
+          main: true
           portbind:
             from: '%{variables.port.source}'
             to: '%{variables.port.target}'

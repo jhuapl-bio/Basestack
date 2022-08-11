@@ -68,22 +68,21 @@ export  class Job {
     defineConfiguration (config) {
         let configuration = new Configuration(cloneDeep(config)) 
         configuration.defineMapping(); 
-        // console.log(configuration.variables.outputDir.target,"created!")
         return  configuration
     } 
     setValueVariable(value, obj, key){ 
         const $this = this;
-        try{   
-            if (obj && obj.options){
-                if (obj.options ){
-                    if (!obj.option){ 
-                        obj.option = 0
-                    } 
+        try{      
+            if (obj && obj.options){ 
+                if (obj.options ){  
+                    if (!obj.option){  
+                        obj.option = 0 
+                    }   
                 }
             }
+              
             
-            
-            if (value.source || typeof value == 'object' && 'source' in value){
+            if (value.source == 0 || value.source || ( typeof value == 'object' && 'source' in value)){
                 if (typeof value.source == 'string' || typeof value.source == 'number' || ! value.source){
                     obj.source = value.source
                 } else if (typeof value.source == 'object') {
@@ -97,55 +96,51 @@ export  class Job {
                     obj.source = obj.fallback
                 } 
             } 
-            
-            
             let getter = Object.getOwnPropertyDescriptor(obj, 'source');
-            
             if (getter && getter.get){
                 obj = value.source
                 
             } else if ( ( value.option || value.option == 0 ) || obj.options ) {   
-                
+                 
                 if (!value.option && value.option != 0){
                     obj.option = 0
                 } else { 
                     obj.option = value.option
                 }
+                
                 if (typeof obj.options[obj.option] == "object"){
                     $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
                 }
                 $this.runningConfig.variables[key].option = obj.option
-                // if (obj.source ){ 
-                //     $this.runningConfig.variables[key].source = obj.source
-                // } 
-                // if (obj.target){
-                //     $this.runningConfig.variables[key].target = obj.target
-                // }
-                 
-                
+                if (obj.source){
+                    $this.runningConfig.variables[key].source = obj.source
+                }
+                // if (obj.options[obj.option].bind){
 
+                // }
                
             }  else {
                 $this.runningConfig.variables[key].source = obj.source
             }  
+            
+            if (!$this.runningConfig.variables[key].target){
+                $this.runningConfig.variables[key].target = $this.runningConfig.variables[key].source
+            }
         } catch (Err){
-            store.logger.error(Err)
-        }        
-    } 
+            store.logger.error(Err) 
+        }         
+    }  
     async setVariable(value, variable, target){
         
-        return new Promise ((resolve, reject)=>{
-            let data = {}
-            data[target] = value 
+        return new Promise ((resolve, reject)=>{ 
+            let data = {} 
+            data[target] = value  
             let obj = this.runningConfig.variables[variable]
             this.setValueVariable(data, obj, variable)
             let variables = this.runningConfig.variables
             let promises = [] 
             if (variables){ 
                 for (let [key, vari] of Object.entries(variables)){
-                    // if (vari.options && vari.option >=0 ){
-                    //     vari = vari.optionValue
-                    // }
                     if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
                         let update_on = vari.update_on
                         let action  = update_on.action
@@ -201,25 +196,25 @@ export  class Job {
                                     returnedVari.value = vari
                                     return returnedVari
                                 }).catch((err)=>{
-                                    store.logger.error(err)
+                                    store.logger.error(err) 
                                     return vari
                                 })
-                            )
-                        }
-                    }
-                }
-
+                            )  
+                        }    
+                    }  
+                } 
+ 
             }
-            let changed_variables = []
+            let changed_variables = []  
             
             Promise.allSettled(promises).then((respo)=>{
                 respo.forEach((res)=>{
                     if (res.status == 'fulfilled'){
                         changed_variables.push(res.value)
                     }
-                })
-                resolve(changed_variables)
-            }).catch((err)=>{
+                })  
+                resolve(changed_variables)  
+            }).catch((err)=>{   
                 store.logger.error(err)
                 resolve(changed_variables)
             }) 
@@ -366,7 +361,6 @@ export  class Job {
                                     ...resp.value.status
                                 }
                             } else {
-                                console.log(resp,index, filtered_outputs[index].source, filtered_outputs[index].target)
                                 store.logger.error("Error in getting status for watched location: %o", resp.reason )
                                 $this.status.watches[index] = 
                                 { 
@@ -489,13 +483,13 @@ export  class Job {
             if ( custom_variable && typeof custom_variable == 'object' ){
                 this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`)
             } else {
-                if (custom_variable){ 
-                    
+                if (custom_variable){  
+                     
                     nestedProperty.set($this, `${path}.${key}`, custom_variable)
                 }
             }
         }
-    }
+    } 
     async start(params){       
         const $this = this
         let services;
@@ -503,16 +497,14 @@ export  class Job {
         $this.status.running = true
         $this.status.complete = false
         let promises = []; 
+        if (!params.variables){
+            params.variables = {}
+        }
         store.logger.info("%s setting variables", $this.baseConfig.name)
         // this.mergeInputs(params, 'mergedConfig'  )
         this.runningConfig = this.defineConfiguration(this.mergedConfig)
         
         this.setVariables(params.variables) 
-        // console.log(this.runningConfig.variables.outputDir.target,
-        //     this.services[0].config.variables.outputDir.target,
-        //     "target",
-        //     this.services[0].config.variables.fastqs.target)
-        // return
         store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{
             if (service && service.streamObj){

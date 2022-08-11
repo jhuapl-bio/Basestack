@@ -1,3 +1,5 @@
+import { bytesToSize } from "../controllers/configurations.js";
+
 const cloneDeep = require("lodash.clonedeep");
 
 /*
@@ -15,7 +17,7 @@ const { remove_images, removeVolume, checkVolumeExists, pullImage, loadImage, cr
 const {  check_image, fetch_external_dockers } = require("../controllers/fetch.js")
 const { Service }  = require("./service.js") 
 const { spawnLog } = require("../controllers/logger.js")
-  
+
 var logger = store.logger
 // var docker = new Docker();   
 const fs = require("file-system")     
@@ -29,6 +31,30 @@ export class Procedure {
         this.baseConfig = procedure
         this.lastJob = null
         const $this = this
+        Object.defineProperty(this, "spaceUsedTotal", {
+            enumerable: true,   
+            get: function(){
+                let sum = 0
+                var sizes = {
+                    "Bytes": 1,
+                    "TB": 1024**4,
+                    "GB": 1024**3,
+                    "MB": 1024**2,
+                    "KB": 1024
+                }
+                
+                this.dependencies.forEach((f)=>{
+                    let size = f.status && f.status.size ? f.status.size : "0 Bytes"
+                    let denom = size.split(" ")
+                    if (denom.length >1){
+                        let denom_char = denom[1]
+                        size = sizes[denom_char]*parseInt(denom[0])
+                    } 
+                    sum += size 
+                })
+                return bytesToSize(sum)
+            }
+        })
 
         if (procedure.shared && procedure.shared.variables){
             
@@ -256,10 +282,14 @@ export class Procedure {
                         } else {
                             dependencies[index].status.exists = ( dependency.value && typeof dependency.value == 'object'  ? true : dependency.value )
                         }
+                        if (dependency.value.size){
+                            dependencies[index].status.size = dependency.value.size
+                        }
 						
 					} else { 
 						dependencies[index].status.exists = false
 						dependencies[index].status.version = null
+                        dependencies[index].status.size = "N/A"
 					}
                     
                     if (dependencies[index].status && dependencies[index].status.stream && Array.isArray(dependencies[index].status.stream.info)){
@@ -520,26 +550,33 @@ export class Procedure {
                         dependency.status.stream = spawnLog(stream, $this.logger)
                         dependency.streamObj = stream
                         if (error){   
-                            console.error(error)
+                            store.logger.error(`ERROR ${error}`)
+                            reject(error)
                         }       
                         $this.buildlog = spawnLog(stream, $this.logger)
                         stream.on("close", ()=>{ 
                             store.logger.info("Completed download of %o", dependency.source)
                             
                             dependency.status.building = false
+                            dependency.status.error = null 
                             dependency.status.downloading= false
                             resolve()
-                        }).on("error", ()=>{
-                            store.logger.error("Error in stream")
+                        }).on("error", (err)=>{
+                            store.logger.error(`Error in stream ${err}`)
+                            dependency.status.error = err 
+                            reject(err)
                         })
                     }).catch((err)=>{
                         store.logger.error("%o %o","Error in downloading source: ", dependency.source , err)
                         dependency.status.building = false
+                        dependency.status.error = err 
                         dependency.status.downloading= false
                         reject(err)
                     }) 
                 } else{
                     store.logger.info(`Skipping dependency install: ${dependency.source.target} due to it existing`) 
+                    dependency.status.building = false
+                    dependency.status.downloading= false
                     resolve()
                 }  
             }) 
@@ -673,7 +710,9 @@ export class Procedure {
                     if (dependency_obj.overwrite){  
                         overwrite_idx = true
                     }
-                }    
+                }   else {
+                    overwrite_idx = true
+                } 
                 if (Array.isArray(overwrite) && overwrite[i]){ 
                     overwrite_idx = overwrite[i]
                 }
@@ -707,6 +746,7 @@ export class Procedure {
                                 checkExists(dependency_obj.target).then((exists)=>{
                                     if (!exists.exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
                                         dependency_obj.status.building = true
+                                        
                                         decompress_file(dependency_obj.decompress.source, path.dirname(dependency_obj.target)).then(()=>{
                                             dependency_obj.status.building = false
                                         }).catch((err) =>{
@@ -716,7 +756,7 @@ export class Procedure {
                                     } else {
                                         store.logger.info(`Skipping dependency decompression: ${dependency_obj.target} due to it existing`)
                                          dependency_obj.status.building = false
-                                         
+                                        
                                     }
                                 })
                             } 
@@ -724,7 +764,7 @@ export class Procedure {
                     }).catch((err)=>{ 
                         store.logger.error("Error in downloading source url: %o", err);
                         dependency_obj.status.downloading = false
-
+                        dependency_obj.status.error = err
                     }) ) 
                 } 
                 Promise.allSettled(promises).then((res)=>{

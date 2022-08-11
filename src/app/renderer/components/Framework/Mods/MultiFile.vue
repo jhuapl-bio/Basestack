@@ -59,12 +59,17 @@ export default {
 	},
 	props: ['source', 'variable'],
   mounted(){
-    if (this.value.length == 0 && Array.isArray(this.source)){
+    var dt = new DataTransfer();
+
+    if (Array.isArray(this.source)){
       var files = this.source.map((f,i)=>{
-        return new File([f], f, {
+        let file = new File([f], f, {
           type: "text/plain",
         });
+        return file
       })
+      this.$emit("updateValue",files)
+      dt.files = files
       this.value = files
       this.filenames = this.source.join(", ")
     }
@@ -75,7 +80,9 @@ export default {
             if (newValue  ){
               let arr = Object.values(newValue)
               let fileslist = []
-              this.$emit("updateValue",arr.map((f)=>{
+              this.$emit("updateValue",arr.filter((f)=>{
+                return f
+              }).map((f)=>{
                 fileslist.push(path.basename(f.name))
                 return f.path
               })  )

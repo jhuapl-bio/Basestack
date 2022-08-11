@@ -75,6 +75,7 @@ function getDefaultState(){
     defaults: [],
     modules:[],
     system: {},
+    docker: {}, 
     status: {},
     watcher: null,
     catalog: {
@@ -98,6 +99,11 @@ export default new Vuex.Store({
     CREATE_PROCEDURE ({ commit }, params) {
       
       commit("CREATE_PROCEDURE", params)
+      
+    },
+    DOCKER_STATUS ({ commit }, params) {
+      
+      commit("DOCKER_STATUS", params)
       
     },
     SAVE_PROCEDURE_DEFAULT ({ commit }, params) {
@@ -140,6 +146,9 @@ export default new Vuex.Store({
     SAVE_PROCEDURE_DEFAULT (state, meta){
       nestedProperty.set(state,`configs.${meta.catalog}.procedures.${meta.procedure}`, cloneDeep(meta.config))
       
+    },
+    DOCKER_STATUS(state, meta){
+      this.docker  = meta
     },
     UPDATE_AMOUNT (state, variable){
       state.amount++ 

@@ -265,23 +265,24 @@ export async function checkExists(location, globSet){
 	return new Promise((resolve, reject)=>{
 		if (!globSet){
 			fs.stat(location, function(err, exists){
+				
 				if (err){
 					resolve(
-						{location: location, exists: false}
+						{location: location, size:0, exists: false}
 					)
 				}
 				if(exists){
-					// let size = 0 
-					// if (exists.size){
-					// 	size = bytesToSize(exists.size)
-					// 	console.log(size, path)
-					// }
+					let size = 0 
+					if (exists.size){
+						size = bytesToSize(exists.size)
+					} 
 					resolve(
-						{location: location, exists: true}
+						{location: location, size: size, exists: true}
 					)
 				} else {
 					resolve({
 						location: null,
+						size: 0,
 						exists: null
 					})
 				}
@@ -296,10 +297,7 @@ export async function checkExists(location, globSet){
 							{location: location, exists: false}
 						)
 					}
-					console.log(path.basename(location), path.dirname(location))
-				
 					if (files && files.length) {
-						console.log(files,"<<<<<")
 						resolve(
 							{location: files, exists: true}
 						)
@@ -380,7 +378,6 @@ export async function downloadSource(url, target, params)  {
 				};
 			};
 			var downloaded = 0
-			console.log("write folder....", dirpath)
 			writeFolder(dirpath).then(()=>{ 
 				writer = fs.createWriteStream(p)
 				console.log("folder made if not existing, or continuing...") 
@@ -457,7 +454,6 @@ export async function downloadSource(url, target, params)  {
 					// 	store.logger.info("url not beginning with http://, appending now..")
 					// 	url = "http://" + url
 					// }
-					console.log(url, "to", dirpath)
 					let fnct = https
 					if (url.startsWith("http:")){
 						fnct  = http
@@ -483,45 +479,50 @@ export async function downloadSource(url, target, params)  {
 						}).on('destroy', function () { 
 							// clear timeout 
 							// clearTimeout( timeoutId ); 
-							writer.destroy() 
+							store.logger.info("Destroy writer")	
 							// resolve(null);   
 						}).on('end', function () {
 							// clear timeout
 							// clearTimeout( timeoutId );
-							writer.status = 100			
-							writer.destroy()
+							writer.status = 100		
+							// writer.destroy()
+							// resolve(writer)
 						}).on('error', function (err) {
 							// clear timeout 
-							store.logger.error(`Got error on http get: %o`, err);
+							store.logger.error(`Got error on http(s) get: %o`, err);
 							clearTimeout( timeoutId );
-							writer.destroy()
-							// reject(err.message);
+							// writer.destroy()
+							reject(err.message);
 						});
 						response.pipe(writer)  
 						// generate timeout handler
 						var fn = timeout_wrapper( request );
 	
 						// set initial timeout
-						var timeoutId = setTimeout( fn, timeout );
+						var timeoutId = setTimeout( fn, timeout ); 
 						writer.on("close", ()=>{
 							if (typeof request.end === "function") { 
-								request.end()
-							}
+								request.end()  
+							} 
 						}).on("error", (err)=>{
 							store.logger.error("err %o", err)
+							reject(err)
 						})
-						// resolve(writer)
-					}).on('error', (e) => {
-						store.logger.error(`Got error: ${e.message}`);
+						resolve(writer)
+					}) 
+					.on('error', (e) => {
+						store.logger.error(`Got error http(s) in download: ${e}`);
 						reject(e)
+						// writer.end()
 					});
 				}
-				resolve(writer)
+				// resolve(writer)
 			}).catch((err)=>{
 				store.logger.error("Error in downloading file: %o to: %o", url, target)
 				reject(err)
 			})
 		} catch (Err){
+			store.logger.error(`Got error: ${Err}`);
 			reject(Err)
 		}
 	});    
@@ -623,7 +624,7 @@ export async function writeFile(filepath, content){
 				fs.writeFile(filepath, content,(errFile)=>{
 					if (errFile){
 						store.logger.error("Error in writing file... %o", errFile)
-						reject(errFile)
+						reject(errFile)   
 					}
 					resolve("Success in writingfile")
 				})

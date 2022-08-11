@@ -6,7 +6,7 @@ const cloneDeep = require("lodash.clonedeep");
 const path = require("path")   
 const lodash = require("lodash")    
 const { module_status } = require("./watcher.js")
-const {readFile, checkExists} = require("./IO.js") 
+const {readFile, checkExists, readCsv} = require("./IO.js") 
 
 // Configuration 
 // A configuration class is a conversion of a static YAML configuration for a procedure selected from the UI
@@ -80,10 +80,9 @@ export  class Configuration {     // Make the main procedure class for configura
     create_intervalWatcher(){ // set status checker at interval of 2000 milliseconds
         const $this = this;
         $this.destroy_interval() // If creating, destroy any existing one to ensure no parallel processes doing same thing
-        // $this.getProgress().then((f)=>{ // Figure out the status of the output files
-        //     $this.watches = f
-        // })
-        console.log("create watcher")
+        $this.getProgress().then((f)=>{ // Figure out the status of the output files
+            $this.watches = f
+        })
         this.watcher = setInterval(()=>{
             $this.getProgress().then((f)=>{ // Figure out the status of the output files
                 $this.watches = f
@@ -111,7 +110,7 @@ export  class Configuration {     // Make the main procedure class for configura
             
         }
         
-    }
+    } 
     async getProgress(){ // Find out how many outputs are done
         const $this = this; 
         return new Promise(function(resolve,reject){
@@ -197,7 +196,7 @@ export  class Configuration {     // Make the main procedure class for configura
                                     }).catch((err)=>{
                                         console.error(err, "does not exists!", update_on.source)
                                         return returnedVari 
-                                    })
+                                    }) 
                                 )  
                             }
                             if (action == 'read'){ // If you need to read a file (like csv or tsv)
@@ -205,26 +204,25 @@ export  class Configuration {     // Make the main procedure class for configura
                                     key: key, 
                                     value: null
                                 }
+                                let header = update_on.header
+                                let make_header = (vari.header && !update_on.header ? vari.header : null)
+                                let func = 
+                                    ( header ? 
+                                        readCsv(update_on.source, update_on.sep, header) : 
+                                        ( make_header ? 
+                                            readCsv(update_on.source, update_on.sep, make_header) : 
+                                            readFile(update_on.source, true)  
+                                    ) )
                                 promises.push(
-                                    readFile(update_on.source, true).then((f)=>{ // Ingest the raw data of the file
-                                        let header = vari.header // IF header defined, set first row as so
+                                    func.then((f)=>{ // Ingest the raw data of the file
+                                        vari.sep = ( vari.sep == "tab" ? "\t" : vari.sep )
                                         f  = f.filter(function (el) {
                                             return el != null && el !== '';
                                         }); 
-                                        if (header){
-                                            vari.source = f.map((d,i)=>{ // split the header as tabular format (only supported one right now)
-                                                if (update_on.skip_header && i ==0){
-                                                    console.log("skipping header", vari.header)
-                                                } else { 
-                                                    let p  = d.split((vari.sep ? vari.sep : "\t"))
-                                                    let returned = { }
-                                                    header.map((head,i)=>{
-                                                        returned[head] = p[i]
-                                                    }) // Define the keys for the header
-                                                    return returned
-                                                }
-                                                
-                                            })
+                                        console.log(f)
+                                        if (header || make_header) {
+                                            vari.source = f 
+
                                         } else {
                                             vari.source = f.map((d,i)=>{
                                                 if (update_on.skip_header && i ==0){
@@ -235,6 +233,7 @@ export  class Configuration {     // Make the main procedure class for configura
                                             }) // Otherwise, assume the splitting type if tabular
                                             
                                         }
+                                     
                                         vari.source = vari.source.filter((f)=>{
                                             return f
                                         })
@@ -429,13 +428,15 @@ export  class Configuration {     // Make the main procedure class for configura
                     if (fo && Array.isArray(fo)){  // If there are one or more matches
                         let original = cloneDeep(obj[key])
                         Object.defineProperty(obj, key, {
-                            enumerable: true,   
-                            set: function(value){
-                                original = value
+                            enumerable: true,    
+                            set: function(value){ 
+                                original = value 
                             }, 
                             get: function(){  // set getter that will update on all value changes if needed
                                 let fullstring = cloneDeep(original)  
                                 let final = $this.mapVariable(fullstring,obj)
+                                
+
                                 if (final == 'undefined'){
                                     return null
                                 } else { 

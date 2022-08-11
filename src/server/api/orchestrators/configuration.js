@@ -96,19 +96,11 @@ export  class Configuration {
                             }
                         }
                         custom_variable.bind = val.bind
-                        // custom_variable = { 
-                        //     ...true_value,
-                        //     ...custom_variable   
-                        //     }
+                        
                     } 
                 }   
             }
-            // (custom_variable.source ? selected_option.source = custom_variable.source : '' ) ;
-            // (custom_variable.target ? selected_option.target = custom_variable.target : '' ) ;
-            // this.variables[key] = { 
-            //     ...selected_option,   
-            //     ...custom_variable      
-            // }  
+          
         }
     }
     mapTargetFunctions(found, fullstring){
