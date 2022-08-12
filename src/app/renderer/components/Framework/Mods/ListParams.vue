@@ -39,7 +39,7 @@
                     {{item.hint}}
                 </v-list-item-subtitle>
                 
-                <v-container v-if="item.options"    width="10px">
+                <v-container v-if="item.options"  style="width:100%; margin: 0px">
                     <v-select
                         v-model="item.optionValue" 
                         :disabled="item.output"

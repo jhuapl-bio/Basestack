@@ -20,6 +20,7 @@
       title: Kraken2 Mytax2
       icon: binoculars
       init: false
+      full_orientation: true
       tooltip: >-
         Run dashboard
       force_restart: true
@@ -32,7 +33,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.0.0
+          version: v2.1.0
           type: docker
           format: docker
       variables:
@@ -41,10 +42,8 @@
           element: file
           optional: false
           fallback: "${writePath}/workflows/mytax2/Samplesheet.csv"
-          bind_parent_dir: true
-          bind: directory
+          # bind: directory
           name: "Samplesheet"
-          class: wb-100  p-3 mb-1
           read:
             - type: "file"
               sep: ","
@@ -61,32 +60,42 @@
               source: "%{variables.csv.source}"
               bind: "self"
               column: "database"
+          set:
+            - target: "variables.manifest.source"
+              header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
+              reformat: ['database', 'path_1', 'path_2']
+              source: "%{variables.csv.source}"
+              sep: "," 
           source: null
-          target: /MYTAX/data/<<basename(%{variables.csv.source})>>
         manifest:
-          label: "Input Samplsheet contents"
+          label: "Input Samplesheet contents"
           element: "list"
           hint: "Samplesheet contents"
           columns: 2
           column: 12
           sep: ","
-          bind_parent_dir: true
+          define_columns: 
+            path_1: file
+            path_2: file
+            database: file
           tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
           update_on: 
             depends:
               - csv
             action: "read"
-            skip_header: true
+            header: true
             source: "%{variables.csv.source}"
+          bind:
+            from:  "<<directory(%{variables.csv.source})>>/mytax2/Samplesheet.csv"
+            to: "/MYTAX/data/Samplesheet.csv"
           create:
-            # target: null
-            target: "<<directory(%{variables.csv.source})>>/Samplesheet.csv"
+            target: "<<directory(%{variables.csv.source})>>/mytax2/Samplesheet.csv"
             sep: ","
             type: "list"
-            header: ['sample','path_1','path_2','format','platform','database','compressed']
+            header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
           class: "wb-50  p-3 mb-1"
           source: []
-          header: ['sample','path_1','path_2','format','platform','database','compressed']
+          header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
           append_newline: true
         port:
           element: render
@@ -95,6 +104,7 @@
           output: false
           target: 80 
           source: 8098
+          main: true
           port: true
           portbind:
             from: '%{variables.port.source}'
@@ -113,11 +123,11 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.0.0
-          workingdir: /opt/test-data
+          image: jhuaplbio/basestack_mytax2:v2.1.0
+          workingdir: /
           orchestrated: false
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; source /opt/conda/etc/profile.d/conda.sh; conda activate mytax2; npm run server   ']
+          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; source /opt/conda/etc/profile.d/conda.sh; conda activate mytax2; echo $PWD; cd /opt; npm run server   ']
         

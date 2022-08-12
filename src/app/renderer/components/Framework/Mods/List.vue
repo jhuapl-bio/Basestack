@@ -56,15 +56,35 @@
                                 <v-container>
                                     <v-col
                                         cols="12"
-                                        sm="6"
-                                        md="4"
-
                                     >
+                                    
                                         <v-container v-for="head in headers" :key="head.value + head.index">
-                                                <v-text-field v-if="head.value !== 'actions'"
-                                                    v-model="editedItem[head.value]"
-                                                    :label="head.text"
-                                                ></v-text-field>
+                                            <div @drop.prevent="addDropFile" @dragover.prevent  v-if="variable.define_columns && variable.define_columns[head.value] && head.value !== 'actions'">
+                                                    <v-file-input 
+                                                        v-model="editedItem[head.value]" 
+                                                        :label="head.text" counter show-size overlap
+                                                    >
+                                                        <template v-slot:selection="{ text }">
+                                                            <v-chip
+                                                                small
+                                                                label
+                                                                color="primary"
+                                                            >
+                                                                {{ text }}
+                                                            </v-chip>
+                                                        </template>
+                                                        <template v-slot:append-outer>
+                                                            <v-icon  v-if="editedItem[head.value]" class="text--caption configure" @click="editedItem[head.value] = null" color="grey" small>$times-circle
+                                                            </v-icon>
+                                                        </template>
+                                                    
+                                                    </v-file-input>
+                                                    <v-subheader v-if="editedItem[head.value]">{{editedItem[head.value].name}}</v-subheader>
+                                            </div>
+                                            <v-text-field v-else-if="head.value !== 'actions'"
+                                                v-model="editedItem[head.value]"
+                                                :label="head.text"
+                                            ></v-text-field>
                                         </v-container>
                                         
                                     </v-col>
@@ -93,19 +113,21 @@
             </template>
             <template v-slot:item.actions="{ item, index }">
                 <v-icon
-                    x-small
+                    small
                     class="mr-2" color="light"
                     @click="editItem(item)"
                 >
                     $edit
                 </v-icon>
                 <v-icon
-                    x-small color="orange"
+                    small color="orange"
                     @click="deleteItem(item, index)"
                 >
                     $minus
                 </v-icon>
             </template>
+            
+            
         
             
         </v-data-table>
@@ -114,6 +136,7 @@
 <script>
 
 import draggable from 'vuedraggable'
+const cloneDeep = require("lodash.clonedeep");
 
 export default {
 	name: 'multi-select',
@@ -147,11 +170,10 @@ export default {
                         sortable: true
                     }
                 })
-                tt.push({
+                return [{
                     text: "Actions",
                     value: "actions"
-                })
-                return tt 
+                }, ...tt ]
             } else {
                 return []
             }
@@ -159,26 +181,42 @@ export default {
     },
     watch: {
       dialog (val) {
-        val || this.close()
+        // val || this.close()
       },
       defaultHeaders(newValue, oldValue){
       },
       dialogDelete (val) {
         val || this.closeDelete()
       },
-      source: {
-          deep: true,
-          handler(newValue){
-              this.values = newValue
-          }
+    //   source: {
+        //   deep: true,
+        //   handler(newValue){
+        //       this.values = newValue
+        //   }
 
-      },
+    //   },
     },
 	methods: {
+        addDropFile(e) { 
+            this.value = e.dataTransfer.files[0]; 
+            console.log(e)
+        },
         save () {
+            const $this = this;
             this.editedItem.index = this.editedIndex
+            let newItem = cloneDeep(this.editedItem)  
             if (this.editedIndex > -1) {
-                Object.assign(this.source[this.editedIndex], this.editedItem)
+                for (let[key, value] of Object.entries(this.editedItem) ){
+                    if (value instanceof File ){
+                        if (value.path == ""){
+                            newItem[key] = value.name
+                        } else {
+                            newItem[key] = value.path
+                        }
+                    }  
+                    $this.source[$this.editedIndex][key] = newItem[key]
+                }
+                
             } else {
                 this.source.push(this.editedItem)
             }
@@ -198,9 +236,22 @@ export default {
             this.editedIndex = -1
             })
         },
+        check_defined(va){
+            return this.variable.define_columns && this.variable.define_columns[va]
+        },
         editItem (item) {
             this.editedIndex = this.source.indexOf(item)
-            this.editedItem = Object.assign({}, item)
+            let newItem = cloneDeep(item)
+            for (let[name, value] of Object.entries(item) ){
+                if (this.variable.define_columns[name] && typeof value == 'string'){
+                    var file = new File([value], value, {
+                        type: "text/plain",
+                    });
+                    newItem[name] = file
+                } 
+
+            }
+            this.editedItem = Object.assign({}, newItem)
             this.dialog = true
         },
 
@@ -240,6 +291,7 @@ export default {
         }
     },
     mounted(){
+        console.log(this.variable,"<<<<in list ")
     }, 
 
     

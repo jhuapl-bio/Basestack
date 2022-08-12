@@ -38,10 +38,17 @@
           hint: "Can be one of the paired end reads (Illumina) OR your aggregated FASTQ for Long Read Sequencing"
           bind_parent_dir: true
           element: "file"
-          bind: "directory"
+          bind: "self"
           class: "wb-100  p-3 mb-1"
           source: null
           target: "/opt/data/<<basename(%{variables.file.source})>>"
+        output: 
+          hidden: True
+          source: "<<directory(%{variables.file.source})>>"
+          target: "/opt/output/unicycler_assembly_long_reads"
+          bind:
+            from: "<<directory(%{variables.file.source})>>/unicycler_assembly_long_reads/"
+            to: /opt/output/unicycler_assembly_long_reads
         gfa: 
           label: "Genome Graph Assembly File"
           element: "file"
@@ -65,12 +72,12 @@
         - name: unicycler
           label: "Unicycler"
           image: "staphb/unicycler"
-          workingdir: "/opt/data"
+          workingdir: "/opt/output"
           orchestrated: false #orchestrated means it r
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "unicycler -o ${assembly} -l ${file} "]
+          command: ["bash","-c", "unicycler -o ${output} -l ${file} "]
     - name: unicycler_short #Top level is the left-hand selection of the menu and the major module to install 
       title: "Unicycler Short Read (Paired)"
       icon: "bicycle"
@@ -94,7 +101,7 @@
           label: "FASTQ File"
           hint: "Can be one of the paired end reads (Illumina) OR your aggregated FASTQ for Long Read Sequencing"
           element: "file"
-          bind: "directory"
+          bind: "self"
           class: "wb-100  p-3 mb-1"
           source: null
           target: "/opt/data/<<basename(%{variables.file.source})>>"
@@ -102,10 +109,17 @@
           label: "FASTQ 2nd File"
           element: "file"
           hint: "The other paired end read (If using Illumina)"
-          bind: "directory"
+          bind: "self"
           target: "/opt/data2/<<basename(%{variables.file2.source})>>"
           class: "wb-100  p-3 mb-1"
           source: null
+        output: 
+          hidden: True
+          source: "<<directory(%{variables.file.source})>>"
+          target: "/opt/output/unicycler_assembly_short_reads"
+          bind:
+            from: "<<directory(%{variables.file.source})>>/unicycler_assembly_short_reads/"
+            to: /opt/output/unicycler_assembly_short_reads
         assembly: 
           label: "Genome Assembly"
           element: "file"
@@ -113,8 +127,8 @@
           watch: true
           openSelf: True
           class: "wb-100  p-3 mb-1"
-          source: "<<directory(%{variables.file.source})>>/unicycler_assembly_short_reads/assembly.fasta"
-          target: "/opt/data/unicycler_assembly_short_reads/assembly.fasta"
+          source: "%{variables.output.source}/assembly.fasta"
+          target:  "/opt/output/assembly.fasta"
         gfa: 
           label: "Genome Graph Assembly File"
           element: "file"
@@ -123,18 +137,18 @@
           openSelf: True
           hint: "View in a 3rd party UI like Bandage http://rrwick.github.io/Bandage/"
           class: "wb-100  p-3 mb-1"
-          source: "<<directory(%{variables.file.source})>>/unicycler_assembly_short_reads/assembly.gfa"
-          target: "/opt/data/unicycler_assembly_short_reads/assembly.gfa"
+          source: "%{variables.output.source}/assembly.gfa"
+          target: "/opt/output/assembly.gfa"
       services:
         - name: unicycler
           label: "Unicycler"
           image: "staphb/unicycler"
-          workingdir: "/opt/data"
+          workingdir: "/opt/output"
           orchestrated: false #orchestrated means it r
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "unicycler -o /opt/data/unicycler_assembly_short_reads/ -1 ${file} -2 ${file2} "]
+          command: ["bash","-c", "unicycler -o ${output}/ -1 ${file} -2 ${file2} "]
             
         
           

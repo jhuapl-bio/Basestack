@@ -1,18 +1,58 @@
 const fs  = require("fs")
 import glob from "glob"
-import  path  from "path"
-import { parse } from 'csv-parse';
+import  path, { delimiter }  from "path" 
+import { parse } from 'csv-parse'; 
 
-export async function readFile(filepath, split){ // 1st argument is filepath, second is whetehr or not to split the data into a tsv with a string/char
+export async function readCsv(filepath, sep, header){ // 1st argument is filepath, second is whetehr or not to split the data into a tsv with a string/char
 	return new Promise((resolve, reject)=>{
-		  fs.readFile(filepath, (err, data) => { // read the filepath, must be a file!
-			  if (err){
-			  	console.error("%s %s %s", "Error in reading the file: ", filepath, err)
-			  	reject(err)  
-			  } else {   
-				resolve(split ? data.toString().split("\n") : data.toString())
-			  } 
-		  });		
+		const csvData = []; 
+		( async ()=>{
+			let exists = await fs.existsSync(filepath)
+			if (exists){ 
+				console.log("header", header)
+				let columns = (header ? header  : null)
+				let delimiter = (sep == '\\t' ? "\t" : sep)
+				fs.createReadStream(filepath)
+				.pipe(parse({ delimiter: delimiter, columns: columns }))
+				.on('data', function(csvrow) {
+					//do something with csvrow
+					csvData.push(csvrow);        
+				})
+				.on("error", function(err){
+					reject(err)
+				})
+				.on('end',function() {
+					resolve(csvData)
+				});
+			} else {
+				reject(new Error(`${filepath} doesn't exist`))
+			}
+		})().catch((err)=>{
+			reject(err)
+		})
+	}) 
+}
+export async function readFile(filepath, split, sep){ // 1st argument is filepath, second is whetehr or not to split the data into a tsv with a string/char
+	return new Promise((resolve, reject)=>{
+		console.log(filepath, sep,"readfile siwth sep")
+		if (!sep){
+			fs.readFile(filepath, (err, data) => { // read the filepath, must be a file!
+				if (err){
+					console.error("%s %s %s", "Error in reading the file: ", filepath, err)
+					reject(err)  
+				} else {   
+				 
+					resolve(split ? data.toString().split("\n") : data.toString())
+				} 
+			});
+		} else {
+			readCsv(filepath, sep, null).then((f)=>{
+				resolve(f)
+			}).catch((err)=>{
+				reject(err)
+			})
+		}
+		  		
 	}) 
 }
 
@@ -58,7 +98,7 @@ export async function checkExists(location, globSet){ // location to check for e
 						resolve(
 							{location: files, exists: null}
 						)
-					}
+					}  
 				}
 			);
 		}

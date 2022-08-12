@@ -11,9 +11,8 @@
      
       <v-file-input 
           v-model="value"  class="fill-width"
-          multiple
-          overlap
-          counter 
+          multiple   overlap counter :label="filenames ? filenames : null"
+          
       > 
         <template v-slot:append-outer>
           <v-icon  v-if="value" class="text--caption configure" @click="value = null" color="grey" small>$times-circle
@@ -21,8 +20,6 @@
         </template>
          
       </v-file-input >
-   
-    
       
         
       
@@ -35,22 +32,24 @@
 </template>
 
 <script>
+const path = require("path")  
+
 export default {
 	name: 'file',
   data() {
       return {
           test: "placeholder",
           value: [],
+          filenames: null,
           cached: false
       }
   },
   computed: {
-    
+     
   },
 	methods: {
     addDropFile(e) { 
       this.value = e.dataTransfer.files; 
-      console.log(this.value)
     }
     
     
@@ -60,19 +59,35 @@ export default {
 	},
 	props: ['source', 'variable'],
   mounted(){
-   
+    var dt = new DataTransfer();
+
+    if (Array.isArray(this.source)){
+      var files = this.source.map((f,i)=>{
+        let file = new File([f], f, {
+          type: "text/plain",
+        });
+        return file
+      })
+      this.$emit("updateValue",files)
+      dt.files = files
+      this.value = files
+      this.filenames = this.source.join(", ")
+    }
   },
   
   watch: {
         value(newValue, oldValue){
-          console.log(newValue, typeof newValue,"new value multifile")
             if (newValue  ){
               let arr = Object.values(newValue)
-              this.$emit("updateValue",arr.map((f)=>{
+              let fileslist = []
+              this.$emit("updateValue",arr.filter((f)=>{
+                return f
+              }).map((f)=>{
+                fileslist.push(path.basename(f.name))
                 return f.path
               })  )
+              this.filenames = fileslist.join(", ")
             }
-            console.log(this.value)
         },
        
     }

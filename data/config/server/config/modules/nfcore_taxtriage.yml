@@ -1,7 +1,7 @@
 - name: nfcore_taxtriage
   title: "TaxTriage"
   icon: "virus"
-  version: 1.0
+  version: 1.1
   basestack_released: 2.0
   module: True
   url: https://nf-co.re/viralrecon
@@ -30,6 +30,7 @@
       title: "TaxTriage"
       icon: "virus"
       module: True
+      full_orientation: true
       init: false 
       dependencies:
         - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
@@ -65,6 +66,72 @@
         - "nanopore"
         - "illumina"
       variables:
+        csv:
+          label: "Samplesheet"
+          fallback: "${writePath}/workflows/nfcore_taxtriage/Samplesheet.csv"
+          warning: "Must be in .csv format (comma separated)"
+          hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
+          element: "file"
+          set:
+            - target: "variables.manifest.source"
+              header: ['single_end','fastq_1','fastq_2', 'sample', 'from',  'platform',  'sequencing_summary', 'barcode', 'trim']
+              reformat: ['sequencing_summary', 'from', 'fastq_1', 'fastq_2']
+              source: "%{variables.csv.source}"
+              sep: "," 
+          source: null
+          bind: self
+          read:
+            - type: "file"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "self"
+              column: "fastq_1"
+            - type: "file"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "self"
+              column: "fastq_2"
+            - type: "directory"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "self"
+              column: "from"
+            - type: "file"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "self"
+              column: "sequencing_summary"
+        manifest:
+          label: "Input Samplesheet contents"
+          element: "list"
+          hint: "Samplesheet contents"
+          columns: 2
+          column: 12
+          sep: ","
+          define_columns: 
+            fastq_1: file
+            fastq_2: file
+            from: dir
+            sequencing_summary: file
+          update_on: 
+            depends:
+              - csv
+            action: "read"
+            sep: ","
+            header: true
+            source: "%{variables.csv.source}"
+          bind:
+            from:  "<<directory(%{variables.csv.source})>>/nfcore_taxtriage/Samplesheet.csv"
+            to: "/opt/samplesheet/Samplesheet.csv"
+          create:
+            target: "<<directory(%{variables.csv.source})>>/nfcore_taxtriage/Samplesheet.csv"
+            sep: ","
+            type: "list"
+            header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
+          class: "wb-50  p-3 mb-1"
+          source: []
+          header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
+          append_newline: false
         maxCPUs:
           label: "Maximum CPUs"
           element: "number"
@@ -77,6 +144,10 @@
             position: "end"
             services: 
               - 1
+        sleepTime:
+          label: "Lag Time (s) between Pipeline start and Docker starting"
+          source: 5
+          element: number
         maxMemory:
           label: "Maximum Memory (GB)"
           element: "number"
@@ -148,50 +219,6 @@
           bind: "self"
           define:
             filter: " --filter %{variables.filter_db.target} "
-        rundir:
-          label: "Run Directory"
-          element: "file"
-          source: null
-          hint: "Requires a Samplesheet.csv with all relevant data in the same folder in terms of pathing as well as things like your fastq files and sequencing summary files"
-          target: "/opt/data"
-          bind: "self"
-        samplesheet:
-            label: "Samplesheet"
-            warning: "Must be in the root (same level) of the run directory"
-            hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
-            element: "exists"
-            source:  null
-            validations:
-              - type: "files"
-                error: "Must have a Samplesheet.csv file in the root directory (directly in your run directory)"
-                target: 
-                  type: "value"
-                  minimum: 1
-                  path: "%{variables.rundir.source}"
-                  value: "Samplesheet.csv$"
-            update_on: 
-              depends:
-                - rundir
-              action: "exists"
-              source: "%{variables.rundir.source}"
-        # fastqs:
-        #   label: "Input Reads"
-        #   hint: "Folder(s) that contains 1 or more fastq files in COMPRESSED (.gz) format"
-        #   class: "wb-50  p-3 mb-1"
-        #   warning: "Ensure that all fastq files you want to analyze are compressed"
-        #   update_on: 
-        #       depends:
-        #         - rundir
-        #       action: "exists"
-        #       source: "%{variables.rundir.source}/*"
-        #   validations:
-        #     - type: "files"
-        #       error: "Must have 1 or more .fastq.gz files"
-        #       target: 
-        #         type: "value"
-        #         minimum: 1
-        #         path: "%{variables.rundir.source}"
-        #         value: ".*(fastq|fq).gz"
         profile:
           label: "Profile"
           options:
@@ -202,8 +229,8 @@
           label: "Output Directory"
           output: True
           hint: "Directory to place your analysis results into"
-          source: "%{variables.rundir.source}/taxtriage_output"
-          path: "%{variables.rundir.source}/taxtriage_output"
+          source: "<<directory(%{variables.csv.source})>>/taxtriage_output"
+          path: "<<directory(%{variables.csv.source})>>/taxtriage_output"
           name: "Output Folder"
           target: "/opt/output"
           bind: "self"
@@ -215,11 +242,11 @@
           force_init: false
           label: "TaxTriage"
           image: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          workingdir: "/opt/data"
+          workingdir: "/opt/samplesheet"
           warning: "This process requires internet in its current state"
           command: [
             "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep 5; nextflow run /opt/code/main.nf 
-              --input /opt/data/Samplesheet.csv
+              --input /opt/samplesheet/Samplesheet.csv
               --db ${db}  
               --outdir /opt/output
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 

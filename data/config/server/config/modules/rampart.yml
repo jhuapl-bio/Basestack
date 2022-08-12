@@ -24,6 +24,7 @@
         port:
           label: "Served Port"
           column: 12
+          main: true
           element: "render"
           port: true
           target: [

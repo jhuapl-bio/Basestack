@@ -320,7 +320,7 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "mytax2",
+      selectedCatalogName: "agave",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},

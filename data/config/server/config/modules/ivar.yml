@@ -30,9 +30,8 @@
           - element: "file" 
             name: "Custom Reference FASTA file"
             source: null
-            bind_parent_dir: true
             target: "/opt/reference/<<basename(%{variables.reference.source})>>" 
-            bind: "directory"
+            bind: "self"
               
       bam:
         label: "Bam File"
@@ -146,7 +145,7 @@
           element: number
           hint: "Minimum frequency threshold(0 - 1) to call consensus. (Default: 0)"
           class: "wb-50 p-3 mb-1"
-          source: 0 
+          source: "0" 
           target: null
         quality_filter:
           label: "Quality Minimum"
@@ -202,8 +201,6 @@
           hideStatus: false
           label: "iVar Variant"
           force_restart: true
-          # command: ["bash","-c", "head ${gff}; samtools mpileup -aa -A -d 0 -B -Q 0 ${bam}   " ]
-          # command: ["bash","-c", " samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam}  " ]
           command: ["bash","-c", "samtools faidx ${reference}; samtools mpileup -aa -A -d ${depth_max} -B -Q 0 --reference ${reference} ${bam} | ivar variants -p ${outputName}  -r ${reference}  " ]
           workingdir: "/opt/data"
             
