@@ -96,6 +96,9 @@ export  class Job {
                     obj.source = obj.fallback
                 } 
             } 
+            if (!obj.target && obj.source){
+                obj.target = obj.source
+            }
             let getter = Object.getOwnPropertyDescriptor(obj, 'source');
             if (getter && getter.get){
                 obj = value.source

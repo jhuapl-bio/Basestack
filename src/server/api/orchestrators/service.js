@@ -475,12 +475,14 @@ export class Service {
             return `${source}:${target}`
         }
         async function formatBind(source, target){
+            
             let exists = await checkExists(source)
             let returnable = {
                 Source: source, 
                 Type: "bind",
                 Target: target
             }
+            
             if (exists && exists.exists){
                 store.logger.info(`${source} exists, skipping creation`)
                 return returnable
@@ -534,15 +536,24 @@ export class Service {
                 if (selected_option.options){
                     selected_option = {... selected_option.options[(selected_option.option ? selected_option.option : 0)]}
                 }
+                
                 if (typeof selected_option == 'object' && selected_option.bind){
                     let from = selected_option.source
                     let to = selected_option.target 
+                    
                     if (selected_option.bind && selected_option.bind.from){
-                        from = selected_option.bind.from
+                        from = selected_option.bind.from  
                     }
                     if (selected_option.bind && selected_option.bind.to){
                         to  = selected_option.bind.to
-                    } 
+                    }  
+                    if (!from){
+                        console.log(selected_option,"<")
+                        if(selected_option.define){
+                            console.log(selected_option.define.assembly)
+                        }
+                        continue
+                    }
                     if (from == '.'){
                         from = null
                     }  
@@ -630,6 +641,9 @@ export class Service {
         const $this = this; 
         let promises = []
         let defaultVariables = this.config.variables
+        if (!defaultVariables){
+            defaultVariables = {} 
+        }
         for (let [name, selected_option ] of Object.entries(defaultVariables)){
             if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
                 let targetBinding = selected_option
@@ -874,7 +888,7 @@ export class Service {
                     let mounts = await $this.defineReads()
                     console.log("define reads done")
                     await $this.defineSet() 
-                    console.log("defineset done")
+                    console.log("define set done")
                     await $this.defineCopies()  
                     console.log("define copies doen")
                     await $this.defineBinds()   

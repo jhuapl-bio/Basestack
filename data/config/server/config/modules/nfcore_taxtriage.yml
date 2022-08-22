@@ -43,6 +43,32 @@
         - target: "basestack-docker-taxtriage"
           label: "TaxTriage Volume"
           type: "volume"
+          # git clone -b 'v0.0.1' --single-branch --depth 1 https://github.com/jhuapl-bio/nf-core-taxtriage.git
+        - source: 
+            url: "git clone  https://github.com/jhuapl-bio/nf-core-taxtriage.git"
+            type: "dir"
+            remove: false
+            target: "${writePath}/workflows/taxtriage/taxtriage"
+          type: "orchestration" 
+          service:
+            command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/nf-core-taxtriage.git" ]
+            init: false
+            force_restart: true
+            image: "bitnami/git"
+            name: "nfcore_taxtriage_git"
+            force_init: false
+            config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
+            orchestrated: true
+            workingdir: "/opt"
+          target: "${writePath}/workflows/taxtriage/nf-core-taxtriage"
+          format: dir
+          bind: 
+            from: "${writePath}/workflows/taxtriage"
+            to: "/opt/source"
+          workingdir: "/opt/source"
+          overwrite: true
+          command: [ "sh", "-c", "rm -rf nf-core-taxtriage; git clone  https://github.com/jhuapl-bio/nf-core-taxtriage.git" ]
+          label: "Tax Triage Code"
         - source:
             url: ftp.ccb.jhu.edu
             type: file
@@ -151,7 +177,7 @@
         maxMemory:
           label: "Maximum Memory (GB)"
           element: "number"
-          source: 10
+          source: 12
           optional: true
           target: "%{variables.maxMemory.source}"
           append:
@@ -182,13 +208,13 @@
               source: null
               target: /opt/databases/<<basename(%{variables.db.source})>>
               bind: self
-        codedir: 
-          label: "Code Directory"
-          element: "dir"
-          source: null
-          hint: "Directory containing your offline source code"
-          target: "/opt/code"
-          bind: "self"
+        skip_assembly:
+          label: "Skip De Novo Assembly"
+          element: "checkbox"
+          source: true
+          hint: "Skip De Novo Assembly"
+          define: 
+            skip_assembly: "--skip_assembly"
         skip_plots:
           label: "Skip QC Plotting"
           element: "checkbox"
@@ -203,13 +229,34 @@
           hint: "pick up where you left off, useful if piplines are lenghty or you're debugging issues with a failed midrun submission"
           define: 
             resume: "-resume"
-        assembly: 
-          label: "Assembly File"
+        assembly_option: 
+          label: "Assembly File Option"
           element: "file"
           source: null
           hint: "File containing assembly refseq"
-          target: "/opt/assembly/<<basename(%{variables.assembly.source})>>"
-          bind: "directory"
+          target: null
+          bind: "self"
+          define: 
+            assembly: " --assembly %{variables.assembly_option.source}"
+        code: 
+          label: "code dir"
+          name: "code"
+          hidden: true
+          bind:
+            from:  "${writePath}/workflows/taxtriage/nf-core-taxtriage"
+            to: "/opt/code"
+        autopull: 
+          label: "Automatically Pull Latest Code from GitHub"
+          name: pull
+          source: true
+          element: "checkbox"
+          target: null
+          append:
+            command: "git -C /opt/code pull && "
+            placement: 2
+            position: "start"
+            services: 
+              - 0
         filter_db:
           label: "Filter Database"
           element: "dir"
@@ -234,6 +281,15 @@
           name: "Output Folder"
           target: "/opt/output"
           bind: "self"
+        report:
+          label: "Report"
+          element: file
+          openSelf: true
+          output: True
+          source: "%{variables.outdir.source}/multiqc/multiqc_report.html"
+          path: "%{variables.outdir.source}/multiqc/multiqc_report.html"
+          name: "Report"
+          target: "%{variables.outdir.source}/multiqc/multiqc_report.html"
       services:
         - name: taxtriage
           orchestrator: true
@@ -242,16 +298,20 @@
           force_init: false
           label: "TaxTriage"
           image: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          workingdir: "/opt/samplesheet"
+          workingdir: "/opt/code"
           warning: "This process requires internet in its current state"
+          # command: [
+          #   "bash", "-c", "${pull}"
+          # ]
           command: [
-            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep 5; nextflow run /opt/code/main.nf 
+            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep 5; 
+             nextflow run /opt/code/main.nf 
               --input /opt/samplesheet/Samplesheet.csv
               --db ${db}  
               --outdir /opt/output
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
-              -profile ${profile} ${skip_plots}
-              --assembly ${assembly} --demux 
+              -profile ${profile} ${skip_plots} ${skip_assembly} 
+              ${assembly} --demux 
               ${resume} ${filter};pkill -9 . ';  "
           ]
     

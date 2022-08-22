@@ -458,9 +458,9 @@ export class Procedure {
                 reject(err)  
             })   
         })
-    }   
-    async orchestrateDownload(dependency){
-		const $this = this   
+    }     
+    async orchestrateDownload(dependency){   
+		const $this = this       
         return new Promise(function(resolve,reject){  
              
             if (dependency.streamObj){
@@ -469,18 +469,18 @@ export class Procedure {
                     dependency.status.downloading = false
                     dependency.status.building = false
                     dependency.streamObj.destroy()
-                } catch(err){
-                    store.logger.error(err)
-                }
-            }
-            let service = new Service( 
-                cloneDeep(dependency.service),
-                null,
-                true
-            )
+                } catch(err){    
+                    store.logger.error(err) 
+                }        
+            }    
+            let service = new Service(    
+                cloneDeep(dependency.service), 
+                null,     
+                true 
+            ) 
             if (dependency.workingdir){
                 service.config.workingdir = dependency.workingdir
-            }
+            } 
             if (dependency.bind){  
                 if (!service.config.bind){
                     service.config.bind = []
@@ -497,7 +497,6 @@ export class Procedure {
             dependency.status.building = true
             dependency.status.downloading = true
             dependency.status.error = null
-            
               
             service.setOptions().then((f)=>{
                 service.check_then_start({}, null).catch((err)=>{
@@ -512,7 +511,6 @@ export class Procedure {
                         dependency.status.stream =  log
                         try{
                             dependency.streamObj.on("end", (response)=>{
-                                console.log("closed")
                                 dependency.status.building = false
                                 dependency.status.downloading= false
                                 dependency.status.error = null
