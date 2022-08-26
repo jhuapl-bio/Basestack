@@ -611,7 +611,6 @@ export default {
       } else {
         url  = `http://localhost:${link.source}`
       }
-      console.log(link,url,"<")
       if (link.suburl){
 				  url = url + link.suburl
 			  }
@@ -1254,7 +1253,6 @@ export default {
     anyMainRender(){
       if (this.selectedProcedure && this.selectedProcedure.variables){
         return Object.values(this.selectedProcedure.variables).filter((f)=>{
-          console.log(f)
           return f.element == 'render' && f.main
         })
       } else {

@@ -1,4 +1,4 @@
-- version: 1.0
+- version: 1.1
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -54,32 +54,6 @@
           target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
           overwrite: false
       variables:
-        custom_configuration:
-          optional: true
-          label: Custom Barcode Cfg file
-          element: file
-          source: null
-          bind: self
-          target: "/opt/custom_config.cfg"
-          append:
-            command: " cp /opt/custom_config.cfg /opt/ont-guppy-cpu/data/barcoding/; sed -i \"0,/arrangements_files/s/$/ custom_config.cfg/\" /opt/ont-guppy-cpu/data/barcoding/configuration.cfg ;  "
-            position: "start" 
-            placement: 2
-            services: 
-              - 0
-        custom_barcode_fasta:
-          optional: true
-          label: Custom FASTA barcode
-          element: file
-          source: null
-          bind: self
-          target: "/opt/custom_fasta.fasta"
-          append:
-            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy-cpu/data/barcoding/barcodes_masked.fasta;  "
-            position: "start"
-            placement: 2
-            services: 
-              - 0
         csv:
           label: CSV File(s)
           element: file
@@ -139,6 +113,32 @@
           source: []
           header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
           append_newline: true
+        custom_configuration:
+          optional: true
+          label: Custom Barcode Cfg file
+          element: file
+          source: null
+          bind: self
+          target: "/opt/custom_config.cfg"
+          append:
+            command: " cp /opt/custom_config.cfg /opt/ont-guppy-cpu/data/barcoding/; sed -i \"0,/arrangements_files/s/$/ custom_config.cfg/\" /opt/ont-guppy-cpu/data/barcoding/configuration.cfg ;  "
+            position: "start" 
+            placement: 2
+            services: 
+              - 0
+        custom_barcode_fasta:
+          optional: true
+          label: Custom FASTA barcode
+          element: file
+          source: null
+          bind: self
+          target: "/opt/custom_fasta.fasta"
+          append:
+            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy-cpu/data/barcoding/barcodes_masked.fasta;  "
+            position: "start"
+            placement: 2
+            services: 
+              - 0
         port:
           element: render
           label: Mytax2 Dashboard Service
