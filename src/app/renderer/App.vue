@@ -517,7 +517,7 @@ export default {
           position: 'center',
           icon: 'error',
           showConfirmButton:true,
-                  title:  "Could not open the path: "+link
+                  title:  "Could not open the path: "+link 
         })
       }
     },
@@ -562,7 +562,6 @@ export default {
         }
       }
       this.importedLibrary = importedLibrary
-      console.log("imported library", importedLibrary)
       if (!this.selectedCatalog){
         let name = (this.selectedCatalogName && importedLibrary[this.selectedCatalogName] ? this.selectedCatalogName : first)
         this.selectedCatalogName = name
