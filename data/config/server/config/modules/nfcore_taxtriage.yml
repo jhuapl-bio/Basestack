@@ -40,6 +40,10 @@
             path: ${configPath}/modules/orchestrator/Dockerfile
             file: Dockerfile
           format: "dockerfile"
+        - target: "bitnami/git"
+          label: "bitnami/git"
+          type: "docker"
+          format: "docker"
         - target: "basestack-docker-taxtriage"
           label: "TaxTriage Volume"
           type: "volume"

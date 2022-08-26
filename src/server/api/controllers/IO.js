@@ -56,8 +56,8 @@ export async function readCsv(filepath, sep){ // 1st argument is filepath, secon
 	return new Promise((resolve, reject)=>{
 		const csvData = []; 
 		( async ()=>{
-			let exists = await fs.existsSync(filepath)
-			if (exists){
+			let exists = await fs.statSync(filepath)
+			if (exists && exists.isFile()){
 				fs.createReadStream(filepath)
 				.pipe(parse({delimiter: sep}))
 				.on('data', function(csvrow) {
@@ -72,6 +72,8 @@ export async function readCsv(filepath, sep){ // 1st argument is filepath, secon
 					store.logger.info(`closed the reading`)
 					resolve(csvData)
 				});
+				
+					
 			} else {
 				reject(new Error(`${filepath} doesn't exist`))
 			}

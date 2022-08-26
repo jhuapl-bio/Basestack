@@ -747,7 +747,7 @@ export class Service {
                                         Type: "bind",
                                         RW: true,
                                         Target: ""
-                                    } 
+                                    }  
                                     if(row[read.column] !== ''){
                                         if (row[read.column] && !path.isAbsolute(row[read.column])){
                                             row[read.column] = path.join(path.dirname(read.source), row[read.column])
