@@ -481,7 +481,7 @@ export async function check_image(image){
 				let digests = getImage.RepoDigests.map((d)=>{
 					return d.replace(image+"@", "")
 				}) 
-				if (getImage.Size){
+				if (getImage.Size){ 
 					getImage.Size = bytesToSize(getImage.Size)
 				}
 				for (const tag of getImage.RepoTags) {
