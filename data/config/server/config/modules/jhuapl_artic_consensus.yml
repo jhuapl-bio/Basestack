@@ -193,7 +193,9 @@
             depends:
               - dir
             action: "read"
+            sep: '\t'
             source: "%{variables.dir.source}/manifest.txt"
+            header: false
           create:
             target: "%{variables.dir.source}/manifest.txt"
             sep: "tab"

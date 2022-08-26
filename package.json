@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "2.3.0",
+  "version": "2.3.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -15,7 +15,7 @@
     "buildOnly:linuxARM64": "electron-builder --arm64 --linux AppImage",
     "buildOnly:linux": "electron-builder --linux AppImage",
     "buildOnly:linuxAll": "electron-builder --arm64 --x64 --linux  AppImage",
-    "buildOnly:win": "electron-builder --win; zip build/win-unpacked",
+    "buildOnly:win": "electron-builder --win; rm build/win-unpacked.zip; rm build/win-unpacked.zip; zip build/win-unpacked; mv 'build/Basestack Setup 2.3.2.exe' build/Basestack-Setup-2.3.2.exe",
     "buildOnly:mac": "electron-builder --mac dmg",
     "package:mac-zip": "electron-builder --mac zip",
     "package:mac": "electron-builder --mac",
@@ -34,7 +34,7 @@
     "build:mac": "node .electron-vue/build.js && electron-builder --mac",
     "build:macOffline": "node .electron-vue/build.js && cross-env offline=true electron-builder --mac dmg",
     "build:macOfflineSign": "node .electron-vue/build.js && cross-env electron-builder --mac dmg -p never",
-    "build:win": "node .electron-vue/build.js && electron-builder --win",
+    "build:win": "node .electron-vue/build.js && electron-builder --win; rm build/win-unpacked.zip; zip build/win-unpacked",
     "build:winOffline": "node .electron-vue/build.js && electron-builder --win -p never",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
@@ -158,6 +158,7 @@
     "express": "^4.17.1",
     "extract-zip": "^2.0.1",
     "file-system": "^2.2.2",
+    "get-folder-size": "^2.0.0",
     "git-clone": "^0.2.0",
     "glob": "^7.2.0",
     "gunzip-file": "^0.1.1",

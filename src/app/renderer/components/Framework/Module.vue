@@ -54,7 +54,7 @@
           </v-list-item-avatar>
           <v-list-item-content>
             <v-list-item-title >{{`v${item.version}`}}, {{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}</v-list-item-title>
-            <v-list-item-subtitle v-text="(!item.imported && !item.local ? 'Not Imported' : 'Local' )"></v-list-item-subtitle>
+            <v-list-item-subtitle v-text="(!item.imported && !item.local ? 'Not imported from remote or not pre-packaged' : ( item.imported && !item.local ? 'Imported from remote database' : 'Pre-packaged default with Basestack' )  )"></v-list-item-subtitle>
           </v-list-item-content>
           <v-list-item-action>
             <v-list-item-subtitle v-if="item.local">
@@ -77,6 +77,18 @@
         <template v-slot:prepend>
           <v-subheader>Version</v-subheader>
           <v-icon medium color="primary">$tags</v-icon>
+          <v-tooltip v-if="selectedVersion.imported || selectedVersion.local" top >
+            <template v-slot:activator="{ on }">
+            <v-icon class="ml-2"  v-on="on" color="green" >$check-double</v-icon>
+            </template>
+            Available for offline use
+          </v-tooltip>
+          <v-tooltip  v-else top  >
+            <template v-slot:activator="{ on }">
+              <v-icon class="ml-2"  v-on="on" color="orange">$exclamation-triangle</v-icon>
+            </template>
+            Not available for offline use
+          </v-tooltip>
         </template>
       </v-autocomplete>
       <template v-slot:extension >
@@ -106,8 +118,48 @@
           <v-icon class="mr-3" small color="primary lighten-2" >
               $cog 
           </v-icon>
-        Reset Default</v-btn>
+          Reset Default
+        </v-btn>
+        <v-dialog
+          transition="dialog-bottom-transition"
+          max-width="80vh" v-model="dialogLog"
+        >
+          <template v-slot:activator="{ on, attrs }">
+            
+            <v-btn
+              v-bind="attrs" 
+              v-on="on" class=" "
+            >
+              <v-icon
+                  medium class="mr-3"
+                >$comment
+              </v-icon>
+              Log Viewer
+            </v-btn>
+          </template>
+          <template v-slot:default="dialogLog">
+            <v-card
+            >
+              <v-toolbar
+                color="indigo"
+                dark
+              >Log output</v-toolbar>
+              <v-card-text>
+                <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow> 
+              </v-card-text>
+              <v-card-actions class="justify-center">
+                <v-btn
+                  text
+                  @click="dialogLog.value = false"
+                >Close</v-btn>
+              </v-card-actions>
+            </v-card>
+            
+          </template>
+          
+        </v-dialog>
       </template>
+      
       <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.removable && selectedVersion.imported">
         <template v-slot:activator="{ on }">
           <v-btn @click="removeModule(selectedVersion.idx, selectedVersion.name)" v-on="on" icon >
@@ -203,7 +255,7 @@
           
         </v-card>
       </v-navigation-drawer>
-    
+     
     <v-col sm="3" class="shrink">
       <v-dialog 
           transition="dialog-bottom-transition"
@@ -215,14 +267,16 @@
           >
             <v-card-title v-if="installStatus.fully_installed" class="text-h5">
               Module Status
+              <v-spacer></v-spacer>
+              
             </v-card-title>
             <v-card-title v-else class="text-h5">
               Module Status
             </v-card-title>
-
             <v-card-subtitle>{{showInstalled}} up-to-date dependencies</v-card-subtitle>
-            <v-card-text v-if="installStatus.fully_installed">All dependencies installed</v-card-text>
-            <v-card-text v-else>Missing 1 or more dependencies</v-card-text>
+            <v-card-text class="text-h6 my-0 py-0" v-if="installStatus.fully_installed">All dependencies installed</v-card-text>
+            <v-card-text class="text-h6 my-0 py-0" v-else>Missing 1 or more dependencies</v-card-text>
+            <v-card-text  class="text-h6 my-0 py-0">Total Space Used: ~{{totalSpaceUsed}}</v-card-text>
             <v-card-actions>
               <v-btn
                   v-on="on" v-bind="attrs"
@@ -247,46 +301,9 @@
                   $download
                 </v-icon>
               </v-btn>
-            </v-card-actions>
-          </v-card>
-          <!-- <v-alert  prominent 
-          :icon="(installStatus.fully_installed ? '$check-circle': '$exclamation-triangle')"
-          :type="( installStatus.fully_installed ? 'success': 'error')">
-            <v-row align="center">
-              <v-col v-if="installStatus.fully_installed" class="grow">  
-                {{showInstalled}} up-to-date dependencies
-              </v-col>
-              <v-col class="grow" v-else>
-                {{showInstalled}} up-to-date dependencies
-              </v-col>
-              <v-col class="shrink">
-                <v-btn
-                    v-on="on" v-bind="attrs"
-                    class="text-caption"
-                    dark small 
-                >
-                  Check
-                  <looping-rhombuses-spinner  
-                    :animation-duration="6000" v-if="installStatus.building"
-                    :size="3" class="ml-1"
-                    :color="'white'"
-                    />  
-                </v-btn>
-                <v-icon
-                    class="configure" color="white lighten-2"
-                    medium @click="buildModule()"
-                >
-                  $download
-                </v-icon>
-              </v-col>
-            </v-row>
               
-          </v-alert> -->
-        
-          
-            
-          
-          
+            </v-card-actions>
+          </v-card>          
         </template>
         <SubLibrary
               :version="selectedVersion"
@@ -298,13 +315,8 @@
         </SubLibrary>
         
       </v-dialog>
-      <v-alert
-        dense v-if="anyRender" prominent
-        text icon="$exclamation-triangle"
-        type="info"
-      >
-        This procedure utilizes a rendered UI, select the "Click Me" button below to open it
-      </v-alert>
+      
+      
       <v-banner v-if="selectedVersion.version != latest">
         <v-tooltip bottom class="" >
           <template v-slot:activator="{ on }">
@@ -419,31 +431,7 @@
         </v-stepper-header>
           
       </v-stepper>
-      <v-checkbox 
-          v-if="os == 'linux'"
-          v-model="setUser"
-          on-icon="$check-square"
-          label="Run job as current user (yes) or default (no)"
-          class="align-right justify-center text-xs-center" 
-          off-icon="$square"
-          color="primary"
-      ></v-checkbox>
-    </v-col>
-    <v-col sm="6" v-if="procedure && procedure.variables" class="overflow:auto; min-height:">
-      
-      <ListParams
-          :items="additionals"
-          v-if="additionals.length > 0"
-          :defaultHeaders="headers"
-          @updateValue="updateValue"
-          :key="updates"
-          @removeCustomVariable="removeCustomVariable"
-      >
-      </ListParams>
-    </v-col>
-    <v-col sm="6" v-if="headers.length > 0 && procedure "  >
-      <v-card height="90vh" class="scroll fill-height">
-        
+      <v-card  v-if="anyOutput" class="scroll ">
         <Progresses
           :progresses="procedure.watches"
           :status="status"
@@ -455,10 +443,125 @@
           :defaultHeaders="outputHeaders"
         >
         </Progresses>
-        <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow> 
         
       </v-card>
+      
+      <div style="display:flex" v-if="job && job.running">
+        <v-tooltip  bottom v-for="item in anyMainRender" :key="item.label">
+          <template v-slot:activator="{ on }">
+          <v-btn
+            color="info"  large
+            class="text-h5 my-6"  
+            @click="open_link(item, $event)" v-on="on" 
+          >
+            <v-icon class="mr-3" large color="goldenrod" >
+              $external-link-alt
+            </v-icon>
+            Click to open at {{item.source}}</v-btn>
+          </template>
+          Open in Browser
+        </v-tooltip>
+        <v-alert
+          dense v-if="anyRender" prominent
+          text icon="$exclamation-triangle"
+          type="info" class="ml-5 justify-center "
+        >
+          This procedure utilizes a rendered UI, select the "Click Me"
+        </v-alert>
+      </div>
+      <v-checkbox 
+          v-if="os == 'linux'"
+          v-model="setUser"
+          on-icon="$check-square"
+          label="Run job as current user (yes) or default (no)"
+          class="align-right justify-center text-xs-center" 
+          off-icon="$square"
+          color="primary"
+      ></v-checkbox>
     </v-col>
+    <v-col :sm="!selectedProcedure.full_orientation ? 12 : 12" v-if="procedure && procedure.variables" class="mx-0 px-0 overflow:auto; ">
+      
+      <ListParams
+          :items="additionals"
+          v-if="additionals.length > 0"
+          :defaultHeaders="headers"
+          @updateValue="updateValue"
+          :key="updates"
+          @removeCustomVariable="removeCustomVariable"
+      >
+      </ListParams>
+    </v-col>
+    <!-- <v-footer
+      v-bind="{
+        absolute: true,
+      }"
+      app
+      :padless="false"
+    >
+      <v-dialog
+        transition="dialog-bottom-transition"
+        max-width="80vh" v-model="dialogLog"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <v-card
+            flat
+            tile
+            width="100%"
+            class="red lighten-1 text-center"
+          >
+              <v-card-text>
+              <v-btn
+                icon
+                v-bind="attrs" class="justify-center text-center"
+                v-on="on"
+              >
+                <v-icon
+                  medium
+                >$comment
+                </v-icon>
+              </v-btn>
+            </v-card-text>
+          </v-card>
+        </template>
+        <template v-slot:default="dialogLog">
+          <v-card
+          >
+            <v-toolbar
+              color="indigo"
+              dark
+            >Log output</v-toolbar>
+            <v-card-text>
+              <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow> 
+            </v-card-text>
+            <v-card-actions class="justify-center">
+              <v-btn
+                text
+                @click="dialogLog.value = false"
+              >Close</v-btn>
+            </v-card-actions>
+          </v-card>
+          
+        </template>
+        
+      </v-dialog>
+    </v-footer> -->
+    <!-- <v-col :sm="!selectedProcedure.full_orientation ? 6 : 12" v-if="headers.length > 0 && procedure "  >
+      <v-card height="90vh" class="scroll fill-height"> -->
+        <!-- <Progresses
+          :progresses="procedure.watches"
+          :status="status"
+          :job="job"
+          :catalog="module"
+          :procedure="procedureIdx"
+          :removal_override="procedure.removal_override"
+          @removeCustomVariable="removeCustomVariable"
+          :defaultHeaders="outputHeaders"
+        >
+        </Progresses> -->
+        <!-- <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow>  -->
+        
+      <!-- </v-card> -->
+    <!-- </v-col> -->
   </v-row>
 </template>
 
@@ -500,6 +603,26 @@ export default {
   methods: {
     setProcedure(event){
       this.procedure_selected_index = event
+    },
+    getUrl(link){
+			  let url 
+      if (Array.isArray(link.from)){
+          url  = `http://localhost:${link.from[0]}`
+      } else {
+        url  = `http://localhost:${link.source}`
+      }
+      console.log(link,url,"<")
+      if (link.suburl){
+				  url = url + link.suburl
+			  }
+      return url
+    },
+    openUrl(link){
+			this.$electron.shell.openExternal(this.getUrl(link))
+		},
+		open_link (link, e) {
+			e.stopPropagation()
+			this.openUrl(link)
     },
     async buildModule(){
         const $this = this
@@ -587,6 +710,12 @@ export default {
           }
       }) 
     },
+    bytesToSize(bytes) {
+      var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+      if (bytes == 0) return '0 Byte';         
+      var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+      return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+    },
     async getInstallStatus(){
       FileService.getProcedure({
         procedure: this.procedureIdx, 
@@ -594,6 +723,7 @@ export default {
         token: this.$store.token
       }).then((f)=>{
         this.dependencies = f.data.data.dependencies
+        this.totalSpaceUsed = f.data.data.spaceUsedTotal
         this.installStatus = f.data.data.status
       })
       .catch((err)=>{
@@ -814,7 +944,6 @@ export default {
     },
     async updateValue(value){
       const $this = this;
-      console.log("update value")
       $this.$store.dispatch('UPDATE_VARIABLE', {
         name: value.variable,
         source: value.src,
@@ -962,7 +1091,10 @@ export default {
   data(){
     return{
       drawer: true,
+      dialog: false,
+      dialogLog: false,
       customDrawer: false,
+      totalSpaceUsed: "0 Bytes",
       installStatus: {},
       setUser: (process.env.platform_os == 'linux' ? true : false),
       stored: {},
@@ -970,7 +1102,6 @@ export default {
       mini: true,
       el: 1,
       services: [],
-      dialog: false,
       dependencies:[],
       updates: 0,
       procedureIdx: 0,
@@ -996,7 +1127,6 @@ export default {
         "render": "Render"
 
       },
-
       interval: null,
       count:0,
       tab:0,
@@ -1102,6 +1232,16 @@ export default {
       })
       return serviceList
     },
+    anyOutput(){
+      if (this.selectedProcedure && this.selectedProcedure.variables){
+        return Object.values(this.selectedProcedure.variables).some((f)=>{
+          return f.output
+        })
+      } else {
+        return false
+      }
+
+    },
     anyRender(){
       if (this.selectedProcedure && this.selectedProcedure.variables){
         return Object.values(this.selectedProcedure.variables).some((f)=>{
@@ -1109,6 +1249,17 @@ export default {
         })
       } else {
         return false
+      }
+
+    },
+    anyMainRender(){
+      if (this.selectedProcedure && this.selectedProcedure.variables){
+        return Object.values(this.selectedProcedure.variables).filter((f)=>{
+          console.log(f)
+          return f.element == 'render' && f.main
+        })
+      } else {
+        return []
       }
 
     },

@@ -1,11 +1,12 @@
 import { match } from "assert";
 import nestedProperty from "nested-property"
 import { remove } from "winston";
+import { store } from "../server/config/store/index.js";
 const cloneDeep = require("lodash.clonedeep"); 
 const path = require("path")   
 const lodash = require("lodash")    
 const { module_status } = require("./watcher.js")
-const {readFile, checkExists} = require("./IO.js") 
+const {readFile, checkExists, readCsv} = require("./IO.js") 
 
 // Configuration 
 // A configuration class is a conversion of a static YAML configuration for a procedure selected from the UI
@@ -109,7 +110,7 @@ export  class Configuration {     // Make the main procedure class for configura
             
         }
         
-    }
+    } 
     async getProgress(){ // Find out how many outputs are done
         const $this = this; 
         return new Promise(function(resolve,reject){
@@ -197,7 +198,7 @@ export  class Configuration {     // Make the main procedure class for configura
                                     }).catch((err)=>{
                                         console.error(err, "does not exists!", update_on.source)
                                         return returnedVari 
-                                    })
+                                    }) 
                                 )  
                             }
                             if (action == 'read'){ // If you need to read a file (like csv or tsv)
@@ -205,26 +206,39 @@ export  class Configuration {     // Make the main procedure class for configura
                                     key: key, 
                                     value: null
                                 }
+                                let header = update_on.header
+                                let make_header = (vari.header && !update_on.header ? vari.header : null)
+                                let func = 
+                                    ( header ? 
+                                        readCsv(update_on.source, update_on.sep, header) : 
+                                        ( make_header ? 
+                                            readCsv(update_on.source, update_on.sep, make_header) : 
+                                            readFile(update_on.source, true)  
+                                    ) )
                                 promises.push(
-                                    readFile(update_on.source, true).then((f)=>{ // Ingest the raw data of the file
-                                        let header = vari.header // IF header defined, set first row as so
+                                    func.then((f)=>{ // Ingest the raw data of the file
+                                        vari.sep = ( vari.sep == "tab" ? "\t" : vari.sep )
                                         f  = f.filter(function (el) {
                                             return el != null && el !== '';
-                                        });
-                                        if (header){
-                                            vari.source = f.map((d)=>{ // split the header as tabular format (only supported one right now)
-                                                let p  = d.split("\t")
-                                                let returned = { }
-                                                header.map((head,i)=>{
-                                                    returned[head] = p[i]
-                                                }) // Define the keys for the header
-                                                return returned
-                                            })
+                                        }); 
+                                        console.log(f)
+                                        if (header || make_header) {
+                                            vari.source = f 
+
                                         } else {
-                                            vari.source = f.map((d)=>{
-                                                return d.split("\t")
+                                            vari.source = f.map((d,i)=>{
+                                                if (update_on.skip_header && i ==0){
+                                                    console.log("skipping header", vari.header)
+                                                } else {
+                                                    return d.split((vari.sep ? vari.sep : "\t"))
+                                                }
                                             }) // Otherwise, assume the splitting type if tabular
+                                            
                                         }
+                                     
+                                        vari.source = vari.source.filter((f)=>{
+                                            return f
+                                        })
                                         returnedVari.value = vari
                                         // return the key of the variable, and the value of it (source)
                                         return returnedVari 
@@ -272,10 +286,10 @@ export  class Configuration {     // Make the main procedure class for configura
                 resolve(changed_variables)
             })
         })
-       
+         
     }
 
-    mapFunctions(targets, functions_list){   
+    mapFunctions(targets, functions_list){    
         let functions = { 
             "directory": path.dirname, // return dirname of source
             "notExists": null, // Check if the path doesnt exist
@@ -416,13 +430,15 @@ export  class Configuration {     // Make the main procedure class for configura
                     if (fo && Array.isArray(fo)){  // If there are one or more matches
                         let original = cloneDeep(obj[key])
                         Object.defineProperty(obj, key, {
-                            enumerable: true,   
-                            set: function(value){
-                                original = value
+                            enumerable: true,    
+                            set: function(value){ 
+                                original = value 
                             }, 
                             get: function(){  // set getter that will update on all value changes if needed
                                 let fullstring = cloneDeep(original)  
-                                let final = $this.mapVariable(fullstring)
+                                let final = $this.mapVariable(fullstring,obj)
+                                
+
                                 if (final == 'undefined'){
                                     return null
                                 } else { 
@@ -471,9 +487,6 @@ export  class Configuration {     // Make the main procedure class for configura
     defineMapping(){ 
         let final = this.findObjectByLabel(this, "(\%\{.+?\})") 
         // console.log(this.variables.fastqs.options[1].bind.from,"end")
-
-
-        
         // this.variables = {
         //     fastqs: {
         //         source: ["/Users/1", "/Users/2" ]
@@ -492,10 +505,13 @@ export  class Configuration {     // Make the main procedure class for configura
         // let string = "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report.json"
         // let final = this.mapVariable(string)
 
-
+ 
         
     }  
-    mapVariable(fullstring){
+    splice(value,index){
+        return value.splice(index, 1)
+    }
+    mapVariable(fullstring,key){
         let $this  = this
         let split = fullstring.match(/(\%\{.*?\})|((?<=\}).*?(?=\%\{))|^.*?(?=\%\{)|(.+$)/g)
         let mapping = []
@@ -503,23 +519,28 @@ export  class Configuration {     // Make the main procedure class for configura
             split = split.filter((f)=>{
                 return f && f!==''
             })
-            split.forEach((id)=>{
-                let pattern = "(\%\{.+?\})"
-                var replace = `${pattern}`   
-                var re = new RegExp(replace,"g");
-                let fo = id.match(re)
-                if (fo){ 
-                    let d = fo[0].replace(/[\%\{\}]/g, "") 
-                    let found = nestedProperty.get($this, d)
-                    if (Array.isArray(found)){
-                        d = found
-                    } else {
-                        d = found
-                    }
-                    mapping.push(d)
+            let find = {}
+            split.forEach((id,i)=>{
+            let pattern = "(\%\{.+?\})"
+            var replace = `${pattern}`   
+
+            var re = new RegExp(replace,"g");
+            let fo = id.match(re) 
+            if (fo){ 
+                let d = fo[0].replace(/[\%\{\}\]]/g, "") 
+                d = d.replace(/(\[)/g, ".")  
+                let found = nestedProperty.get($this, d)
+                if (Array.isArray(found)){
+                    d=found
+    
                 } else {
-                    mapping.push(id)
+                    d = found
                 }
+                mapping.push(d)
+            } else {
+                mapping.push(id)
+            }
+                             
             })
         } else {
             mapping.push(fullstring)
@@ -532,7 +553,6 @@ export  class Configuration {     // Make the main procedure class for configura
             }
             return (Array.isArray(f) ? f.length : 1)
         }))
-        
         if (maxlen == 1){
             final = final.join("")
         } else {
@@ -550,8 +570,9 @@ export  class Configuration {     // Make the main procedure class for configura
             final = truefinal
         }
         let mapping2 = []
+        
         if (!Array.isArray(final)){
-            final = [ final ]
+            final = [ final ] 
         }
         
         let functions = { 
@@ -564,8 +585,9 @@ export  class Configuration {     // Make the main procedure class for configura
             "basename": path.basename, // Get the basename of the path
             "trim": path.parse // get the name without the ext of the path
         } 
-        let returnable =[]
+        let returnable =[] 
         let combined_maps = {}
+        let stop_force = false
         final.forEach((entry)=>{
             let split = entry.match(/(\<\<.*?\>\>)|(?<=\>\>).*?(?=\<\<)|(^.*?(?=\<\<)|((?<=\>\>).*?$))/g)
             if (split){
@@ -586,6 +608,7 @@ export  class Configuration {     // Make the main procedure class for configura
                                 result  = ( result ? false : true )
                             }
                             else if (d == 'firstIndex'){  // If you need to grab the first element of an array
+                                
                                 result = result[0]                              
                             }
                             else if (d == 'join'){ // If you need to join the array of src vals
@@ -651,11 +674,15 @@ export  class Configuration {     // Make the main procedure class for configura
                 })
                 
                 returnable.push(idxReturnable)
-                
+                 
             }  else {
                 returnable.push([entry])
             }
-        })
+        })  
+        // if(key.label == 'Output SAM File'){
+        //     console.log(returnable,key,"-----------")
+        // }
+
         
         returnable = returnable.map((f)=>{
             return f.join("")
@@ -669,214 +696,6 @@ export  class Configuration {     // Make the main procedure class for configura
         
 
     }
-    findObjectByLabelOld(obj, pattern) {
-        const $this  = this
-        
-        if (obj && typeof obj == 'object'){ // If the object type is an object, there are values beneath, part of it, keep going
-            Object.keys(obj).forEach(function (key) {
-               
-                if (typeof obj[key] === 'object') { // If the object type is an object, there are values beneath, part of it, keep going
-                    $this.findObjectByLabel(obj[key], pattern, $this) 
-                    
-                     
-                    // return null
-                } else if (typeof obj[key] == 'string'){ // If the object type is not an object, we are at the terminus of a branching pattern
-                    
-                    var replace = `${pattern}`   
-                    var re = new RegExp(replace,"g");
-                    
-                    let fo = obj[key].match(re) // match all values between ${}   
-                    
-                    if (fo && Array.isArray(fo)){  // If there are one or more matches
-                        let original = cloneDeep(obj[key])
-                        Object.defineProperty(obj, key, {
-                            enumerable: true,   
-                            set: function(value){
-                                original = value
-                            }, 
-                            get: function(){  // set getter that will update on all value changes if needed
-                                let fullstring = cloneDeep(original)  
-                                
-                                fo.forEach((match,i)=>{   // for all times you find ${}
-                                    let id; 
-                                    let found; 
-                                    try{  
-                                        id = match.replace(/[\%\{\}]/g, "") /// remove any functions INSIDE the ${}
-                                        found =  nestedProperty.get($this, id) // use nested propery to finding branching pattern of top level
-                                        if (fullstring){
-                                            if (typeof found == 'string' && match ){ // If it is a string, just simply replace value in ${} with nested prop find
-                                                fullstring  = fullstring.replaceAll(match, found)        
-                                            } else if (Array.isArray(found) && match) { // Else if arr, go thru all possible finds, and match approprately iteratively
-                                                let newval = []
-                                                // fullstring  = fullstring.replaceAll(match, found)  
-                                                fullstring = found.map((f,i)=>{ // go through each propery match of ${}
-                                                    let u = cloneDeep(original).replaceAll(match, f)   
-                                                    return u 
-                                                })
-                                                
-                                            } else {
-                                                fullstring = found 
-                                            }  
-                                        }
-                                        
-                                                
-                                    } catch(err)  { 
-                                        console.error("error in matching", match, id, found, "origina:", original)
-                                        console.log(err)
-                                    }
-                                    
-                                })
-                                
-                           
-                                if (fullstring){
-                                    fullstring= $this.mapFunctions(fullstring, obj.formatting) // next match all %<<>> which are functions
-                                }
-                                
-                                
-                                if (fullstring == 'undefined'){
-                                    return null
-                                } else { 
-                                    return fullstring
-                                }
-                            }
-                        })
-                    }
-                } else {
-                    return 
-                }
-            }) 
-        } else if (typeof obj == 'string') { 
-            var replace = `${pattern}`   
-            var re = new RegExp(replace,"g");
-            let fo = obj.match(re)  
-            let fullstring = obj
-            if (fo && Array.isArray(fo)){  
-                fo.forEach((match)=>{  
-                    try{
-                        let id = match.replace(/[\%\{\}]/g, "")
-                        Object.defineProperty(obj, )
-                        obj = { 
-                            get: function(){
-                                let found =  nestedProperty.get($this, id)
-                                fullstring  = fullstring.replaceAll(match, found)
-                                if (fullstring == 'undefined'){
-                                    return null
-                                } else {
-                                    return fullstring
-                                }
-                            }
-                        }
-                    } catch(err)  {
-                        console.error(err)
-                    }
-                })
-                return obj.get()
-            }  else {
-                return obj
-            }
-        } else {
-            return obj
-        }
-    }
-    findObjectByReference(obj, pattern) {
-        const $this  = this
-        
-        if (obj && typeof obj == 'object'){ // If the object type is an object, there are values beneath, part of it, keep going
-            Object.keys(obj).forEach(function (key) {
-               
-                if (typeof obj[key] === 'object') { // If the object type is an object, there are values beneath, part of it, keep going
-                    $this.findObjectByReference(obj[key], pattern, $this) 
-                } else if (typeof obj[key] == 'string'){ // If the object type is not an object, we are at the terminus of a branching pattern
-                    var replace = `${pattern}`   
-                    var re = new RegExp(replace,"g");
-                    
-                    let fo = obj[key].match(re) // match all values between ${}   
-                    if (fo && Array.isArray(fo)){  // If there are one or more matches
-                        let original = cloneDeep(obj[key])
-                        Object.defineProperty(obj, key, {
-                            enumerable: true,   
-                            set: function(value){
-                                original = value
-                            }, 
-                            get: function(){  // set getter that will update on all value changes if needed
-                                let fullstring = cloneDeep(original)  
-                                
-                                fo.forEach((match,i)=>{   // for all times you find ${}
-                                    let id; 
-                                    let found; 
-                                    try{  
-                                        id = match.replace(/[\&\{\}]/g, "") /// remove any functions INSIDE the ${}
-                                        found =  nestedProperty.get($this, id) // use nested propery to finding branching pattern of top level
-                                        if (fullstring){
-                                            if (typeof found == 'string' && match ){ // If it is a string, just simply replace value in ${} with nested prop find
-                                                fullstring  = fullstring.replaceAll(match, found)        
-                                            } else if (Array.isArray(found) && match) { // Else if arr, go thru all possible finds, and match approprately iteratively
-                                                let newval = [] 
-                                                // fullstring  = fullstring.replaceAll(match, found)  
-                                                fullstring = found.map((f,i)=>{ // go through each propery match of ${}
-                                                    let u = cloneDeep(original).replaceAll(match, f)   
-                                                    return u 
-                                                })
-                                            } else {
-                                                fullstring = found 
-                                            }  
-                                        }
-                                        
-                                                
-                                    } catch(err)  { 
-                                        console.error("error in matching", match, id, found, "origina:", original)
-                                    }
-                                    
-                                })
-                                
-                           
-                                
-                                
-                                
-                                if (fullstring == 'undefined'){
-                                    return null
-                                } else { 
-                                    return fullstring
-                                }
-                            }
-                        })
-                    }       
-                } else {
-                    return 
-                }
-            }) 
-        } else if (typeof obj == 'string') { 
-            var replace = `${pattern}`   
-            var re = new RegExp(replace,"g");
-            let fo = obj.match(re)  
-            let fullstring = obj
-            if (fo && Array.isArray(fo)){  
-                fo.forEach((match)=>{  
-                    try{
-                        let id = match.replace(/[\%\{\}]/g, "")
-                        Object.defineProperty(obj, )
-                        obj = { 
-                            get: function(){
-                                let found =  nestedProperty.get($this, id)
-                                fullstring  = fullstring.replaceAll(match, found)
-                                if (fullstring == 'undefined'){
-                                    return null
-                                } else {
-                                    return fullstring
-                                }
-                            }
-                        }
-                    } catch(err)  {
-                        console.error(err)
-                    }
-                })
-                return obj.get()
-            }  else {
-                return obj
-            }
-        } else {
-            return obj
-        }
-    }
+    
     
 }

@@ -10,6 +10,7 @@ var ncp = require("ncp").ncp
 const http = require("http")
 const https = require("https")
 ncp.limit = 16;
+import getSize from 'get-folder-size';
 const fs  = require("fs")
 import  path  from "path"
 const mkdirp = require("mkdirp");
@@ -53,29 +54,31 @@ export function set(attribute, value, obj, type) {
 
 export async function readCsv(filepath, sep){ // 1st argument is filepath, second is whetehr or not to split the data into a tsv with a string/char
 	return new Promise((resolve, reject)=>{
-				
 		const csvData = []; 
-			fs.exists(filepath,(exists)=>{
-				if (exists){
-					fs.createReadStream(filepath)
-					.pipe(parse({delimiter: sep}))
-					.on('data', function(csvrow) {
-						//do something with csvrow
-						csvData.push(csvrow);        
-					})
-					.on("error", function(err){
-						reject(err)
-					})
-					.on('end',function() {
-						resolve(csvData)
-					});
-				} else {
-					reject(new Error(`${filepath} doesn't exist`))
-				}
-				
-			})
-			
-		
+		( async ()=>{
+			let exists = await fs.existsSync(filepath)
+			if (exists){
+				fs.createReadStream(filepath)
+				.pipe(parse({delimiter: sep}))
+				.on('data', function(csvrow) {
+					//do something with csvrow
+					csvData.push(csvrow);        
+				})
+				.on("error", function(err){
+					store.logger.error(err)
+					reject(err)
+				})
+				.on('end',function() {
+					store.logger.info(`closed the reading`)
+					resolve(csvData)
+				});
+			} else {
+				reject(new Error(`${filepath} doesn't exist`))
+			}
+		})().catch((err)=>{
+			store.logger.error(err)
+			reject(err)
+		})
 	}) 
 }
 export function get(attribute, obj, type) {
@@ -264,23 +267,40 @@ export async function checkExists(location, globSet){
 	return new Promise((resolve, reject)=>{
 		if (!globSet){
 			fs.stat(location, function(err, exists){
+				
 				if (err){
 					resolve(
-						{location: location, exists: false}
+						{location: location, size:0, exists: false}
 					)
 				}
 				if(exists){
-					// let size = 0 
-					// if (exists.size){
-					// 	size = bytesToSize(exists.size)
-					// 	console.log(size, path)
-					// }
-					resolve(
-						{location: location, exists: true}
-					)
+					let size = 0 
+					if (exists.isDirectory()){
+						getSize(location, (err, size)=>{
+							if (!err){
+								size = bytesToSize(size)
+								resolve(
+									{location: location, size: size, exists: true}
+								)
+							} else{
+								resolve(
+									{location: location, size: 0, exists: true}
+								)
+							}
+						})
+					} else {
+						if (exists.size){
+							size = bytesToSize(exists.size)
+						} 	
+						resolve(
+							{location: location, size: size, exists: true}
+						)
+					}
+					
 				} else {
 					resolve({
 						location: null,
+						size: 0,
 						exists: null
 					})
 				}
@@ -295,10 +315,7 @@ export async function checkExists(location, globSet){
 							{location: location, exists: false}
 						)
 					}
-					console.log(path.basename(location), path.dirname(location))
-				
 					if (files && files.length) {
-						console.log(files,"<<<<<")
 						resolve(
 							{location: files, exists: true}
 						)
@@ -375,7 +392,6 @@ export async function downloadSource(url, target, params)  {
 				};
 			};
 			var downloaded = 0
-			console.log("write folder....", dirpath)
 			writeFolder(dirpath).then(()=>{ 
 				writer = fs.createWriteStream(p)
 				console.log("folder made if not existing, or continuing...") 
@@ -485,7 +501,10 @@ export async function downloadSource(url, target, params)  {
 					}
 				} else { 
 					store.logger.info("http(s) protocol called to get file %s", url)
-					logger.info(`${url} to ${dirpath}`)
+					// if (!url.startsWith("http://")){
+					// 	store.logger.info("url not beginning with http://, appending now..")
+					// 	url = "http://" + url
+					// }
 					let fnct = https
 					if (url.startsWith("http:")){
 						fnct  = http
@@ -496,7 +515,7 @@ export async function downloadSource(url, target, params)  {
 							logger.error("err %o", err)
 							try{
 								response.destroy()
-							} catch(Err){
+							} catch(Err){ 
 								logger.error(Err)
 							}
 						})
@@ -519,47 +538,50 @@ export async function downloadSource(url, target, params)  {
 						}).on('destroy', function () { 
 							// clear timeout 
 							// clearTimeout( timeoutId ); 
-							writer.destroy() 
+							store.logger.info("Destroy writer")	
 							// resolve(null);   
 						}).on('end', function () {
 							// clear timeout
 							// clearTimeout( timeoutId );
-							writer.status = 100			
-							writer.destroy()
+							writer.status = 100		
+							// writer.destroy()
+							// resolve(writer)
 						}).on('error', function (err) {
 							// clear timeout 
-							store.logger.error(`Got error on http get: %o`, err);
+							store.logger.error(`Got error on http(s) get: %o`, err);
 							clearTimeout( timeoutId );
-							writer.destroy()
-							// reject(err.message);
+							// writer.destroy()
+							reject(err.message);
 						});
 						response.pipe(writer)  
 						// generate timeout handler
 						var fn = timeout_wrapper( request );
 	
 						// set initial timeout
-						var timeoutId = setTimeout( fn, timeout );
+						var timeoutId = setTimeout( fn, timeout ); 
 						writer.on("close", ()=>{
 							if (typeof request.end === "function") { 
-								request.end()
-							}
+								request.end()  
+							} 
 						}).on("error", (err)=>{
 							store.logger.error("err %o", err)
-						})			
-						writer.obj = response			
+							reject(err)
+						})
 						resolve(writer)
-					})
-					request.on('error', (e) => {
-						store.logger.error(`Got error: ${e.message}`);
+					}) 
+					.on('error', (e) => {
+						store.logger.error(`Got error http(s) in download: ${e}`);
 						reject(e)
+						// writer.end()
 					});
 				}
-				
+				// resolve(writer)
 			}).catch((err)=>{
 				store.logger.error("Error in downloading file: %o to: %o", url, target)
 				reject(err)
 			})
 		} catch (Err){
+			store.logger.error(`Got error: ${Err}`);
 			reject(Err)
 		}
 	});    
@@ -656,12 +678,11 @@ export async function archive(filepath, gzip){
 export async function writeFile(filepath, content){
 	return new Promise((resolve, reject)=>{
 			const directory = path.dirname(filepath)
-			console.log("writing file: file", filepath)
 			mkdirp(directory).then(response=>{
 				fs.writeFile(filepath, content,(errFile)=>{
 					if (errFile){
 						store.logger.error("Error in writing file... %o", errFile)
-						reject(errFile)
+						reject(errFile)   
 					}
 					resolve("Success in writingfile")
 				})

@@ -32,10 +32,17 @@
           element: "file"
           hint: "Consensus FASTA file that you need to determine lineage from"
           bind_parent_dir: true
-          bind: "directory"
+          bind: "self"
           class: "wb-100  p-3 mb-1"
           source: null
           target: "/opt/data/<<basename(%{variables.file.source})>>"
+        output: 
+          hidden: True
+          source: "<<directory(%{variables.file.source})>>/pangolin"
+          target: "/opt/output/pangolin"
+          bind:
+            from: "<<directory(%{variables.file.source})>>/pangolin/"
+            to: /opt/output/pangolin
         autoUpdate:
           label: "AutoUpdated"
           element: "checkbox"
@@ -53,23 +60,21 @@
           # hint: "Mapped alignment file from anonymised SARS-CoV-2 sequence"
           output: true
           openSelf: True
-          source: "<<directory(%{variables.file.source})>>/sequences.aln.fasta"
-          target: "<<directory(%{variables.file.target})>>/sequences.aln.fasta"
+          source: "%{variables.output.source}/alignment.fasta"
+          target: "%{variables.output.target}/alignment.fasta"
         report:
-          label: "Lineage Report"
+          label: "Lineage Report" 
           element: "file"
           output: true
           openSelf: True
-          bind_parent_dir: false
-          source: "<<directory(%{variables.file.source})>>/lineage_report.csv"
-          # target: "%{variables.file.bind.to}/%{variables.file.source}.report"
-          target: "<<directory(%{variables.file.target})>>/lineage_report.csv"
+          source: "%{variables.output.source}/lineage_report.csv"
+          target: "%{variables.output.target}/lineage_report.csv"
       tooltip: "Run the pangolin UI interface"
       services:
         - name: pangolin
           label: "Pangolin Analysis"
           image: "staphb/pangolin:latest"
-          workingdir: "/opt/data"
+          workingdir: "/opt/output/pangolin"
           orchestrated: false #orchestrated means it r
           init: false
           force_restart: false

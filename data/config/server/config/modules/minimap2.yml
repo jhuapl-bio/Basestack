@@ -31,7 +31,7 @@
         init: false
         force_restart: false
         force_init: false
-        command: ["bash","-c", "samtools index ${bam}"]
+        command: ["bash","-c", "samtools index ${bam} ${bai}"]
     variables:
       sam:
         label: "Alignment File"
@@ -58,8 +58,8 @@
         watch: True
         output: True
         element: "file"
-        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bam.bai"
-        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bam.bai"
+        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bai"
+        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bai" 
   procedures:
     - name: minimap2Long #Top level is the left-hand selection of the menu and the major module to install 
       title: "Minimap2 ONT"

@@ -1,3 +1,5 @@
+import { bytesToSize } from "../controllers/configurations.js";
+
 const cloneDeep = require("lodash.clonedeep");
 
 /*
@@ -14,10 +16,8 @@ const { readFile, checkExists,  removeFile, downloadSource, decompress_file, ite
 const { remove_images, removeVolume, checkVolumeExists, pullImage, loadImage, createVolumes, removeDep } = require("../controllers/post-installation.js")
 const {  check_image, fetch_external_dockers } = require("../controllers/fetch.js")
 const { Service }  = require("./service.js") 
-const { Download, Downloader }  = require("./downloader.js") 
-
 const { spawnLog } = require("../controllers/logger.js")
-  
+
 var logger = store.logger
 // var docker = new Docker();   
 const fs = require("file-system")     
@@ -31,6 +31,30 @@ export class Procedure {
         this.baseConfig = procedure
         this.lastJob = null
         const $this = this
+        Object.defineProperty(this, "spaceUsedTotal", {
+            enumerable: true,   
+            get: function(){
+                let sum = 0
+                var sizes = {
+                    "Bytes": 1,
+                    "TB": 1024**4,
+                    "GB": 1024**3,
+                    "MB": 1024**2,
+                    "KB": 1024
+                }
+                
+                this.dependencies.forEach((f)=>{
+                    let size = f.status && f.status.size ? f.status.size : "0 Bytes"
+                    let denom = size.split(" ")
+                    if (denom.length >1){
+                        let denom_char = denom[1]
+                        size = sizes[denom_char]*parseInt(denom[0])
+                    } 
+                    sum += size 
+                })
+                return bytesToSize(sum)
+            }
+        })
 
         if (procedure.shared && procedure.shared.variables){
             
@@ -69,7 +93,6 @@ export class Procedure {
                 exists: false, 
                 error: null, 
                 stream: null,
-                building:false,
                 fully_installed: false,
                 partial_install: false
             }
@@ -79,7 +102,7 @@ export class Procedure {
         this.buildStream = [],
         
         this.services_config = cloneDeep(procedure.services)
-        this.service_steps = {} 
+        this.service_steps = {}  
 		this.container = null; 
 		this.cmd = null; 
 		this.options = {};  
@@ -87,7 +110,7 @@ export class Procedure {
 		this.streamObj = null;
         this.orchestrator = null; 
         this.status = {
-            error: null, 
+            error: null,  
             stream: null, 
             buildStream: [],
             running: false,
@@ -227,18 +250,13 @@ export class Procedure {
 		return new Promise(function(resolve,reject){ 
 			let promises = [] 
             let building=false   
-            let seenindex = []
 			dependencies.forEach((dependency, index)=>{ 
 				if (dependency.type == "docker"){
                     let target = dependency.fulltarget
 					promises.push(check_image(target))
                      
 				} else if (dependency.type == "docker-local"){ 
-                    let target=dependency.target
-                    if (dependency.version){
-                        target  = `${dependency.target}:${dependency.version}`
-                    }
-                    seenindex.push(index)
+                    let target = dependency.fulltarget
 					promises.push(check_image(target))
 				} else if (dependency.type == 'volume'){
                     promises.push(checkVolumeExists(dependency.target))
@@ -246,9 +264,8 @@ export class Procedure {
                 else { 
                     promises.push(checkExists(dependency.target)) 
                 }
-                if (dependency.streamObj && dependency.streamObj.progress){
-                    
-                    dependency.status.progress = cloneDeep(dependency.streamObj.progress)
+                if (dependency.streamObj && dependency.streamObj.status){
+                    dependency.status.progress = cloneDeep(dependency.streamObj.status)
                 }
 			}) 
 			Promise.allSettled(promises).then((response, err)=>{
@@ -265,10 +282,14 @@ export class Procedure {
                         } else {
                             dependencies[index].status.exists = ( dependency.value && typeof dependency.value == 'object'  ? true : dependency.value )
                         }
+                        if (dependency.value.size){
+                            dependencies[index].status.size = dependency.value.size
+                        }
 						
 					} else { 
 						dependencies[index].status.exists = false
 						dependencies[index].status.version = null
+                        dependencies[index].status.size = 0
 					}
                     
                     if (dependencies[index].status && dependencies[index].status.stream && Array.isArray(dependencies[index].status.stream.info)){
@@ -419,10 +440,12 @@ export class Procedure {
                 dependency.streamObj = stream 
                 $this.buildlog = spawnLog(stream, $this.logger)
                 stream.on("close", (err, data)=>{
+                    console.log("closed....")
                     dependency.status.downloading = false
                     dependency.status.building = false
                 })
                 stream.on("end", (err, data)=>{
+                    console.log("ended...")
                     dependency.status.downloading = false
                     dependency.status.building = false
                 })
@@ -435,9 +458,9 @@ export class Procedure {
                 reject(err)  
             })   
         })
-    }   
-    async orchestrateDownload(dependency){
-		const $this = this   
+    }     
+    async orchestrateDownload(dependency){   
+		const $this = this       
         return new Promise(function(resolve,reject){  
              
             if (dependency.streamObj){
@@ -446,18 +469,18 @@ export class Procedure {
                     dependency.status.downloading = false
                     dependency.status.building = false
                     dependency.streamObj.destroy()
-                } catch(err){
-                    store.logger.error(err)
-                }
-            }
-            let service = new Service( 
-                cloneDeep(dependency.service),
-                null,
-                true
-            )
+                } catch(err){    
+                    store.logger.error(err) 
+                }        
+            }    
+            let service = new Service(    
+                cloneDeep(dependency.service), 
+                null,     
+                true 
+            ) 
             if (dependency.workingdir){
                 service.config.workingdir = dependency.workingdir
-            }
+            } 
             if (dependency.bind){  
                 if (!service.config.bind){
                     service.config.bind = []
@@ -474,7 +497,6 @@ export class Procedure {
             dependency.status.building = true
             dependency.status.downloading = true
             dependency.status.error = null
-            
               
             service.setOptions().then((f)=>{
                 service.check_then_start({}, null).catch((err)=>{
@@ -489,7 +511,6 @@ export class Procedure {
                         dependency.status.stream =  log
                         try{
                             dependency.streamObj.on("end", (response)=>{
-                                console.log("closed")
                                 dependency.status.building = false
                                 dependency.status.downloading= false
                                 dependency.status.error = null
@@ -514,86 +535,49 @@ export class Procedure {
             resolve()             
         })
     } 
-    downloadSource(dependency, idx){   
+    downloadSource(dependency, overwrite){   
 		const $this = this  
         return new Promise(function(resolve,reject){ 
-            let downloader = new Downloader(
-                dependency
-            ) 
-            if ($this.dependencies[idx].streamObj){
-                $this.dependencies[idx].streamObj.close()
-                delete $this.dependencies[idx].streamObj
-            }
-            
-            $this.dependencies[idx].streamObj = downloader
-            
-            downloader.download().then((response)=>{
-                console.log("Downloading!")
-                $this.status.stream = downloader.logs
-                resolve()
-            }).catch((err)=>{
-                reject(err)
-            })
-            // checkExists(dependency.source.target).then((exists)=>{
-            //     if ( (exists && exists.exists || exists  ) ){  
-            //         if (dependency.streamObj){
-            //             dependency.streamObj.close() 
-            //             dependency.streamObj.end()
-            //         }
-            //         console.log("Downllad source")
-            //         downloadSource(dependency.source.url, dependency.source.target, dependency.source ).then((stream, error)=>{
-            //             dependency.status.stream = spawnLog(stream, $this.logger)
-            //             console.log("stream returned!!!!!!!!!!",stream)
-            //             dependency.streamObj = stream
-            //             if (error){
-            //                 console.error(error)
-            //                 reject(error)
-            //             }
-            //             $this.buildlog = spawnLog(stream, $this.logger)
-            //             stream.on("close", ()=>{ 
-            //                 store.logger.info("Completed download of %o", dependency.source)
-            //                 checkExists(dependency.source.target).then((exists,err)=>{
-            //                     if (dependency.decompress){  
-            //                         store.logger.info("Decompressing required, doing so now for final target... %s", dependency.target)
-            //                         checkExists(dependency.target).then((exists)=>{
-            //                             if (!exists.exists || exists || exists && dependency.decompress.overwrite_idx){
-            //                                 dependency.status.building = true
-            //                                 decompress_file(dependency.decompress.source, path.dirname(dependency.target)).then(()=>{
-            //                                     dependency.status.building = false
-            //                                     resolve()
-            //                                 }).catch((err) =>{
-            //                                     store.logger.error("Error in decompressing file: %o %o", dependency.source, err)
-            //                                     dependency.status.building = false
-            //                                     reject(err)
-            //                                 } )                                       
-            //                             } else {
-            //                                 store.logger.info(`Skipping dependency decompression: ${dependency.target} due to it existing`)
-            //                                 dependency.status.building = false
-            //                                 reject(new Error(`Skipping dependency decompression: ${dependency.target} due to it existing`))
-            //                             }
-            //                         })
-            //                     } else {
-            //                         dependency.status.building = false
-            //                         dependency.status.downloading = false
-            //                         resolve()
-            //                     }
-            //                 }).catch((err)=>{
-            //                     reject(err)
-            //                 })
-            //             }).on("error", ()=>{
-            //                 store.logger.error("Error in stream")
-            //             })
-            //         }).catch((err)=>{
-            //             store.logger.error("%o %o","Error in downloading source: ", dependency.source , err)
-            //             dependency.status.building = false
-            //             dependency.status.downloading= false
-            //             reject(err)
-            //         }) 
-            //     } else{
-            //         store.logger.info(`Skipping dependency install: ${dependency.source.target} due to it existing`) 
-            //         resolve()
-            //     }  
-            // }) 
+            checkExists(dependency.source.target).then((exists)=>{
+                if (!exists.exists || exists && overwrite){  
+                    if (dependency.streamObj){
+                        dependency.streamObj.close() 
+                        dependency.streamObj.end()
+                    } 
+                    downloadSource(dependency.source.url, dependency.source.target, dependency.source ).then((stream, error)=>{
+                        dependency.status.stream = spawnLog(stream, $this.logger)
+                        dependency.streamObj = stream
+                        if (error){   
+                            store.logger.error(`ERROR ${error}`)
+                            reject(error)
+                        }       
+                        $this.buildlog = spawnLog(stream, $this.logger)
+                        stream.on("close", ()=>{ 
+                            store.logger.info("Completed download of %o", dependency.source)
+                            
+                            dependency.status.building = false
+                            dependency.status.error = null 
+                            dependency.status.downloading= false
+                            resolve()
+                        }).on("error", (err)=>{
+                            store.logger.error(`Error in stream ${err}`)
+                            dependency.status.error = err 
+                            reject(err)
+                        })
+                    }).catch((err)=>{
+                        store.logger.error("%o %o","Error in downloading source: ", dependency.source , err)
+                        dependency.status.building = false
+                        dependency.status.error = err 
+                        dependency.status.downloading= false
+                        reject(err)
+                    }) 
+                } else{
+                    store.logger.info(`Skipping dependency install: ${dependency.source.target} due to it existing`) 
+                    dependency.status.building = false
+                    dependency.status.downloading= false
+                    resolve()
+                }  
+            }) 
                
         })
     }
@@ -604,6 +588,7 @@ export class Procedure {
                 dependency.streamObj.destroy()   
             } 
             fs.stat(dependency.build.path, (err, stat)=>{
+                console.log(err, stat)
                 if (err){
                     store.logger.error("Could not build from Dockerfile %s %o", dependency.build.path, err)
                     reject(err)
@@ -615,14 +600,10 @@ export class Procedure {
                         AttachStderr: true, 
                         Tty:false
                     }
-                    let target=dependency.target
-                    if (dependency.version){
-                        target  = `${dependency.target}:${dependency.version}`
-                    }
                     try{
                         store.docker.buildImage(conf,
                         {
-                            t: target
+                            t: dependency.target
                         }, (err, stream)=>{
                             if (err){  
                                 store.logger.error("%s %s %o","Error in building docker image for: ", dependency.target , err)
@@ -672,28 +653,34 @@ export class Procedure {
                 } else {
                     selectedDep  = [ $this.dependencies[dependencyIdx] ]
                 }
-                
                 selectedDep.map((dependency)=>{
+                    let status = dependency.status; 
                     if (dependency.streamObj){
-                        if (dependency.type == 'docker'){
+                        // promises.push(dependency.streamObj.close())
+                        if(dependency.type == 'docker'){
+                            // promises.push(dependency.streamObj.destroy())
                             dependency.streamObj.destroy()
-                        } else if (dependency.type == 'orchestration'){
+                            // promises.push(dependency.streamObj.destroy())
+                        } else if(dependency.type == 'orchestration'){
                             dependency.streamObj.end() 
                             dependency.status.downloading = false
                             dependency.status.building = false
                             dependency.streamObj.destroy() 
-                        } else {
+                            // dependency.streamObj.remove({force:true})
+                        } else{
+                            // promises.push(dependency.streamObj.end())
                             dependency.streamObj.close()
-                            delete dependency.streamObj
-                            dependency.status.downloading = false
-                            dependency.status.building = false
-                            console.log("destroying")
+
+                            dependency.streamObj.end()
+                            dependency.streamObj.destroy()
                         }
                     } else { 
+                        // promises.push(new Promise((resolve, reject)=>{ resolve(`Skipping removal due to it not running`) }))
                         store.logger.info("Skipping removal due to it not running")
-                        dependency.status.downloading = false
-                        dependency.status.building = false
                     }
+                    // Promise.allSettled(promises).then((resp)=>{
+                    //     resolve(resp)
+                    // })
                     resolve()
                 })
             } catch(err){
@@ -702,35 +689,35 @@ export class Procedure {
             }
         });
     }
-	async build( skip, params){
+	async build( overwrite, params){
 		const $this = this;
         let promises = []
         let objs = [] 
-        let dependencies = []
-
-        if (!params){
-            dependencies = this.dependencies.filter((f,i)=>{
-                f.idx = i
-                return ( Array.isArray(skip) ? skip.indexOf(i) == -1 : i !== skip )
-            })
-        } else {
-            dependencies = this.dependencies.filter((f,i)=>{
-                f.idx = i
-                return ( Array.isArray(params) ?  params.indexOf(i) != -1 : params == i ) && ( Array.isArray(skip) ? skip.indexOf(i) == -1 : i !== skip )
-            })
+        let dependencies = this.dependencies
+        this.status.building = true
+        if (params || params == 0){
+            dependencies = [dependencies[params]]
         }
-        
         try{
             dependencies.forEach((dependency_obj, i)=>{ 
-                
-                objs.push(dependency_obj) 
                 dependency_obj.status.downloading = true
                 dependency_obj.status.building = true
+                objs.push(dependency_obj) 
+                let overwrite_idx = false
+                if (!overwrite){
+                    if (dependency_obj.overwrite){  
+                        overwrite_idx = true
+                    }
+                }   else {
+                    overwrite_idx = true
+                } 
+                if (Array.isArray(overwrite) && overwrite[i]){ 
+                    overwrite_idx = overwrite[i]
+                }
                 if (dependency_obj.type == 'docker' && !dependency_obj.build && !dependency_obj.local ){
                     
                     promises.push($this.pullImage(dependency_obj))
                 }   else if (dependency_obj.type == 'docker-local' && dependency_obj.build ){
-                    
                     promises.push($this.buildImage(dependency_obj))
                 }   else if (dependency_obj.type == 'volume'){
                     promises.push(createVolumes([dependency_obj.target]).then((f)=>{
@@ -748,15 +735,34 @@ export class Procedure {
 
                     }))
                 } else {
-                    promises.push($this.downloadSource(dependency_obj,  dependency_obj.idx).then((response)=>{
-                        // dependency_obj.status.downloading = false  
-                        store.logger.info(`______Item downloaded and/or decompressed: ${dependency_obj.source.target}`)
-                        // dependency_obj.status.building = false
+                    promises.push($this.downloadSource(dependency_obj, overwrite_idx).then((response)=>{
+                        dependency_obj.status.downloading = false  
+                        store.logger.info(`______Item download: ${dependency_obj.source.target}`)
+                        checkExists(dependency_obj.source.target).then((exists)=>{
+                            if (dependency_obj.decompress){ 
+                                store.logger.info("Decompressing required, doing so now for final target... %s", dependency_obj.target)
+                                checkExists(dependency_obj.target).then((exists)=>{
+                                    if (!exists.exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
+                                        dependency_obj.status.building = true
+                                        
+                                        decompress_file(dependency_obj.decompress.source, path.dirname(dependency_obj.target)).then(()=>{
+                                            dependency_obj.status.building = false
+                                        }).catch((err) =>{
+                                            store.logger.error("Error in decompressing file: %o %o", dependency_obj.source, err)
+                                            dependency_obj.status.building = false
+                                        } )                                       
+                                    } else {
+                                        store.logger.info(`Skipping dependency decompression: ${dependency_obj.target} due to it existing`)
+                                         dependency_obj.status.building = false
+                                        
+                                    }
+                                })
+                            } 
+                        })
                     }).catch((err)=>{ 
                         store.logger.error("Error in downloading source url: %o", err);
                         dependency_obj.status.downloading = false
-                        dependency_obj.status.building = false
-
+                        dependency_obj.status.error = err
                     }) ) 
                 } 
                 Promise.allSettled(promises).then((res)=>{
@@ -764,16 +770,17 @@ export class Procedure {
                 }).catch((err)=>{
                     store.logger.error("error in building process: %o", err)
                     dependency_obj.status.building = false
-                    dependency_obj.status.downloading = false
                 })
             })
             
         } catch(err){
             this.status.errors = err
-            console.error("err %o", err)
+            console.error("EDD")
             throw err 
         } finally {
-           store.logger.info("end")
+            // $this.dependencies.forEach((dependency, index)=>{
+            //     $this.dependencies[index].status.building = false
+            // })
         }
         return `Building dependencies for module:  ${$this.name} ${dependencies}`
 	} 

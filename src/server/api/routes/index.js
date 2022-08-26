@@ -69,20 +69,20 @@ router.get("/server/ping", (req,res,next)=>{ // Used
 // 	} 
 // })
 // //Used
-// router.post("/server/start", (req,res,next)=>{ // Used
-// 	try {
-// 		store.server.initiate_server().then((f)=>{
+// router.post("/server/start", (req,res,next)=>{ // Used  
+// 	try {    
+// 		store.server.initiate_server().then((f)=>{  
 // 			res.status(200).send({status: 200, message: `Server is now running at port: ${process.env.PORT_SERVER}` });
-// 		}).catch((err)=>{
-// 			res.status(419).send({status: 419, message: error_alert(err) });
-// 		})
-// 	} catch(err){
+// 		}).catch((err)=>{   
+// 			res.status(419).send({status: 419, message: error_alert(err) });  
+// 		})    
+// 	} catch(err){ 
 // 		logger.error(`Error in server status ping ${err}`)
 // 		res.status(419).send({status: 419, message: error_alert(err) });
 // 	} 
 // })
-
-//Used
+ 
+//Used 
 
 // Get the state of the docker instance, if it is running, df, etc
 router.get("/docker/status/get", (req,res,next)=>{
@@ -548,6 +548,7 @@ router.get("/procedure/get/:catalog/:procedure/:token", (req,res,next)=>{ // bui
 		})
 		returnable.dependencies = dependencies
 		returnable.services = []
+		returnable.spaceUsedTotal = procedure.spaceUsedTotal
 		try{
 			procedure.services.forEach((service,i)=>{
 				returnable.services.push({
@@ -733,7 +734,7 @@ router.post("/module/save/text", (req,res,next)=>{ // build workflow according t
 				let endpath = path.join(store.system.shared.modules, basename+".yml")
 				parsed.path = endpath
 				let modl = store.library.create_module(parsed)
-				store.config.modules.push(parsed)
+				store.config.modules.push(parsed)    
 				store.library.catalog[module.name].modules.push(modl)
 				let response = YAML.dump([parsed])
 				await writeFile(endpath, response)
@@ -741,10 +742,10 @@ router.post("/module/save/text", (req,res,next)=>{ // build workflow according t
 			
 			logger.info("%s \n module copied", req.body.type)
 			res.status(200).json({status: 200, message: `Completed run save text to YAML`, data: '' });
-		} catch(err2){
+		} catch(err2){ 
 			logger.error("%s %s", "Error in copying module", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
-		}	
+		}	 
 	})().catch((err2)=>{
 		logger.error("%s %s", "Error in copying module", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)}); 
@@ -784,12 +785,12 @@ router.post("/module/create", (req,res,next)=>{ // build workflow according to n
 
 // USED
 router.post("/module/import", (req,res,next)=>{ // build workflow according to name and index
-	(async function(){ 
-		try {  
-			let library = store.library.all
+	(async function(){  
+		try {    
+			let library = store.library.all 
 			let data = library[req.body.catalog].choices
-			let index = req.body.index 
-			let module = data[index]  
+			let index = req.body.index  
+			let module = data[index]   
 			let d="new" 
 			if (!module.version){
 				d = dateFormat.asString('dd_mm_yy_hh:mm:ss', new Date()); // just the time
@@ -804,18 +805,18 @@ router.post("/module/import", (req,res,next)=>{ // build workflow according to n
 				if (found){
 					found.cleanup()   
 					delete store.library.catalog[req.body.catalog]
-				}  
-			} catch (err){  
+				}   
+			} catch (err){   
 				store.logger.error("err in cleaning up already loaded catalog: %s", err)
-			} 
-			let modl = store.library.create_module(module)
-			store.library.catalog[module.name] = modl	
+			}   
+			let modl = store.library.create_module(module) 
+			store.library.catalog[module.name] = modl	 
 			store.library.addImported(module, module.name,true)
 			res.status(200).json({status: 200, message: `Completed module copy`, data: '' });
 		} catch(err2){ 
 			logger.error("%s %s", "Error in importing module", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
-		}	
+		}	 
 	})().catch((err2)=>{
 		logger.error("%s %s", "Error in importing module", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)}); 

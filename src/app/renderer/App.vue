@@ -185,7 +185,7 @@
           
         </v-row>
         
-        <v-row   v-if="selected == 'procedures' && selectedCatalog">
+        <v-row  style="height: 10vh" v-if="selected == 'procedures' && selectedCatalog">
           <v-col sm="12" v-if="importedLibrary[selectedCatalog.name] && importedLibrary[selectedCatalog.name].choices" >
             <component 
               :is="'Module'" 
@@ -320,7 +320,7 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "mytax",
+      selectedCatalogName: "mytax2",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},

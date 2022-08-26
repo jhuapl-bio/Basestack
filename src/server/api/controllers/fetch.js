@@ -9,6 +9,7 @@
 const fs = require("fs")
 const { convert_custom, checkFileExist,  checkFolderExists, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
+const { bytesToSize } = require("./configurations.js")
 const { create_module } = require("./init.js")
 const { store }  = require("../../config/store/index.js")
 var  logger  = store.logger
@@ -480,19 +481,18 @@ export async function check_image(image){
 				let digests = getImage.RepoDigests.map((d)=>{
 					return d.replace(image+"@", "")
 				}) 
-				if (digests && digests.length > 0){
-					for (const tag of getImage.RepoTags) {
-						// if (tag.includes('latest')){
-							if(digests){
-								installed = digests[0]
-							}
-						// }
-					}
-				} else {
-					installed = ( getImage.RepoTags.indexOf(image) > -1 ? image : false)
+				if (getImage.Size){
+					getImage.Size = bytesToSize(getImage.Size)
+				}
+				for (const tag of getImage.RepoTags) {
+						if(digests){
+							installed = digests[0]
+						}
+					// }
 				}
 					
 				resolve({
+					size: (getImage.Size ? getImage.Size : 0),
 					version: installed
 				})
 				

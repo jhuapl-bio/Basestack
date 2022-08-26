@@ -1,7 +1,7 @@
 - name: irma
   title: "IRMA"
   icon: "eye-dropper"
-  version: 1.1
+  version: 1.2
   basestack_released: 2.0
   module: True
   description: "IRMA was designed for the robust assembly, variant calling, and phasing of highly variable RNA viruses. Currently IRMA is deployed with modules for influenza, ebolavirus and coronavirus"

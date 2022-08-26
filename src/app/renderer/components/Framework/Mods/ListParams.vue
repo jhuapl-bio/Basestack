@@ -24,7 +24,7 @@
         </v-btn>
       </template>
     </v-snackbar>
-    <v-list height="70vh" class="scroll fill-height fill-width"  two-line v-if="items&&items.length > 0">
+    <v-list height="70vh" class="fill-height fill-width"  two-line v-if="items&&items.length > 0">
         
         <v-list-item  v-for="(item, key) in items.filter((d)=>{
             return !d.hidden
@@ -38,7 +38,7 @@
                 <v-list-item-subtitle class="text-wrap" v-if="item.hint">
                     {{item.hint}}
                 </v-list-item-subtitle>
-                <v-container v-if="item.options"    width="10px">
+                <v-container v-if="item.options"  style="width:100%; margin: 0px">
                     <v-select
                         v-model="item.optionValue" 
                         :disabled="item.output"

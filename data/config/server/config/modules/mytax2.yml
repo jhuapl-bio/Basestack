@@ -20,6 +20,7 @@
       title: Kraken2 Mytax2
       icon: binoculars
       init: false
+      full_orientation: true
       tooltip: >-
         Run dashboard
       force_restart: true
@@ -32,18 +33,59 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: latest
+          version: v2.1.1
           type: docker
           format: docker
+        - source:
+            url: ftp.ccb.jhu.edu
+            type: file
+            user: anonymous
+            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
+            password: null
+            protocol: ftp
+            remove: false
+            target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          label: Minikraken2
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+          overwrite: false
       variables:
+        custom_configuration:
+          optional: true
+          label: Custom Barcode Cfg file
+          element: file
+          source: null
+          bind: self
+          target: "/opt/custom_config.cfg"
+          append:
+            command: " cp /opt/custom_config.cfg /opt/ont-guppy-cpu/data/barcoding/; sed -i \"0,/arrangements_files/s/$/ custom_config.cfg/\" /opt/ont-guppy-cpu/data/barcoding/configuration.cfg ;  "
+            position: "start" 
+            placement: 2
+            services: 
+              - 0
+        custom_barcode_fasta:
+          optional: true
+          label: Custom FASTA barcode
+          element: file
+          source: null
+          bind: self
+          target: "/opt/custom_fasta.fasta"
+          append:
+            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy-cpu/data/barcoding/barcodes_masked.fasta;  "
+            position: "start"
+            placement: 2
+            services: 
+              - 0
         csv:
           label: CSV File(s)
           element: file
           optional: false
-          bind_parent_dir: true
-          bind: directory
+          fallback: "${writePath}/workflows/mytax2/Samplesheet.csv"
           name: "Samplesheet"
-          class: wb-100  p-3 mb-1
           read:
             - type: "file"
               sep: ","
@@ -60,8 +102,43 @@
               source: "%{variables.csv.source}"
               bind: "self"
               column: "database"
+          set:
+            - target: "variables.manifest.source"
+              header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
+              reformat: ['database', 'path_1', 'path_2']
+              source: "%{variables.csv.source}"
+              sep: "," 
           source: null
-          target: /MYTAX/data/<<basename(%{variables.csv.source})>>
+        manifest:
+          label: "Input Samplesheet contents"
+          element: "list"
+          hint: "Samplesheet contents"
+          columns: 2
+          column: 12
+          sep: ","
+          define_columns: 
+            path_1: file
+            path_2: file
+            database: file
+          tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
+          update_on: 
+            depends:
+              - csv
+            action: "read"
+            header: true
+            source: "%{variables.csv.source}"
+          bind:
+            from:  "<<directory(%{variables.csv.source})>>/mytax2/Samplesheet.csv"
+            to: "/MYTAX/data/Samplesheet.csv"
+          create:
+            target: "<<directory(%{variables.csv.source})>>/mytax2/Samplesheet.csv"
+            sep: ","
+            type: "list"
+            header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
+          class: "wb-50  p-3 mb-1"
+          source: []
+          header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
+          append_newline: true
         port:
           element: render
           label: Mytax2 Dashboard Service
@@ -69,6 +146,7 @@
           output: false
           target: 80 
           source: 8098
+          main: true
           port: true
           portbind:
             from: '%{variables.port.source}'
@@ -87,11 +165,11 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:latest
-          workingdir: /opt/test-data
+          image: jhuaplbio/basestack_mytax2:v2.1.1
+          workingdir: /
           orchestrated: false
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; source /opt/conda/etc/profile.d/conda.sh; conda activate mytax2; npm run server   ']
+          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; source /opt/conda/etc/profile.d/conda.sh; conda activate mytax2; echo $PWD; cd /opt; npm run server   ']
         

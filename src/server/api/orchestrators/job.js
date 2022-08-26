@@ -8,7 +8,7 @@ const { readFile, removeFile, removeFolder, checkExists } = require("../controll
 const { store }  = require("../../config/store/index.js")
 const path = require("path")
 var logger = store.logger
-
+ 
 export  class Job {  
     constructor(procedure, config){         
         this.config = null  
@@ -68,23 +68,22 @@ export  class Job {
     defineConfiguration (config) {
         let configuration = new Configuration(cloneDeep(config)) 
         configuration.defineMapping(); 
-        // console.log(configuration.variables.outputDir.target,"created!")
         return  configuration
     } 
     setValueVariable(value, obj, key){ 
         const $this = this;
-        try{   
-            if (obj && obj.options){
-                if (obj.options ){
-                    if (!obj.option){
-                        obj.option = 0
-                    } 
+        try{      
+            if (obj && obj.options){ 
+                if (obj.options ){  
+                    if (!obj.option){  
+                        obj.option = 0 
+                    }   
                 }
             }
+              
             
-            
-            if (value.source || typeof value == 'object' && 'source' in value){
-                if (typeof value.source == 'string' || typeof value.source == 'number' || !typeof value.source){
+            if (value.source == 0 || value.source || ( typeof value == 'object' && 'source' in value)){
+                if (typeof value.source == 'string' || typeof value.source == 'number' || ! value.source){
                     obj.source = value.source
                 } else if (typeof value.source == 'object') {
                     for (let [key, v] of Object.entries(value.source)){
@@ -93,65 +92,62 @@ export  class Job {
                 } else {
                     obj.source = value.source
                 }
+                if (!obj.source && obj.fallback){
+                    obj.source = obj.fallback
+                } 
             } 
-            
-            
+            if (!obj.target && obj.source){
+                obj.target = obj.source
+            }
             let getter = Object.getOwnPropertyDescriptor(obj, 'source');
-            
             if (getter && getter.get){
                 obj = value.source
                 
             } else if ( ( value.option || value.option == 0 ) || obj.options ) {   
-                
+                 
                 if (!value.option && value.option != 0){
                     obj.option = 0
                 } else { 
                     obj.option = value.option
                 }
-                $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
-                $this.runningConfig.variables[key].define  = obj.define
-                $this.runningConfig.variables[key].option = obj.option
-                if (obj.source ){ 
-                    $this.runningConfig.variables[key].source = obj.source
-                } 
-                if (obj.target){
-                   
-                    $this.runningConfig.variables[key].target = obj.target
+                
+                if (typeof obj.options[obj.option] == "object"){
+                    $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
                 }
+                $this.runningConfig.variables[key].option = obj.option
+                if (obj.source){
+                    $this.runningConfig.variables[key].source = obj.source
+                }
+                // if (obj.options[obj.option].bind){
+
+                // }
                
             }  else {
                 $this.runningConfig.variables[key].source = obj.source
             }  
-            if (obj.element == 'file' || obj.element == 'dir'){
-                obj.target = obj.target.replace(/\\/g, '/')
+            
+            if (!$this.runningConfig.variables[key].target){
+                $this.runningConfig.variables[key].target = $this.runningConfig.variables[key].source
             }
         } catch (Err){
-            store.logger.error(Err)
-        }
-
-       
-        
-    } 
+            store.logger.error(Err) 
+        }         
+    }  
     async setVariable(value, variable, target){
         
-        return new Promise ((resolve, reject)=>{
-            let data = {}
-            data[target] = value 
+        return new Promise ((resolve, reject)=>{ 
+            let data = {} 
+            data[target] = value  
             let obj = this.runningConfig.variables[variable]
             this.setValueVariable(data, obj, variable)
             let variables = this.runningConfig.variables
-            console.log(this.runningConfig.variables,"<<<<<<<<<<<<<<<<<<<<<")
-            let promises = []
-            
-            if (variables){
+            let promises = [] 
+            if (variables){ 
                 for (let [key, vari] of Object.entries(variables)){
-                    if (vari.options && vari.option >=0 ){
-                        vari = vari.optionValue
-                    }
                     if (vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
                         let update_on = vari.update_on
                         let action  = update_on.action
-                        if (action == 'exists'){ 
+                        if (action == 'exists'){  
                             let returnedVari = { 
                                 key: key,  
                                 value: null
@@ -203,28 +199,28 @@ export  class Job {
                                     returnedVari.value = vari
                                     return returnedVari
                                 }).catch((err)=>{
-                                    store.logger.error(err)
+                                    store.logger.error(err) 
                                     return vari
                                 })
-                            )
-                        }
-                    }
-                }
-
+                            )  
+                        }    
+                    }  
+                } 
+ 
             }
-            let changed_variables = []
+            let changed_variables = []  
             
             Promise.allSettled(promises).then((respo)=>{
                 respo.forEach((res)=>{
                     if (res.status == 'fulfilled'){
                         changed_variables.push(res.value)
                     }
-                })
-                resolve(changed_variables)
-            }).catch((err)=>{
+                })  
+                resolve(changed_variables)  
+            }).catch((err)=>{   
                 store.logger.error(err)
                 resolve(changed_variables)
-            })
+            }) 
         })
        
     }
@@ -261,11 +257,11 @@ export  class Job {
                         let watch = $this.status.watches[i]
                         if (typeof watch.source == 'string'){
                             promises.push(removeFile(watch.source))
-                        } else {
+                        } else { 
                             watch.source.forEach((w)=>{
                                 promises.push(removeFile(w))
                             })
-                        } 
+                        }  
                     }
                 } 
             } 
@@ -304,15 +300,15 @@ export  class Job {
         for(let [key, value] of Object.entries(variables)){
             if (!$this.runningConfig.variables[key] && value.custom){
                 $this.runningConfig.variables[key] = value
-            }
+            } 
             let obj = $this.runningConfig.variables[key]
             this.setValueVariable(value, obj, key)
+            
         }
           
         this.services.forEach((service)=>{ 
             service.config.variables = $this.runningConfig.variables
         })
-        
         return 
     }
     async defineServices (services, params ) {
@@ -431,7 +427,7 @@ export  class Job {
                 
                 
                 
-                
+                 
                 $this.getProgress()
 
 
@@ -453,18 +449,18 @@ export  class Job {
         const $this  = this 
         let cancelled_or_skip = false
         let end = false  
-        try{
+        try{ 
             for (let i = 0; !end && i < $this.services.length; i++){
                 let service = $this.services[i]
-                try{
-                    let skip
+                try{  
+                    let skip        
                     store.logger.info("I: %s, Starting a new job service %s", i, service.name)
-                    
+                        
                     skip = await service.check_then_start({ variables: $this.variables }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
                         cancelled_or_skip = skip
-                        end = true
+                        end = true 
                     }
                 } catch(err){
                     logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
@@ -472,7 +468,6 @@ export  class Job {
                     cancelled_or_skip = true
                     $this.status.error = err
                 }
-                // }
             }
             store.logger.info("Job completed or skipped/exited")
             return cancelled_or_skip
@@ -491,13 +486,13 @@ export  class Job {
             if ( custom_variable && typeof custom_variable == 'object' ){
                 this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`)
             } else {
-                if (custom_variable){ 
-                    
+                if (custom_variable){  
+                     
                     nestedProperty.set($this, `${path}.${key}`, custom_variable)
                 }
             }
         }
-    }
+    } 
     async start(params){       
         const $this = this
         let services;
@@ -505,16 +500,14 @@ export  class Job {
         $this.status.running = true
         $this.status.complete = false
         let promises = []; 
+        if (!params.variables){
+            params.variables = {}
+        }
         store.logger.info("%s setting variables", $this.baseConfig.name)
         // this.mergeInputs(params, 'mergedConfig'  )
         this.runningConfig = this.defineConfiguration(this.mergedConfig)
         
         this.setVariables(params.variables) 
-        // console.log(this.runningConfig.variables.outputDir.target,
-        //     this.services[0].config.variables.outputDir.target,
-        //     "target",
-        //     this.services[0].config.variables.fastqs.target)
-        // return
         store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{
             if (service && service.streamObj){

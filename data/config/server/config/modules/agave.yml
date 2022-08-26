@@ -58,17 +58,6 @@
         element: "string"
         source: ""
         target: null
-      port:
-        element: "render"
-        column: 12
-        port: true
-        output: true
-        label: "Rendered Dashboard"
-        hint: "Dashboard to display in a web browser"
-        suburl: "/AGAVE/"
-        bind:
-          from: "80"
-          to: "8083"
       gbs:
         label: "Genbank Files"
         hint: ".gb files used for referencing sequences"
@@ -110,7 +99,7 @@
           force_restart: true
           # command: ["bash","-c", "head ${gff}; samtools mpileup -aa -A -d 0 -B -Q 0 ${bam}   " ]
           command: ["bash","-c", " samtools faidx ${reference}; samtools mpileup -aa -A -d 0 -B -Q 0 --reference ${reference} ${bam} | ivar variants -p ${outputName}  -r ${reference}  " ]
-          workingdir: "/opt/data"
+          workingdir: "/opt/output"
         - target: agave_create_report
           shared: True
         - target: agave_visualization
@@ -123,7 +112,7 @@
           bind_parent_dir: true
           bind: 
             from: "%{variables.bam.source}"
-            to: "/opt/data"
+            to: "%{variables.bam.source}"
           class: "wb-100  p-3 mb-1" 
           source: null
         gff:
@@ -140,28 +129,13 @@
               source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
               bind: 
                 from: "%{variables.gff.source}"
-                to: "/opt/gff"
+                to: "%{variables.gff.source}"
               append:
                 command: " -g ${gff} "
                 placement: 2
                 services: 
                   - 0
               class: "wb-100  p-3 mb-1" 
-            # - name: "SARS-CoV-2 GFF Reference"
-            #   element: null
-            #   hint: "Coding regions for SARS-CoV-2"
-            #   bind_parent_dir: true
-            #   source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff"
-            #   target: "/opt/gff/GCF_009858895.2_ASM985889v3_genomic.gff"
-            #   bind: 
-            #     from: "%{variables.gff.source}"
-            #     to: "/opt/gff"
-            #   append:
-            #     command: " -g ${gff} "
-            #     placement: 2
-            #     services: 
-            #       - 0
-            #   class: "wb-100  p-3 mb-1" 
             - element: "file"
               name: "Custom GFF3"
               source: null
@@ -173,22 +147,24 @@
                   - 0
               bind: 
                 from: "%{variables.gff.source}"
-                to: "/opt/gff" 
+                to: "%{variables.gff.source}"
         output:
           label: "Output TSV"
           element: "file"
           output: True
           openSelf: True
           hint: "TSV file containing variants called against Reference and optional GFF"
-          bind_parent_dir: true
+          bind: 
+            from: "<<directory(%{variables.bam.source})>>/agave"
+            to: /opt/output
           class: "wb-100  p-3 mb-1"
-          source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
-          target: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+          source: "%{variables.output.bind.from}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+          target: "%{variables.output.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
           define:
-            outputName: <<basename,trim(%{variables.bam.source})>>.ivar
-            variant: "%{variables.bam.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+            outputName: "%{variables.output.bind.to}/<<basename,trim(%{variables.bam.source})>>.ivar"
+            variant: "%{variables.output.target}"
             filetype: "tsv"
-            json: "%{variables.bam.bind.to}/variants.json"
+            json: "%{variables.output.bind.to}/variants.json"
             depthType: variant
         reference:
           label: "Reference FASTA"
@@ -196,21 +172,20 @@
           option: 0
           options:
             - name: "SARS-CoV-2 FASTA Reference File MN908947.3"
-              element: null
+              element: "file"
               hint: "FASTA File used as a reference for alignment steps"
-              bind_parent_dir: true
               source: "${writePath}/workflows/agave/reference.fasta"
-              target: "/opt/reference/reference.fasta"
+              target: "${writePath}/workflows/agave/reference.fasta"
               bind: 
                 from: "%{variables.reference.source}"
-                to: "/opt/reference"
+                to: "%{variables.reference.source}"
               class: "wb-100  p-3 mb-1" 
             - element: "file"
               name: "Custom Reference"
               source: null
               bind: 
                 from: "%{variables.reference.source}"
-                to: "/opt/reference" 
+                to: "%{variables.reference.source}"
         email:
           shared: True
           target: "%{shared.variables.email}"
@@ -218,8 +193,19 @@
           shared: True
           target: "%{shared.variables.gbs}"
         port:
-          shared: True
-          target: "%{shared.variables.port}"
+          element: "render"
+          column: 12
+          port: true
+          main: true
+          output: false
+          label: "Rendered Dashboard"
+          hint: "Dashboard to display in a web browser"
+          suburl: "/AGAVE/"
+          target: 80 
+          source: 8083
+          portbind:
+            from: '%{variables.port.source}'
+            to: '%{variables.port.target}'
       dependencies:
         - target: "jhuaplbio/agave"
           label: "jhuaplbio/agave"
@@ -275,10 +261,10 @@
           options:
             - element: "file"
               name: "File (single)"
-              bind_parent_dir: true 
+              target: "/opt/variant/variant.tsv"
               bind: 
                 from: "%{variables.variant.source}"
-                to: "/opt/data/variant"
+                to: "/opt/variant/variant.tsv"
               class: "wb-100  p-3 mb-1"
             - element: "dir"
               name: "Folder"
@@ -290,9 +276,10 @@
                   - 0
               bind: 
                 from: "%{variables.variant.source}"
-                to: "/opt/data/variant"
+                to: "/opt/variant/variant.tsv"
               class: "wb-100  p-3 mb-1"
           source: null
+          
         depth: 
           label: "Depth file(s)"
           hint: "One or more files to be used as referencing the depth from the sample run"
@@ -340,6 +327,11 @@
         gbs:
           shared: True
           target: "%{shared.variables.gbs}"
+        outputDir:
+          hidden: true
+          bind: 
+            from: "<<directory(%{variables.variant.source})>>"
+            to: /opt/output
         json: 
           element: "file"
           output: true
@@ -347,10 +339,21 @@
           label: "JSON Visualization File"
           hint: "Custom JSON generated from the AGAVE report pipeline"
           source: "<<directory(%{variables.variant.source})>>/variants.json"
-          target: "%{variables.variant.target}/variants.json"
+          target: "/opt/output/variants.json"
         port:
-          shared: True
-          target: "%{shared.variables.port}"
+          element: "render"
+          column: 12
+          port: true
+          main: true
+          output: false
+          label: "Rendered Dashboard"
+          hint: "Dashboard to display in a web browser"
+          suburl: "/AGAVE/"
+          target: 80 
+          source: 8083
+          portbind:
+            from: '%{variables.port.source}'
+            to: '%{variables.port.target}'
         filetype:
           label: "Filetype of variant calling pipeline"
           hint: "When variants are generated, they are in the .vcf or .tsv (ivar pipeline) format"

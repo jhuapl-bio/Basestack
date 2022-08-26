@@ -258,7 +258,10 @@
                     style="" 
                     @click="removeModuleDependency(version.name, index)">$trash-alt
                 </v-icon>
-            </template> 
+            </template>
+            <template v-slot:item.size="{ item, index }">
+                <p>{{item.size}}</p>
+            </template>
             <template v-slot:item.cancel="{ item, index }">
                 <v-icon class="configure" small color="light" 
                     style="" v-if="item.status.building"
@@ -359,6 +362,11 @@ export default {
                     value: 'skip',
                     align: "center",
                     text: 'Skip'
+                },
+                {
+                    value: 'status.size',
+                    align: "center",
+                    text: 'Size'
                 },
                 
                 {

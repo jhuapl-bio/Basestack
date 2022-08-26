@@ -140,7 +140,7 @@
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "fasta-trim-terminal-ambigs.pl --minlen 50 --maxlen 30000 ${file} > sars-cov2.4.fa && 
-            v-annotate.pl --split --glsearch -s -r --nomisc --mkey sarscov2 -f --lowsim5seq 6 --lowsim3seq 6 --alt_fail lowscore,insertnn,deletinn --mdir ${model} sars-cov2.4.fa vadr_output
+          command: ["bash","-c", "fasta-trim-terminal-ambigs.pl --minlen 50 --maxlen 30000 ${file} > vadr.fa && 
+            v-annotate.pl --split --glsearch -s -r --nomisc --mkey sarscov2 -f --noseqnamemax --lowsim5seq 6 --lowsim3seq 6 --alt_fail lowscore,insertnn,deletinn --mdir ${model} vadr.fa vadr_output
           "]
     
