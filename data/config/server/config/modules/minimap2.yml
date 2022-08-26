@@ -32,34 +32,6 @@
         force_restart: false
         force_init: false
         command: ["bash","-c", "samtools index ${bam} ${bai}"]
-    variables:
-      sam:
-        label: "Alignment File"
-        hint: "Alignment file to be used in downstream analysis"
-        watch: True
-        output: True
-        openSelf: True
-        element: "file"
-        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.sam"
-        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.sam"
-      bam:
-        label: "BAM File"
-        element: "file"
-        hint: "Compressed BAM file from SAM format"
-        bind_parent_dir: true
-        output: True
-        bind: "directory"
-        class: "wb-100  p-3 mb-1"
-        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bam"
-        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bam"
-      bai:
-        label: "BAI File"
-        hint: "BAI index file generated from an alignment and sorted"
-        watch: True
-        output: True
-        element: "file"
-        source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bai"
-        target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bai" 
   procedures:
     - name: minimap2Long #Top level is the left-hand selection of the menu and the major module to install 
       title: "Minimap2 ONT"
@@ -107,15 +79,33 @@
                 type: "value"
                 value: ".*(fasta|fa|fna)$"
           target: "/opt/ref/<<basename(%{variables.ref.source})>>"
-        bam: 
-          target: "%{shared.variables.bam}"
-          shared: true
-        sam: 
-          target: "%{shared.variables.sam}"
-          shared: true
-        bai: 
-          target: "%{shared.variables.bai}"
-          shared: true
+        sam:
+          label: "Alignment File"
+          hint: "Alignment file to be used in downstream analysis"
+          watch: True
+          output: True
+          openSelf: True
+          element: "file"
+          source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.sam"
+          target: "/opt/data/<<basename,trim(%{variables.file.source})>>.sam"
+        bam:
+          label: "BAM File"
+          element: "file"
+          hint: "Compressed BAM file from SAM format"
+          bind_parent_dir: true
+          output: True
+          bind: "directory"
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bam"
+          target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bam"
+        bai:
+          label: "BAI File"
+          hint: "BAI index file generated from an alignment and sorted"
+          watch: True
+          output: True
+          element: "file"
+          source: "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.bai"
+          target: "/opt/data/<<basename,trim(%{variables.file.source})>>.bai" 
       tooltip: "Run a Minimap2 Alignment against reference FASTA files"
       services:
         - name: minimap2

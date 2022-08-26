@@ -320,7 +320,7 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "mytax2",
+      selectedCatalogName: "minimap2",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
@@ -517,7 +517,7 @@ export default {
           position: 'center',
           icon: 'error',
           showConfirmButton:true,
-                  title:  "Could not open the path: "+link 
+                  title:  "Could not open the path: "+link
         })
       }
     },
@@ -648,4 +648,3 @@ export default {
 }
 
 </style>
-

@@ -631,7 +631,7 @@ export class Service {
         if (selected_path == '/'){ 
             selected_path = "/junk"
         }
-        return `${selected_path}`
+        return selected_path
     }
     async defineCopies(){ 
         const $this = this; 
@@ -747,7 +747,7 @@ export class Service {
                                         Type: "bind",
                                         RW: true,
                                         Target: ""
-                                    } 
+                                    }  
                                     if(row[read.column] !== ''){
                                         if (row[read.column] && !path.isAbsolute(row[read.column])){
                                             row[read.column] = path.join(path.dirname(read.source), row[read.column])
