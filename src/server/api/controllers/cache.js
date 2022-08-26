@@ -1,9 +1,6 @@
 "use strict";
 import nestedProperty from "nested-property"
 
- const {promisify} = require("util"); 
-// const config = require('./config')   
-   
 var  { store }  = require("../../config/store/index.js") 
    
 export function cacheParams( token, params){        
@@ -15,7 +12,6 @@ export function cacheParams( token, params){
 	store.server.cache.set(params.token, tokenVals)
     return       
 } 
-    
 export function createCache(){
     const NodeCache = require( "node-cache" );
     const myCache = new NodeCache( { stdTTL: 100, checkperiod: 120 } );

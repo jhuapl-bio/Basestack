@@ -664,7 +664,7 @@ export  class Configuration {     // Make the main procedure class for configura
                         
                 })
                 
-                returnable.push(idxReturnable)
+                returnable.push(idxReturnable)  
                  
             }  else {
                 returnable.push([entry])

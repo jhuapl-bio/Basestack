@@ -320,11 +320,11 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "mytax2",
+      selectedCatalogName: "minimap2",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
-			selected: 'defaults',
+			selected: 'procedures',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 
@@ -648,4 +648,3 @@ export default {
 }
 
 </style>
-

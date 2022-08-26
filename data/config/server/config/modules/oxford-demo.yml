@@ -24,11 +24,11 @@
       variables:
         port:
           element: render
-          label: Demo Port
+          label: Port to render at
           column: 12
           output: false
           target: 8089
-          source": 8089
+          source: 8089
           port: true
           main: true
           portbind:

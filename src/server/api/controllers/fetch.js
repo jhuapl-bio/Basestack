@@ -476,7 +476,8 @@ export async function check_image(image){
 			(async ()=>{
 				let getImage = await store.docker.getImage(image).inspect()
 				let latest; let installed;
-				let tags=[];
+				let tags=[]; 
+				
 				let digests = getImage.RepoDigests.map((d)=>{
 					return d.replace(image+"@", "")
 				}) 
@@ -489,6 +490,7 @@ export async function check_image(image){
 						}
 					// }
 				}
+					
 				resolve({
 					size: (getImage.Size ? getImage.Size : 0),
 					version: installed

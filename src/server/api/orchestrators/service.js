@@ -330,8 +330,8 @@ export class Service {
                 source: selected_option 
             }
         } 
-        let source = selected_option.source
-        // let target = selected_option.target 
+        let source = selected_option.source 
+        // let target = selected_option.target  
         let target = selected_option.target  
         
         return [source, target] 
@@ -631,7 +631,7 @@ export class Service {
         if (selected_path == '/'){ 
             selected_path = "/junk"
         }
-        return `${selected_path}`
+        return selected_path
     }
     async defineCopies(){ 
         const $this = this; 
@@ -688,7 +688,7 @@ export class Service {
         let defaultVariables = this.config.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.set){
+                if (selected_option.set ){
                     for (let i = 0; i < selected_option.set.length; i++){
                         let set  = selected_option.set[i]
                         let exists = await fs.existsSync(set.source)
@@ -747,7 +747,7 @@ export class Service {
                                         Type: "bind",
                                         RW: true,
                                         Target: ""
-                                    } 
+                                    }  
                                     if(row[read.column] !== ''){
                                         if (row[read.column] && !path.isAbsolute(row[read.column])){
                                             row[read.column] = path.join(path.dirname(read.source), row[read.column])
@@ -784,6 +784,12 @@ export class Service {
         }
         
     }
+    removeBackslash(value){
+        if (value && typeof value == "string"){
+            value = value.replaceAll(/\\/g, "/")
+        } 
+        return value
+    }
     
     defineEnv(){
         let env = []   
@@ -798,20 +804,21 @@ export class Service {
                     selected_option = selected_option.optionValue
                 }    
                 if (typeof selected_option == 'object'){ 
-                     
+                    console.log(key, selected_option.target, selected_option.source)
                     if (selected_option.output && !selected_option.target){
                         store.logger.info(`no defined target for variable: ${key}`) 
                     } else {   
                         
                         if (!Array.isArray(selected_option.target)){
                             if (selected_option.target || selected_option.source){
-                                env.push(`${key}=${( selected_option.target ? selected_option.target : selected_option.source)}`)                         
+                                env.push(`${key}=${this.removeBackslash( selected_option.target ? selected_option.target : selected_option.source)}`)                         
                             } 
                         } else {
                             
                             if (selected_option.target ){
                                 let su  = selected_option.target.join( (selected_option.bindChar ? selected_option.bindChar : " " ) )
-                                env.push(`${key}=${su}`)
+
+                                env.push(`${key}=${this.removeBackslash(su)}`)
                             }
                         } 
                     }
@@ -820,21 +827,21 @@ export class Service {
                 } else{
                     
                     if (selected_option){
-                        env.push(`${key}=${selected_option}`)
+                        env.push(`${key}=${this.removeBackslash(selected_option)}`)
                     }
                 }
 
                 if (selected_option.define && selected_option.source){
                     for( let [key, value] of Object.entries(selected_option.define)){
                         if (value){
-                            env.push(`${key}=${value}`)
+                            env.push(`${key}=${this.removeBackslash(value)}`)
                         }
                     }
                 }  
                 if (full_item.define && full_item.source){
                     for( let [key, value] of Object.entries(full_item.define)){
                         if (value){
-                            env.push(`${key}=${value}`)
+                            env.push(`${key}=${this.removeBackslash(value)}`)
                         }
                     }  
                 }  

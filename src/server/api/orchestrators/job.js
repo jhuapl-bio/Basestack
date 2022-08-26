@@ -70,6 +70,12 @@ export  class Job {
         configuration.defineMapping(); 
         return  configuration
     } 
+    reformatPath(selected_path){
+        if (selected_path){
+            selected_path = selected_path.replaceAll(/\\/g, "/")
+        }
+        return selected_path
+    }
     setValueVariable(value, obj, key){ 
         const $this = this;
         try{      
@@ -97,7 +103,7 @@ export  class Job {
                 } 
             } 
             if (!obj.target && obj.source){
-                obj.target = obj.source
+                obj.target =obj.source
             }
             let getter = Object.getOwnPropertyDescriptor(obj, 'source');
             if (getter && getter.get){
@@ -118,9 +124,6 @@ export  class Job {
                 if (obj.source){
                     $this.runningConfig.variables[key].source = obj.source
                 }
-                // if (obj.options[obj.option].bind){
-
-                // }
                
             }  else {
                 $this.runningConfig.variables[key].source = obj.source

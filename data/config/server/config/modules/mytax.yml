@@ -85,7 +85,24 @@
             format: tgz
             source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
-          overwrite: false
+          overwrite: true
+        - source:
+            url: ftp.ccb.jhu.edu
+            type: file
+            user: anonymous
+            path: /pub/data/kraken2_dbs/16S_Greengenes13.5_20200326.tgz
+            password: null
+            protocol: ftp
+            remove: false
+            target: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          label: 16S Greengenes
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          target: "${writePath}/workflows/mytax/16S_Greengenes_k2db"
+          overwrite: true
       variables:
         file:
           label: FASTA/Q File(s)
@@ -156,6 +173,13 @@
               bind:
                 from: '%{variables.db.source}'
                 to: /opt/databases/minikraken2
+            - element: null
+              name: 16_SGreengenes
+              source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326"
+              target: /opt/databases/16S_Greengenes13.5_20200326
+              bind:
+                from: '%{variables.db.source}'
+                to: /opt/databases/16S_Greengenes13.5_20200326
             - element: null
               name: Flukraken2-2021
               source: "${writePath}/workflows/mytax/flukraken2"

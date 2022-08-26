@@ -8,7 +8,6 @@
   -->
 <template>
   <v-container id="file"   @drop.prevent="addDropFile" @dragover.prevent >
-     
       <v-file-input 
           v-model="value"  class="fill-width"
           multiple   overlap counter :label="filenames ? filenames : null"

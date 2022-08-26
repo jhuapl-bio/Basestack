@@ -43,7 +43,6 @@
           target: "/opt/data"
           bind: "self"
           class: "wb-50  p-3 mb-1"
-          
         fast5:
           label: "Fast5 Pass Folder"
           hint: "Required for nanopolish mode (consensus portion). Contains your FAST5 files. Folder must be named fast5_pass"
@@ -73,7 +72,6 @@
               - dir
             action: "exists"
             source: "%{variables.dir.source}"
-            # source: "%{variables.dir.source}/sequencing_summary*.txt"
         fastq_pass:
           label: "Input Long-Reads FASTQ Directory"
           hint: "Folder that contains 1 or more fastq files in UNCOMPRESSED format"

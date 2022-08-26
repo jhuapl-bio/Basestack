@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -18,7 +18,7 @@
     "buildOnly:linuxARM64": "electron-builder --arm64 --linux AppImage",
     "buildOnly:linux": "electron-builder --linux AppImage",
     "buildOnly:linuxAll": "electron-builder --arm64 --x64 --linux  AppImage",
-    "buildOnly:win": "electron-builder --win; rm build/win-unpacked.zip; rm build/win-unpacked.zip; zip build/win-unpacked; mv 'build/Basestack Setup 2.3.2.exe' build/Basestack-Setup-2.3.2.exe",
+    "buildOnly:win": "electron-builder --win; rm build/win-unpacked.zip; rm build/win-unpacked.zip; zip build/win-unpacked",
     "buildOnly:mac": "electron-builder --mac dmg",
     "build:linuxOffline": "node .electron-vue/build.js && electron-builder --linux AppImage -p never",
     "build:mac-zip": "node .electron-vue/build.js && electron-builder --mac  zip",

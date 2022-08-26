@@ -27,6 +27,7 @@ const extract = require('extract-zip')
 const clone = require('git-clone');
 const tar = require("tar")
 import glob from "glob"
+import { logger } from "./logger.js";
 const  gunzip = require('gunzip-file');
 const YAML = require("js-yaml")    
 
@@ -55,8 +56,8 @@ export async function readCsv(filepath, sep){ // 1st argument is filepath, secon
 	return new Promise((resolve, reject)=>{
 		const csvData = []; 
 		( async ()=>{
-			let exists = await fs.existsSync(filepath)
-			if (exists){
+			let exists = await fs.statSync(filepath)
+			if (exists && exists.isFile()){
 				fs.createReadStream(filepath)
 				.pipe(parse({delimiter: sep}))
 				.on('data', function(csvrow) {
@@ -71,6 +72,8 @@ export async function readCsv(filepath, sep){ // 1st argument is filepath, secon
 					store.logger.info(`closed the reading`)
 					resolve(csvData)
 				});
+				
+					
 			} else {
 				reject(new Error(`${filepath} doesn't exist`))
 			}
@@ -252,10 +255,10 @@ export async function readTableFile(filepath, delimeter, header){
 				})
 				.on('end',function(){
 					resolve(dataFull) 
-				})
+				}) 
 				.on("error", function(err){
-					store.logger.error(err)
-				});   
+					store.logger.error(err) 
+				});    
 			} else {
 				resolve(dataFull)
 			}
@@ -375,10 +378,6 @@ export async function downloadSource(url, target, params)  {
 			
 			var received_bytes = 0;
 			var total_bytes = 0;
-			// if (url.startsWith("https")){
-			// 	store.logger.info("https not supported, falling back on http url instead...")
-			// 	url = url.replace("https", "http")
-			// }	
 			let writer; 
 			// p = url.parse(url),           
 			let timeout = 1000; 
@@ -407,64 +406,101 @@ export async function downloadSource(url, target, params)  {
 				else if (params && params.protocol == 'ftp'){
 					store.logger.info("ftp protocol called to get file")
 					var c = new Client();   
-					c.on('ready', function() {
-						c.size(params.path, (err, len)=>{
-							if (err) { 
-								store.logger.error("Error in getting item: %s", params.path)
-								reject(err)
-							}
-							c.get(params.path, function(err, stream) {
-							if (err) { 
-								store.logger.error("Error in getting item: %s", params.path)
-
-								reject(err)
-							}
-								// stream.once('close', function() { c.end(); });
-								stream.on("data", (buffer)=>{
-									var segmentLength = buffer.length;
-									downloaded += segmentLength; 
-									if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
-										let percent= (100 * downloaded/len ).toFixed(0)
-										store.logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
-										seen.start =  .02 + downloaded/len
-										seen.end =  seen.end + .02 
-										writer.status = percent
-									} 
-									// console.log("Progress:\t" + ((downloaded/len *100).toFixed(2) + "%"));
-								}) 
-								.once('destroy', function () {
-									c.end()
-									writer.destroy() 
-									// resolve(null);
-								}).once('end', function () {
-									c.end()
-									writer.destroy()
-									resolve(null);
-								}).once('close', function () {
-									writer.status = 100			
-									writer.destroy()
-									c.end()
-									resolve(null);
-								}).once('error', function (err) {
-									store.logger.error(`Got error on ftp get: %o`, err);
-									c.end() 
-									writer.destroy()
-									// reject(err.message);
-								});
-								writer.on("close", ()=>{
-									console.log("ending writing of stream...")
-									c.end()
-								})
-								stream.pipe(writer)
-							});
-						})
+					try{
+						
+						c.on('ready', function(err, stream) {
 							
-					});
-					c.connect({ 
-						host: params.url,
-						user: params.user,
-						password: params.password
-					})
+							if (err){
+								logger.error(err)
+								reject(err)
+							}
+							c.size(params.path, (err, len)=>{
+								if (err) { 
+									store.logger.error("Error in getting item: %s", params.path)
+									reject(err)
+								}
+								c.get(params.path, function(err, stream) {
+									
+									if (err) { 
+										store.logger.error("Error in getting item: %s", params.path)
+
+										reject(err)
+									} else {
+										resolve(stream)
+									}
+									stream.on('close', function() { 
+										console.log("closed stream")
+										stream.end(); });
+									stream.on('end', function() { 
+										console.log("ended stream")
+										stream.destroy(); });
+									stream.on("data", (buffer)=>{
+										var segmentLength = buffer.length;
+										downloaded += segmentLength; 
+										if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
+											let percent= (100 * downloaded/len ).toFixed(0)
+											store.logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
+											seen.start =  .02 + downloaded/len
+											seen.end =  seen.end + .02 
+											writer.status = percent
+										} 
+										// console.log("Progress:\t" + ((downloaded/len *100).toFixed(2) + "%"));
+									}) 
+									stream.on('destroy', function () {
+										c.end()
+										writer.destroy() 
+										// resolve(null);
+									})
+									stream.on('end', function () {
+										c.end()
+										writer.destroy()
+										resolve(null);
+									})
+									stream.on('close', function () {
+										writer.status = 100			
+										writer.destroy()
+										c.end()
+										resolve(null);
+									})
+									stream.on('error', function (err) {
+										store.logger.error(`Got error on ftp get: %o`, err);
+										c.end() 
+										writer.destroy()
+										// reject(err.message);
+									});
+									writer.on("close", ()=>{
+										console.log("ending writing of stream...")
+										c.end()
+										c.destroy()
+									})
+									stream.pipe(writer)
+								});
+							})
+								
+						});
+						c.on('error',(err)=>{
+							logger.error(err)
+							reject(err)
+						});
+						c.on('close',(err)=>{
+							logger.info(`${err}, closed ftp protocol get`)
+							c.destroy()
+							resolve()
+						});
+						c.on('end',(err)=>{
+							logger.info(`${err}, ended ftp protocol get`)
+							c.destroy()
+							resolve()
+						});
+						c.connect({ 
+							host: params.url,
+							user: params.user,
+							password: params.password
+						})
+						 
+					} catch (err){
+						reject(err)
+					}
 				} else { 
 					store.logger.info("http(s) protocol called to get file %s", url)
 					// if (!url.startsWith("http://")){
@@ -477,6 +513,14 @@ export async function downloadSource(url, target, params)  {
 					}  
 					let request = fnct.get(url).on("response", (response)=>{
 						var len = parseInt(response.headers['content-length'], 10);
+						response.on("close", (err)=>{
+							logger.error("err %o", err)
+							try{
+								response.destroy()
+							} catch(Err){ 
+								logger.error(Err)
+							}
+						})
 						response.on('data', function(chunk) {
 							if(chunk){
 								downloaded += chunk.length;

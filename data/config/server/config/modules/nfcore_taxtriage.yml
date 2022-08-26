@@ -40,6 +40,10 @@
             path: ${configPath}/modules/orchestrator/Dockerfile
             file: Dockerfile
           format: "dockerfile"
+        - target: "bitnami/git"
+          label: "bitnami/git"
+          type: "docker"
+          format: "docker"
         - target: "basestack-docker-taxtriage"
           label: "TaxTriage Volume"
           type: "volume"
@@ -266,6 +270,49 @@
           bind: "self"
           define:
             filter: " --filter %{variables.filter_db.target} "
+        rundir:
+          label: "Run Directory"
+          element: "file"
+          source: null
+          hint: "Requires a Samplesheet.csv with all relevant data in the same folder in terms of pathing as well as things like your fastq files and sequencing summary files"
+          target: "/opt/data"
+          bind: "self"
+        samplesheet:
+            label: "Samplesheet"
+            warning: "Must be in the root (same level) of the run directory"
+            hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
+            element: "exists"
+            source:  null
+            validations:
+              - type: "files"
+                error: "Must have a Samplesheet.csv file in the root directory (directly in your run directory)"
+                target: 
+                  type: "value"
+                  minimum: 1
+                  path: "%{variables.rundir.source}"
+                  value: "Samplesheet.csv$"
+            update_on: 
+              depends:
+                - rundir
+              action: "exists"
+              source: "%{variables.rundir.source}"
+        # fastqs:
+        #   label: "Input Reads"
+        #   hint: "Folder(s) that contains 1 or more fastq files in COMPRESSED (.gz) format"
+        #   class: "wb-50  p-3 mb-1"
+        #   warning: "Ensure that all fastq files you want to analyze are compressed"
+        #   update_on: 
+        #       depends:
+        #         - rundir
+        #       action: "exists"
+        #       source: "%{variables.rundir.source}/*"
+        #   validations:
+        #     - type: "files"
+        #       error: "Must have 1 or more .fastq.gz files"
+        #       target: 
+        #         type: "value"
+        #         minimum: 1
+        #         path: "%{variables.rundir.source}"
         profile:
           label: "Profile"
           options:
