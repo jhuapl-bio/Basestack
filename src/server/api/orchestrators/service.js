@@ -784,6 +784,12 @@ export class Service {
         }
         
     }
+    removeBackslash(value){
+        if (value && typeof value == "string"){
+            value = value.replaceAll(/\\/g, "/")
+        } 
+        return value
+    }
     
     defineEnv(){
         let env = []   
@@ -805,13 +811,14 @@ export class Service {
                         
                         if (!Array.isArray(selected_option.target)){
                             if (selected_option.target || selected_option.source){
-                                env.push(`${key}=${( selected_option.target ? selected_option.target : selected_option.source)}`)                         
+                                env.push(`${key}=${this.removeBackslash( selected_option.target ? selected_option.target : selected_option.source)}`)                         
                             } 
                         } else {
                             
                             if (selected_option.target ){
                                 let su  = selected_option.target.join( (selected_option.bindChar ? selected_option.bindChar : " " ) )
-                                env.push(`${key}=${su}`)
+
+                                env.push(`${key}=${this.removeBackslash(su)}`)
                             }
                         } 
                     }
@@ -820,21 +827,21 @@ export class Service {
                 } else{
                     
                     if (selected_option){
-                        env.push(`${key}=${selected_option}`)
+                        env.push(`${key}=${this.removeBackslash(selected_option)}`)
                     }
                 }
 
                 if (selected_option.define && selected_option.source){
                     for( let [key, value] of Object.entries(selected_option.define)){
                         if (value){
-                            env.push(`${key}=${value}`)
+                            env.push(`${key}=${this.removeBackslash(value)}`)
                         }
                     }
                 }  
                 if (full_item.define && full_item.source){
                     for( let [key, value] of Object.entries(full_item.define)){
                         if (value){
-                            env.push(`${key}=${value}`)
+                            env.push(`${key}=${this.removeBackslash(value)}`)
                         }
                     }  
                 }  
