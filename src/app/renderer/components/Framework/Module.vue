@@ -118,8 +118,48 @@
           <v-icon class="mr-3" small color="primary lighten-2" >
               $cog 
           </v-icon>
-        Reset Default</v-btn>
+          Reset Default
+        </v-btn>
+        <v-dialog
+          transition="dialog-bottom-transition"
+          max-width="80vh" v-model="dialogLog"
+        >
+          <template v-slot:activator="{ on, attrs }">
+            
+            <v-btn
+              v-bind="attrs" 
+              v-on="on" class=" "
+            >
+              <v-icon
+                  medium class="mr-3"
+                >$comment
+              </v-icon>
+              Log Viewer
+            </v-btn>
+          </template>
+          <template v-slot:default="dialogLog">
+            <v-card
+            >
+              <v-toolbar
+                color="indigo"
+                dark
+              >Log output</v-toolbar>
+              <v-card-text>
+                <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow> 
+              </v-card-text>
+              <v-card-actions class="justify-center">
+                <v-btn
+                  text
+                  @click="dialogLog.value = false"
+                >Close</v-btn>
+              </v-card-actions>
+            </v-card>
+            
+          </template>
+          
+        </v-dialog>
       </template>
+      
       <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.removable && selectedVersion.imported">
         <template v-slot:activator="{ on }">
           <v-btn @click="removeModule(selectedVersion.idx, selectedVersion.name)" v-on="on" icon >
@@ -215,7 +255,7 @@
           
         </v-card>
       </v-navigation-drawer>
-    
+     
     <v-col sm="3" class="shrink">
       <v-dialog 
           transition="dialog-bottom-transition"
@@ -227,6 +267,8 @@
           >
             <v-card-title v-if="installStatus.fully_installed" class="text-h5">
               Module Status
+              <v-spacer></v-spacer>
+              
             </v-card-title>
             <v-card-title v-else class="text-h5">
               Module Status
@@ -389,6 +431,20 @@
         </v-stepper-header>
           
       </v-stepper>
+      <v-card  v-if="anyOutput" class="scroll ">
+        <Progresses
+          :progresses="procedure.watches"
+          :status="status"
+          :job="job"
+          :catalog="module"
+          :procedure="procedureIdx"
+          :removal_override="procedure.removal_override"
+          @removeCustomVariable="removeCustomVariable"
+          :defaultHeaders="outputHeaders"
+        >
+        </Progresses>
+        
+      </v-card>
       
       <div style="display:flex" v-if="job && job.running">
         <v-tooltip  bottom v-for="item in anyMainRender" :key="item.label">
@@ -423,7 +479,7 @@
           color="primary"
       ></v-checkbox>
     </v-col>
-    <v-col :sm="!selectedProcedure.full_orientation ? 6 : 12" v-if="procedure && procedure.variables" class="mx-0 px-0 overflow:auto; min-height:">
+    <v-col :sm="!selectedProcedure.full_orientation ? 12 : 12" v-if="procedure && procedure.variables" class="mx-0 px-0 overflow:auto; ">
       
       <ListParams
           :items="additionals"
@@ -435,9 +491,63 @@
       >
       </ListParams>
     </v-col>
-    <v-col :sm="!selectedProcedure.full_orientation ? 6 : 12" v-if="headers.length > 0 && procedure "  >
-      <v-card height="90vh" class="scroll fill-height">
-        <Progresses
+    <!-- <v-footer
+      v-bind="{
+        absolute: true,
+      }"
+      app
+      :padless="false"
+    >
+      <v-dialog
+        transition="dialog-bottom-transition"
+        max-width="80vh" v-model="dialogLog"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <v-card
+            flat
+            tile
+            width="100%"
+            class="red lighten-1 text-center"
+          >
+              <v-card-text>
+              <v-btn
+                icon
+                v-bind="attrs" class="justify-center text-center"
+                v-on="on"
+              >
+                <v-icon
+                  medium
+                >$comment
+                </v-icon>
+              </v-btn>
+            </v-card-text>
+          </v-card>
+        </template>
+        <template v-slot:default="dialogLog">
+          <v-card
+          >
+            <v-toolbar
+              color="indigo"
+              dark
+            >Log output</v-toolbar>
+            <v-card-text>
+              <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow> 
+            </v-card-text>
+            <v-card-actions class="justify-center">
+              <v-btn
+                text
+                @click="dialogLog.value = false"
+              >Close</v-btn>
+            </v-card-actions>
+          </v-card>
+          
+        </template>
+        
+      </v-dialog>
+    </v-footer> -->
+    <!-- <v-col :sm="!selectedProcedure.full_orientation ? 6 : 12" v-if="headers.length > 0 && procedure "  >
+      <v-card height="90vh" class="scroll fill-height"> -->
+        <!-- <Progresses
           :progresses="procedure.watches"
           :status="status"
           :job="job"
@@ -447,11 +557,11 @@
           @removeCustomVariable="removeCustomVariable"
           :defaultHeaders="outputHeaders"
         >
-        </Progresses>
-        <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow> 
+        </Progresses> -->
+        <!-- <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow>  -->
         
-      </v-card>
-    </v-col>
+      <!-- </v-card> -->
+    <!-- </v-col> -->
   </v-row>
 </template>
 
@@ -981,6 +1091,8 @@ export default {
   data(){
     return{
       drawer: true,
+      dialog: false,
+      dialogLog: false,
       customDrawer: false,
       totalSpaceUsed: "0 Bytes",
       installStatus: {},
@@ -990,7 +1102,6 @@ export default {
       mini: true,
       el: 1,
       services: [],
-      dialog: false,
       dependencies:[],
       updates: 0,
       procedureIdx: 0,
@@ -1119,6 +1230,16 @@ export default {
         serviceList.push(i+1)
       })
       return serviceList
+    },
+    anyOutput(){
+      if (this.selectedProcedure && this.selectedProcedure.variables){
+        return Object.values(this.selectedProcedure.variables).some((f)=>{
+          return f.output
+        })
+      } else {
+        return false
+      }
+
     },
     anyRender(){
       if (this.selectedProcedure && this.selectedProcedure.variables){

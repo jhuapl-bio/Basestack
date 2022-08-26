@@ -1,0 +1,109 @@
+- name: "demultiplex"
+  title: "Demultiplex"
+  icon: "mountain"
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  url: https://nanopype.readthedocs.io/en/latest/rules/demux/
+  tags: 
+    - "demultiplex"
+    - "Oxford Nanopore"
+    - "sequencing processing"
+    - "fastq"
+  description: "Run Demux on your samples using default or custom parameters"
+  procedures:
+    - name: "demux" #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Demultiplex Oxford Reads"
+      icon: "mountain"
+      dependencies:
+        - target: "jhuaplbio/custom_demultiplexing_guppy"
+          type: "docker" 
+          format: "docker"
+      services:
+        - name: "demultiplex"
+          label: "Demultiplex Barcodes"
+          image: "jhuaplbio/custom_demultiplexing_guppy"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          # command: ["yes"]
+          command: ["bash","-c", 
+            "mkdir -p $barcode_dir && 
+            cd $barcode_dir &&
+            guppy_barcoder 
+              --require_barcodes_both_ends 
+              -i $dir 
+              -s $barcode_dir
+              --recursive 
+              --arrangements_files $barcoding" ]
+      variables:  
+        dir:
+          label: "Input Long-Reads Full Run Directory"
+          hint: "Directory that contains your fastq_pass, fast5_pass, and sequencing summary.txt file. Output directory from a Oxford Nanopore run"
+          element: "dir"
+          optional: false
+          bind_parent_dir: false
+          source: null
+          target: "/opt/data"
+          bind: "self"
+          class: "wb-50  p-3 mb-1"
+        barcode_dir:
+          output: True
+          bind: self
+          openSelf: False
+          type: files
+          pattern: "barcode[0-9]+"
+          element: dir
+          source: "<<directory(%{variables.dir.source})>>/demultiplexed"
+          path:  "<<directory(%{variables.dir.source})>>/demultiplexed"
+          target: "<<directory(%{variables.dir.source})>>/demultiplexed"
+        barcoding:
+          label: "Barcode Configuration"
+          element: null
+          hint: "Which barcoding configuration you used. If no demux took place, select any"
+          link: run_config
+          option: 0
+          class: "wb-50 p-3 mb-1"
+          options:
+            - "barcode_arrs_nb96.cfg"
+            - "barcode_arrs_custom_flu.cfg"
+            - "barcode_arrs_16s.cfg"
+            - "barcode_arrs_dual_nb24_pcr96.cfg"
+            - "barcode_arrs_lwb.cfg"
+            - "barcode_arrs_nb12.cfg"
+            - "barcode_arrs_nb24.cfg"
+            - "barcode_arrs_pcr12.cfg"
+            - "barcode_arrs_pcr96.cfg"
+            - "barcode_arrs_rab.cfg"
+            - "barcode_arrs_rbk096.cfg"
+            - "barcode_arrs_rbk4.cfg"
+            - "barcode_arrs_rbk.cfg"
+            - "barcode_arrs_rlb.cfg"
+            - "barcode_arrs_vmk2.cfg"
+            - "barcode_arrs_vmk.cfg"
+            - "configuration.cfg"
+            - "configuration_dual.cfg"
+      
+        # guppyplex:
+        #   name: "guppyplex"
+        #   label: "GuppyPlex"
+        #   image: "jhuaplbio/basestack_consensus"
+        #   workingdir: "/opt/data"
+        #   orchestrated: false #orchestrated means it r
+        #   init: false
+        #   force_restart: false
+        #   force_init: false
+        #   command: ["bash","-c", 
+        #       "echo $barcode_dir; source $(conda info --base)/etc/profile.d/conda.sh && 
+        #       conda activate artic-ncov2019 && mkdir -p $barcode_dir && 
+        #       cd $barcode_dir  &&
+        #       find ${barcode_dir}/* -type d -name \"*barcode*\"  | while read line; do 
+        #         echo $line; 
+        #         artic guppyplex 
+        #         --skip-quality-check 
+        #         --directory ${line} --prefix $out_prefix;  
+        #       done " 
+        #   ]
+    

@@ -43,15 +43,15 @@
         - target: "basestack-docker-taxtriage"
           label: "TaxTriage Volume"
           type: "volume"
-          # git clone -b 'v0.0.1' --single-branch --depth 1 https://github.com/jhuapl-bio/nf-core-taxtriage.git
+          # git clone -b 'v0.0.1' --single-branch --depth 1 https://github.com/jhuapl-bio/taxtriage.git
         - source: 
-            url: "git clone  https://github.com/jhuapl-bio/nf-core-taxtriage.git"
+            url: "git clone  https://github.com/jhuapl-bio/taxtriage.git"
             type: "dir"
             remove: false
             target: "${writePath}/workflows/taxtriage/taxtriage"
           type: "orchestration" 
           service:
-            command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/nf-core-taxtriage.git" ]
+            command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
             init: false
             force_restart: true
             image: "bitnami/git"
@@ -60,14 +60,14 @@
             config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
             orchestrated: true
             workingdir: "/opt"
-          target: "${writePath}/workflows/taxtriage/nf-core-taxtriage"
+          target: "${writePath}/workflows/taxtriage/taxtriage"
           format: dir
           bind: 
             from: "${writePath}/workflows/taxtriage"
             to: "/opt/source"
           workingdir: "/opt/source"
           overwrite: true
-          command: [ "sh", "-c", "rm -rf nf-core-taxtriage; git clone  https://github.com/jhuapl-bio/nf-core-taxtriage.git" ]
+          command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
           label: "Tax Triage Code"
         - source:
             url: ftp.ccb.jhu.edu
@@ -243,7 +243,7 @@
           name: "code"
           hidden: true
           bind:
-            from:  "${writePath}/workflows/taxtriage/nf-core-taxtriage"
+            from:  "${writePath}/workflows/taxtriage/taxtriage"
             to: "/opt/code"
         autopull: 
           label: "Automatically Pull Latest Code from GitHub"

@@ -100,12 +100,11 @@ export class Procedure {
             return d
         })
         this.buildStream = [],
-        
-        this.services_config = cloneDeep(procedure.services)
-        this.service_steps = {} 
-		this.container = null; 
+        this.services_config = cloneDeep(procedure.services) 
+        this.service_steps = {}  
+		this.container = null;  
 		this.cmd = null; 
-		this.options = {};  
+		this.options = {};     
         this.services = []; 
 		this.streamObj = null;
         this.orchestrator = null; 
@@ -289,7 +288,7 @@ export class Procedure {
 					} else { 
 						dependencies[index].status.exists = false
 						dependencies[index].status.version = null
-                        dependencies[index].status.size = "N/A"
+                        dependencies[index].status.size = 0
 					}
                     
                     if (dependencies[index].status && dependencies[index].status.stream && Array.isArray(dependencies[index].status.stream.info)){
@@ -432,7 +431,7 @@ export class Procedure {
                 target = `${dependency.target}:${dependency.version}`
             }
             pullImage(target, dependency).then((stream, error)=>{
-                dependency.status.building = true
+                dependency.status.building = true 
                 dependency.status.downloading = true
                 dependency.status.error = null
                 $this.log  = spawnLog(stream, $this.logger)
@@ -588,7 +587,6 @@ export class Procedure {
                 dependency.streamObj.destroy()   
             } 
             fs.stat(dependency.build.path, (err, stat)=>{
-                console.log(err, stat)
                 if (err){
                     store.logger.error("Could not build from Dockerfile %s %o", dependency.build.path, err)
                     reject(err)

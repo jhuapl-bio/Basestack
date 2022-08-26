@@ -7,7 +7,7 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="logs" ref="logs" v-if="info">
+  <div id="logs" class="mt-3" ref="logs" v-if="info">
     <span class="center-align-icon configure"  
         style="float:right" 
         v-tooltip="{
@@ -17,20 +17,20 @@
             trigger: 'hover',
             targetClasses: ['it-has-a-tooltip'],
         }" @click="scroll=!scroll">
-            <font-awesome-icon :icon="(scroll ? 'comment' : 'comment-slash')" size="sm"/>
+            <font-awesome-icon :icon="(scroll ? 'comment' : 'comment-slash')"/>
     </span>	
     <v-btn
         icon-and-text
-        color="primary" small
+        color="secondary" small
         @click="open(link)"
-    ><v-icon
-        x-small
+    ><v-icon  class="mr-3"
+        small
     >$external-link-alt
     </v-icon>
     Open Log Folder
     </v-btn>
     <div class="logWindow" >
-        <div v-if="info" class="logDiv" style="max-height: 400px; overflow-y:auto; ">
+        <div v-if="info" class="logDiv" style="max-height: 900px; overflow-y:auto; ">
             <code >
                 <p v-for="(line, index) in info"  v-bind:key="index">{{ line }}</p>
             </code>

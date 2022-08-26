@@ -10,6 +10,7 @@ var ncp = require("ncp").ncp
 const http = require("http")
 const https = require("https")
 ncp.limit = 16;
+import getSize from 'get-folder-size';
 const fs  = require("fs")
 import  path  from "path"
 const mkdirp = require("mkdirp");
@@ -273,12 +274,28 @@ export async function checkExists(location, globSet){
 				}
 				if(exists){
 					let size = 0 
-					if (exists.size){
-						size = bytesToSize(exists.size)
-					} 
-					resolve(
-						{location: location, size: size, exists: true}
-					)
+					if (exists.isDirectory()){
+						getSize(location, (err, size)=>{
+							if (!err){
+								size = bytesToSize(size)
+								resolve(
+									{location: location, size: size, exists: true}
+								)
+							} else{
+								resolve(
+									{location: location, size: 0, exists: true}
+								)
+							}
+						})
+					} else {
+						if (exists.size){
+							size = bytesToSize(exists.size)
+						} 	
+						resolve(
+							{location: location, size: size, exists: true}
+						)
+					}
+					
 				} else {
 					resolve({
 						location: null,
@@ -619,7 +636,6 @@ export async function archive(filepath, gzip){
 export async function writeFile(filepath, content){
 	return new Promise((resolve, reject)=>{
 			const directory = path.dirname(filepath)
-			console.log("writing file: file", filepath)
 			mkdirp(directory).then(response=>{
 				fs.writeFile(filepath, content,(errFile)=>{
 					if (errFile){

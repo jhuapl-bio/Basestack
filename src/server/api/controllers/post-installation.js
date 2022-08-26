@@ -105,6 +105,7 @@ export async function checkVolumeExists(name){
 		// try { 
 		let volume = await store.docker.getVolume(name)
 		let inspected = await volume.inspect()
+		// console.log(inspected,"<<<<")
 		return ( inspected ? true : false)
 }
 

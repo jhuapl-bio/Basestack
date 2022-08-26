@@ -95,7 +95,7 @@ export  class Module {
     cleanup(){
         clearInterval(this.interval.interval) 
         return
-    }
+    } 
     async initProcedures(){ 
         let promises = []   
         const $this = this;

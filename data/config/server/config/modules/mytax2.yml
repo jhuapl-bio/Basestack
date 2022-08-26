@@ -33,16 +33,58 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.1.0
+          version: v2.1.1
           type: docker
           format: docker
+        - source:
+            url: ftp.ccb.jhu.edu
+            type: file
+            user: anonymous
+            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
+            password: null
+            protocol: ftp
+            remove: false
+            target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          label: Minikraken2
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+          overwrite: false
       variables:
+        custom_configuration:
+          optional: true
+          label: Custom Barcode Cfg file
+          element: file
+          source: null
+          bind: self
+          target: "/opt/custom_config.cfg"
+          append:
+            command: " cp /opt/custom_config.cfg /opt/ont-guppy-cpu/data/barcoding/; sed -i \"0,/arrangements_files/s/$/ custom_config.cfg/\" /opt/ont-guppy-cpu/data/barcoding/configuration.cfg ;  "
+            position: "start" 
+            placement: 2
+            services: 
+              - 0
+        custom_barcode_fasta:
+          optional: true
+          label: Custom FASTA barcode
+          element: file
+          source: null
+          bind: self
+          target: "/opt/custom_fasta.fasta"
+          append:
+            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy-cpu/data/barcoding/barcodes_masked.fasta;  "
+            position: "start"
+            placement: 2
+            services: 
+              - 0
         csv:
           label: CSV File(s)
           element: file
           optional: false
           fallback: "${writePath}/workflows/mytax2/Samplesheet.csv"
-          # bind: directory
           name: "Samplesheet"
           read:
             - type: "file"
@@ -123,7 +165,7 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.1.0
+          image: jhuaplbio/basestack_mytax2:v2.1.1
           workingdir: /
           orchestrated: false
           init: false

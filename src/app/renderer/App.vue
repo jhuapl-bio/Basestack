@@ -185,7 +185,7 @@
           
         </v-row>
         
-        <v-row   v-if="selected == 'procedures' && selectedCatalog">
+        <v-row  style="height: 10vh" v-if="selected == 'procedures' && selectedCatalog">
           <v-col sm="12" v-if="importedLibrary[selectedCatalog.name] && importedLibrary[selectedCatalog.name].choices" >
             <component 
               :is="'Module'" 
@@ -320,11 +320,11 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "agave",
+      selectedCatalogName: "mytax2",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
-			selected: 'defaults',
+			selected: 'procedures',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 
