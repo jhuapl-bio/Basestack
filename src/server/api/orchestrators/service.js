@@ -631,7 +631,7 @@ export class Service {
         if (selected_path == '/'){ 
             selected_path = "/junk"
         }
-        return `${selected_path}`
+        return selected_path
     }
     async defineCopies(){ 
         const $this = this; 
@@ -688,7 +688,7 @@ export class Service {
         let defaultVariables = this.config.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.set){
+                if (selected_option.set ){
                     for (let i = 0; i < selected_option.set.length; i++){
                         let set  = selected_option.set[i]
                         let exists = await fs.existsSync(set.source)
@@ -804,7 +804,7 @@ export class Service {
                     selected_option = selected_option.optionValue
                 }    
                 if (typeof selected_option == 'object'){ 
-                     
+                    console.log(key, selected_option.target, selected_option.source)
                     if (selected_option.output && !selected_option.target){
                         store.logger.info(`no defined target for variable: ${key}`) 
                     } else {   

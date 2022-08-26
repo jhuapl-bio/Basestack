@@ -135,7 +135,7 @@
           hideStatus: false
           label: "Gamma"
           force_restart: true
-          command: ["bash","-c", "ls -lht /opt/databases/ && GAMMA.py $fasta $geneDB $output"
+          command: ["bash","-c", "GAMMA.py $fasta $geneDB $output"
           ]
           workingdir: "/output"
             

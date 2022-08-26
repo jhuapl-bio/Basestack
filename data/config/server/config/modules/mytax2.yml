@@ -36,6 +36,10 @@
           version: v2.1.1
           type: docker
           format: docker
+        - target: "bitnami/git"
+          label: "bitnami/git"
+          type: "docker"
+          format: "docker"
         - source:
             url: ftp.ccb.jhu.edu
             type: file

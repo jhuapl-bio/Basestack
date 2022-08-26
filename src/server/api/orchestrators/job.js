@@ -103,7 +103,7 @@ export  class Job {
                 } 
             } 
             if (!obj.target && obj.source){
-                obj.target = this.reformatPath(obj.source)
+                obj.target =obj.source
             }
             let getter = Object.getOwnPropertyDescriptor(obj, 'source');
             if (getter && getter.get){
