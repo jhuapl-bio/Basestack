@@ -15,12 +15,12 @@ html,
 body {
 /*  background: #4A484C !important; */
   background: #FFFFFF !important;
-  height: 100vh;
+  /* height: 100vh; */
   font-family: Myriad Pro Light SemiExtended !important;
   font-size: 1.0em;
   /*font-family:  Baskerville !important;*/
-  /* overflow-y:hidden;
-  overflow-x:hidden; */
+  /* overflow-y:hidden; */
+  /* overflow-x:hidden;  */
 }
 
 #body-container{
@@ -398,6 +398,7 @@ body {
 .logWindow{
   width:100%;
   height:100%;
+
   padding:1%;
   border-top-left-radius: 10px;
 }
@@ -406,7 +407,7 @@ body {
   overflow-y:auto; 
   overflow-x:auto;
   border: 1px solid rgba(238, 238, 238);
-  font-size: 0.8em;
+  font-size: 0.99em;
   
 }
 .logDiv code{
@@ -607,9 +608,9 @@ body {
 .mainContent{
 	-webkit-background-clip: padding-box; /* for Safari */
   background-clip: padding-box; /* for IE9+, Firefox 4+, Opera, Chrome */
-	height:100vh !important;
-	/* overflow-y:hidden ;
-  overflow-x: hidden;  */
+	/* height:100vh !important; */
+	overflow-y:hidden ;
+  overflow-x: hidden; 
   overflow:auto
 }  
 .mainTabContent{
@@ -706,7 +707,7 @@ body {
 .nav-tabs {
   flex-wrap: nowrap;
   white-space: nowrap;
-  max-height: 100vh;
+  /* max-height: 100vh; */
   /* overflow: auto; */
 }
 .modulesTab{

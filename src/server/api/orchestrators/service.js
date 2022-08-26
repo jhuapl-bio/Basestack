@@ -332,12 +332,12 @@ export class Service {
         } 
         let source = selected_option.source
         // let target = selected_option.target 
-        let target = selected_option.target 
-       
-        return [source, target]
-    }
-    updatePorts(ports, options){
-        const $this = this
+        let target = selected_option.target  
+        
+        return [source, target] 
+    } 
+    updatePorts(ports, options){ 
+        const $this = this 
         options.HostConfig.PortBindings = {}
         options.ExposedPorts = {}
         ports.forEach((port)=>{
@@ -475,12 +475,14 @@ export class Service {
             return `${source}:${target}`
         }
         async function formatBind(source, target){
+            
             let exists = await checkExists(source)
             let returnable = {
                 Source: source, 
-                Type: "bind",
+                Type: "bind", 
                 Target: target
             }
+            
             if (exists && exists.exists){
                 store.logger.info(`${source} exists, skipping creation`)
                 return returnable
@@ -490,10 +492,10 @@ export class Service {
                 return  returnable
             }
             
-       }
-        let defaultVariables = this.config.variables 
+       }  
+        let defaultVariables = this.config.variables   
         
-        let promises  = []
+        let promises  = [] 
         if ($this.config.bind){ 
             if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
                 let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
@@ -534,15 +536,20 @@ export class Service {
                 if (selected_option.options){
                     selected_option = {... selected_option.options[(selected_option.option ? selected_option.option : 0)]}
                 }
+                
                 if (typeof selected_option == 'object' && selected_option.bind){
                     let from = selected_option.source
                     let to = selected_option.target 
+                    
                     if (selected_option.bind && selected_option.bind.from){
-                        from = selected_option.bind.from
+                        from = selected_option.bind.from  
                     }
                     if (selected_option.bind && selected_option.bind.to){
                         to  = selected_option.bind.to
-                    } 
+                    }  
+                    if (!from){
+                        continue
+                    }
                     if (from == '.'){
                         from = null
                     }  
@@ -630,6 +637,9 @@ export class Service {
         const $this = this; 
         let promises = []
         let defaultVariables = this.config.variables
+        if (!defaultVariables){
+            defaultVariables = {} 
+        }
         for (let [name, selected_option ] of Object.entries(defaultVariables)){
             if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
                 let targetBinding = selected_option
@@ -680,9 +690,7 @@ export class Service {
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (selected_option.set){
                     for (let i = 0; i < selected_option.set.length; i++){
-                        // selected_option.read.forEach(async (read)=>{
                         let set  = selected_option.set[i]
-                        // promises.push(
                         let exists = await fs.existsSync(set.source)
                         if (exists){
                             try{
@@ -695,7 +703,11 @@ export class Service {
                                 f.forEach((row)=>{ 
                                     let rowupdate = []
                                     set.header.forEach((head)=>{
+                                        
                                         if (set.reformat && set.reformat.indexOf(head) !=-1){
+                                            if (row[head] && !path.isAbsolute(row[head])){
+                                                row[head] = path.join(path.dirname(set.source), row[head])
+                                            }
                                             rowupdate.push($this.reformatPath(row[head]))
                                         }else {
                                             rowupdate.push(row[head])
@@ -737,16 +749,19 @@ export class Service {
                                         Target: ""
                                     } 
                                     if(row[read.column] !== ''){
+                                        if (row[read.column] && !path.isAbsolute(row[read.column])){
+                                            row[read.column] = path.join(path.dirname(read.source), row[read.column])
+                                        }  
                                         if (read.bind == 'directory'){
                                             bind.Source = path.resolve(path.dirname(row[read.column]))
                                             bind.Target = path.dirname(this.reformatPath(row[read.column]))
-                                            // bind = `${path.dirname(row[read.column])}:"${path.dirname(this.reformatPath(row[read.column]))}"`
-                                        } else {  
+                                                                                  } else {  
                                             // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
                                             bind.Source = path.resolve(row[read.column])
                                             bind.Target = this.reformatPath(row[read.column])
                                         }
                                         if(row[read.column] && binds.indexOf(bind) == -1){
+                                            
                                             if (read.bind == 'directory'){
                                                 binds.push(bind)
                                             } else {
@@ -866,23 +881,23 @@ export class Service {
                     if ($this.config.serve ){      
                         let variable_port = defaultVariables[$this.config.serve] 
                         options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
-                    }       
+                    }        
                     // $this.config.variables = defaultVariables  
                     let envs = {}   
                     $this.defineEnv() 
-                    console.log("define env done")  
+                    store.logger.info("define env done")  
                     let mounts = await $this.defineReads()
-                    console.log("define reads done")
+                    store.logger.info("define reads done")
                     await $this.defineSet() 
-                    console.log("defineset done")
+                    store.logger.info("define set done")
                     await $this.defineCopies()  
-                    console.log("define copies doen")
+                    store.logger.info("define copies doen")
                     await $this.defineBinds()   
-                    console.log("define binds done")
+                    store.logger.info("define binds done")
                     $this.definePortBinds()
-                    console.log("define port binds done")
+                    store.logger.info("define port binds done")
                     await $this.updatePorts($this.portbinds,options)
-                    console.log("update ports done") 
+                    store.logger.info("update ports done") 
                     const userInfo = os.userInfo();
                     // get uid property
                     // from the userInfo object
@@ -960,7 +975,7 @@ export class Service {
                                 options.Cmd[options.Cmd.length - 1] =  options.Cmd[options.Cmd.length - 1]  + " && " +   append.command
                             }      
                         }     
-                    }   
+                    }    
                     if ($this.config.image){ 
                         let img = $this.config.image
                         options.Image = img    
@@ -990,7 +1005,6 @@ export class Service {
                         }
                         
                     })
- 
                     $this.mounts.forEach((m)=>{
                         if (!seen[m.Target]){
                             options.HostConfig.Mounts.push(m)

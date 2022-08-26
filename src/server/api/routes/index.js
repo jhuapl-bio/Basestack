@@ -805,18 +805,18 @@ router.post("/module/import", (req,res,next)=>{ // build workflow according to n
 				if (found){
 					found.cleanup()   
 					delete store.library.catalog[req.body.catalog]
-				}  
-			} catch (err){  
+				}   
+			} catch (err){   
 				store.logger.error("err in cleaning up already loaded catalog: %s", err)
-			} 
-			let modl = store.library.create_module(module)
-			store.library.catalog[module.name] = modl	
+			}   
+			let modl = store.library.create_module(module) 
+			store.library.catalog[module.name] = modl	 
 			store.library.addImported(module, module.name,true)
 			res.status(200).json({status: 200, message: `Completed module copy`, data: '' });
 		} catch(err2){ 
 			logger.error("%s %s", "Error in importing module", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
-		}	
+		}	 
 	})().catch((err2)=>{
 		logger.error("%s %s", "Error in importing module", err2)
 		res.status(419).send({status: 419, message: error_alert(err2)}); 
