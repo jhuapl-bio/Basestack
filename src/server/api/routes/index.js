@@ -1196,11 +1196,19 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			store.logger.info("Init job start") 
 			let module = store.library.catalog[req.body.catalog]
 			let procedure = module.procedures[req.body.procedure]
-			let token = req.body.token    
-			
+			let token = req.body.token  
+			if (!req.body.variables){
+				req.body.variables = {}
+			}  
+			for (let [key, value] of Object.entries(req.body.variables)){
+				req.body.variables[key] = {
+					source: value.source,
+					option: value.option
+				}
+			}
 			if (!token){         
 				token = 'development'     
-			}        
+			}         
 			let services = req.body.services    
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`)
 			if (found){          
@@ -1208,12 +1216,13 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 				found.cleanup()           
 				delete store.jobs.catalog[req.body.catalog][req.body.procedure]
 				store.logger.info("found job, cleaned up")    
-			}   
+			}    
+			let skip = true
 			store.logger.info("Starting Job! with services: %s", services) 
   			let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
-			let skip = await job.start(req.body) 
+			skip = await job.start(req.body) 
 			store.logger.info("Completed or Exited Job!")
 
 			if (!skip){

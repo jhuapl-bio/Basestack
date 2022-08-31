@@ -901,15 +901,14 @@ export default {
           command: $this.custom_command[key]
         })
       })
-      let variables = $this.procedure.variables
-      // for (let [key, value] of Object.entries($this.procedure.variables)){
-      //   variables[key] = {}
-      //   variables[key].source = value.source
-      //   variables[key].option = value.option
-      //   if (value.custom){
-      //     variables[key].target = value.target
-      //   }
-      // }
+      let variables = {}
+      for (let [key, F] of Object.entries($this.procedure.variables)){
+        variables[key] = {
+          source: F.source,
+          option: F.option
+        }
+      }
+      console.log(variables,"<")
       const setUser = this.setUser
       await FileService.startJob({
         procedure: $this.procedureIdx, 

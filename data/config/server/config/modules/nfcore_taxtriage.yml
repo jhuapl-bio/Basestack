@@ -72,7 +72,21 @@
           workingdir: "/opt/source"
           overwrite: true
           command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
-          label: "Tax Triage Code"
+          label: "Tax Triage Code" 
+        - source:
+            url: ftp.ncbi.nlm.nih.gov
+            type: "file"
+            user: anonymous
+            path: /genomes/refseq/assembly_summary_refseq.txt
+            password: null
+            protocol: ftp
+            remove: true
+            target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+          label: Assembly Refseq
+          type: "download"
+          format: "file"
+          target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+          overwrite: true
         - source:
             url: ftp.ccb.jhu.edu
             type: file
@@ -235,13 +249,33 @@
             resume: "-resume"
         assembly_option: 
           label: "Assembly File Option"
-          element: "file"
-          source: null
-          hint: "File containing assembly refseq"
-          target: null
-          bind: "self"
-          define: 
-            assembly: " --assembly %{variables.assembly_option.source}"
+          option: 0
+          options:
+            - element: null
+              name: "NCBI Refseq Assembly Txt File"
+              source:  "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+              target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
+              define: 
+                assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
+              bind: 
+                from: "%{variables.assembly_option.source}"
+                to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
+            - element: null
+              name: "Pull Assembly File Automatically"
+              source: null
+              target: null
+              define: 
+                assembly: ""
+            - element: "file"
+              source: null
+              name: "Custom Assembly Txt file"
+              hint: "Must be in the same format as the ncbi assembly refseq file"
+              target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
+              bind: 
+                from: "%{variables.assembly_option.source}"
+                to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
+              define: 
+                assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
         code: 
           label: "code dir"
           name: "code"
@@ -256,7 +290,7 @@
           element: "checkbox"
           target: null
           append:
-            command: "git -C /opt/code pull && "
+            command: "git -C /opt/code pull ; "
             placement: 2
             position: "start"
             services: 
@@ -296,23 +330,6 @@
                 - rundir
               action: "exists"
               source: "%{variables.rundir.source}"
-        # fastqs:
-        #   label: "Input Reads"
-        #   hint: "Folder(s) that contains 1 or more fastq files in COMPRESSED (.gz) format"
-        #   class: "wb-50  p-3 mb-1"
-        #   warning: "Ensure that all fastq files you want to analyze are compressed"
-        #   update_on: 
-        #       depends:
-        #         - rundir
-        #       action: "exists"
-        #       source: "%{variables.rundir.source}/*"
-        #   validations:
-        #     - type: "files"
-        #       error: "Must have 1 or more .fastq.gz files"
-        #       target: 
-        #         type: "value"
-        #         minimum: 1
-        #         path: "%{variables.rundir.source}"
         profile:
           label: "Profile"
           options:
@@ -336,7 +353,7 @@
           source: "%{variables.outdir.source}/multiqc/multiqc_report.html"
           path: "%{variables.outdir.source}/multiqc/multiqc_report.html"
           name: "Report"
-          target: "%{variables.outdir.source}/multiqc/multiqc_report.html"
+          target: "%{variables.outdir.target}/multiqc/multiqc_report.html"
       services:
         - name: taxtriage
           orchestrator: true
@@ -351,7 +368,7 @@
           #   "bash", "-c", "${pull}"
           # ]
           command: [
-            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep 5; 
+            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep ${sleepTime}; 
              nextflow run /opt/code/main.nf 
               --input /opt/samplesheet/Samplesheet.csv
               --db ${db}  
@@ -359,6 +376,7 @@
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
               -profile ${profile} ${skip_plots} ${skip_assembly} 
               ${assembly} --demux 
-              ${resume} ${filter};pkill -9 . ';  "
+              ${resume} ${filter};
+              ';  "
           ]
     
