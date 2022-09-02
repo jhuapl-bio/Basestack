@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -19,7 +19,7 @@
     "buildOnly:linux": "electron-builder --linux AppImage",
     "buildOnly:linuxAll": "electron-builder --arm64 --x64 --linux  AppImage",
     "buildOnly:win": "electron-builder --win; rm build/win-unpacked.zip; rm build/win-unpacked.zip; zip build/win-unpacked",
-    "buildOnly:mac": "electron-builder --mac dmg",
+    "buildOnly:mac": "electron-builder --mac ",
     "build:linuxOffline": "node .electron-vue/build.js && electron-builder --linux AppImage -p never",
     "build:mac-zip": "node .electron-vue/build.js && electron-builder --mac  zip",
     "package:mac-zip": "electron-builder --mac zip",

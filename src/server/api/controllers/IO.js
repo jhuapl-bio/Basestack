@@ -679,7 +679,7 @@ export async function archive(filepath, gzip){
 
 export async function writeFile(filepath, content){
 	return new Promise((resolve, reject)=>{
-			const directory = path.dirname(filepath)
+			const directory = path.dirname(filepath) 
 			mkdirp(directory).then(response=>{
 				fs.writeFile(filepath, content,(errFile)=>{
 					if (errFile){
@@ -696,7 +696,6 @@ export async function writeFile(filepath, content){
 export async function writeFolder(directory){
 	return new Promise((resolve, reject)=>{
 			mkdirp(directory).then(response=>{
-				console.log(response)
 				resolve() 
 			}).catch((errmkdrir)=>{
 				console.log(directory) 

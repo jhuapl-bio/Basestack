@@ -70,12 +70,12 @@ export  class Job {
         configuration.defineMapping(); 
         return  configuration
     } 
-    reformatPath(selected_path){
-        if (selected_path){
-            selected_path = selected_path.replaceAll(/\\/g, "/")
-        }
-        return selected_path
-    }
+    // reformatPath(selected_path){
+    //     if (selected_path){
+    //         selected_path = selected_path.replaceAll(/\\/g, "/")
+    //     }
+    //     return selected_path
+    // }
     setValueVariable(value, obj, key){ 
         const $this = this;
         try{      
@@ -103,14 +103,14 @@ export  class Job {
                 } 
             } 
             if (!obj.target && obj.source){
-                obj.target =obj.source
+                obj.target = obj.source
             }
             let getter = Object.getOwnPropertyDescriptor(obj, 'source');
             if (getter && getter.get){
                 obj = value.source
                 
             } else if ( ( value.option || value.option == 0 ) || obj.options ) {   
-                 
+                
                 if (!value.option && value.option != 0){
                     obj.option = 0
                 } else { 
@@ -118,8 +118,12 @@ export  class Job {
                 }
                 
                 if (typeof obj.options[obj.option] == "object"){
+                    if (!value.source){
+                        obj.source = obj.options[obj.option].source
+                    }
                     $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
                 }
+                
                 $this.runningConfig.variables[key].option = obj.option
                 if (obj.source){
                     $this.runningConfig.variables[key].source = obj.source
@@ -132,6 +136,13 @@ export  class Job {
             if (!$this.runningConfig.variables[key].target){
                 $this.runningConfig.variables[key].target = $this.runningConfig.variables[key].source
             }
+            if (this.runningConfig.variables[key].bind){
+                this.runningConfig.variables[key].target = this.setTarget($this.runningConfig.variables[key].target)
+                this.runningConfig.variables[key].source = this.setSource($this.runningConfig.variables[key].source)
+            }
+            
+            
+
         } catch (Err){
             store.logger.error(Err) 
         }         
@@ -286,18 +297,38 @@ export  class Job {
             service.config.dry = params.dry
         })
         this.mergeInputs(params, 'mergedConfig'  )
-        return 
-
-
+        return   
+ 
+ 
 
     } 
-    updateCommand(service, command){
-        const $this = this  
+    updateCommand(service, command){ 
+        const $this = this   
         if (command){
             service.config.command = command  
-        } 
+        }  
+    }
+    setSource(source){
+        if (source && typeof source == 'string'){
+            source = source.replaceAll(/\s/g, "\ ")
+        }
+        return source
+    }
+    setTarget(target){
+        if (target && typeof target == 'string'){
+            target = target.replaceAll(/\\/g, "/")
+            target = target.replaceAll(/\s/g, '_')
+            target = target.replaceAll(/:/g, "_")
+            if (!target.startsWith("/")){
+                target = `/${target}`
+            }
+        }
+        
+        return target
+
     }
     setVariables(variables){  
+        
         this.variables = variables
         const $this = this
         for(let [key, value] of Object.entries(variables)){
@@ -306,9 +337,10 @@ export  class Job {
             } 
             let obj = $this.runningConfig.variables[key]
             this.setValueVariable(value, obj, key)
-            
+             
         }
-          
+
+        
         this.services.forEach((service)=>{ 
             service.config.variables = $this.runningConfig.variables
         })
@@ -498,18 +530,17 @@ export  class Job {
     } 
     async start(params){       
         const $this = this
-        let services;
+        let services;  
         $this.status.error = null 
-        $this.status.running = true
+        $this.status.running = true 
         $this.status.complete = false
         let promises = []; 
         if (!params.variables){
-            params.variables = {}
+            params.variables = {} 
         }
         store.logger.info("%s setting variables", $this.baseConfig.name)
         // this.mergeInputs(params, 'mergedConfig'  )
         this.runningConfig = this.defineConfiguration(this.mergedConfig)
-        
         this.setVariables(params.variables) 
         store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{

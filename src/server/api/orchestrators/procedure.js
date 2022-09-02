@@ -21,12 +21,12 @@ const { spawnLog } = require("../controllers/logger.js")
 var logger = store.logger
 // var docker = new Docker();   
 const fs = require("file-system")     
-let dockerObj;    
+let dockerObj;     
    
 export class Procedure { 
 	constructor(procedure){
 		this.name = procedure.name    
-        this.type = 'procedure'
+        this.type = 'procedure' 
         this.config = procedure  
         this.baseConfig = procedure
         this.lastJob = null
@@ -545,16 +545,17 @@ export class Procedure {
                         dependency.streamObj.end()
                     } 
                     downloadSource(dependency.source.url, dependency.source.target, dependency.source ).then((stream, error)=>{
-                        dependency.status.stream = spawnLog(stream, $this.logger)
-                        dependency.streamObj = stream
-                        if (error){   
+                        // dependency.status.stream = spawnLog(stream, $this.logger)
+                        dependency.streamObj = stream 
+                        if (error){      
                             store.logger.error(`ERROR ${error}`)
-                            reject(error)
+                            reject(error) 
                         }       
-                        $this.buildlog = spawnLog(stream, $this.logger)
+                         
+                        // $this.buildlog = spawnLog(stream, $this.logger)
                         stream.on("close", ()=>{ 
-                            store.logger.info("Completed download of %o", dependency.source)
-                            
+                            // store.logger.info("Completed download of %o", dependency.source)
+                             
                             dependency.status.building = false
                             dependency.status.error = null 
                             dependency.status.downloading= false
