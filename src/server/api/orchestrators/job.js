@@ -118,7 +118,9 @@ export  class Job {
                 }
                 
                 if (typeof obj.options[obj.option] == "object"){
-                    obj.source = obj.options[obj.option].source
+                    if (!value.source){
+                        obj.source = obj.options[obj.option].source
+                    }
                     $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
                 }
                 
@@ -315,8 +317,8 @@ export  class Job {
     setTarget(target){
         if (target && typeof target == 'string'){
             target = target.replaceAll(/\\/g, "/")
-            target = target.replaceAll(/\s/g, '')
-            target = target.replaceAll(/:/g, "")
+            target = target.replaceAll(/\s/g, '_')
+            target = target.replaceAll(/:/g, "_")
             if (!target.startsWith("/")){
                 target = `/${target}`
             }

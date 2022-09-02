@@ -377,6 +377,6 @@
               -profile ${profile} ${skip_plots} ${skip_assembly} 
               ${assembly} --demux 
               ${resume} ${filter};
-              ';  "
+              pkill -9 .';  "
           ]
     

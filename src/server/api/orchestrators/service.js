@@ -465,6 +465,17 @@ export class Service {
             return null
         }
     }
+    setTarget(target){
+        if (target && typeof target == 'string'){
+            target = target.replaceAll(/\\/g, "/")
+            target = target.replaceAll(/\s/g, '_')
+            target = target.replaceAll(/:/g, "_")
+            if (!target.startsWith("/")){
+                target = `/${target}`
+            }
+        }
+        return target
+    }
     async defineBinds(){
         let binds = [] 
         let mounts = []
@@ -474,7 +485,7 @@ export class Service {
         function formatVolume(source, target){
             return `${source}:${target}`
         }
-        async function formatBind(source, target){
+        async function formatBind(source, target, element){
             
             let exists = await checkExists(source)
             let returnable = {
@@ -488,7 +499,9 @@ export class Service {
                 return returnable
             } else { 
                 store.logger.info(`${source} source does not exist, creating folder`)
-                await writeFolder(source)
+                if (element !== "file"){
+                    await writeFolder(source)
+                }
                 return  returnable
             }
             
@@ -561,7 +574,10 @@ export class Service {
                                 finalpath = $this.removeQuotes(finalpath)
                                 promises.push(formatBind(
                                     path.resolve(directory), 
-                                    this.reformatPath(finalpath)))
+                                    this.reformatPath(finalpath)),
+                                    selected_option.element
+                                
+                                )
                                 
                                 // binds.push(`${path.resolve(directory)}:${this.reformatPath(finalpath)}`) 
                             }   
@@ -574,7 +590,8 @@ export class Service {
                                 finalpath = $this.removeQuotes(finalpath)
                                 promises.push(formatBind(
                                         path.resolve(path.dirname(from)), 
-                                        this.reformatPath(finalpath)
+                                        this.reformatPath(finalpath),
+                                        selected_option.element
                                     )
                                 )
                                 // binds.push(`${path.resolve(path.dirname(from))}:${this.reformatPath(finalpath)}`) 
@@ -583,16 +600,24 @@ export class Service {
                         } else if (typeof selected_option.bind == 'object' && from){
                             
                             selected_option.bind.to = $this.removeQuotes(selected_option.bind.to, selected_option.bind.from)
-                            promises.push(formatBind(
+                            promises.push(formatBind( 
                                 path.resolve(selected_option.bind.from),
-                                this.reformatPath(selected_option.bind.to)
+                                this.reformatPath(selected_option.bind.to),
+                                selected_option.element
+
                             )) 
                             // binds.push(`${path.resolve(selected_option.bind.from)}:${this.reformatPath(selected_option.bind.to)}`) 
                             seenTargetTos.push(selected_option.bind.to)
                         }  else {    
                             if (seenTargetTos.indexOf(to) == -1 && from){ 
                                 to = $this.removeQuotes(to)
-                                promises.push(formatBind(path.resolve(from), this.reformatPath(to)))
+                                promises.push(
+                                    formatBind(path.resolve(from), 
+                                    this.reformatPath(to),
+                                    selected_option.element
+                                )
+                                
+                                )
                             }  
                             
                             seenTargetTos.push(to)
@@ -618,6 +643,7 @@ export class Service {
     }  
     reformatPath(selected_path){
         if (selected_path && selected_path !==''){
+            selected_path = this.setTarget(selected_path)
             if (!selected_path.startsWith("/")){
                 if (this.config.workingdir){
                     selected_path = `${this.config.workingdir}/${selected_path}`
