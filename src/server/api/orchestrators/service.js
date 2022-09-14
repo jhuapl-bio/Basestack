@@ -632,11 +632,11 @@ export class Service {
             if (f.status == 'fulfilled'){
                 mounts.push(f.value)
             }
-        })
+        }) 
         // this.volumes.push(...binds)
         this.mounts.push(...mounts) 
-        return 
-    }  
+        return   
+    }     
     reformatPath(selected_path){
         if (selected_path && selected_path !==''){
             selected_path = this.setTarget(selected_path)
@@ -682,6 +682,7 @@ export class Service {
                 }   
                 if (selected_option.create){
                     if (selected_option.create.type == 'list' && selected_option.source.length > 0){
+                        
                         let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list', selected_option.resolve)
                         promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                             logger.error(err)  
@@ -700,11 +701,11 @@ export class Service {
             }
         }
         await Promise.allSettled((promises))
-        return
+        return 
     }
-    async defineSet(){ 
+    async defineSet(){  
         let promises = []
-        const $this=this
+        const $this=this 
         let binds = []
         let defaultVariables = this.config.variables 
         if (defaultVariables){
@@ -724,7 +725,6 @@ export class Service {
                                 f.forEach((row)=>{ 
                                     let rowupdate = []
                                     set.header.forEach((head)=>{
-                                        
                                         if (set.reformat && set.reformat.indexOf(head) !=-1){
                                             if (row[head] && !path.isAbsolute(row[head])){
                                                 row[head] = path.join(path.dirname(set.source), row[head])
@@ -749,7 +749,7 @@ export class Service {
         }
     }
     async defineReads(){
-        let promises = []
+        let promises = [] 
         let binds = []
         let defaultVariables = this.config.variables 
         if (defaultVariables){
@@ -912,6 +912,7 @@ export class Service {
                     $this.defineEnv() 
                     store.logger.info("define env done")  
                     let mounts = await $this.defineReads()
+                    console.log(defaultVariables.manifest)
                     store.logger.info("define reads done")
                     await $this.defineSet() 
                     store.logger.info("define set done")

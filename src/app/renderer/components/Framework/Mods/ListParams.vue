@@ -145,7 +145,7 @@ import Number from '@/components/Framework/Mods/Number.vue';
 import String from '@/components/Framework/Mods/String.vue';
 import Checkbox from '@/components/Framework/Mods/Checkbox.vue';
 import Exists from '@/components/Framework/Mods/Exists.vue';
-import File from '@/components/Framework/Mods/File.vue';
+import FileSelect from '@/components/Framework/Mods/FileSelect.vue';
 import MultiFile from '@/components/Framework/Mods/MultiFile.vue';
 import Dir from '@/components/Framework/Mods/Dir.vue';
 import List  from '@/components/Framework/Mods/List.vue';
@@ -160,7 +160,7 @@ const path  = require("path")
 export default {
 	name: 'multi-select',
     components: {
-        File,
+        FileSelect,
         MultiFile,
         Validation,
         Number,
@@ -313,7 +313,7 @@ export default {
                 "number": "Number",
                 "checkbox": "Checkbox",
                 "exists": "Exists",
-                "file": "File",
+                "file": "FileSelect",
                 "files": "MultiFile",
                 "render": "Render",
                 "configuration-file": "ConfigurationFile",

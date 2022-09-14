@@ -59,32 +59,71 @@
                                     >
                                     
                                         <v-container v-for="head in headers" :key="head.value + head.index">
-                                            <div @drop.prevent="addDropFile" @dragover.prevent  v-if="variable.define_columns && variable.define_columns[head.value] && head.value !== 'actions'">
-                                                    <v-file-input 
-                                                        v-model="editedItem[head.value]" 
-                                                        :label="head.text" counter show-size overlap
-                                                    >
-                                                        <template v-slot:selection="{ text }">
-                                                            <v-chip
-                                                                small
-                                                                label
-                                                                color="primary"
-                                                            >
-                                                                {{ text }}
-                                                            </v-chip>
-                                                        </template>
-                                                        <template v-slot:append-outer>
-                                                            <v-icon  v-if="editedItem[head.value]" class="text--caption configure" @click="editedItem[head.value] = null" color="grey" small>$times-circle
-                                                            </v-icon>
-                                                        </template>
+                                            <v-subheader v-if="head.value != 'actions'">{{head.value}}</v-subheader>
+                                            <FileSelect v-if="!custom[head.value] && discerntype(head.value).type == 'file'"
+                                            :source="editedItem[head.value]"
+                                            :variable="editedItem"
+                                            @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
+                                            >
+                                                
+                                            </FileSelect>
+                                            
+                                            <Dir v-else-if="!custom[head.value] && discerntype(head.value).type == 'dir'"
+                                                :source="editedItem[head.value]"
+                                                :variable="editedItem"
+                                                @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
+                                                >
                                                     
-                                                    </v-file-input>
-                                                    <v-subheader v-if="editedItem[head.value]">{{editedItem[head.value].name}}</v-subheader>
-                                            </div>
-                                            <v-text-field v-else-if="head.value !== 'actions'"
+                                            </Dir>
+                                            <v-select v-else-if="!custom[head.value] && discerntype(head.value).type =='select'"
+                                            
+                                                v-model="editedItem[head.value]"
+                                                :items="variable.define_columns[head.value].options"
+                                            >
+
+                                            </v-select>
+                                            
+                                            <v-text-field v-else-if="!custom[head.value] && head.value !== 'actions'"
                                                 v-model="editedItem[head.value]"
                                                 :label="head.text"
                                             ></v-text-field>
+                                            <div v-if="discerntype(head.value).custom">
+                                                <v-checkbox
+                                                    v-model="custom[head.value]"
+                                                    on-icon="$check-square"
+                                                    label="custom input"
+                                                    class="align-center justify-center text-xs-center" 
+                                                    off-icon="$square"
+                                                    color="primary"
+                                                >
+                                                
+                                                </v-checkbox>
+                                                {{custom[head.value]}}{{discerntype(head.value).element}}
+                                                <FileSelect :key="`${custom[head.value]}-${head.value}`" v-if="custom[head.value] && discerntype(head.value).element == 'file'"
+                                                :source="editedItem[head.value]"
+                                                :variable="editedItem"
+                                                :label="head.value"
+                                                @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
+                                                >
+                                                    
+                                                </FileSelect>
+                                                
+                                                <Dir v-else-if="custom[head.value] && discerntype(head.value).element == 'dir'"
+                                                    :source="editedItem[head.value]"
+                                                    :label="head.value"
+                                                    :variable="editedItem"
+                                                    @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
+                                                    >
+                                                        
+                                                </Dir>
+                                                <v-text-field v-else-if="custom[head.value] && discerntype(head.value).element == 'string'"
+                                                    v-model="editedItem[head.value]"
+                                                    :label="head.text"
+                                                ></v-text-field>
+                                            </div>
+                                            
+                                            
+                                            
                                         </v-container>
                                         
                                     </v-col>
@@ -137,11 +176,15 @@
 
 import draggable from 'vuedraggable'
 const cloneDeep = require("lodash.clonedeep");
+import FileSelect  from '@/components/Framework/Mods/FileSelect.vue' ;
+import Dir from '@/components/Framework/Mods/Dir.vue';
 
 export default {
 	name: 'multi-select',
     components: {
-        draggable
+        draggable,
+        FileSelect,
+        Dir
     },
     computed: {
         length(){
@@ -182,6 +225,30 @@ export default {
     watch: {
       dialog (val) {
         // val || this.close()
+        if (this.variable && this.variable.define_columns){
+            for (let [key,value] of Object.entries(this.variable.define_columns)){
+                if (typeof this.variable.define_columns[key] && !this.custom[key])
+                {
+                    if (Array.isArray(value.options) || Array.isArray(value)){
+                        this.editedItem[key] = value.options[0]
+                    } else {
+                        console.log("emtpy",key)
+                        if (typeof value == "string"){
+                            this.editedItem[key] = value
+                        }
+                    }
+                } else {
+                    if (typeof value == "string"){
+                        this.editedItem[key] = value
+                    }
+                }
+                if (!this.editedItem[key] && ['file', 'dir', 'directory'].indexOf(value) ==-1){
+                    
+
+                }
+            }
+
+        }
       },
       defaultHeaders(newValue, oldValue){
       },
@@ -197,15 +264,46 @@ export default {
     //   },
     },
 	methods: {
-        addDropFile(e) { 
-            this.value = e.dataTransfer.files[0]; 
+        discerntype(value){
+            let variable = this.variable
+            let returnable = {
+                type: "string", 
+                custom: false
+            }
+            if (variable.define_columns && variable.define_columns[value]){
+                let defined = variable.define_columns[value]
+                if (typeof defined == "object"){
+                    returnable.type = (defined.element ? defined.element : "string")
+                    returnable.custom = defined.custom
+                    returnable.options = defined.options
+                    returnable.element = ( defined.element ? defined.element : "string")
+                    if (returnable.options){
+                        returnable.type = "select"
+                    }
+                } 
+            } 
+            return returnable
+        },  
+        addDropFile(e,key) { 
+            this.$set(this.editedItem, key, e.dataTransfer.files[0])
+        },
+        updateValue(value, option, variable, name, var_name){
+            let src = value
+            this.editedItem[name] = value
+            this.$set(this.editedItem, name, value)
+        },
+        addDropFiles(e, key) {
+            this.editedItem[key] = e.dataTransfer.files[0].path
+            this.$set(this.editedItem, key, e.dataTransfer.files[0].path)
         },
         save () {
             const $this = this;
             this.editedItem.index = this.editedIndex
             let newItem = cloneDeep(this.editedItem)  
             for (let[key, value] of Object.entries(this.editedItem) ){
+                console.log(key,value,"........",newItem.index)
                 if (value instanceof File ){
+                    console.log("isfile")
                     if (value.path == ""){
                         newItem[key] = value.name
                     } else {
@@ -215,6 +313,7 @@ export default {
                 if (newItem.index >-1){
                     $this.source[$this.editedIndex][key] = newItem[key]
                 } 
+                
             }
             if (this.editedIndex == -1){
                 this.source.push(newItem)
@@ -242,7 +341,7 @@ export default {
             this.editedIndex = this.source.indexOf(item)
             let newItem = cloneDeep(item)
             for (let[name, value] of Object.entries(item) ){
-                if (this.variable.define_columns[name] && typeof value == 'string'){
+                if (this.variable.define_columns[name] && typeof value == 'string' && this.variable.define_columns && this.variable.define_columns[name] == 'file'){
                     var file = new File([value], value, {
                         type: "text/plain",
                     });
@@ -283,14 +382,14 @@ export default {
     data (){
         return {
             values: [],
-            dialog: false,
+            dialog: true,
             editedIndex: -1,
             editedItem: {},
+            custom: {},
             dialogDelete: false,
         }
     },
     mounted(){
-        console.log(this.variable,"<<<<in list ")
     }, 
 
     

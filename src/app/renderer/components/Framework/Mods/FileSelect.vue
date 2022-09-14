@@ -34,7 +34,7 @@
 
 <script>
 export default {
-	name: 'file',
+	name: 'fileselect',
   data() {
       return {
           test: "placeholder",
