@@ -61,7 +61,8 @@
         csv:
           label: CSV File(s)
           element: file
-          optional: false
+          optional: true
+          hint: "CSV files are saved after each run. You can re-upload it here each time if you don't want to manually remake the table"
           fallback: "${writePath}/workflows/mytax2/Samplesheet.csv"
           name: "Samplesheet"
           read:
@@ -96,7 +97,7 @@
           sep: ","
           define_columns: 
             path_1: 
-              element: file
+              element: ['file', 'directory']
             path_2: 
               element: file
             database: 
@@ -107,7 +108,7 @@
               ]
             platform: 
               custom: False
-              options: ['ILLUMINA', 'OXFORD']
+              options: ['illumina', 'oxford']
             kits: 
               custom: true
               options: [
@@ -241,5 +242,10 @@
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; source /opt/conda/etc/profile.d/conda.sh; conda activate mytax2; echo $PWD; cd /opt; npm run server   ']
+          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; 
+          source /opt/conda/etc/profile.d/conda.sh; 
+          conda activate mytax2; 
+          echo $PWD; 
+          cd /opt; 
+          npm run server   ']
         

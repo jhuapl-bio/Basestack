@@ -1101,7 +1101,7 @@ export default {
       dialogLog: false,
       customDrawer: false,
       totalSpaceUsed: "0 Bytes",
-      dry: true,
+      dry: false,
       installStatus: {},
       setUser: (process.env.platform_os == 'linux' ? true : false),
       stored: {},

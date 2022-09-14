@@ -201,6 +201,7 @@
         report:
           target: '%{shared.variables.report}'
           shared: true
+          output: true
         json:
           target: '%{shared.variables.json}'
           shared: true

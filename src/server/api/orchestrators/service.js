@@ -710,7 +710,7 @@ export class Service {
         let defaultVariables = this.config.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.set ){
+                if (selected_option.set && (!selected_option.manifest.source || selected_option.manifest.source.length == 0 ) ){
                     for (let i = 0; i < selected_option.set.length; i++){
                         let set  = selected_option.set[i]
                         let exists = await fs.existsSync(set.source)
@@ -736,6 +736,7 @@ export class Service {
                                     })
                                     updates.push(rowupdate) 
                                 }) 
+                                
                                 nestedProperty.set($this.config, set.target, updates)
                                 set.target = updates
                             } catch (err){
@@ -745,6 +746,7 @@ export class Service {
                     }
                 }
             }
+            
             return
         }
     }
@@ -754,49 +756,68 @@ export class Service {
         let defaultVariables = this.config.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.read){
-                    for (let i = 0; i < selected_option.read.length; i++){ 
-                        // selected_option.read.forEach(async (read)=>{
-                        let read  = selected_option.read[i]
-                        let exists = await fs.existsSync(read.source)
-                        if (exists){
-                            try{ 
-                                let f = await readCsv(read.source, read.sep)
-                                f.forEach((row)=>{  
-                                    let bind = {
-                                        Source: "",
-                                        Type: "bind",
-                                        RW: true,
-                                        Target: ""
-                                    }  
-                                    if(row[read.column] !== ''){
-                                        if (row[read.column] && !path.isAbsolute(row[read.column])){
-                                            row[read.column] = path.join(path.dirname(read.source), row[read.column])
-                                        }  
-                                        if (read.bind == 'directory'){
-                                            bind.Source = path.resolve(path.dirname(row[read.column]))
-                                            bind.Target = path.dirname(this.reformatPath(row[read.column]))
-                                                                                  } else {  
-                                            // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
-                                            bind.Source = path.resolve(row[read.column])
-                                            bind.Target = this.reformatPath(row[read.column])
-                                        }
-                                        if(row[read.column] && binds.indexOf(bind) == -1){
-                                            
-                                            if (read.bind == 'directory'){
-                                                binds.push(bind)
-                                            } else {
-                                                binds.push(bind)
-                                            }
-                                        }  
-                                    }
-                                     
-                                })
-                            } catch (err){
-                                store.logger.error(`${err}, error in reading csv file`)
+                if (selected_option.define_columns){
+                    let defined = selected_option.define_columns
+                    let defined_keys = []
+                    for (let [key, column] of Object.entries(defined)){
+                        if (typeof column != 'object') {
+                            continue
+                        }
+                        
+                        if (!Array.isArray(column.element)){
+                            column.element = [column.element]
+                        }
+                        
+                        let tr = false
+                        column.element.map((F)=>{
+                            if (['directory','dir', 'file'].indexOf(F) > -1){
+                                tr=true
                             }
+                        })
+                        if (tr){
+                            defined_keys.push(key)
                         }
                     }
+                    selected_option.source
+                        .forEach((read)=>{
+                        try{ 
+                            defined_keys.forEach((key)=>{
+                                let bind = {
+                                    Source: "",
+                                    Type: "bind",
+                                    RW: true,
+                                    Target: ""
+                                }  
+                                let row = read[key]
+                                let column = defined[key]
+                                if(row !== '' && row){ 
+                                    // if (row && !path.isAbsolute(row)){
+                                    //     row = path.join(path.dirname(read.source), row)
+                                    // }  
+                                    // if (column.element == 'file'){
+                                    //     bind.Source = path.resolve(path.dirname(row))
+                                    //     bind.Target = path.dirname(this.reformatPath(row))
+                                    // } else {  
+                                        // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
+                                    bind.Source = path.resolve(row)
+                                    bind.Target = this.reformatPath(row)
+                                    // }
+                                    if( row && binds.indexOf(bind) == -1){
+                                        
+                                        if (column.element == 'directory' || column.element == 'dir'){
+                                            binds.push(bind)
+                                        } else {
+                                            binds.push(bind)
+                                        }
+                                    }  
+                                }
+                            })
+                        } catch (err){
+                            store.logger.error(`${err}, error in reading csv file`)
+                        }
+                    })
+                       
+                
                 }
             }
             return binds
@@ -825,7 +846,6 @@ export class Service {
                     } else {   
                         if (!Array.isArray(selected_option.target)){
                             if (selected_option.target || selected_option.source){
-                                // console.log(( selected_option.target ? selected_option.target : selected_option.source))
                                 env.push(`${key}=${( selected_option.target ? selected_option.target : selected_option.source)}`)                         
                             } 
                         } else {
@@ -911,10 +931,12 @@ export class Service {
                     }   
                     $this.defineEnv() 
                     store.logger.info("define env done")  
+                    
                     let mounts = await $this.defineReads()
-                    console.log(defaultVariables.manifest)
+                    
                     store.logger.info("define reads done")
-                    await $this.defineSet() 
+                    // await $this.defineSet() 
+                    
                     store.logger.info("define set done")
                     await $this.defineCopies()  
                     store.logger.info("define copies doen")
@@ -1031,7 +1053,7 @@ export class Service {
                     options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
                     let seen = {}
                     mounts.forEach((m)=>{
-                        if (!seen[m.Target]){
+                        if (!seen[m.Target]){ 
                             // m.Target = `"${m.Target}"`
                             // m.Source = `"${m.Source}"`
                             options.HostConfig.Mounts.push(m)

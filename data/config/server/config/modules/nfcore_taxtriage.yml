@@ -10,7 +10,7 @@
     - "Nextflow"
     - "metagenomics"
     - "Nanopore"
-    - "Illumina"
+    - "Illumina" 
   shared:
     services:
       orchestrator:
@@ -34,12 +34,9 @@
       init: false 
       dependencies:
         - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          label: jhuaplbio/basestack_orchestrator
-          type: "docker-local"
-          build: 
-            path: ${configPath}/modules/orchestrator/Dockerfile
-            file: Dockerfile
-          format: "dockerfile"
+          label: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          type: "docker"
+          format: "docker"
         - target: "bitnami/git"
           label: "bitnami/git"
           type: "docker"
@@ -153,10 +150,26 @@
           column: 12
           sep: ","
           define_columns: 
-            fastq_1: file
-            fastq_2: file
-            from: dir
-            sequencing_summary: file
+            fastq_1: 
+              element: 'file'
+            fastq_2: 
+              element: file
+            from: 
+              element: dir
+            sequencing_summary: 
+              element: file
+            platform: 
+              custom: False
+              options: ['ILLUMINA', 'OXFORD']
+            barcode: 
+              custom: False
+              options: [True, False]
+            trim: 
+              custom: False
+              options: [True, False]
+            single_end: 
+              custom: False
+              options: [True, False]
           update_on: 
             depends:
               - csv
@@ -165,10 +178,10 @@
             header: true
             source: "%{variables.csv.source}"
           bind:
-            from:  "<<directory(%{variables.csv.source})>>/nfcore_taxtriage/Samplesheet.csv"
+            from:  "<<directory(%{variables.csv.source})>>/Samplesheet.csv"
             to: "/opt/samplesheet/Samplesheet.csv"
           create:
-            target: "<<directory(%{variables.csv.source})>>/nfcore_taxtriage/Samplesheet.csv"
+            target: "<<directory(%{variables.csv.source})>>/Samplesheet.csv"
             sep: ","
             type: "list"
             header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
@@ -376,7 +389,7 @@
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
               -profile ${profile} ${skip_plots} ${skip_assembly} 
               ${assembly} --demux 
-              ${resume} ${filter};
-              pkill -9 .';  "
+              ${resume} ${filter}; chmod -R 777 /opt/output; chmod +x /opt/output/**/*html; 
+              pkill -9 .; '  "
           ]
     

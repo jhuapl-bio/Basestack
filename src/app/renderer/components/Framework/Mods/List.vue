@@ -58,19 +58,23 @@
                                         cols="12"
                                     >
                                     
-                                        <v-container v-for="head in headers" :key="head.value + head.index">
-                                            <v-subheader v-if="head.value != 'actions'">{{head.value}}</v-subheader>
-                                            <FileSelect v-if="!custom[head.value] && discerntype(head.value).type == 'file'"
+                                        <v-container v-for="head in headers.filter((f)=>{
+                                            return f.value != 'actions'
+                                        })" :key="head.value + head.index">
+                                            <v-subheader style="text-align:center" v-if="head.value != 'actions'">{{head.value}}</v-subheader>
+                                            <FileSelect v-if="!custom[head.value] && discerntype(head.value).type.indexOf('file') > -1"
                                             :source="editedItem[head.value]"
                                             :variable="editedItem"
+                                        
                                             @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
                                             >
                                                 
                                             </FileSelect>
+                                            <v-subheader v-if="discerntype(head.value).type.length > 1">or...</v-subheader>
                                             
-                                            <Dir v-else-if="!custom[head.value] && discerntype(head.value).type == 'dir'"
+                                            <Dir v-if="!custom[head.value] && ['directory', 'dir'].some(r=> discerntype(head.value).type.includes(r))"
                                                 :source="editedItem[head.value]"
-                                                :variable="editedItem"
+                                                :variable="editedItem" 
                                                 @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
                                                 >
                                                     
@@ -99,7 +103,7 @@
                                                 
                                                 </v-checkbox>
                                                 {{custom[head.value]}}{{discerntype(head.value).element}}
-                                                <FileSelect :key="`${custom[head.value]}-${head.value}`" v-if="custom[head.value] && discerntype(head.value).element == 'file'"
+                                                <FileSelect :key="`${custom[head.value]}-${head.value}`" v-if="custom[head.value] && discerntype(head.value).element.indexOf('file') > -1"
                                                 :source="editedItem[head.value]"
                                                 :variable="editedItem"
                                                 :label="head.value"
@@ -108,7 +112,7 @@
                                                     
                                                 </FileSelect>
                                                 
-                                                <Dir v-else-if="custom[head.value] && discerntype(head.value).element == 'dir'"
+                                                <Dir v-else-if="custom[head.value] && discerntype(head.value).element.indexOf('dir') > -1"
                                                     :source="editedItem[head.value]"
                                                     :label="head.value"
                                                     :variable="editedItem"
@@ -121,6 +125,7 @@
                                                     :label="head.text"
                                                 ></v-text-field>
                                             </div>
+                                            <v-divider></v-divider>
                                             
                                             
                                             
@@ -227,7 +232,7 @@ export default {
         // val || this.close()
         if (this.variable && this.variable.define_columns){
             for (let [key,value] of Object.entries(this.variable.define_columns)){
-                if (typeof this.variable.define_columns[key] && !this.custom[key])
+                if (typeof this.variable.define_columns[key] && !this.custom[key] && !this.editedItem[key])
                 {
                     if (Array.isArray(value.options) || Array.isArray(value)){
                         this.editedItem[key] = value.options[0]
@@ -267,16 +272,23 @@ export default {
         discerntype(value){
             let variable = this.variable
             let returnable = {
-                type: "string", 
+                type: ["string"], 
+                element: ['string'],
                 custom: false
             }
             if (variable.define_columns && variable.define_columns[value]){
                 let defined = variable.define_columns[value]
                 if (typeof defined == "object"){
-                    returnable.type = (defined.element ? defined.element : "string")
                     returnable.custom = defined.custom
                     returnable.options = defined.options
                     returnable.element = ( defined.element ? defined.element : "string")
+                    returnable.type = (defined.element ? defined.element : "string")
+                    if (!Array.isArray(returnable.type)){
+                        returnable.type = [returnable.type]
+                    }
+                    if (!Array.isArray(returnable.element)){
+                        returnable.element = [returnable.element]
+                    }
                     if (returnable.options){
                         returnable.type = "select"
                     }
@@ -382,10 +394,11 @@ export default {
     data (){
         return {
             values: [],
-            dialog: true,
+            dialog: false,
             editedIndex: -1,
             editedItem: {},
             custom: {},
+            mark: {},
             dialogDelete: false,
         }
     },

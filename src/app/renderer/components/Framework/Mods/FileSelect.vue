@@ -8,6 +8,7 @@
   -->
 <template>
   <v-container id="file"   @drop.prevent="addDropFile" @dragover.prevent >
+      File
       <v-file-input 
           v-model="value"  class="fill-width"
           :hint="hint" persistent-hint
