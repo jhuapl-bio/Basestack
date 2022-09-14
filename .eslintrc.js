@@ -16,6 +16,7 @@ module.exports = {
     "no-mixed-spaces-and-tabs": 0,
     'no-unused-vars':0,
     'no-console': 0,
+    'no-prototype-builtins': 0,
     'no-useless-escape': 0,
     'no-inner-declarations': "off"
   }

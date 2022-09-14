@@ -216,10 +216,11 @@ export  class Configuration {     // Make the main procedure class for configura
                                 promises.push(
                                     func.then((f)=>{ // Ingest the raw data of the file
                                         vari.sep = ( vari.sep == "tab" ? "\t" : vari.sep )
+                                        
                                         f  = f.filter(function (el) {
                                             return el != null && el !== '';
                                         }); 
-                                        console.log(f)
+                                        
                                         if (header || make_header) {
                                             vari.source = f 
 
@@ -670,9 +671,7 @@ export  class Configuration {     // Make the main procedure class for configura
                 returnable.push([entry])
             }
         })  
-        // if(key.label == 'Output SAM File'){
-        //     console.log(returnable,key,"-----------")
-        // }
+        
 
         
         returnable = returnable.map((f)=>{

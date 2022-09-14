@@ -399,14 +399,10 @@ export class Service {
 
         let tsv_file_content = item.map((d)=>{ 
             let full = []
-             
             if (header && !Array.isArray(d) && typeof d == 'object'){
                 header.forEach((head)=>{
                     full.push(d[head])
-                    // full.push()
                 })
-                // full = d
-
             }  else { 
                 full = d 
             }
@@ -1035,6 +1031,8 @@ export class Service {
                     let seen = {}
                     mounts.forEach((m)=>{
                         if (!seen[m.Target]){
+                            // m.Target = `"${m.Target}"`
+                            // m.Source = `"${m.Source}"`
                             options.HostConfig.Mounts.push(m)
                             seen[m.Target] = m.Source
                         }

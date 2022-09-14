@@ -9,19 +9,20 @@ export async function readCsv(filepath, sep, header){ // 1st argument is filepat
 		( async ()=>{
 			let exists = await fs.existsSync(filepath)
 			if (exists){ 
-				console.log("header", header)
 				let columns = (header ? header  : null)
 				let delimiter = (sep == '\\t' ? "\t" : sep)
 				fs.createReadStream(filepath)
-				.pipe(parse({ delimiter: delimiter, columns: columns }))
+				.pipe(parse({ delimiter: delimiter, columns: columns, auto_parse: true, bom: true }))
 				.on('data', function(csvrow) {
 					//do something with csvrow
-					csvData.push(csvrow);        
+					let g = Object.assign({}, csvrow)
+					csvData.push(g);        
 				})
 				.on("error", function(err){
 					reject(err)
 				})
 				.on('end',function() {
+					
 					resolve(csvData)
 				});
 			} else {

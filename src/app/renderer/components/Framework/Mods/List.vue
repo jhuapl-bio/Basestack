@@ -199,26 +199,25 @@ export default {
 	methods: {
         addDropFile(e) { 
             this.value = e.dataTransfer.files[0]; 
-            console.log(e)
         },
         save () {
             const $this = this;
             this.editedItem.index = this.editedIndex
             let newItem = cloneDeep(this.editedItem)  
-            if (this.editedIndex > -1) {
-                for (let[key, value] of Object.entries(this.editedItem) ){
-                    if (value instanceof File ){
-                        if (value.path == ""){
-                            newItem[key] = value.name
-                        } else {
-                            newItem[key] = value.path
-                        }
-                    }  
+            for (let[key, value] of Object.entries(this.editedItem) ){
+                if (value instanceof File ){
+                    if (value.path == ""){
+                        newItem[key] = value.name
+                    } else {
+                        newItem[key] = value.path
+                    }
+                }  
+                if (newItem.index >-1){
                     $this.source[$this.editedIndex][key] = newItem[key]
-                }
-                
-            } else {
-                this.source.push(this.editedItem)
+                } 
+            }
+            if (this.editedIndex == -1){
+                this.source.push(newItem)
             }
             this.close()
         },

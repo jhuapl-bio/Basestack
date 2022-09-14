@@ -320,7 +320,7 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "nfcore_taxtriage",
+      selectedCatalogName: "mytax2",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},

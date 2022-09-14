@@ -98,6 +98,13 @@
           - "nCoV-2019/4"
           - "nCoV-2019/2"
           - "nCoV-2019/1"
+          - element: dir
+            name: Custom Primer
+            source: null
+            target: null
+            bind: 
+              from: "%{variables.primers.source}"
+              to: "/opt/basestack_consensus/primer_schemes"
         define:
           organism: "<<directory(%{variables.primers.source})>>"
           scheme_version: "<<basename(%{variables.primers.source})>>"

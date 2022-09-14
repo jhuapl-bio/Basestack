@@ -130,7 +130,7 @@
       "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "deleteAppDataOnUninstall": true,
-      "allowElevation": true,
+      "allowElevation": false,
       "oneClick": false
     },
     "publish": {

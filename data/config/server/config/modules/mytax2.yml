@@ -115,6 +115,8 @@
             header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
           class: "wb-50  p-3 mb-1"
           source: []
+          defaults:
+            sample: "unknown"
           header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
           append_newline: true
         custom_configuration:
