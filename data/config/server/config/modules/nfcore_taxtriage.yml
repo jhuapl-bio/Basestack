@@ -109,7 +109,7 @@
       variables:
         csv:
           label: "Samplesheet"
-          fallback: "${writePath}/workflows/nfcore_taxtriage/Samplesheet.csv"
+          fallback: "${writePath}/workflows/nfcore_taxtriage/Samplesheet.target.csv"
           warning: "Must be in .csv format (comma separated)"
           hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
           element: "file"
@@ -178,10 +178,10 @@
             header: true
             source: "%{variables.csv.source}"
           bind:
-            from:  "<<directory(%{variables.csv.source})>>/Samplesheet.csv"
+            from:  "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
             to: "/opt/samplesheet/Samplesheet.csv"
           create:
-            target: "<<directory(%{variables.csv.source})>>/Samplesheet.csv"
+            target: "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
             sep: ","
             type: "list"
             header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']

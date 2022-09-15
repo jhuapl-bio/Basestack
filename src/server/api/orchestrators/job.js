@@ -103,7 +103,7 @@ export  class Job {
                 } 
             } 
             if (!obj.target && obj.source){
-                obj.target = obj.source
+                obj.target = cloneDeep(obj.source)
             }
             let getter = Object.getOwnPropertyDescriptor(obj, 'source');
             if (getter && getter.get){
@@ -134,11 +134,38 @@ export  class Job {
             }  
             
             if (!$this.runningConfig.variables[key].target){
-                $this.runningConfig.variables[key].target = $this.runningConfig.variables[key].source
+                $this.runningConfig.variables[key].target = cloneDeep($this.runningConfig.variables[key].source)
             }
-            if (this.runningConfig.variables[key].bind){
-                this.runningConfig.variables[key].target = this.setTarget($this.runningConfig.variables[key].target)
-                this.runningConfig.variables[key].source = this.setSource($this.runningConfig.variables[key].source)
+            if ($this.runningConfig.variables[key].bind){
+                if ($this.runningConfig.variables[key].define_columns){
+                    let columns = []
+                    for (let [key2, val] of Object.entries(this.runningConfig.variables[key].define_columns)){
+                        if (val && typeof(val)  == 'object'){
+                            if (!Array.isArray(val.element)){
+                                val.element = [val.element]
+                            }
+                            let true_filesystem_variable = val.element.some((el)=>{
+                                return ['file', 'directory','dir'].indexOf(el) > -1
+                            })
+                            if (true_filesystem_variable){
+                                columns.push(key2)
+                            }
+                        }
+                    }
+
+                    if (Array.isArray($this.runningConfig.variables[key].target)){
+                        $this.runningConfig.variables[key].target.forEach((f,i)=>{
+                            columns.forEach((col)=>{
+                                $this.runningConfig.variables[key].target[i][col] = $this.setTarget(f[col])                                
+                            })
+                        })
+                    }
+                } else {
+                    $this.runningConfig.variables[key].target = $this.setTarget($this.runningConfig.variables[key].target)
+                    
+                }
+                $this.runningConfig.variables[key].source = $this.setSource($this.runningConfig.variables[key].source)
+                console.log($this.runningConfig.variables[key].target)
             }
             
             
@@ -309,21 +336,21 @@ export  class Job {
         }  
     }
     setSource(source){
-        if (source && typeof source == 'string'){
+        if (source && typeof source == 'string'){ 
             source = source.replaceAll(/\s/g, "\ ")
         }
         return source
     }
     setTarget(target){
+       
         if (target && typeof target == 'string'){
             target = target.replaceAll(/\\/g, "/")
             target = target.replaceAll(/\s/g, '_')
             target = target.replaceAll(/:/g, "_")
-            if (!target.startsWith("/")){
+            if (target && target != '' && !target.startsWith("/")){
                 target = `/${target}`
             }
-        }
-        
+        } 
         return target
 
     }

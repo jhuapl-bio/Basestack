@@ -682,8 +682,8 @@ export class Service {
                 }   
                 if (selected_option.create){
                     if (selected_option.create.type == 'list' && selected_option.source.length > 0){
-                        
-                        let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list', selected_option.resolve)
+                        console.log("create content!")
+                        let output = $this.createContentOutput(selected_option.target, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list', selected_option.resolve)
                         promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                             logger.error(err)  
                         }))
@@ -883,7 +883,7 @@ export class Service {
               
             } 
         }  
-        
+           
         this.env.push(...env)
         return 
     }  

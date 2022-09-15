@@ -171,10 +171,10 @@
             header: true 
             source: "%{variables.csv.source}"
           bind:
-            from:  "%{variables.csv.source}"
+            from:  "%{variables.manifest.create.target}"
             to: "/MYTAX/data/Samplesheet.csv"
           create:
-            target: "%{variables.csv.source}"
+            target: "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
             sep: ","
             type: "list"
             header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
