@@ -102,7 +102,6 @@
                                                 >
                                                 
                                                 </v-checkbox>
-                                                {{custom[head.value]}}{{discerntype(head.value).element}}
                                                 <FileSelect :key="`${custom[head.value]}-${head.value}`" v-if="custom[head.value] && discerntype(head.value).element.indexOf('file') > -1"
                                                 :source="editedItem[head.value]"
                                                 :variable="editedItem"

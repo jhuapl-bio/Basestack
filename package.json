@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -127,7 +127,7 @@
       "artifactName": "${name}.${arch}.${ext}"
     },
     "nsis": {
-      "perMachine": true,
+      "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "deleteAppDataOnUninstall": true,
       "allowElevation": false,
