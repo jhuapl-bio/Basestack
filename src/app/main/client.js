@@ -9,6 +9,7 @@ const path = require("path") // Pathing module
 const { download } = require('electron-dl'); // For download electron package binaries and libs
 const { spawn } = require('child_process'); // used for spawning processes directly on host system
 var sudo = require('sudo-prompt');
+const { join } = require('path')
 
 
 export class  Client { // Create a class for the Electron main client

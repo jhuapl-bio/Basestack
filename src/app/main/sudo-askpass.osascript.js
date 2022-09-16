@@ -1,6 +1,6 @@
 const app = Application.currentApplication()
 app.includeStandardAdditions = true
-
+console.log(app,"<<<<<<<")
 const result = app.displayDialog('Please enter your sudo password.', {
   defaultAnswer: '',
   withIcon: 'stop',
