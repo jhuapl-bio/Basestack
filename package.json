@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "2.3.5",
+  "version": "2.3.6",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -18,7 +18,7 @@
     "buildOnly:linuxARM64": "electron-builder --arm64 --linux AppImage",
     "buildOnly:linux": "electron-builder --linux AppImage",
     "buildOnly:linuxAll": "electron-builder --arm64 --x64 --linux  AppImage",
-    "buildOnly:win": "electron-builder --win; rm build/win-unpacked.zip; rm build/win-unpacked.zip; zip build/win-unpacked",
+    "buildOnly:win": "electron-builder --win; rm build/win-unpacked.zip; rm build/win-unpacked.zip; zip -r build/win-unpacked.zip build/win-unpacked",
     "buildOnly:mac": "electron-builder --mac ",
     "build:linuxOffline": "node .electron-vue/build.js && electron-builder --linux AppImage -p never",
     "build:mac-zip": "node .electron-vue/build.js && electron-builder --mac  zip",
@@ -32,7 +32,7 @@
     "build:mac": "node .electron-vue/build.js && electron-builder --mac",
     "build:macOffline": "node .electron-vue/build.js && cross-env offline=true electron-builder --mac dmg",
     "build:macOfflineSign": "node .electron-vue/build.js && cross-env electron-builder --mac dmg -p never",
-    "build:win": "node .electron-vue/build.js && electron-builder --win; rm build/win-unpacked.zip; zip build/win-unpacked",
+    "build:win": "node .electron-vue/build.js && electron-builder --win; rm build/win-unpacked.zip; zip -r build/win-unpacked.zip build/win-unpacked",
     "build:winOffline": "node .electron-vue/build.js && electron-builder --win -p never",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
@@ -131,7 +131,8 @@
       "allowToChangeInstallationDirectory": true,
       "deleteAppDataOnUninstall": true,
       "allowElevation": false,
-      "oneClick": false
+      "oneClick": false,
+      "artifactName": "${name}-Setup-${version}.${ext}"
     },
     "publish": {
       "provider": "github",
@@ -175,6 +176,7 @@
     "rimraf": "^3.0.2",
     "simple-git": "^2.48.0",
     "source-map-support": "^0.5.19",
+    "sudo-prompt": "^9.2.1",
     "sweetalert2": "^9.10.9",
     "systeminformation": "^5.0.6",
     "tar": "^6.1.11",

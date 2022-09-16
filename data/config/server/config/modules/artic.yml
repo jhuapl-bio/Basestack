@@ -103,7 +103,7 @@
             source: null
             target: null
             bind: 
-              from: "%{variables.primers.source}"
+              from: "%{variables.primers.source}/custom/1"
               to: "/opt/basestack_consensus/primer_schemes"
         define:
           organism: "<<directory(%{variables.primers.source})>>"

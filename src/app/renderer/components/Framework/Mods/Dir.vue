@@ -8,7 +8,6 @@
   -->
 <template>
   <v-card >
-      Directory
       <v-sheet  elevation="1" 
           height="50" :hint="hint" persistent-hint
           max-width="600" class="px-8 pt-4" 
@@ -21,9 +20,20 @@
             Drag Folder here
             <v-icon  v-if="directory" class="text--caption configure ml-5" @click="directory = null" color="grey" small>$times-circle
             </v-icon>
+            <v-dialog
+              v-model="dialog"
+              max-width="290"
+            >
+            <template v-slot:activator="{ on, attrs }">
+                <v-icon @click="dialog=true"  v-if="process && !process.system.isWin && source"  v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
+                </v-icon>
+              </template>
+              <Permissions
+                :source="source"
+              ></Permissions>
+            </v-dialog>
            
       </v-sheet>
-      
       <small class="text-caption" v-if="directory">
         {{directory}}
       </small>
@@ -36,16 +46,22 @@
 <script>
 const path = require("path")
 
+import Permissions from "./Permissions.vue";
 
 export default {
 	name: 'file',
   data() {
       return {
           value: null,
+          process:null,
           valueDir: null,
           directory: null,
+          dialog: false,
           test: "placeholder",
       }
+  },
+  components: {
+    Permissions
   },
   computed: {
       hint(){
@@ -63,6 +79,9 @@ export default {
       this.value = Array.from(e.dataTransfer.files);
       this.directory = this.value[0].path
     },
+    makeUsable(item, event){
+        this.$electron.ipcRenderer.send("sudoPrompt", { item: item } )
+		}, 
     formatNames(files) {
       return files.length === 1 ? `Selected` : `${files.length} files selected`
     },
@@ -77,6 +96,7 @@ export default {
 	},
 	props: ['source', 'status', 'service', 'variable'],
   mounted(){
+    this.process = process.env
     this.directory = this.source 
   },
   watch: {

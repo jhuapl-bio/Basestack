@@ -223,6 +223,7 @@ export default {
                 }
             this.$emit("updateValue", { src: item.source, option: false, variable: item.name }   )
         },
+        
         electronOpenDir(key){
             const $this = this
             if (key.options ){

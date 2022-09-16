@@ -236,6 +236,29 @@ export  class Configuration {     // Make the main procedure class for configura
                                         }
                                      
                                         vari.source = vari.source.filter((f)=>{
+                                            if (typeof f == 'object'){
+                                                for (let [key, value] of Object.entries(f)){
+                                                    if (f[key] && !path.isAbsolute(value) && vari.define_columns && vari.define_columns[key]){
+                                                        let seen = false
+                                                        if (typeof vari.define_columns[key] == 'object' && vari.define_columns[key].element){
+                                                            if (!Array.isArray(vari.define_columns[key].element)){
+                                                                vari.define_columns[key].element = [vari.define_columns[key].element]
+                                                            }
+                                                            vari.define_columns[key].element.forEach((element)=>{
+                                                                if (['file', 'dir', 'directory'].indexOf(element) > -1){
+                                                                    console.log("not absolute", value, update_on.source, element)
+                                                                    seen = true
+                                                                    
+                                                                }
+                                                            })
+                                                        }
+                                                        if (seen){
+                                                            let abs = path.join(path.dirname(update_on.source), value)
+                                                            f[key] = abs 
+                                                        }
+                                                    }
+                                                }
+                                            }
                                             return f
                                         })
                                         returnedVari.value = vari

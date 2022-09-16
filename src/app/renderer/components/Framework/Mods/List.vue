@@ -31,10 +31,9 @@
                         inset
                         vertical
                     ></v-divider>
-                    <v-spacer></v-spacer>
                     <v-dialog
                         v-model="dialog"
-                        max-width="500px"
+                        max-width="50%"
                         >
                         <template v-slot:activator="{ on, attrs }">
                             <v-btn
@@ -54,14 +53,16 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-container>
-                                    <v-col
-                                        cols="12"
-                                    >
-                                    
-                                        <v-container v-for="head in headers.filter((f)=>{
-                                            return f.value != 'actions'
-                                        })" :key="head.value + head.index">
-                                            <v-subheader style="text-align:center" v-if="head.value != 'actions'">{{head.value}}</v-subheader>
+                                    <v-list subheader
+                                        two-line>
+                                        <v-subheader>
+                                            Samplesheet Configuration
+                                        </v-subheader>
+                                    <v-list-item v-for="head in headers.filter((f)=>{
+                                        return f.value != 'actions'
+                                    })" :key="head.value + head.index">
+                                        <v-list-item-content>    
+                                            <v-list-item-title class="justify-end"   v-if="head.value != 'actions'">{{head.value}}</v-list-item-title> 
                                             <FileSelect v-if="!custom[head.value] && discerntype(head.value).type.indexOf('file') > -1"
                                             :source="editedItem[head.value]"
                                             :variable="editedItem"
@@ -70,16 +71,16 @@
                                             >
                                                 
                                             </FileSelect>
-                                            <v-subheader v-if="discerntype(head.value).type.length > 1">or...</v-subheader>
+                                            <v-divider inset v-if="discerntype(head.value).element.length > 1"></v-divider>
                                             
                                             <Dir v-if="!custom[head.value] && ['directory', 'dir'].some(r=> discerntype(head.value).type.includes(r))"
                                                 :source="editedItem[head.value]"
-                                                :variable="editedItem" 
+                                                :variable="editedItem"  
                                                 @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
                                                 >
                                                     
                                             </Dir>
-                                            <v-select v-else-if="!custom[head.value] && discerntype(head.value).type =='select'"
+                                            <v-select v-else-if="!custom[head.value] && discerntype(head.value).type.indexOf('select') > -1"
                                             
                                                 v-model="editedItem[head.value]"
                                                 :items="variable.define_columns[head.value].options"
@@ -87,21 +88,11 @@
 
                                             </v-select>
                                             
-                                            <v-text-field v-else-if="!custom[head.value] && head.value !== 'actions'"
-                                                v-model="editedItem[head.value]"
-                                                :label="head.text"
+                                            <v-text-field v-else-if="!custom[head.value] && head.value !== 'actions' && discerntype(head.value).type.indexOf('file') == -1"
+                                                v-model="editedItem[head.value]" persistent-hint
+                                                :hint="`Value for column: ${head.text}`"
                                             ></v-text-field>
                                             <div v-if="discerntype(head.value).custom">
-                                                <v-checkbox
-                                                    v-model="custom[head.value]"
-                                                    on-icon="$check-square"
-                                                    label="custom input"
-                                                    class="align-center justify-center text-xs-center" 
-                                                    off-icon="$square"
-                                                    color="primary"
-                                                >
-                                                
-                                                </v-checkbox>
                                                 <FileSelect :key="`${custom[head.value]}-${head.value}`" v-if="custom[head.value] && discerntype(head.value).element.indexOf('file') > -1"
                                                 :source="editedItem[head.value]"
                                                 :variable="editedItem"
@@ -120,17 +111,27 @@
                                                         
                                                 </Dir>
                                                 <v-text-field v-else-if="custom[head.value] && discerntype(head.value).element == 'string'"
-                                                    v-model="editedItem[head.value]"
-                                                    :label="head.text"
+                                                    v-model="editedItem[head.value]" persistent-hint
+                                                    :hint="`Value for column: ${head.text}`"
                                                 ></v-text-field>
                                             </div>
-                                            <v-divider></v-divider>
-                                            
-                                            
-                                            
-                                        </v-container>
-                                        
-                                    </v-col>
+
+                                            </v-list-item-content>
+
+                                            <v-list-item-action v-if="discerntype(head.value).custom">
+                                                <v-checkbox 
+                                                    v-model="custom[head.value]"
+                                                    on-icon="$check-square"
+                                                    label="custom input"
+                                                    class="text-xs-center" 
+                                                    off-icon="$square"
+                                                    color="primary"
+                                                >
+                                                
+                                                </v-checkbox>
+                                            </v-list-item-action>
+                                    </v-list-item>
+                                    </v-list>
                                 </v-container>
                             </v-card-text>
                             <v-card-actions>
@@ -231,24 +232,17 @@ export default {
         // val || this.close()
         if (this.variable && this.variable.define_columns){
             for (let [key,value] of Object.entries(this.variable.define_columns)){
-                if (typeof this.variable.define_columns[key] && !this.custom[key] && !this.editedItem[key])
-                {
-                    if (Array.isArray(value.options) || Array.isArray(value)){
-                        this.editedItem[key] = value.options[0]
+                if (!this.editedItem[key]){
+                    if (typeof value == 'object' && !this.custom[key]  )
+                    {
+                        if (Array.isArray( value.options) || Array.isArray( value )){
+                            this.editedItem[key] =  value.options[0]
+                        } 
                     } else {
-                        console.log("emtpy",key)
-                        if (typeof value == "string"){
+                        if (typeof value == "string" || typeof value == 'boolean' || !value){
                             this.editedItem[key] = value
                         }
                     }
-                } else {
-                    if (typeof value == "string"){
-                        this.editedItem[key] = value
-                    }
-                }
-                if (!this.editedItem[key] && ['file', 'dir', 'directory'].indexOf(value) ==-1){
-                    
-
                 }
             }
 
@@ -312,9 +306,7 @@ export default {
             this.editedItem.index = this.editedIndex
             let newItem = cloneDeep(this.editedItem)  
             for (let[key, value] of Object.entries(this.editedItem) ){
-                console.log(key,value,"........",newItem.index)
                 if (value instanceof File ){
-                    console.log("isfile")
                     if (value.path == ""){
                         newItem[key] = value.name
                     } else {

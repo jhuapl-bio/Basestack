@@ -107,41 +107,6 @@
         - "nanopore"
         - "illumina"
       variables:
-        csv:
-          label: "Samplesheet"
-          fallback: "${writePath}/workflows/nfcore_taxtriage/Samplesheet.target.csv"
-          warning: "Must be in .csv format (comma separated)"
-          hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
-          element: "file"
-          set:
-            - target: "variables.manifest.source"
-              header: ['single_end','fastq_1','fastq_2', 'sample', 'from',  'platform',  'sequencing_summary', 'barcode', 'trim']
-              reformat: ['sequencing_summary', 'from', 'fastq_1', 'fastq_2']
-              source: "%{variables.csv.source}"
-              sep: "," 
-          source: null
-          bind: self
-          read:
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "fastq_1"
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "fastq_2"
-            - type: "directory"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "from"
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "sequencing_summary"
         manifest:
           label: "Input Samplesheet contents"
           element: "list"
@@ -189,6 +154,41 @@
           source: []
           header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
           append_newline: false
+        csv:
+          label: "Samplesheet"
+          fallback: "${writePath}/workflows/nfcore_taxtriage/Samplesheet.target.csv"
+          warning: "Must be in .csv format (comma separated)"
+          hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
+          element: "file"
+          set:
+            - target: "variables.manifest.source"
+              header: ['single_end','fastq_1','fastq_2', 'sample', 'from',  'platform',  'sequencing_summary', 'barcode', 'trim']
+              reformat: ['sequencing_summary', 'from', 'fastq_1', 'fastq_2']
+              source: "%{variables.csv.source}"
+              sep: "," 
+          source: null
+          bind: self
+          read:
+            - type: "file"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "self"
+              column: "fastq_1"
+            - type: "file"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "self"
+              column: "fastq_2"
+            - type: "directory"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "self"
+              column: "from"
+            - type: "file"
+              sep: ","
+              source: "%{variables.csv.source}"
+              bind: "self"
+              column: "sequencing_summary"
         maxCPUs:
           label: "Maximum CPUs"
           element: "number"

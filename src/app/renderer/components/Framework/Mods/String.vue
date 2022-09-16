@@ -8,6 +8,7 @@
   -->
 <template>
   <div id="string" > 
+    <v-card-title>Text Input</v-card-title>
   	<v-text-field
         v-model="value"
         :label="(variable.hint ? variable.hint : '' )"

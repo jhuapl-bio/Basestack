@@ -2,6 +2,7 @@ const { Menu, shell } = require("electron")
 const { spawn, exec, execSync } = require('child_process');
 
 
+
 export class ClientMenu {
 	constructor(logger, mainWindow, dialog, app, system, spawned_logs, updater){
 		this.logger = logger
@@ -11,6 +12,18 @@ export class ClientMenu {
 		this.system = system
 		this.mainWindow = mainWindow
 		this.updater = updater
+	}
+	openTerminal(){
+		let bat;
+		if (this.system.isWin){
+			bat = exec("start cmd", { cwd: this.app.getPath('desktop') }); 
+		}
+		else if(this.system.isMac){
+			bat = exec("open -a Terminal", { cwd: this.app.getPath('desktop')})
+		} else {
+			bat = exec("gnome-terminal", { cwd: this.app.getPath('desktop'), detached:true })
+		}
+		this.spawned_logs(bat, {throwError: true, process: "Open Terminal"})
 	}
 	async makeMenu(){
 		const $this = this
@@ -100,15 +113,7 @@ export class ClientMenu {
 				label: "Open Terminal",
 				click(){
 				let bat;
-				if ($this.system.isWin){
-					bat = exec("start cmd", { cwd: $this.app.getPath('desktop') }); 
-				}
-				else if($this.system.isMac){
-					bat = exec("open -a Terminal", { cwd: $this.app.getPath('desktop')})
-				} else {
-					bat = exec("gnome-terminal", { cwd: $this.app.getPath('desktop'), detached:true })
-				}
-				$this.spawned_logs(bat, {throwError: true, process: "Open Terminal"})
+				$this.openTerminal()
 				}
 			},
 			...($this.system.isWin ? [

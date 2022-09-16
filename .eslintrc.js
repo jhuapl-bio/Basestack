@@ -18,6 +18,7 @@ module.exports = {
     'no-console': 0,
     'no-prototype-builtins': 0,
     'no-useless-escape': 0,
-    'no-inner-declarations': "off"
+    'no-inner-declarations': "off",
+    'no-magic-numbers':0,
   }
 }
