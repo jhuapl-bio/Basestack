@@ -290,8 +290,42 @@ export async function getRemoteConfigurations(url){
 }
  
 
+export async function fetch_external_yamls(key){
+	let url = `https://api.github.com/repos/jhuapl-bio/Basestack/git/trees/staging?recursive=1`
+	try{
+		console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!",url)
+		let modules = []
+		let promises = []
+		let json = await axios.get(url)
+		if (json  && typeof json == 'object' && json.data.tree){
+			json.data.tree.filter((f)=>{
+				return path.dirname(f.path) == 'data/config/server/config/modules'
+			})
+			.forEach(async (entry,i)=>{ 
+					let ur=`https://raw.githubusercontent.com/jhuapl-bio/Basestack/staging/${entry.path}`
+					promises.push(axios.get(ur))
+				
+			})
+		}
+		Promise.allSettled(promises).then((f)=>{
+			modules = f.filter((entry)=>{
+				return entry.status == 'fulfilled'
+			}).map((entry)=>{
+				return YAML.load(entry.value.data)
+			})
+			return modules
+		}).catch((err)=>{
+			store.logger.error(err)
+			throw err
+		})
+	} catch(err){
+		store.logger.error(err)
+		throw err
+	}
 
 
+
+}
 export async function fetch_external_dockers(key){
 	let url = `https://registry.hub.docker.com/v2/repositories/${key}/tags`
 	try{
