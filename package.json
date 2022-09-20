@@ -161,6 +161,7 @@
     "git-clone": "^0.2.0",
     "glob": "^7.2.0",
     "gunzip-file": "^0.1.1",
+    "hasbin": "^1.2.3",
     "jquery": "^3.5.0",
     "js-cookie": "^2.2.1",
     "js-yaml": "^4.1.0",

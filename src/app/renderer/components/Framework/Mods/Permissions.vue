@@ -26,7 +26,7 @@
         </v-list-item>
         <v-btn
           color="primary"
-          dark
+          dark 
           @click="makeUsable(source, $event)"
         >
           Change Permissions
@@ -66,7 +66,6 @@ export default {
       this.value = e.dataTransfer.files[0]; 
     },
     makeUsable(item, event){
-      console.log(item)
         this.$electron.ipcRenderer.send("sudoPrompt", { item: item, perms: this.check } )
 		}, 
     

@@ -7,15 +7,12 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="number" > 
   	<v-text-field
         v-model="value"
-        type="number" 
+        type="number" persistent-hint
         :hint="(variable.hint ? variable.hint : '' )"
     >
     </v-text-field>
-    
-  </div>
 </template>
 
 <script>

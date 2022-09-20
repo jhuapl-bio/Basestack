@@ -8,9 +8,9 @@
   -->
 <template>
   
-  <v-row>
-    <v-col sm="12" >
-    <v-toolbar   cyan width="100%" class=" elevation-12 "> 
+  <v-row class="">
+    <v-col sm="12" class="">
+    <v-toolbar   cyan width="100%" class=" elevation-12  "> 
       <v-toolbar-title>{{title}}</v-toolbar-title>
       <v-divider vertical inset class="ml-4 mr-8"></v-divider>
       <v-btn
@@ -92,24 +92,7 @@
         </template>
       </v-autocomplete>
       <template v-slot:extension >
-        <v-subheader>Procedures
-        </v-subheader>
-        <v-tabs
-          v-model="procedureIdx"
-          align-with-title 
-          next-icon="$arrow-alt-circle-right"
-          prev-icon="$arrow-alt-circle-left"
-          show-arrows 
-        >
-          <v-tabs-slider color="yellow"></v-tabs-slider>
-
-          <v-tab
-            v-for="(item, index) of selectedVersion.procedures"
-            :key="`${index}-itemtab`"
-          >
-            {{index}}. {{ item.title }}
-          </v-tab>
-        </v-tabs>
+        
         <v-btn
           color="primary"
           class="text-caption"
@@ -256,10 +239,10 @@
           
         </v-card>
       </v-navigation-drawer>
-     
-    <v-col sm="3" class="shrink">
+    <v-col sm="5" class="shrink">
       <v-dialog 
           transition="dialog-bottom-transition"
+          v-model="installDialog"
       >
       <template v-slot:activator="{ on, attrs }">
           <v-card
@@ -286,6 +269,7 @@
             <v-card-text class="text-h6 my-0 py-0" v-if="installStatus.fully_installed">All dependencies installed</v-card-text>
             <v-card-text class="text-h6 my-0 py-0" v-else>Missing 1 or more dependencies</v-card-text>
             <v-card-text  class="text-h6 my-0 py-0">Total Space Used: ~{{totalSpaceUsed}}</v-card-text>
+            
             <v-card-actions>
               <v-btn
                   v-on="on" v-bind="attrs"
@@ -312,11 +296,49 @@
               </v-btn>
               
             </v-card-actions>
-          </v-card>          
+          </v-card>
+          
+          <!-- <v-select 
+              v-model="dep" 
+              :disabled="dependencies.length <=1 "
+              :hint="`Select a method of deployment`"
+              :items="dependencies" 
+              item-text="label" class="mb-15 mt-7"
+              item-label="label"
+              persistent-hint
+              return-object
+          >
+              
+          </v-select>    -->
+          <div style="display:flex">
+            <v-subheader>
+              Procedures
+            </v-subheader>
+            <v-tabs
+              v-model="procedureIdx"
+              label="procedures"
+              next-icon="$arrow-alt-circle-right"
+              prev-icon="$arrow-alt-circle-left"
+              show-arrows 
+            >
+              <v-tabs-slider color="primary"></v-tabs-slider>
+
+              <v-tab
+                v-for="(item, index) of selectedVersion.procedures"
+                :key="`${index}-itemtab`"
+              >
+                {{ item.title }}
+              </v-tab>
+              
+            </v-tabs>   
+          </div>
+          
+           
         </template>
+        {{selectedProcedure}}
         <SubLibrary
               :version="selectedVersion"
-              :dependencies="dependencies"
+              :dependencies="selectedProcedure"
               :procedure="procedureIdx"
               :status="installStatus"
               ref="sublibrary"
@@ -337,8 +359,9 @@
         {{ ( latest ? 'A newer version is available' : 'Could not fetch latest version' ) }}
       </v-banner>
     </v-col>
-    <v-col sm="9">
+    <v-col sm="7">
       <v-subheader class="overflow-x-visible mx-4 indigo lighten-5" v-if="selectedVersion.description">{{selectedVersion.description}}</v-subheader>
+      
       <v-stepper  v-model="el" class="pb-0" v-if="services" >
           <v-stepper-header
               class="configure"
@@ -478,27 +501,22 @@
           This procedure utilizes a rendered UI, select the "Click Me"
         </v-alert>
       </div>
-      <v-checkbox 
-          v-if="os == 'linux'"
-          v-model="setUser"
-          on-icon="$check-square"
-          label="Run job as current user (yes) or default (no)"
-          class="align-right justify-center text-xs-center" 
-          off-icon="$square"
-          color="primary"
-      ></v-checkbox>
-    </v-col>
-    <v-col :sm="!selectedProcedure.full_orientation ? 12 : 12" v-if="procedure && procedure.variables" class="mx-0 px-0 overflow:auto; ">
       
-      <ListParams
+    </v-col>
+    <v-col  v-if="procedure && variables" class="mx-0 px-0 overflow:auto; ">
+      
+      <!-- <ListParams
           :items="additionals"
           v-if="additionals.length > 0"
           :defaultHeaders="headers"
           @updateValue="updateValue"
+          :col="!selectedProcedure.full_orientation ? 6 : 12"
           :key="updates"
+          :os="os"
+          @setUser="userSet"
           @removeCustomVariable="removeCustomVariable"
       >
-      </ListParams>
+      </ListParams> -->
     </v-col>
     <!-- <v-footer
       v-bind="{
@@ -591,7 +609,7 @@ import Customize  from '@/components/Framework/Customize.vue';
 export default {
 	name: 'module',
   components:{
-    ListParams,
+    // ListParams,
     Customize,
     Progresses,
     LogWindow,
@@ -612,6 +630,9 @@ export default {
   methods: {
     setProcedure(event){
       this.procedure_selected_index = event
+    },
+    userSet(event){
+      this.setUser = event
     },
     getUrl(link){
 			  let url 
@@ -1097,9 +1118,11 @@ export default {
   data(){
     return{
       drawer: true,
+      installDialog: false,
       dialog: false,
       dialogLog: false,
       customDrawer: false,
+      dep: null,
       totalSpaceUsed: "0 Bytes",
       dry: false,
       installStatus: {},

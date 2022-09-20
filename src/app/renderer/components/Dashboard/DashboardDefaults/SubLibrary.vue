@@ -38,7 +38,7 @@
         </v-badge>        
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-                <v-icon medium color="primary" v-on="on" class="configure mr-3 ml-3 " @click="buildModule(version.name)">$download</v-icon>
+                <v-icon  medium color="primary" v-on="on" class="configure mr-3 ml-3 " @click="buildModule(version.name)">$download</v-icon>
             </template>
             
             Build Entire Module
@@ -77,13 +77,13 @@
         >
         <v-data-table
             style="max-width: 100%"
-            :items="dependencies"
+            :items="dependencies.items"
             :headers="fields"
             :items-per-page="5"
             centered
             class="elevation-1 "			
             small dense
-            v-if="dependencies && dependencies.length > 0"
+            v-if="dependencies.items && dependencies.items.length > 0"
             :footer-props="{
             showFirstLastPage: true,
                 prevIcon: '$arrow-alt-circle-left',
@@ -234,18 +234,21 @@
             </template>
             <template v-slot:item.build="{ item, index }">
                 <v-icon  class="configure" small color="primary" 
-                    style="" v-if="item.status.dependComplete"
+                    style="" v-if="item.status.dependComplete && item.type !== 'binary'"
                     @click="buildModuleDependency(version.name, index)">$download
                 </v-icon>
-                
-                <v-tooltip bottom v-else>
+                <v-icon  class="configure" small color="primary" 
+                    style="" v-else-if="item.type=='binary' && item.source" @click="open_external(item.url)"
+                    >$external-link-alt
+                </v-icon>
+                <v-tooltip bottom v-else-if="dependComplete">
                     <template v-slot:activator="{ on }">
                     <v-icon v-on="on" class="" small color="warning" 
                         style="" 
                         >$slash
                     </v-icon>
                     </template>
-                    Depends on another dependency to install: {{ dependencies.filter((d,i)=>{
+                    Depends on another dependency to install: {{ dependencies.items.filter((d,i)=>{
                         return item.depends.indexOf(i) > -1
                     }).map((f)=>{
                         return f.label
@@ -396,7 +399,9 @@ export default {
 	},
     props: [ 'version', 'procedure', 'dependencies', 'status' ],
     watch: {
-       
+       dependencies(val){
+        console.log(";;;;;;;",val)
+       }
     },
 	methods:{
         async error_alert(err, title){
@@ -588,6 +593,9 @@ export default {
                 
             }) 
         },
+        open_external(url){
+            this.$electron.shell.openExternal(url)
+        },
         
         openDir(link,format){
             try{       
@@ -691,9 +699,6 @@ export default {
 	
 	mounted() {
         
-    },
-	beforeDestroy: function() {
-        clearInterval(this.interval)
     }
 };
 </script>

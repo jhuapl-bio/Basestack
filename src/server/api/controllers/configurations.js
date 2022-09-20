@@ -41,14 +41,16 @@ export async function import_cfgs(module, type){
             files_marked.push(module.path)
         } else if (module.format ==  'files') {  
             promises_folders.push(getFiles(module.path))  
-        } else { 
+        } else {   
             promises_folders.push(getFolders(module.path))   
-        }   
-        if (promises_folders.length > 0 ){     
+        }    
+        if (promises_folders.length > 0 ){
             let results = await Promise.allSettled(promises_folders)
-            
-            results.forEach((result, i)=>{ 
+            results.filter((F)=>{
+                return F.status == 'fulfilled'
+            }).forEach((result, i)=>{ 
                 let inner_file_read = []    
+                
                 result.value.forEach((dir)=>{  
                     try{  
                         if  (module.format == 'dir'){ 
@@ -60,7 +62,7 @@ export async function import_cfgs(module, type){
                             files_marked.push(( dir  ))
                         }
                     } catch(err){
-                        console.error(err)
+                        console.error(err) 
                     }
                 })
             })
@@ -82,7 +84,7 @@ export async function import_cfgs(module, type){
                     
                     store.logger.error("_________________________")
                 }   
-                
+                 
             }
         })
         if (type !== 'docker'){
@@ -135,15 +137,15 @@ export const  define_base = async function(){
         results_default.forEach((result)=>{
             if (result.status == 'fulfilled'){ 
                 result.value.forEach((config)=>{
-                    
                     config.forEach((conf)=>{
                         let idx = store.default.findIndex((f)=>{
                             return f.name == config.name
                         }) 
-                        store.logger.info("%s idx %s",conf,idx)
                         if (idx == -1){
+                            // store.logger.info("%s idx %s",conf,idx)
                             store.default.push(conf)
                         } else {
+                            // store.logger.info("%s idx %s",conf,idx)
                             store.default[idx] = conf
                         }
                     })

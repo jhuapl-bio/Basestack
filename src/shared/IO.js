@@ -19,10 +19,10 @@ export async function readCsv(filepath, sep, header){ // 1st argument is filepat
 					csvData.push(g);        
 				})
 				.on("error", function(err){
+					console.log(err,"Error in reading csv")
 					reject(err)
 				})
 				.on('end',function() {
-					
 					resolve(csvData)
 				});
 			} else {
@@ -35,7 +35,6 @@ export async function readCsv(filepath, sep, header){ // 1st argument is filepat
 }
 export async function readFile(filepath, split, sep){ // 1st argument is filepath, second is whetehr or not to split the data into a tsv with a string/char
 	return new Promise((resolve, reject)=>{
-		console.log(filepath, sep,"readfile siwth sep")
 		if (!sep){
 			fs.readFile(filepath, (err, data) => { // read the filepath, must be a file!
 				if (err){
@@ -50,6 +49,7 @@ export async function readFile(filepath, split, sep){ // 1st argument is filepat
 			readCsv(filepath, sep, null).then((f)=>{
 				resolve(f)
 			}).catch((err)=>{
+				console.error(err,"<<<<<<ERR")
 				reject(err)
 			})
 		}

@@ -9,8 +9,8 @@
 <template>
   <div id="checkbox" > 
   	<v-checkbox
-        v-model="value"
-        :label="(variable.hint ? variable.hint : '' )"
+        v-model="value" persistent-hint
+        :hint="(variable.hint ? variable.hint : '' )"
         on-icon="$check-square"
         class="align-center justify-center text-xs-center" 
         off-icon="$square"

@@ -1,5 +1,6 @@
 <template>
   <v-card id="list-params"   v-if="items && items.length  > 0">
+    yes
     <v-toolbar
         dark dense class="elevation-6" style="width: 100%"
     >
@@ -7,6 +8,15 @@
         
         <v-spacer>
         </v-spacer>
+        <v-checkbox 
+            v-if="os == 'linux'"
+            v-model="setUser"
+            on-icon="$check-square"
+            label="Run job as current user?"
+            class="align-right justify-center text-xs-center mt-4" 
+            off-icon="$square"
+            color="primary"
+        ></v-checkbox>  
     </v-toolbar>
     <v-snackbar
       v-model="showErrors" :timeout="-1"
@@ -24,117 +34,132 @@
         </v-btn>
       </template>
     </v-snackbar>
-    <v-list height="70vh" class="fill-height fill-width"  two-line v-if="items&&items.length > 0">
-        
-        <v-list-item  v-for="(item, key) in items.filter((d)=>{
-            return !d.hidden
+    <v-card style="max-height: 500px; overflow:auto" class="d-flex flex-wrap pb-50"   flat tile v-if="items&&items.length > 0">
+        <v-card v-for="(item, key) in items.filter((d)=>{
+            return !d.hidden 
         })"     
-        class="elevation-6 "
-        :key="`listVariables-${key}`">
-            
-            <v-list-item-content >
-                <v-list-item-title v-text="item.label + '→${' + item.name  + '}' "></v-list-item-title>
-                
-                <v-list-item-subtitle class="text-wrap" v-if="item.hint">
-                    {{item.hint}}
-                </v-list-item-subtitle>
-                <v-container v-if="item.options"  style="width:100%; margin: 0px">
-                    <v-select
-                        v-model="item.optionValue" 
-                        :disabled="item.output"
-                        class="text-caption"
-                        :hint="`Select an item`"
-                        @input="setOption($event,key, item)"
-                        :items="item.options" 
-                        style="width: 200px"
-                        label="Select"
-                        item-text="name"
-                        persistent-hint
-                        return-object
-                        single-line
+        class="elevation-18 pa-0" :style="{ width: item.element == 'list' ? '100%' : '33.33%' }"
+        :key="`listVariables-${key}`" outlined  >
+            <v-list two-line>
+            <v-list-item > 
+                <v-list-item-content>
+                    <v-list-item-title v-text="item.label + '→${' + item.name  + '}' ">
+                    </v-list-item-title>
+                    
+                    
+                    <v-container v-if="item.options"  style="width:100%; margin: 0px">
+                        <v-select
+                            v-model="item.optionValue" 
+                            :disabled="item.output"
+                            class="text-caption"
+                            :hint="`Select an item`"
+                            @input="setOption($event,key, item)"
+                            :items="item.options" 
+                            style="width: 200px"
+                            label="Select"
+                            item-text="name"
+                            persistent-hint
+                            return-object
+                            single-line
+                        >
+                            
+                        </v-select>
+                        <component
+                            :is="factory[item.optionValue.element]"
+                            v-if="item.optionValue && item.optionValue.element !== 'render' && item.optionValue.element"
+                            :disabled="item.optionValue.output"
+                            :source="items[key].source"
+                            :variable="item.optionValue"
+                            :hidden="item.optionValue.hidden"
+                            @updateValidity="updateValidity(data)"
+                            @updateValue="updateValue($event, false, item, key, item.name)"
+                            >
+                        </component>
+                        
+                        
+                    </v-container>
+                    <v-container v-else>
+                        <component
+                            :is="factory[item.element]"
+                            :disabled="item.output"
+                            :source="item.source"
+                            :variable="item"
+                            :hidden="item.hidden"
+                            @updateValidity="updateValidity(data)"
+                            @updateValue="updateValue($event, false, item, key, item.name)"
+                            >
+                        </component>
+                        
+                        
+                        
+                                    
+                    </v-container>
+                    
+                    <v-alert class="text-caption" v-if="item && item.warning" 
+                        dense 
+                        text
+                        border="left"
+                        type="info"
+                        elevation="2"
+                    
+                    >
+                        <v-icon  small >$exclamation
+                        </v-icon>
+                        {{item.warning}}
+                    </v-alert> 
+                </v-list-item-content> 
+                <v-list-item-action class="">
+                    <v-list-item-action-text>
+                        <Validation 
+                            :item="item"
+                            :validations="item.validations"
+                            :value="item.source"
+                        >
+                        </Validation>
+                        
+                    </v-list-item-action-text>
+                    
+                    <v-tooltip bottom v-if="(item.element == 'file' || item.element == 'dir') &&  ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )">
+                        <template v-slot:activator="{ on }">
+                            <v-icon small v-on="on"  @click="electronOpenDir(item, $event)" class="configure" color="primary">$archive
+                            </v-icon>
+                        </template>
+                        {{  ( item.source ? item.source : item.options[item.option].source  )     }}
+                    </v-tooltip> 
+                    <v-dialog class="justify-end align-right"
+                        v-model="dialog" 
+                        v-if="(item.element == 'file' || item.element=='dir' ) && process && !process.system.isWin && item.source"
+                        max-width="290"
                     >
                         
-                    </v-select>
-                    <component
-                        :is="factory[item.optionValue.element]"
-                        v-if="item.optionValue && item.optionValue.element !== 'render' && item.optionValue.element"
-                        :disabled="item.optionValue.output"
-                        :source="items[key].source"
-                        :variable="item.optionValue"
-                        :hidden="item.optionValue.hidden"
-                        @updateValidity="updateValidity(data)"
-                        @updateValue="updateValue($event, false, item, key, item.name)"
-                        >
-                    </component>
-                    
-                    
-                </v-container>
-                <v-container v-else>
-                    <component
-                        :is="factory[item.element]"
-                        :disabled="item.output"
+                        <template v-slot:activator="{ on, attrs }">
+                        <p class="ml-3" style="font-size:70%">Permissions</p>
+                        <v-icon @click="dialog=true"   v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
+                        </v-icon>
+                        </template>
+                        <Permissions
                         :source="item.source"
-                        :variable="item"
-                        :hidden="item.hidden"
-                        @updateValidity="updateValidity(data)"
-                        @updateValue="updateValue($event, false, item, key, item.name)"
-                        >
-                    </component>
+                        ></Permissions>
+                    </v-dialog>
+                    <v-tooltip bottom v-if="item.custom">
+                        <template v-slot:activator="{ on }">
+                            <v-icon v-on="on" @click="removeCustomVariable(item.name)" class="configure" small>$trash-alt
+                            </v-icon>
+                        </template>
+                        Remove Custom Variable
+                    </v-tooltip>
                     
-                    
-                     
-                                   
-                </v-container>
-                
-                <v-alert class="text-caption" v-if="item && item.warning" 
-                    dense 
-                    text
-                    border="left"
-                    type="info"
-                    elevation="2"
-                
-                >
-                    <v-icon  small >$exclamation
-                    </v-icon>
-                    {{item.warning}}
-                </v-alert> 
-                
-                    
-            </v-list-item-content>
-            <v-list-item-action class="">
-                <v-list-item-action-text>
-                    <Validation 
-                        :item="item"
-                        :validations="item.validations"
-                        :value="item.source"
-                    >
-                    </Validation>
-                    
-                </v-list-item-action-text>
-                
-                <v-tooltip bottom v-if="(item.element == 'file' || item.element == 'dir') &&  ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )">
-                    <template v-slot:activator="{ on }">
-                        <v-icon small v-on="on"  @click="electronOpenDir(item, $event)" class="configure" color="primary">$archive
-                        </v-icon>
-                    </template>
-                    {{  ( item.source ? item.source : item.options[item.option].source  )     }}
-                </v-tooltip> 
-                <v-tooltip bottom v-if="item.custom">
-                    <template v-slot:activator="{ on }">
-                        <v-icon v-on="on" @click="removeCustomVariable(item.name)" class="configure" small>$trash-alt
-                        </v-icon>
-                    </template>
-                    Remove Custom Variable
-                </v-tooltip>
-                
-            </v-list-item-action>
+                </v-list-item-action>
+            
+            </v-list-item>
+            </v-list>
             
                  
-        </v-list-item>
+        </v-card>
         
             
 
-    </v-list>
+    </v-card>
     
   </v-card>
      
@@ -197,7 +222,8 @@ export default {
       dialog (val) {
         val || this.close()
       },
-      v(newValue){
+      setUser (newValue){
+        this.$emit("setUser", newValue)  
       },
       items: {
           deep:true,
@@ -294,12 +320,13 @@ export default {
 			this.$set(this.items, index-1, tmp)
 		},
 	},
-    props: ['items', "defaultHeaders", 'title', "service", "job"],
+    props: ['items', "defaultHeaders", 'title', "service", "job", "os"],
     data (){
         return {
             values: [],
             showErrors: false,
             errors: {},
+            setUser: false,
             dialog: false,
             shippingAddress: null,
             editedIndex: -1,
@@ -308,6 +335,7 @@ export default {
             intervalProgress: false,
             progressChecking: false,
             intervalChecking:false,
+            process:null,
             factory: {
 
                 'string': "String",
@@ -326,7 +354,7 @@ export default {
         }
     },
     mounted(){
-        
+        this.process = process.env;
     }, 
 
     

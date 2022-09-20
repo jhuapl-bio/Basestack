@@ -166,7 +166,7 @@
         </v-autocomplete>
         
     </v-app-bar>
-		<v-main >
+		<v-main class="">
 			<v-container fluid >
         
         <v-alert 
@@ -320,7 +320,7 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "mytax",
+      selectedCatalogName: "nfcore_taxtriage",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},

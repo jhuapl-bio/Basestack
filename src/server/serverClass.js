@@ -89,7 +89,7 @@ export  class Server {
                     store.logger.error(err)
                     reject(err)
                 })
-            }).catch((err)=>{
+            }).catch((err)=>{ 
                 console.error(err)
                 reject(err)
             })

@@ -59,6 +59,7 @@ export async function define_procedure(name, procedure){
 			name, 
 			procedure 
 		)
+		
 		procedure_obj.define().then(()=>{
 			resolve(procedure_obj)
 		}).catch((err)=>{
@@ -70,8 +71,9 @@ export async function import_configurations(){
 	try{
 		let data = await readFile(store.system.configurationFile)
 		data = JSON.parse(data)
-		return data  
-	} catch (err){
+		return data   
+	} 
+	catch (err){
 		store.logger.error("Could not import config file %o ", err) 
 		throw err
 	}
@@ -127,27 +129,18 @@ export async function create_procedure(procedures_default){
 		throw err 
 	}      
 }    
-export async function init_base_services(){      
-		// for (let [key, service] of store.config.services.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
-		// 	try{   
-		// 	} catch(err){   
-		// 		logger.error("%o error in defining service %s", err, key)
-		// 	}
-		// }
-		// return 
-}
 
 export async function init_base_modules(){ 
 	try{ 
 		store.logger.info("Initiating status of modules and meta in fetch.........................") 
-		
+
 		for (let [key, module] of store.config.modules.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
 			store.library.addLocal(module, module.name)
 		}
 
 		  
 		return 
-	} catch(err){
+	} catch(err){ 
 		store.ogger.error("%s %o", "error in init modules", err)
 		throw err  
 	} 

@@ -1,42 +1,44 @@
 <template>
-  <v-layout id="list" >
-        <v-tooltip bottom v-if="length <= 0" >
-            <template v-slot:activator="{ on }">
-                <v-icon medium :if="length <= 0" class="mr-2" color="warning" v-on="on"  >$exclamation-triangle
-                </v-icon>
-            </template>
-            List must be more than 1 entry
-        </v-tooltip>  
+  <v-layout id="list"  >
+    <v-tooltip bottom v-if="length <= 0" >
+        <template v-slot:activator="{ on }">
+            <v-icon medium :if="length <= 0" class="mr-2" color="warning" v-on="on"  >$exclamation-triangle
+            </v-icon>
+        </template>
+        List must be more than 1 entry
+    </v-tooltip> 
+    <v-card width="100vw" >
         <v-data-table
-            small
-            :headers="headers"
-            :items="source"
-            :items-per-page="6"
-            :footer-props="{
-            showFirstLastPage: true,
-                prevIcon: '$arrow-alt-circle-left',
-                nextIcon: '$arrow-alt-circle-right',
-                firstIcon: '$step-backward',
-                lastIcon: '$step-forward',
-            }"
-            class="elevation-1"					        
-        >	
-            <template v-slot:top>
-                <v-toolbar
-                    flat
-                >
-                    <v-toolbar-title>{{ ( title ? title : 'List Table' )  }}</v-toolbar-title>
-                    <v-divider
-                        class="mx-4"
-                        inset
-                        vertical
-                    ></v-divider>
-                    <v-dialog
-                        v-model="dialog"
-                        max-width="50%"
-                        >
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-btn
+        small 
+        :headers="headers"
+        :items="source"
+        :items-per-page="6"
+        :footer-props="{
+        showFirstLastPage: true,
+            prevIcon: '$arrow-alt-circle-left',
+            nextIcon: '$arrow-alt-circle-right',
+            firstIcon: '$step-backward',
+            lastIcon: '$step-forward',
+        }"
+        class="elevation-1 "	
+        				        
+    >	
+        <template v-slot:top>
+            <v-toolbar
+                flat
+            >
+                <v-toolbar-title>{{ ( title ? title : 'List Table' )  }}</v-toolbar-title>
+                <v-divider
+                    class="mx-4"
+                    inset
+                    vertical
+                ></v-divider>
+                <v-dialog
+                    v-model="dialog"
+                    max-width="50%"
+                    >
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-btn
                             color="primary"
                             dark
                             class="mb-2"
@@ -44,138 +46,146 @@
                             v-on="on"
                             >
                             New Item
-                            </v-btn>
-                            
-                        </template>
-                        <v-card>
-                            <v-card-title>
-                            <span class="text-h5">Row Item Add</span>
-                            </v-card-title>
-                            <v-card-text>
-                                <v-container>
-                                    <v-list subheader
-                                        two-line>
-                                        <v-subheader>
-                                            Samplesheet Configuration
-                                        </v-subheader>
-                                    <v-list-item v-for="head in headers.filter((f)=>{
-                                        return f.value != 'actions'
-                                    })" :key="head.value + head.index">
-                                        <v-list-item-content>    
-                                            <v-list-item-title class="justify-end"   v-if="head.value != 'actions'">{{head.value}}</v-list-item-title> 
-                                            <FileSelect v-if="!custom[head.value] && discerntype(head.value).type.indexOf('file') > -1"
+                        </v-btn>
+                                                    
+                    </template>
+                    <v-card>
+                        <v-card-title>
+                        <span class="text-h5">Row Item Add</span>
+                        </v-card-title>
+                        <v-card-text>
+                            <v-container>
+                                <v-list subheader
+                                    two-line>
+                                    <v-subheader>
+                                        Samplesheet Configuration
+                                    </v-subheader>
+                                <v-list-item v-for="head in headers.filter((f)=>{
+                                    return f.value != 'actions'
+                                })" :key="head.value + head.index">
+                                    <v-list-item-content>    
+                                        <v-list-item-title class="justify-end"   v-if="head.value != 'actions'">{{head.value}}</v-list-item-title> 
+                                        <FileSelect v-if="!custom[head.value] && discerntype(head.value).type.indexOf('file') > -1"
+                                        :source="editedItem[head.value]"
+                                        :variable="editedItem"
+                                    
+                                        @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
+                                        >
+                                            
+                                        </FileSelect>
+                                        <v-divider inset v-if="discerntype(head.value).element.length > 1"></v-divider>
+                                        
+                                        <Dir v-if="!custom[head.value] && ['directory', 'dir'].some(r=> discerntype(head.value).type.includes(r))"
+                                            :source="editedItem[head.value]"
+                                            :variable="editedItem"  
+                                            @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
+                                            >
+                                                
+                                        </Dir>
+                                        <v-select v-else-if="!custom[head.value] && discerntype(head.value).type.indexOf('select') > -1"
+                                        
+                                            v-model="editedItem[head.value]"
+                                            :items="variable.define_columns[head.value].options"
+                                        >
+
+                                        </v-select>
+                                        
+                                        <v-text-field v-else-if="!custom[head.value] && head.value !== 'actions' && discerntype(head.value).type.indexOf('file') == -1"
+                                            v-model="editedItem[head.value]" persistent-hint
+                                            :hint="`Value for column: ${head.text}`"
+                                        ></v-text-field>
+                                        <div v-if="discerntype(head.value).custom">
+                                            <FileSelect :key="`${custom[head.value]}-${head.value}`" v-if="custom[head.value] && discerntype(head.value).element.indexOf('file') > -1"
                                             :source="editedItem[head.value]"
                                             :variable="editedItem"
-                                        
+                                            :label="head.value"
                                             @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
                                             >
                                                 
                                             </FileSelect>
-                                            <v-divider inset v-if="discerntype(head.value).element.length > 1"></v-divider>
                                             
-                                            <Dir v-if="!custom[head.value] && ['directory', 'dir'].some(r=> discerntype(head.value).type.includes(r))"
+                                            <Dir v-else-if="custom[head.value] && discerntype(head.value).element.indexOf('dir') > -1"
                                                 :source="editedItem[head.value]"
-                                                :variable="editedItem"  
+                                                :label="head.value"
+                                                :variable="editedItem"
                                                 @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
                                                 >
                                                     
                                             </Dir>
-                                            <v-select v-else-if="!custom[head.value] && discerntype(head.value).type.indexOf('select') > -1"
-                                            
-                                                v-model="editedItem[head.value]"
-                                                :items="variable.define_columns[head.value].options"
-                                            >
-
-                                            </v-select>
-                                            
-                                            <v-text-field v-else-if="!custom[head.value] && head.value !== 'actions' && discerntype(head.value).type.indexOf('file') == -1"
+                                            <v-text-field v-else-if="custom[head.value] && discerntype(head.value).element == 'string'"
                                                 v-model="editedItem[head.value]" persistent-hint
                                                 :hint="`Value for column: ${head.text}`"
                                             ></v-text-field>
-                                            <div v-if="discerntype(head.value).custom">
-                                                <FileSelect :key="`${custom[head.value]}-${head.value}`" v-if="custom[head.value] && discerntype(head.value).element.indexOf('file') > -1"
-                                                :source="editedItem[head.value]"
-                                                :variable="editedItem"
-                                                :label="head.value"
-                                                @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
-                                                >
-                                                    
-                                                </FileSelect>
-                                                
-                                                <Dir v-else-if="custom[head.value] && discerntype(head.value).element.indexOf('dir') > -1"
-                                                    :source="editedItem[head.value]"
-                                                    :label="head.value"
-                                                    :variable="editedItem"
-                                                    @updateValue="updateValue($event, false, editedItem, head.value, head.value)"
-                                                    >
-                                                        
-                                                </Dir>
-                                                <v-text-field v-else-if="custom[head.value] && discerntype(head.value).element == 'string'"
-                                                    v-model="editedItem[head.value]" persistent-hint
-                                                    :hint="`Value for column: ${head.text}`"
-                                                ></v-text-field>
-                                            </div>
+                                        </div>
 
-                                            </v-list-item-content>
+                                        </v-list-item-content>
 
-                                            <v-list-item-action v-if="discerntype(head.value).custom">
-                                                <v-checkbox 
-                                                    v-model="custom[head.value]"
-                                                    on-icon="$check-square"
-                                                    label="custom input"
-                                                    class="text-xs-center" 
-                                                    off-icon="$square"
-                                                    color="primary"
-                                                >
-                                                
-                                                </v-checkbox>
-                                            </v-list-item-action>
-                                    </v-list-item>
-                                    </v-list>
-                                </v-container>
-                            </v-card-text>
-                            <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn
-                                color="blue darken-1"
-                                text
-                                @click="close"
-                            >
-                                Cancel
-                            </v-btn>
-                            <v-btn
-                                color="blue darken-1"
-                                text
-                                @click="save"
-                            >
-                                Save
-                            </v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-dialog>
-                </v-toolbar>
-            </template>
-            <template v-slot:item.actions="{ item, index }">
-                <v-icon
-                    small
-                    class="mr-2" color="light"
-                    @click="editItem(item)"
-                >
-                    $edit
-                </v-icon>
-                <v-icon
-                    small color="orange"
-                    @click="deleteItem(item, index)"
-                >
-                    $minus
-                </v-icon>
-            </template>
-            
-            
-        
-            
+                                        <v-list-item-action v-if="discerntype(head.value).custom">
+                                            <v-checkbox 
+                                                v-model="custom[head.value]"
+                                                on-icon="$check-square"
+                                                label="custom input"
+                                                class="text-xs-center" 
+                                                off-icon="$square"
+                                                color="primary"
+                                            >
+                                            
+                                            </v-checkbox>
+                                        </v-list-item-action>
+                                </v-list-item>
+                                </v-list>
+                            </v-container>
+                        </v-card-text>
+                        <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn
+                            color="blue darken-1"
+                            text
+                            @click="close"
+                        >
+                            Cancel
+                        </v-btn>
+                        <v-btn
+                            color="blue darken-1"
+                            text
+                            @click="save"
+                        >
+                            Save
+                        </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
+            </v-toolbar>
+        </template>
+        <template v-slot:item.actions="{ item, index }">
+            <v-icon
+                small
+                class="mr-2" color="light"
+                @click="editItem(item)"
+            >
+                $edit
+            </v-icon>
+            <v-icon
+                small color="orange"
+                @click="deleteItem(item, index)"
+            >
+                $minus
+            </v-icon>
+        </template>
+        <template v-slot:top>
+            <FileSelect 
+                :source="csvSource"
+                :variable="csv"
+                :fullhint="'Import CSV File'"
+                @updateValue="importCsv($event)"
+            >
+                
+            </FileSelect>
+        </template>
         </v-data-table>
-  </v-layout>
+    </v-card> 
+    
+    </v-layout>
 </template>
 <script>
 
@@ -183,6 +193,7 @@ import draggable from 'vuedraggable'
 const cloneDeep = require("lodash.clonedeep");
 import FileSelect  from '@/components/Framework/Mods/FileSelect.vue' ;
 import Dir from '@/components/Framework/Mods/Dir.vue';
+import { readCsv } from '../../../../../shared/IO';
 
 export default {
 	name: 'multi-select',
@@ -262,6 +273,34 @@ export default {
     //   },
     },
 	methods: {
+        async importCsv(event){
+            if (event){
+                try{
+                    let data = await readCsv(event, ",", true)
+                    if (data){ 
+                        this.$emit("updateValue", data);
+                    } else {
+                        this.$swal.fire({
+                            position: 'center',
+                            icon: 'error',
+                            showConfirmButton:true,
+                            title:  `Failed to read CSV`,
+                            text: "Check headers and that the file is not empty or full of hidden characters"
+                        })
+                    }
+                } catch (err){
+                    this.logger.error(`${err},"failed to read csv"`)
+                    this.$swal.fire({
+                        position: 'center',
+                        icon: 'error',
+                        showConfirmButton:true,
+                        title:   `Failed to read CSV`,
+                        text: err
+                    })
+                }
+
+            }
+        },  
         discerntype(value){
             let variable = this.variable
             let returnable = {
@@ -385,6 +424,8 @@ export default {
     data (){
         return {
             values: [],
+            csv: {},
+            csvSource: null,
             dialog: false,
             editedIndex: -1,
             editedItem: {},

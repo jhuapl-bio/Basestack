@@ -56,22 +56,22 @@ export class Procedure {
             }
         })
 
-        if (procedure.shared && procedure.shared.variables){
+        // if (procedure.shared && procedure.shared.variables){
             
-            for (let [key, value] of Object.entries(procedure.variables)){
-                if (value.shared){
-                    this.config.variables[key]= procedure.shared.variables[key]
-                }
-            }
-        }   
-        if (procedure.shared && procedure.shared.services){
-            procedure.services.forEach((service,i)=>{
-                if (service.shared && procedure.shared.services[service.target]){
-                    this.config.services[i] = procedure.shared.services[service.target]
+        //     for (let [key, value] of Object.entries(procedure.variables)){
+        //         if (value.shared){
+        //             this.config.variables[key]= procedure.shared.variables[key]
+        //         }
+        //     }
+        // }   
+        // if (procedure.shared && procedure.shared.services){
+        //     procedure.services.forEach((service,i)=>{
+        //         if (service.shared && procedure.shared.services[service.target]){
+        //             this.config.services[i] = procedure.shared.services[service.target]
                     
-                }
-            }) 
-        }
+        //         }
+        //     }) 
+        // }
         
         
           
@@ -129,35 +129,7 @@ export class Procedure {
         
         this.checkDependenciesVersion()
         
-        for (let [key, value] of Object.entries($this.config.variables)){
-            
-            if (value.options){
-                if (!value.option){
-                    value.option = 0
-                } 
-                
-                value.optionValue = value.options[value.option]
-                if (typeof value.optionValue == 'object' && !value.optionValue.source && !value.optionValue.element && typeof value.optionValue != "string"   ){
-                    value.optionValue.source = true
-                }
-                
-                if (typeof value.options[value.option] == 'object' && !value.options[value.option].source){
-                    
-                    if (typeof value.optionValue == 'string'){
-                        value.source = value.optionValue
-                    }else {
-                        value.source = value.optionValue.source
-                    }
-                } 
-            }
-            if (value.load){
-                readFile(value.load).then((data)=>{
-                    value.source = JSON.parse(data)
-                }).catch((err)=>{
-                    store.logger.error("%o error in reading file to load for server %s", err, $this.name)
-                })
-            }
-        }
+        
 
 	}  
     async init(){ 

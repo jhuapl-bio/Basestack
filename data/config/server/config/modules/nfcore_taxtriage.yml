@@ -11,362 +11,259 @@
     - "metagenomics"
     - "Nanopore"
     - "Illumina" 
-  shared:
-    services:
-      orchestrator:
-        label: "Orchestrator"
-        name: "orchestrator"
-        image: "jhuaplbio/basestack_orchestrator:v1.0.0"
-        workingdir: "/opt/data"
-        orchestrated: false #orchestrated means it r
-        init: false
-        orchestrator: true
-        force_restart: false
-        continuous: true
-        force_init: false
-        command: []
+  variables:
+    manifest:
+      label: "Input Samplesheet contents"
+      element: "list"
+      samplesheet:
+        sep: ","
+        header: true
+      hint: "Samplesheet contents"
+      columns: 2
+      column: 12
+      sep: ","
+      define_columns: 
+        fastq_1: 
+          element: 'file'
+        fastq_2: 
+          element: file
+        from: 
+          element: dir
+        sequencing_summary: 
+          element: file
+        platform: 
+          custom: False
+          options: ['ILLUMINA', 'OXFORD']
+        barcode: 
+          custom: False
+          options: [True, False]
+        trim: 
+          custom: False
+          options: [True, False]
+        single_end: 
+          custom: False
+          options: [True, False]
+      
+      # update_on: 
+      #   depends:
+      #     - csv
+      #   action: "read"
+      #   sep: ","
+      #   header: true
+      #   source: "%{variables.csv.source}"
+      bind:
+        from:  "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
+        to: "/opt/samplesheet/Samplesheet.csv"
+      create:
+        target: "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
+        sep: ","
+        type: "list"
+        header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
+      class: "wb-50  p-3 mb-1"
+      source: []
+      header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
+      append_newline: false
+    # csv:
+    #   label: "Samplesheet"
+    #   fallback: "${writePath}/workflows/nfcore_taxtriage/Samplesheet.target.csv"
+    #   warning: "Must be in .csv format (comma separated)"
+    #   hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
+    #   element: "file"
+    #   set:
+    #     - target: "variables.manifest.source"
+    #       header: ['single_end','fastq_1','fastq_2', 'sample', 'from',  'platform',  'sequencing_summary', 'barcode', 'trim']
+    #       reformat: ['sequencing_summary', 'from', 'fastq_1', 'fastq_2']
+    #       source: "%{variables.csv.source}"
+    #       sep: "," 
+    #   source: null
+    #   bind: self
+    #   read:
+    #     - type: "file"
+    #       sep: ","
+    #       source: "%{variables.csv.source}"
+    #       bind: "self"
+    #       column: "fastq_1"
+    #     - type: "file"
+    #       sep: ","
+    #       source: "%{variables.csv.source}"
+    #       bind: "self"
+    #       column: "fastq_2"
+    #     - type: "directory"
+    #       sep: ","
+    #       source: "%{variables.csv.source}"
+    #       bind: "self"
+    #       column: "from"
+    #     - type: "file"
+    #       sep: ","
+    #       source: "%{variables.csv.source}"
+    #       bind: "self"
+    #       column: "sequencing_summary"
+    maxCPUs:
+      label: "Maximum CPUs"
+      element: "number"
+      source: 3
+      optional: true
+      target: "%{variables.maxCPUs.source}"
+      append:
+        command: " --max_cpus \"${maxCPUs}\" "
+        placement: 2
+        position: "end"
+        services: 
+          - 1
+    sleepTime:
+      label: "Lag Time (s) between Pipeline start and Docker starting"
+      source: 5
+      element: number
+    maxMemory:
+      label: "Maximum Memory (GB)"
+      element: "number"
+      source: 12
+      optional: true
+      target: "%{variables.maxMemory.source}"
+      append:
+        command: " --max_memory \"${maxMemory}\"GB "
+        placement: 2
+        position: "end"
+        services: 
+          - 1
+    db:
+      label: Classifier database
+      class: wb-100 p-3 mb-1
+      option: 0
+      options:
+        - element: null
+          name: Minikraken2
+          source: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
+          target: /opt/databases/minikraken2
+          warning: >-
+            Requires roughly 7.5 GB of free RAM to load. If limited in RAM
+            available, try to change Memory Mapping below to classify on the
+            local filesystem. If your input file is large, however, this can
+            take a long time
+          bind:
+            from: '%{variables.db.source}'
+            to: /opt/databases/minikraken2
+        - element: dir
+          name: Custom DB
+          source: null
+          target: /opt/databases/<<basename(%{variables.db.source})>>
+          bind: self
+    skip_assembly:
+      label: "Skip De Novo Assembly"
+      element: "checkbox"
+      source: true
+      hint: "Skip De Novo Assembly"
+      define: 
+        skip_assembly: "--skip_assembly"
+    skip_plots:
+      label: "Skip QC Plotting"
+      element: "checkbox"
+      source: true
+      hint: "Skip QC plotting"
+      define: 
+        skip_plots: "--skip_plots"
+    resume:
+      label: "Resume Nextflow"
+      element: "checkbox"
+      source: true
+      hint: "Pick up where you left off, useful if piplines are long-running or you're debugging issues with a failed midrun submission"
+      define: 
+        resume: "-resume"
+    assembly_option: 
+      label: "Assembly File Option"
+      option: 0
+      options:
+        - element: null
+          name: "NCBI Refseq Assembly Txt File"
+          source:  "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+          target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
+          define: 
+            assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
+          bind: 
+            from: "%{variables.assembly_option.source}"
+            to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
+        - element: null
+          name: "Pull Assembly File Automatically"
+          source: null
+          target: null
+          define: 
+            assembly: ""
+        - element: "file"
+          source: null
+          name: "Custom Assembly Txt file"
+          hint: "Must be in the same format as the ncbi assembly refseq file"
+          target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
+          bind: 
+            from: "%{variables.assembly_option.source}"
+            to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
+          define: 
+            assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
+    code: 
+      label: "code dir"
+      name: "code"
+      hidden: true
+      bind:
+        from:  "${writePath}/workflows/taxtriage/taxtriage"
+        to: "/opt/code"
+    autopull: 
+      label: "Automatically Pull Latest Code from GitHub"
+      name: pull
+      source: true
+      element: "checkbox"
+      target: null
+      append:
+        command: "git -C /opt/code pull ; "
+        placement: 2
+        position: "start"
+        services: 
+          - 0
+    filter_db:
+      label: "Filter Database"
+      element: "dir"
+      source: null
+      optional: true
+      hint: "Database to extract reads out of"
+      target: "/opt/database_filter"
+      bind: "self"
+      define:
+        filter: " --filter %{variables.filter_db.target} "
+    profile:
+      label: "Profile"
+      options:
+        - "docker"
+        - "singularity"
+        - "conda"
+    outdir:
+      label: "Output Directory"
+      output: True
+      hint: "Directory to place your analysis results into"
+      source: "<<directory(%{variables.csv.source})>>/taxtriage_output"
+      path: "<<directory(%{variables.csv.source})>>/taxtriage_output"
+      name: "Output Folder"
+      target: "/opt/output"
+      bind: "self"
+    report:
+      label: "Report"
+      element: file
+      openSelf: true
+      output: True
+      source: "%{variables.outdir.source}/multiqc/multiqc_report.html"
+      path: "%{variables.outdir.source}/multiqc/multiqc_report.html"
+      name: "Report"
+      target: "%{variables.outdir.target}/multiqc/multiqc_report.html"
   procedures: 
     - name: nfcore_taxtriage #Top level is the left-hand selection of the menu and the major module to install 
-      title: "TaxTriage"
+      title: "TaxTriage (Native)"
       icon: "virus"
+      deployment: "native"
       module: True
       full_orientation: true
-      init: false 
+      init: false  
       dependencies:
-        - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          label: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          type: "docker"
-          format: "docker"
-        - target: "bitnami/git"
-          label: "bitnami/git"
-          type: "docker"
-          format: "docker"
-        - target: "basestack-docker-taxtriage"
-          label: "TaxTriage Volume"
-          type: "volume"
-          # git clone -b 'v0.0.1' --single-branch --depth 1 https://github.com/jhuapl-bio/taxtriage.git
-        - source: 
-            url: "git clone  https://github.com/jhuapl-bio/taxtriage.git"
-            type: "dir"
-            remove: false
-            target: "${writePath}/workflows/taxtriage/taxtriage"
-          type: "orchestration" 
-          service:
-            command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
-            init: false
-            force_restart: true
-            image: "bitnami/git"
-            name: "nfcore_taxtriage_git"
-            force_init: false
-            config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
-            orchestrated: true
-            workingdir: "/opt"
-          target: "${writePath}/workflows/taxtriage/taxtriage"
-          format: dir
-          bind: 
-            from: "${writePath}/workflows/taxtriage"
-            to: "/opt/source"
-          workingdir: "/opt/source"
-          overwrite: true
-          command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
-          label: "Tax Triage Code" 
-        - source:
-            url: ftp.ncbi.nlm.nih.gov
-            type: "file"
-            user: anonymous
-            path: /genomes/refseq/assembly_summary_refseq.txt
-            password: null
-            protocol: ftp
-            remove: true
-            target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-          label: Assembly Refseq
-          type: "download"
-          format: "file"
-          target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-          overwrite: true
-        - source:
-            url: ftp.ccb.jhu.edu
-            type: file
-            user: anonymous
-            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
-            password: null
-            protocol: ftp
-            remove: false
-            target: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
-          label: Minikraken2
-          type: download
-          format: dir
-          decompress:
-            format: tgz
-            source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
-          target: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
-          overwrite: true
-      tags: 
-        - "Nextflow"
-        - "metagenomics"
-        - "nanopore"
-        - "illumina"
-      variables:
-        manifest:
-          label: "Input Samplesheet contents"
-          element: "list"
-          hint: "Samplesheet contents"
-          columns: 2
-          column: 12
-          sep: ","
-          define_columns: 
-            fastq_1: 
-              element: 'file'
-            fastq_2: 
-              element: file
-            from: 
-              element: dir
-            sequencing_summary: 
-              element: file
-            platform: 
-              custom: False
-              options: ['ILLUMINA', 'OXFORD']
-            barcode: 
-              custom: False
-              options: [True, False]
-            trim: 
-              custom: False
-              options: [True, False]
-            single_end: 
-              custom: False
-              options: [True, False]
-          update_on: 
-            depends:
-              - csv
-            action: "read"
-            sep: ","
-            header: true
-            source: "%{variables.csv.source}"
-          bind:
-            from:  "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
-            to: "/opt/samplesheet/Samplesheet.csv"
-          create:
-            target: "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
-            sep: ","
-            type: "list"
-            header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
-          class: "wb-50  p-3 mb-1"
-          source: []
-          header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
-          append_newline: false
-        csv:
-          label: "Samplesheet"
-          fallback: "${writePath}/workflows/nfcore_taxtriage/Samplesheet.target.csv"
-          warning: "Must be in .csv format (comma separated)"
-          hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
-          element: "file"
-          set:
-            - target: "variables.manifest.source"
-              header: ['single_end','fastq_1','fastq_2', 'sample', 'from',  'platform',  'sequencing_summary', 'barcode', 'trim']
-              reformat: ['sequencing_summary', 'from', 'fastq_1', 'fastq_2']
-              source: "%{variables.csv.source}"
-              sep: "," 
-          source: null
-          bind: self
-          read:
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "fastq_1"
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "fastq_2"
-            - type: "directory"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "from"
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "sequencing_summary"
-        maxCPUs:
-          label: "Maximum CPUs"
-          element: "number"
-          source: 3
-          optional: true
-          target: "%{variables.maxCPUs.source}"
-          append:
-            command: " --max_cpus \"${maxCPUs}\" "
-            placement: 2
-            position: "end"
-            services: 
-              - 1
-        sleepTime:
-          label: "Lag Time (s) between Pipeline start and Docker starting"
-          source: 5
-          element: number
-        maxMemory:
-          label: "Maximum Memory (GB)"
-          element: "number"
-          source: 12
-          optional: true
-          target: "%{variables.maxMemory.source}"
-          append:
-            command: " --max_memory \"${maxMemory}\"GB "
-            placement: 2
-            position: "end"
-            services: 
-              - 1
-        db:
-          label: Classifier database
-          class: wb-100 p-3 mb-1
-          option: 0
-          options:
-            - element: null
-              name: Minikraken2
-              source: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
-              target: /opt/databases/minikraken2
-              warning: >-
-                Requires roughly 7.5 GB of free RAM to load. If limited in RAM
-                available, try to change Memory Mapping below to classify on the
-                local filesystem. If your input file is large, however, this can
-                take a long time
-              bind:
-                from: '%{variables.db.source}'
-                to: /opt/databases/minikraken2
-            - element: dir
-              name: Custom DB
-              source: null
-              target: /opt/databases/<<basename(%{variables.db.source})>>
-              bind: self
-        skip_assembly:
-          label: "Skip De Novo Assembly"
-          element: "checkbox"
-          source: true
-          hint: "Skip De Novo Assembly"
-          define: 
-            skip_assembly: "--skip_assembly"
-        skip_plots:
-          label: "Skip QC Plotting"
-          element: "checkbox"
-          source: true
-          hint: "Skip QC plotting"
-          define: 
-            skip_plots: "--skip_plots"
-        resume:
-          label: "Resume Nextflow"
-          element: "checkbox"
-          source: true
-          hint: "pick up where you left off, useful if piplines are lenghty or you're debugging issues with a failed midrun submission"
-          define: 
-            resume: "-resume"
-        assembly_option: 
-          label: "Assembly File Option"
-          option: 0
-          options:
-            - element: null
-              name: "NCBI Refseq Assembly Txt File"
-              source:  "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-              target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
-              define: 
-                assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
-              bind: 
-                from: "%{variables.assembly_option.source}"
-                to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
-            - element: null
-              name: "Pull Assembly File Automatically"
-              source: null
-              target: null
-              define: 
-                assembly: ""
-            - element: "file"
-              source: null
-              name: "Custom Assembly Txt file"
-              hint: "Must be in the same format as the ncbi assembly refseq file"
-              target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
-              bind: 
-                from: "%{variables.assembly_option.source}"
-                to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
-              define: 
-                assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
-        code: 
-          label: "code dir"
-          name: "code"
-          hidden: true
-          bind:
-            from:  "${writePath}/workflows/taxtriage/taxtriage"
-            to: "/opt/code"
-        autopull: 
-          label: "Automatically Pull Latest Code from GitHub"
-          name: pull
-          source: true
-          element: "checkbox"
-          target: null
-          append:
-            command: "git -C /opt/code pull ; "
-            placement: 2
-            position: "start"
-            services: 
-              - 0
-        filter_db:
-          label: "Filter Database"
-          element: "dir"
-          source: null
-          hint: "Database to extract reads out of"
-          target: "/opt/database_filter"
-          bind: "self"
-          define:
-            filter: " --filter %{variables.filter_db.target} "
-        rundir:
-          label: "Run Directory"
-          element: "file"
-          source: null
-          hint: "Requires a Samplesheet.csv with all relevant data in the same folder in terms of pathing as well as things like your fastq files and sequencing summary files"
-          target: "/opt/data"
-          bind: "self"
-        samplesheet:
-            label: "Samplesheet"
-            warning: "Must be in the root (same level) of the run directory"
-            hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
-            element: "exists"
-            source:  null
-            validations:
-              - type: "files"
-                error: "Must have a Samplesheet.csv file in the root directory (directly in your run directory)"
-                target: 
-                  type: "value"
-                  minimum: 1
-                  path: "%{variables.rundir.source}"
-                  value: "Samplesheet.csv$"
-            update_on: 
-              depends:
-                - rundir
-              action: "exists"
-              source: "%{variables.rundir.source}"
-        profile:
-          label: "Profile"
-          options:
-            - "docker"
-            - "singularity"
-            - "conda"
-        outdir:
-          label: "Output Directory"
-          output: True
-          hint: "Directory to place your analysis results into"
-          source: "<<directory(%{variables.csv.source})>>/taxtriage_output"
-          path: "<<directory(%{variables.csv.source})>>/taxtriage_output"
-          name: "Output Folder"
-          target: "/opt/output"
-          bind: "self"
-        report:
-          label: "Report"
-          element: file
-          openSelf: true
-          output: True
-          source: "%{variables.outdir.source}/multiqc/multiqc_report.html"
-          path: "%{variables.outdir.source}/multiqc/multiqc_report.html"
-          name: "Report"
-          target: "%{variables.outdir.target}/multiqc/multiqc_report.html"
+        - target: "nextflow"
+          label: "Nextflow"
+          source: "https://nextflow.io/"
+          type: "binary"
       services:
         - name: taxtriage
           orchestrator: true
@@ -377,12 +274,9 @@
           image: "jhuaplbio/basestack_orchestrator:v1.0.0"
           workingdir: "/opt/code"
           warning: "This process requires internet in its current state"
-          # command: [
-          #   "bash", "-c", "${pull}"
-          # ]
           command: [
             "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep ${sleepTime}; 
-             nextflow run /opt/code/main.nf 
+            nextflow run /opt/code/main.nf 
               --input /opt/samplesheet/Samplesheet.csv
               --db ${db}  
               --outdir /opt/output
@@ -392,4 +286,78 @@
               ${resume} ${filter}; chmod -R 777 /opt/output; chmod +x /opt/output/**/*html; 
               pkill -9 .; '  "
           ]
+        # - name: "docker"
+        #   label: "Dockerized"
+        #   items:
+        #     - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
+        #       label: "jhuaplbio/basestack_orchestrator:v1.0.0"
+        #       type: "docker"
+        #       format: "docker"
+        #     - target: "bitnami/git"
+        #       label: "bitnami/git"
+        #       type: "docker"
+        #       format: "docker"
+        #     - source: 
+        #         url: "git clone  https://github.com/jhuapl-bio/taxtriage.git"
+        #         type: "dir"
+        #         remove: false
+        #         target: "${writePath}/workflows/taxtriage/taxtriage"
+        #       type: "orchestration" 
+        #       service:
+        #         command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
+        #         init: false
+        #         force_restart: true
+        #         image: "bitnami/git"
+        #         name: "nfcore_taxtriage_git"
+        #         force_init: false
+        #         config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
+        #         orchestrated: true
+        #         workingdir: "/opt"
+        #       target: "${writePath}/workflows/taxtriage/taxtriage"
+        #       format: dir
+        #       bind: 
+        #         from: "${writePath}/workflows/taxtriage"
+        #         to: "/opt/source"
+        #       workingdir: "/opt/source"
+        #       overwrite: true
+        #       command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
+        #       label: "Tax Triage Code" 
+        #     - source:
+        #         url: ftp.ncbi.nlm.nih.gov
+        #         type: "file"
+        #         user: anonymous
+        #         path: /genomes/refseq/assembly_summary_refseq.txt
+        #         password: null
+        #         protocol: ftp
+        #         remove: true
+        #         target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+        #       label: Assembly Refseq
+        #       type: "download"
+        #       format: "file"
+        #       target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+        #       overwrite: true
+        #     - source:
+        #         url: ftp.ccb.jhu.edu
+        #         type: file
+        #         user: anonymous
+        #         path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
+        #         password: null
+        #         protocol: ftp
+        #         remove: false
+        #         target: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+        #       label: Minikraken2
+        #       type: download
+        #       format: dir
+        #       decompress:
+        #         format: tgz
+        #         source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+        #       target: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
+        #       overwrite: true
+      tags: 
+        - "Nextflow"
+        - "metagenomics"
+        - "nanopore"
+        - "illumina"
+      
+      
     

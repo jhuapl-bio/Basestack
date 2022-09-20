@@ -21,6 +21,7 @@ export  class Job {
         this.mergedConfig = cloneDeep(this.baseConfig)
         this.containers = []
         this.env = {}
+        this.procedure = procedure
         this.status = { 
             exists: false, 
             services_used: [],
@@ -507,7 +508,7 @@ export  class Job {
         let response = await Promise.allSettled(promises)
         return 
     }
-    async loopServices(){      
+    async loopServices(autocheck){      
         const $this  = this 
         let cancelled_or_skip = false
         let end = false  
@@ -517,7 +518,18 @@ export  class Job {
                 try{  
                     let skip        
                     store.logger.info("I: %s, Starting a new job service %s", i, service.name)
-                        
+                    let procedures = $this.procedure
+                    let index = procedures.dependencies.findIndex((f)=>{
+                        return f.fulltarget == service.config.image
+                    })
+                    if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
+                        if (!autocheck){
+                            store.logger.info("Image doesnt exists %s", service.config.image, index)
+                        } else {
+                            store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                        }
+                        await procedures.build(false, index, true)
+                    }
                     skip = await service.check_then_start({ variables: $this.variables }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
@@ -562,6 +574,7 @@ export  class Job {
         $this.status.running = true 
         $this.status.complete = false
         let promises = []; 
+        let autocheck = params.autocheck
         if (!params.variables){
             params.variables = {} 
         }
@@ -583,7 +596,7 @@ export  class Job {
         
         store.logger.info("Job starting: %s", $this.name)
         try{
-            this.loopServices()
+            this.loopServices(autocheck)
             return 
         } catch (err){
             store.logger.error(err)

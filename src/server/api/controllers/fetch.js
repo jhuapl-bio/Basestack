@@ -8,7 +8,7 @@
   */
 const fs = require("fs")
 const { convert_custom, checkFileExist,  checkFolderExists, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
-import  path  from "path"
+import  path  from "path" 
 const { bytesToSize } = require("./configurations.js")
 const { create_module } = require("./init.js")
 const { store }  = require("../../config/store/index.js")
@@ -290,13 +290,12 @@ export async function getRemoteConfigurations(url){
 }
  
 
-export async function fetch_external_yamls(key){
+export async function fetch_external_yamls(){
 	let url = `https://api.github.com/repos/jhuapl-bio/Basestack/git/trees/staging?recursive=1`
 	try{
-		console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!",url)
 		let modules = []
 		let promises = []
-		let json = await axios.get(url)
+		let json = await axios.get(url) 
 		if (json  && typeof json == 'object' && json.data.tree){
 			json.data.tree.filter((f)=>{
 				return path.dirname(f.path) == 'data/config/server/config/modules'
@@ -307,7 +306,7 @@ export async function fetch_external_yamls(key){
 				
 			})
 		}
-		Promise.allSettled(promises).then((f)=>{
+		let data = await Promise.allSettled(promises).then((f)=>{
 			modules = f.filter((entry)=>{
 				return entry.status == 'fulfilled'
 			}).map((entry)=>{
@@ -318,6 +317,7 @@ export async function fetch_external_yamls(key){
 			store.logger.error(err)
 			throw err
 		})
+		return data
 	} catch(err){
 		store.logger.error(err)
 		throw err
@@ -501,10 +501,27 @@ export async function listImages(dind){
 
 			}) 
 		}  
-	})
+	}) 
 }
 
-export async function check_image(image){
+import hasbin from 'hasbin'
+
+export async function checkBinary(target){
+	return new Promise((resolve, reject)=>{
+		try{
+			hasbin(target, function(ff){
+				resolve({
+					version: null, 
+					exists:ff
+				})
+			})
+		} catch (err){
+			store.logger.error(err)
+			reject(err)
+		}
+	})
+}
+export async function check_image(image, returnable){
 	return new Promise((resolve, reject)=>{
 		try{
 			(async ()=>{
@@ -532,7 +549,11 @@ export async function check_image(image){
 				
 			})().catch((error)=>{ 
 				// logger.error(`check image exists failed or doesn't exist %o`, error)
-				reject(error)
+				if (returnable){
+					resolve(false)
+				} else {
+					reject(error)
+				}
 			});
 		} catch(err){
 			logger.error("%s %s", err, " error  in retrieving docker image name: "+image)

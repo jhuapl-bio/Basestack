@@ -247,7 +247,6 @@ export  class Configuration {
                                     if (typeof fullstring == 'string'){
                                         fullstring= $this.mapFunctions(fullstring, obj.formatting)
                                     } else if (Array.isArray(fullstring)){
-                                        console.log("isarray")
                                         fullstring = fullstring.map((f)=>{
                                             return $this.mapFunctions(f, obj.formatting)
                                         })

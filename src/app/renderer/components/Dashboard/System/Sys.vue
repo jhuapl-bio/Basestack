@@ -87,6 +87,7 @@
         const $this = this
         FileService.getResources().then((status)=>{
           $this.resources= status.data.data.resources
+          process.env.os == $this.resources.os
           $this.checkingResources = false
           return 
         }).catch((err)=>{

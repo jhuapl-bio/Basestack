@@ -1,3 +1,5 @@
+import { spawnLog } from "./logger.js"
+
 /*  
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
@@ -216,7 +218,7 @@ export var loadImage = function(obj){
 }
 
 
-export var pullImage  = function(name){
+export var pullImage  = function(name, wait){
 	return new Promise(function(resolve,reject){
 	console.log(name,"<<<< name pull")
     store.docker.pull(name)
@@ -230,5 +232,20 @@ export var pullImage  = function(name){
         reject(errStream)
       });
     })
+}
+
+
+export var pullImageSync  = async function(name){
+    let stream = await store.docker.pull(name)
+		return new Promise(function(resolve,reject){
+			let logger;
+			spawnLog(stream, logger)
+			stream.on("end", (err, data)=>{
+					resolve()
+			})
+			stream.on("error", (err)=>{
+				reject(err)
+			})
+		})
 }
 		

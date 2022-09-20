@@ -537,7 +537,7 @@ router.get("/procedure/get/:catalog/:procedure/:token", (req,res,next)=>{ // bui
 		}
 		let dependencies = procedure.dependencies.map((d,i)=>{
 			let { streamObj, ...ret } = d
-			if (d.type == 'docker'){
+			if (d.type == 'docker'){ 
 				if (store.images[d.target.split(":")[0] ]){
 					ret.tags = store.images[d.target.split(":")[0] ].all_tags
 				} else {
@@ -1219,7 +1219,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			}    
 			let skip = true 
 			store.logger.info("Starting Job! with services: %s", services) 
-  			let job = await create_job(procedure.config, req.body, services, procedure)
+  		let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
 			skip = await job.start(req.body) 

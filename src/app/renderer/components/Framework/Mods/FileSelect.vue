@@ -10,32 +10,33 @@
   <v-container id="file"   @drop.prevent="addDropFile" @dragover.prevent >
       <v-file-input 
           v-model="value"  class="fill-width"
-          :hint="hint" persistent-hint
+          :hint="hint" persistent-hint 
           show-size  overlap
-          counter 
+          counter :solo="type =='solo' ? true : false"
       > 
         <template v-slot:append-outer>
           <v-icon  v-if="value" class="text--caption configure mr-3" @click="value = null" color="grey" small>$times-circle
           </v-icon>
           <v-divider vertical></v-divider>
-          <v-dialog class="justify-end align-right"
-              v-model="dialog" 
-              
-              max-width="290"
-            >
-              
-              <template v-slot:activator="{ on, attrs }">
-                <p class="ml-3" style="font-size:70%">Permissions</p>
-                <v-icon @click="dialog=true"  v-if="process && !process.system.isWin && source"  v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
-                </v-icon>
-              </template>
-              <Permissions
-                :source="source"
-              ></Permissions>
-            </v-dialog>
+          
         </template>
       </v-file-input >
-      
+      <!-- <v-dialog class="justify-end align-right"
+            v-model="dialog" 
+            v-if="process && !process.system.isWin && source"
+            max-width="290"
+        >
+            
+            <template v-slot:activator="{ on, attrs }">
+            <p class="ml-3" style="font-size:70%">Permissions</p>
+            <v-icon @click="dialog=true"   v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
+            </v-icon>
+            </template>
+            <Permissions
+            :source="source"
+            ></Permissions>
+        </v-dialog>
+       -->
   
     
       
@@ -65,8 +66,10 @@ export default {
     computed: {
         hint() {
             let hint = "";
-            if (this.variable.target) {
+            if (!this.fullhint && this.variable.target) {
                 hint = `${this.variable.target}`;
+            } else {
+                hint = this.fullhint
             }
             return hint;
         },
@@ -79,7 +82,7 @@ export default {
         updateValidity() {
         }
     },
-    props: ["source", "variable"],
+    props: ["source", "variable", 'fullhint', 'type'],
     mounted() {
         this.process = process.env;
         if (!this.value && typeof (this.source) == "string") {

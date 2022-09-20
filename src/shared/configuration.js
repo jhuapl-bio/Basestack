@@ -35,7 +35,7 @@ export  class Configuration {     // Make the main procedure class for configura
           
         };
         this.obj = obj
-        
+        this.config = config
         if (config.shared && config.shared.variables){ // Shared variables are shared across one or more procedures to reduce coding needs/bloat
             for (let [key, value] of Object.entries(config.variables)){
                 if (value.shared){
@@ -93,7 +93,7 @@ export  class Configuration {     // Make the main procedure class for configura
     }
     mergeInputs(params, path){
         if (!path){
-            path = ""
+            path = "" 
         }
         const $this = this;
         for (let [key, custom_variable] of Object.entries(params)){ // move thru all elements of the object 

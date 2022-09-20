@@ -100,6 +100,7 @@ export  class Module {
         let promises = []   
         const $this = this;
         cloneDeep(this.config.procedures).forEach((procedure, idx)=>{
+            // procedure.variables = this.config.variables
             promises.push(this.defineProcedure(procedure, idx))
         }) 
         Promise.allSettled(promises).then((response)=>{
@@ -117,7 +118,6 @@ export  class Module {
         procedure.shared = this.config.shared
         let proce = new Procedure(procedure, this.catalog, this.module, procedureIdx )
         await proce.init() 
-        
         return proce
     }
     async fetchVersion(dependency){

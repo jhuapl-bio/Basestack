@@ -6,8 +6,8 @@ const path = require("path")
 const { store }  = require("../../config/store/index.js")
 const lodash = require("lodash")  
 const {removeDep} = require("../controllers/post-installation.js")
-const {   fetch_external_config, fetch_external_yamls } = require("../controllers/fetch.js") 
-const { removeFile } = require("../controllers/IO.js")
+const {   fetch_external_config } = require("../controllers/fetch.js") 
+const { removeFile, readFile } = require("../controllers/IO.js")
 const {  init_modules } = require("../controllers/init.js")
 const {   import_cfgs } = require("../controllers/configurations.js") 
 const { Module } = require("../orchestrators/module.js")
@@ -20,6 +20,35 @@ export  class Library {
         this.catalog = {} 
         this.locals = store.config.imported
         this.customs = {}
+        for (let [key, value] of Object.entries(config.variables)){
+            
+            if (value.options){
+                if (!value.option){
+                    value.option = 0
+                } 
+                
+                value.optionValue = value.options[value.option]
+                if (typeof value.optionValue == 'object' && !value.optionValue.source && !value.optionValue.element && typeof value.optionValue != "string"   ){
+                    value.optionValue.source = true
+                }
+                
+                if (typeof value.options[value.option] == 'object' && !value.options[value.option].source){
+                    
+                    if (typeof value.optionValue == 'string'){
+                        value.source = value.optionValue
+                    }else {
+                        value.source = value.optionValue.source
+                    }
+                } 
+            }
+            if (value.load){
+                readFile(value.load).then((data)=>{
+                    value.source = JSON.parse(data)
+                }).catch((err)=>{
+                    store.logger.error("%o error in reading file to load for server %s", err, $this.name)
+                })
+            }
+        }
         const $this = this
         
         Object.defineProperty(this, "all", {
@@ -438,18 +467,15 @@ export  class Library {
     }
     async getRemotes(target, catalog){
         const $this = this;
-        // let modules = await fetch_external_config(target)
-        let modules = await fetch_external_yamls()
-        // modules = parseConfigVariables(JSON.stringify(modules), store.system)
-        console.log(modules,"..............................")
+        let modules = await fetch_external_config(target)
+        modules = parseConfigVariables(JSON.stringify(modules), store.system)
         modules.forEach((module)=>{
             if (module ){
                 this.addRemote(module, module.name)
-            } else {  
+            } else {
                 store.logger.info("No modules found at remote location")
             }  
         })
-        console.log($this.remotes)
         return $this.remotes
        
         
@@ -533,10 +559,10 @@ export  class Library {
     async importModules(){
         let module_paths = store.system.modules
         let promises = []
+        console.log("import")
         module_paths.savedPaths.forEach((item)=>{ 
             promises.push(import_cfgs(item))
         })
-        
         let results_default = await Promise.allSettled(promises)
         results_default.forEach((result, index)=>{
             if (result.status == 'fulfilled'){ 
@@ -585,7 +611,7 @@ export  class Library {
             }
         })
         return 
-    }
+    } 
     async init_modules(){
         let $this = this
         return new Promise((resolve, reject)=>{

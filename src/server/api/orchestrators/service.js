@@ -1,5 +1,6 @@
 import nestedProperty from 'nested-property';
 import { checkExists } from '../../../shared/IO.js';
+import { pullImage, pullImageSync } from '../controllers/post-installation.js';
 const cloneDeep = require("lodash.clonedeep"); 
 const os = require("os")
 /*
@@ -16,7 +17,7 @@ var  { store }  = require("../../config/store/index.js")
  
 const {  validateFramework } = require("../controllers/validate.js")
 const { readFile, readCsv, writeFile, copyFile, writeFolder } = require("../controllers/IO.js")
-const { check_container,   } = require("../controllers/fetch.js")
+const { check_container, check_image,   } = require("../controllers/fetch.js")
 const { spawnLog } = require("../controllers/logger.js")
 const { Configuration }  = require("./configuration.js")
 var logger = store.logger    
@@ -244,6 +245,11 @@ export class Service {
                 
                 $this.container = null
                 let skip = false 
+                exists = await check_image($this.config.image,true)
+                if (!exists){
+                    await pullImageSync($this.config.image)
+                }
+    
                 skip = await $this.start(params, wait)
                 if ($this.status.cancelled){
                     skip = true
@@ -1068,6 +1074,7 @@ export class Service {
                         }
                     })
                     store.logger.info("%o _____ ",options)
+                    
                     logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 
                         resolve()  

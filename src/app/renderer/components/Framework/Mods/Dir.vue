@@ -8,35 +8,40 @@
   -->
 <template>
   <v-card >
-      <v-sheet  elevation="1" 
-          height="50" :hint="hint" persistent-hint
-          max-width="600" class="px-8 pt-4" 
-          style="" @drop.prevent="addDropFiles" @dragover.prevent >
+    <v-list-item-subtitle class="text-wrap" v-if="variable.hint">
+        {{variable.hint}}
+    </v-list-item-subtitle>
+    <v-sheet  elevation="1" 
+        height="50" :hint="hint" persistent-hint
+        max-width="600" class="px-8 pt-4" 
+        style="" @drop.prevent="addDropFiles" @dragover.prevent >
+        
+          <v-icon
+          small class="mr-2 "
+          > $upload
+          </v-icon>
+          Drag Folder here
+          <v-icon  v-if="directory" class="text--caption configure ml-5" @click="directory = null" color="grey" small>$times-circle
+          </v-icon>
+          <v-dialog v-if="process && !process.system.isWin && source"
+            v-model="dialog"
+            max-width="290"
+          >
+          <template v-slot:activator="{ on, attrs }">
+              <v-icon @click="dialog=true"   v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
+              </v-icon>
+            </template>
+            <Permissions
+              :source="source"
+            ></Permissions>
+          </v-dialog>
           
-            <v-icon
-            small class="mr-2 "
-            > $upload
-            </v-icon>
-            Drag Folder here
-            <v-icon  v-if="directory" class="text--caption configure ml-5" @click="directory = null" color="grey" small>$times-circle
-            </v-icon>
-            <v-dialog
-              v-model="dialog"
-              max-width="290"
-            >
-            <template v-slot:activator="{ on, attrs }">
-                <v-icon @click="dialog=true"  v-if="process && !process.system.isWin && source"  v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
-                </v-icon>
-              </template>
-              <Permissions
-                :source="source"
-              ></Permissions>
-            </v-dialog>
-           
-      </v-sheet>
-      <small class="text-caption" v-if="directory">
-        {{directory}}
-      </small>
+    </v-sheet>
+    
+    <small class="text-caption" v-if="directory">
+      {{directory}}
+    </small>
+
       
       
       
@@ -69,7 +74,6 @@ export default {
       if (this.variable.target){
         hint =`${this.variable.target}`
       }
-      console.log(hint)
       return hint
     },
   },

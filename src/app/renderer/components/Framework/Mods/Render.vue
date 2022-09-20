@@ -199,7 +199,7 @@ export default {
       	},
 		open_local_link (link, e) {
           e.stopPropagation()
-		  console.log(this.getUrl(link),link.from)
+					this.logger.info(`${this.getUrl(link)},${link.from}`)
           window.open(this.getUrl(link), "browser", 'top=500,left=200,frame=true,nodeIntegration=no')
       	},
 		getUrl(link){
