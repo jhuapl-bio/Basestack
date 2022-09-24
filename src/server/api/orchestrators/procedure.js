@@ -17,17 +17,18 @@ const { remove_images, removeVolume, checkVolumeExists, pullImage, loadImage, cr
 const {  check_image, fetch_external_dockers } = require("../controllers/fetch.js")
 const { Service }  = require("./service.js") 
 const { spawnLog } = require("../controllers/logger.js")
-
+ 
 var logger = store.logger
 // var docker = new Docker();   
 const fs = require("file-system")     
-let dockerObj;     
+let dockerObj;      
    
 export class Procedure { 
 	constructor(procedure){
 		this.name = procedure.name    
         this.type = 'procedure' 
         this.config = procedure  
+        this.deployment = procedure.deployment ? procedure.deployment : "native"
         this.baseConfig = procedure
         this.lastJob = null
         const $this = this
@@ -56,23 +57,6 @@ export class Procedure {
             }
         })
 
-        // if (procedure.shared && procedure.shared.variables){
-            
-        //     for (let [key, value] of Object.entries(procedure.variables)){
-        //         if (value.shared){
-        //             this.config.variables[key]= procedure.shared.variables[key]
-        //         }
-        //     }
-        // }   
-        // if (procedure.shared && procedure.shared.services){
-        //     procedure.services.forEach((service,i)=>{
-        //         if (service.shared && procedure.shared.services[service.target]){
-        //             this.config.services[i] = procedure.shared.services[service.target]
-                    
-        //         }
-        //     }) 
-        // }
-        
         
           
         this.i =0
@@ -182,6 +166,7 @@ export class Procedure {
                 $this.services[service] = store.services[service] 
             }
         })
+        console.log("Define services")
 
         let services = {}
         for( let [key, service] of Object.entries(this.services)){
@@ -795,39 +780,39 @@ export class Procedure {
             return messages
         }
 	} 
-    updateVariables(variables){
-        try{
-            // let services_objs = this.services
-            let configVariables = cloneDeep(this.config.services)
+    // updateVariables(variables){
+    //     try{
+    //         // let services_objs = this.services
+    //         let configVariables = cloneDeep(this.config.services)
             
-            let parsed_variables = cloneDeep(this.config.services)
-            .map((d)=>{
-                if (d && d.variables){
-                    return d.variables
-                } else { 
-                    return {}
-                }
-            }) 
-            variables.forEach((variable, i)=>{
-                for (let [key, value] of Object.entries(variable)){
-                    if (value.source && value.source !== '' && parsed_variables[i][key]){
-                        parsed_variables[i][key].source = value.source
-                    }
-                    if ((value.option || value.option == 0) && parsed_variables[i][key]){
-                        parsed_variables[i][key].option = value.option
-                    }  
-                }
+    //         let parsed_variables = cloneDeep(this.config.services)
+    //         .map((d)=>{
+    //             if (d && d.variables){
+    //                 return d.variables
+    //             } else { 
+    //                 return {}
+    //             }
+    //         }) 
+    //         variables.forEach((variable, i)=>{
+    //             for (let [key, value] of Object.entries(variable)){
+    //                 if (value.source && value.source !== '' && parsed_variables[i][key]){
+    //                     parsed_variables[i][key].source = value.source
+    //                 }
+    //                 if ((value.option || value.option == 0) && parsed_variables[i][key]){
+    //                     parsed_variables[i][key].option = value.option
+    //                 }  
+    //             }
                     
-            })
-            let linking = this.config.linking
+    //         })
+    //         let linking = this.config.linking
             
-            return  parsed_variables
-        } catch (err){
-            logger.error(err)
-            throw err
-        }
+    //         return  parsed_variables
+    //     } catch (err){
+    //         logger.error(err)
+    //         throw err
+    //     }
 
-    }
+    // }
     
 
 

@@ -194,6 +194,7 @@ const cloneDeep = require("lodash.clonedeep");
 import FileSelect  from '@/components/Framework/Mods/FileSelect.vue' ;
 import Dir from '@/components/Framework/Mods/Dir.vue';
 import { readCsv } from '../../../../../shared/IO';
+const path = require("path")   
 
 export default {
 	name: 'multi-select',
@@ -278,6 +279,19 @@ export default {
                 try{
                     let data = await readCsv(event, ",", true)
                     if (data){ 
+                        if (this.variable.samplesheet && this.variable.samplesheet.define_columns){
+                            data = data.map((d)=>{
+                                console.log(d)
+                                for( let [key, val] of Object.entries(this.variable.samplesheet.define_columns)){
+                                    console.log(key, val)
+                                    if (d[key] &&  ['file', 'dir', 'directory'].indexOf(val.element)> -1 && !path.isAbsolute(d[key])){
+                                        d[key] = path.join(path.dirname(event), d[key])
+                                    }
+                                }
+                                return d
+                            })
+                            
+                        }
                         this.$emit("updateValue", data);
                     } else {
                         this.$swal.fire({

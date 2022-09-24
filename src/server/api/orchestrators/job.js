@@ -11,8 +11,9 @@ var logger = store.logger
  
 export  class Job {  
     constructor(procedure, config){         
-        this.config = null  
-        this.options = null   
+        this.config = config  
+        this.options = null  
+        this.deployment = procedure.deployment 
         this.configurations = null 
         this.services = []
         this.variables = {}
@@ -359,10 +360,12 @@ export  class Job {
         
         this.variables = variables
         const $this = this
+        console.log(1)
         for(let [key, value] of Object.entries(variables)){
             if (!$this.runningConfig.variables[key] && value.custom){
                 $this.runningConfig.variables[key] = value
             } 
+
             let obj = $this.runningConfig.variables[key]
             this.setValueVariable(value, obj, key)
              
@@ -517,19 +520,25 @@ export  class Job {
                 let service = $this.services[i]
                 try{  
                     let skip        
-                    store.logger.info("I: %s, Starting a new job service %s", i, service.name)
+                    store.logger.info("%s, Starting a new job service %s", i, service.name)
+                    console.log(this.deployment,"<<")
                     let procedures = $this.procedure
-                    let index = procedures.dependencies.findIndex((f)=>{
-                        return f.fulltarget == service.config.image
-                    })
-                    if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
-                        if (!autocheck){
-                            store.logger.info("Image doesnt exists %s", service.config.image, index)
-                        } else {
-                            store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                    if (this.deployment == 'native'){
+                        console.log("is native, skipping")
+                    } else {
+
+                        let index = procedures.dependencies.findIndex((f)=>{
+                            return f.fulltarget == service.config.image
+                        })
+                        if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
+                            if (!autocheck){
+                                store.logger.info("Image doesnt exists %s", service.config.image, index)
+                            } else {
+                                store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                            }
+                            await procedures.build(false, index, true)
                         }
-                        await procedures.build(false, index, true)
-                    }
+                    } 
                     skip = await service.check_then_start({ variables: $this.variables }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)

@@ -18,39 +18,31 @@
       samplesheet:
         sep: ","
         header: true
+        define_columns: 
+          fastq_1: 
+            element: 'file'
+          fastq_2: 
+            element: file
+          from: 
+            element: dir
+          sequencing_summary: 
+            element: file
+          platform: 
+            custom: False
+            options: ['ILLUMINA', 'OXFORD']
+          barcode: 
+            custom: False
+            options: [True, False]
+          trim: 
+            custom: False
+            options: [True, False]
+          single_end: 
+            custom: False
+            options: [True, False]
       hint: "Samplesheet contents"
       columns: 2
       column: 12
       sep: ","
-      define_columns: 
-        fastq_1: 
-          element: 'file'
-        fastq_2: 
-          element: file
-        from: 
-          element: dir
-        sequencing_summary: 
-          element: file
-        platform: 
-          custom: False
-          options: ['ILLUMINA', 'OXFORD']
-        barcode: 
-          custom: False
-          options: [True, False]
-        trim: 
-          custom: False
-          options: [True, False]
-        single_end: 
-          custom: False
-          options: [True, False]
-      
-      # update_on: 
-      #   depends:
-      #     - csv
-      #   action: "read"
-      #   sep: ","
-      #   header: true
-      #   source: "%{variables.csv.source}"
       bind:
         from:  "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
         to: "/opt/samplesheet/Samplesheet.csv"
@@ -63,41 +55,6 @@
       source: []
       header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
       append_newline: false
-    # csv:
-    #   label: "Samplesheet"
-    #   fallback: "${writePath}/workflows/nfcore_taxtriage/Samplesheet.target.csv"
-    #   warning: "Must be in .csv format (comma separated)"
-    #   hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
-    #   element: "file"
-    #   set:
-    #     - target: "variables.manifest.source"
-    #       header: ['single_end','fastq_1','fastq_2', 'sample', 'from',  'platform',  'sequencing_summary', 'barcode', 'trim']
-    #       reformat: ['sequencing_summary', 'from', 'fastq_1', 'fastq_2']
-    #       source: "%{variables.csv.source}"
-    #       sep: "," 
-    #   source: null
-    #   bind: self
-    #   read:
-    #     - type: "file"
-    #       sep: ","
-    #       source: "%{variables.csv.source}"
-    #       bind: "self"
-    #       column: "fastq_1"
-    #     - type: "file"
-    #       sep: ","
-    #       source: "%{variables.csv.source}"
-    #       bind: "self"
-    #       column: "fastq_2"
-    #     - type: "directory"
-    #       sep: ","
-    #       source: "%{variables.csv.source}"
-    #       bind: "self"
-    #       column: "from"
-    #     - type: "file"
-    #       sep: ","
-    #       source: "%{variables.csv.source}"
-    #       bind: "self"
-    #       column: "sequencing_summary"
     maxCPUs:
       label: "Maximum CPUs"
       element: "number"
@@ -271,6 +228,105 @@
           continuous: true
           force_init: false
           label: "TaxTriage"
+          workingdir: "/opt/code"
+          warning: "This process requires internet in its current state"
+          command: [
+            "bash", "-c", "nextflow run https://github.com/jhuapl-bio/taxtriage/main.nf
+              --input %{variables.csv.source}
+              --db ${db}  
+              --outdir ${output}
+              --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
+              -profile ${profile} ${skip_plots} ${skip_assembly} 
+              ${assembly} --demux 
+              ${resume} ${filter}; '  "
+          ]
+      tags: 
+        - "Nextflow"
+        - "metagenomics"
+        - "nanopore"
+        - "illumina"
+    - name: nfcore_taxtriage #Top level is the left-hand selection of the menu and the major module to install 
+      title: "TaxTriage (Docker)"
+      icon: "virus"
+      deployment: "docker"
+      module: True
+      full_orientation: true
+      init: false  
+      dependencies:
+        - name: "docker"
+          label: "Dockerized"
+          items:
+            - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
+              label: "jhuaplbio/basestack_orchestrator:v1.0.0"
+              type: "docker"
+              format: "docker"
+            - target: "bitnami/git"
+              label: "bitnami/git"
+              type: "docker"
+              format: "docker"
+            - source: 
+                url: "git clone  https://github.com/jhuapl-bio/taxtriage.git"
+                type: "dir"
+                remove: false
+                target: "${writePath}/workflows/taxtriage/taxtriage"
+              type: "orchestration" 
+              service:
+                command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
+                init: false
+                force_restart: true
+                image: "bitnami/git"
+                name: "nfcore_taxtriage_git"
+                force_init: false
+                config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
+                orchestrated: true
+                workingdir: "/opt"
+              target: "${writePath}/workflows/taxtriage/taxtriage"
+              format: dir
+              bind: 
+                from: "${writePath}/workflows/taxtriage"
+                to: "/opt/source"
+              workingdir: "/opt/source"
+              overwrite: true
+              command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
+              label: "Tax Triage Code" 
+            - source:
+                url: ftp.ncbi.nlm.nih.gov
+                type: "file"
+                user: anonymous
+                path: /genomes/refseq/assembly_summary_refseq.txt
+                password: null
+                protocol: ftp
+                remove: true
+                target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+              label: Assembly Refseq
+              type: "download"
+              format: "file"
+              target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+              overwrite: true
+            - source:
+                url: ftp.ccb.jhu.edu
+                type: file
+                user: anonymous
+                path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
+                password: null
+                protocol: ftp
+                remove: false
+                target: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+              label: Minikraken2
+              type: download
+              format: dir
+              decompress:
+                format: tgz
+                source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+              target: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
+              overwrite: true
+      services:
+        - name: taxtriage
+          orchestrator: true
+          force_restart: false
+          continuous: true
+          force_init: false
+          label: "TaxTriage"
           image: "jhuaplbio/basestack_orchestrator:v1.0.0"
           workingdir: "/opt/code"
           warning: "This process requires internet in its current state"
@@ -283,76 +339,9 @@
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
               -profile ${profile} ${skip_plots} ${skip_assembly} 
               ${assembly} --demux 
-              ${resume} ${filter}; chmod -R 777 /opt/output; chmod +x /opt/output/**/*html; 
-              pkill -9 .; '  "
+              ${resume} ${filter}; '  "
           ]
-        # - name: "docker"
-        #   label: "Dockerized"
-        #   items:
-        #     - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
-        #       label: "jhuaplbio/basestack_orchestrator:v1.0.0"
-        #       type: "docker"
-        #       format: "docker"
-        #     - target: "bitnami/git"
-        #       label: "bitnami/git"
-        #       type: "docker"
-        #       format: "docker"
-        #     - source: 
-        #         url: "git clone  https://github.com/jhuapl-bio/taxtriage.git"
-        #         type: "dir"
-        #         remove: false
-        #         target: "${writePath}/workflows/taxtriage/taxtriage"
-        #       type: "orchestration" 
-        #       service:
-        #         command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
-        #         init: false
-        #         force_restart: true
-        #         image: "bitnami/git"
-        #         name: "nfcore_taxtriage_git"
-        #         force_init: false
-        #         config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
-        #         orchestrated: true
-        #         workingdir: "/opt"
-        #       target: "${writePath}/workflows/taxtriage/taxtriage"
-        #       format: dir
-        #       bind: 
-        #         from: "${writePath}/workflows/taxtriage"
-        #         to: "/opt/source"
-        #       workingdir: "/opt/source"
-        #       overwrite: true
-        #       command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
-        #       label: "Tax Triage Code" 
-        #     - source:
-        #         url: ftp.ncbi.nlm.nih.gov
-        #         type: "file"
-        #         user: anonymous
-        #         path: /genomes/refseq/assembly_summary_refseq.txt
-        #         password: null
-        #         protocol: ftp
-        #         remove: true
-        #         target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-        #       label: Assembly Refseq
-        #       type: "download"
-        #       format: "file"
-        #       target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-        #       overwrite: true
-        #     - source:
-        #         url: ftp.ccb.jhu.edu
-        #         type: file
-        #         user: anonymous
-        #         path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
-        #         password: null
-        #         protocol: ftp
-        #         remove: false
-        #         target: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
-        #       label: Minikraken2
-        #       type: download
-        #       format: dir
-        #       decompress:
-        #         format: tgz
-        #         source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
-        #       target: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
-        #       overwrite: true
+        
       tags: 
         - "Nextflow"
         - "metagenomics"

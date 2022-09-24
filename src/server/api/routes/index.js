@@ -463,8 +463,10 @@ router.get("/catalog/get", (req,res,next)=>{ // build workflow according to name
 //Used
 router.get("/procedures/get/:catalog/:token", (req,res,next)=>{ // build workflow according to name and index
 	try {
-		let procedures = store.library.catalog[req.params.catalog].procedures
+		let catalog = store.library.catalog[req.params.catalog]
 		let data = []  
+		let procedures = catalog.procedures 
+		let variables  = catalog.variables
 		let token = req.params.token
 		if (!req.params.token){
 			token = 'development'
@@ -499,12 +501,12 @@ router.get("/procedures/get/:catalog/:token", (req,res,next)=>{ // build workflo
 						command: service.config.command, 
 						label: service.config.label,
 						idx: i,
-						variables: service.config.variables
+						// variables: service.config.variables
 					})
 				}) 
 				let tokenVals = store.server.cache.get(token)  
-				let cached_variables = nestedProperty.get(tokenVals, `catalog.${req.params.catalog}.${i}`)
-				returnable.cached_variables = cached_variables
+				// let cached_variables = nestedProperty.get(tokenVals, `catalog.${req.params.catalog}.${i}`)
+				// returnable.cached_variables = cached_variables
 				data.push(returnable)
 			} 
 			
@@ -1219,7 +1221,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			}    
 			let skip = true 
 			store.logger.info("Starting Job! with services: %s", services) 
-  		let job = await create_job(procedure.config, req.body, services, procedure)
+  			let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
 			skip = await job.start(req.body) 

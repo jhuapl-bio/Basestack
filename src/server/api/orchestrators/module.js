@@ -4,7 +4,7 @@ const { store } = require('../../config/store/index.js')
 const path = require("path")     
 const cloneDeep = require("lodash.clonedeep");   
 const { check_image, fetch_external_dockers } = require("../controllers/fetch.js")
-const {  removeFile, decompress_file, checkExists } = require("../controllers/IO.js")
+const {  removeFile, readFile, decompress_file, checkExists } = require("../controllers/IO.js")
 const { spawnLog } = require("../controllers/logger.js")  
 const {  remove_images, removeVolume } = require("../controllers/post-installation.js")
 export  class Module {       
@@ -12,7 +12,9 @@ export  class Module {
         this.name= module.name 
         this.module = moduleIdx
         this.catalog = catalog
+        this.variables = module.variables
         this.type = 'module'
+        const $this = this
         this.config = module
         this.procedures = []
         this.status =  { 
@@ -26,7 +28,35 @@ export  class Module {
             checking: false,
         }
         this.create_interval() 
-        this.statusCheck()
+        this.statusCheck() 
+        for (let [key, value] of Object.entries(this.variables)){
+            if (value.options){ 
+                if (!value.option){
+                    value.option = 0
+                } 
+                
+                value.optionValue = value.options[value.option]
+                if (typeof value.optionValue == 'object' && !value.optionValue.source && !value.optionValue.element && typeof value.optionValue != "string"   ){
+                    value.optionValue.source = true
+                }
+                
+                if (typeof value.options[value.option] == 'object' && !value.options[value.option].source){
+                    
+                    if (typeof value.optionValue == 'string'){
+                        value.source = value.optionValue
+                    }else {
+                        value.source = value.optionValue.source
+                    }
+                } 
+            }
+            if (value.load){
+                readFile(value.load).then((data)=>{
+                    value.source = JSON.parse(data)
+                }).catch((err)=>{
+                    store.logger.error("%o error in reading file to load for server %s", err, $this.name)
+                })
+            }
+        }
 	} 
     async create_interval (){
         const $this = this
@@ -100,7 +130,6 @@ export  class Module {
         let promises = []   
         const $this = this;
         cloneDeep(this.config.procedures).forEach((procedure, idx)=>{
-            // procedure.variables = this.config.variables
             promises.push(this.defineProcedure(procedure, idx))
         }) 
         Promise.allSettled(promises).then((response)=>{

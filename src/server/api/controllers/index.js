@@ -15,15 +15,10 @@ export async function init(moduleLocation){
 	store.ready = true   
 	
 	// Initiating the Docker Class     
-	try{
-		let data = await import_configurations()
-		store.configurations = data
-	} catch(err){
-		store.logger.error("%o, -------------------- ----error in import configurations", err)
-	}
+	let data = await import_configurations()
+	store.configurations = data
 	let library = new Library()
 	store.library = library 
-	
 	
 	 
 	store.docker = await docker_init( (store.configurations.socketPath ? {socketPath: store.configurations.socketPath } : null ) );  

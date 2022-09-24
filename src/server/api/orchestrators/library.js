@@ -20,37 +20,8 @@ export  class Library {
         this.catalog = {} 
         this.locals = store.config.imported
         this.customs = {}
-        for (let [key, value] of Object.entries(config.variables)){
-            
-            if (value.options){
-                if (!value.option){
-                    value.option = 0
-                } 
-                
-                value.optionValue = value.options[value.option]
-                if (typeof value.optionValue == 'object' && !value.optionValue.source && !value.optionValue.element && typeof value.optionValue != "string"   ){
-                    value.optionValue.source = true
-                }
-                
-                if (typeof value.options[value.option] == 'object' && !value.options[value.option].source){
-                    
-                    if (typeof value.optionValue == 'string'){
-                        value.source = value.optionValue
-                    }else {
-                        value.source = value.optionValue.source
-                    }
-                } 
-            }
-            if (value.load){
-                readFile(value.load).then((data)=>{
-                    value.source = JSON.parse(data)
-                }).catch((err)=>{
-                    store.logger.error("%o error in reading file to load for server %s", err, $this.name)
-                })
-            }
-        }
-        const $this = this
         
+        const $this = this
         Object.defineProperty(this, "all", {
             enumerable: true,   
             get: function(){
@@ -557,9 +528,9 @@ export  class Library {
         }
     }
     async importModules(){
+        console.log("MIPORT")
         let module_paths = store.system.modules
         let promises = []
-        console.log("import")
         module_paths.savedPaths.forEach((item)=>{ 
             promises.push(import_cfgs(item))
         })

@@ -335,10 +335,9 @@
           
            
         </template>
-        {{selectedProcedure}}
         <SubLibrary
               :version="selectedVersion"
-              :dependencies="selectedProcedure"
+              :dependencies="dependencies"
               :procedure="procedureIdx"
               :status="installStatus"
               ref="sublibrary"
@@ -465,12 +464,12 @@
       </v-stepper>
       <v-card  v-if="anyOutput" class="scroll ">
         <Progresses
-          :progresses="procedure.watches"
+          :progresses="configurations.watches"
           :status="status"
           :job="job"
           :catalog="module"
           :procedure="procedureIdx"
-          :removal_override="procedure.removal_override"
+          :removal_override="configurations.removal_override"
           @removeCustomVariable="removeCustomVariable"
           :defaultHeaders="outputHeaders"
         >
@@ -505,7 +504,7 @@
     </v-col>
     <v-col  v-if="procedure && variables" class="mx-0 px-0 overflow:auto; ">
       
-      <!-- <ListParams
+      <ListParams
           :items="additionals"
           v-if="additionals.length > 0"
           :defaultHeaders="headers"
@@ -516,7 +515,7 @@
           @setUser="userSet"
           @removeCustomVariable="removeCustomVariable"
       >
-      </ListParams> -->
+      </ListParams> 
     </v-col>
     <!-- <v-footer
       v-bind="{
@@ -609,7 +608,7 @@ import Customize  from '@/components/Framework/Customize.vue';
 export default {
 	name: 'module',
   components:{
-    // ListParams,
+    ListParams,
     Customize,
     Progresses,
     LogWindow,
@@ -752,6 +751,7 @@ export default {
         token: this.$store.token
       }).then((f)=>{
         this.dependencies = f.data.data.dependencies
+        console.log(f.data.data.dependencies)
         this.totalSpaceUsed = f.data.data.spaceUsedTotal
         this.installStatus = f.data.data.status
       })
@@ -802,7 +802,7 @@ export default {
       }
     },
     removeCustomVariable(variable){
-      this.$delete(this.procedure.variables, variable);
+      this.$delete(this.configurations.variables, variable);
       this.$store.dispatch('REMOVE_VAR_CUSTOM', {
         name: variable.name,
         catalog: this.selected.name, 
@@ -813,7 +813,7 @@ export default {
       this.custom_command[index] = command
     },
     addCustomElement(element){
-      this.$set(this.procedure.variables, element.name, element)
+      this.$set(this.configurations.variables, element.name, element)
       element.custom = true
       this.$store.dispatch('ADD_VARIABLE_CUSTOM', {
         name: element.name,
@@ -910,9 +910,8 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
-
-      let services = Object.keys(this.services_to_use).filter((key, i)=>{
-        return this.services_to_use[parseInt(key)] == 1
+      let services =this.services_to_use.filter((i)=>{
+        return  i == 1
       })
       let images  = []
       if (this.custom_images ){
@@ -932,7 +931,7 @@ export default {
         })
       })
       let variables = {}
-      for (let [key, F] of Object.entries($this.procedure.variables)){
+      for (let [key, F] of Object.entries($this.configurations.variables)){
         variables[key] = {
           source: F.source,
           option: F.option
@@ -978,12 +977,13 @@ export default {
         catalog: $this.selected.name, 
         procedure: $this.procedureIdx
       })
-      this.procedure.variables[value.variable].source = value.src
-      this.procedure.updates(value).then((f)=>{
+      this.configurations.variables[value.variable].source = value.src
+      this.configurations.updates(value).then((f)=>{
+        
         if (f){
           f.forEach((changed)=>{
-            if ($this.procedure[changed.key]){
-              $this.procedure.variables[changed.key] = changed.value.source
+            if ($this.configurations[changed.key]){
+              $this.configurations.variables[changed.key] = changed.value.source
             }
           })
         }
@@ -992,35 +992,31 @@ export default {
     
 		loadProcedure(proc){
       const $this = this;
-      let procedureConfig = ( proc ? proc : this.selectedProcedure)
-      if (this.selectedVersion.shared){
-        procedureConfig.shared = this.selectedVersion.shared
-      }
-      let procedure = new Configuration(cloneDeep(procedureConfig))
-      
-      
-      procedure.defineMapping()
-      procedure.create_intervalWatcher() 
-      procedure.getProgress()
+      let config = ( proc ? proc : this.selectedVersion)
+      let configurations = new Configuration(cloneDeep(config))
+      configurations.defineMapping()
+      configurations.create_intervalWatcher() 
+      configurations.getProgress()
       let found = nestedProperty.get(this.$store.state, `catalog.${this.selectedVersion.name}.procedures.${this.procedureIdx}`)
       
       if (found){
         try{
-          procedure.mergeInputs(found)
+          configurations.mergeInputs(found)
         } catch (Err){
           console.error(Err,"<<<") 
         }
 
       }
-      this.procedure = procedure
-      this.watches  = this.procedure.watches
+      // console.log(1)
+      this.configurations = configurations
+      this.watches  = this.configurations.watches
       
-      this.services = this.procedure.services
-      if (Object.keys(this.services_to_use).length == 0){
-        for (let [key, value] of Object.entries(this.services)){
-            this.$set(this.services_to_use, key, 1)
-        }
-      }
+      // this.services = this.configurations.services
+      // if (Object.keys(this.services_to_use).length == 0){
+      //   for (let [key, value] of Object.entries(this.services)){
+      //       this.$set(this.services_to_use, key, 1)
+      //   }
+      // }
     },
     updateStagedVersion(event){
       let index = 0
@@ -1046,7 +1042,7 @@ export default {
         this.$store.dispatch("SAVE_PROCEDURE_DEFAULT", {
           catalog: this.module, 
           procedure: this.procedureIdx,
-          config: this.procedure
+          config: this.configurations
         })
       } catch(err){
         this.initial=false
@@ -1119,6 +1115,7 @@ export default {
     return{
       drawer: true,
       installDialog: false,
+      configurations: {},
       dialog: false,
       dialogLog: false,
       customDrawer: false,
@@ -1131,11 +1128,10 @@ export default {
       custom_images: {},
       mini: true,
       el: 1,
-      services: [],
       dependencies:[],
       updates: 0,
       procedureIdx: 0,
-      services_to_use:{},
+      services_to_use: [],
       selectedVersion: {},
       selectedProcedure: {},
       services_selected: [],
@@ -1235,16 +1231,30 @@ export default {
       
       this.getLibrary()
     },
+    selectedVersion(newValue){
+      this.loadProcedure(newValue)
+    },
     selectedProcedure(newValue){
       const $this = this
       if (newValue){
         this.services_selected = newValue.services
-        this.loadProcedure(newValue)
       }
     }
 
   },
   computed: {
+    variables(){
+      return this.selectedVersion.variables
+    },
+    services(){
+      if (this.services_to_use.length == 0 && this.selectedProcedure.services ){
+        this.selectedProcedure.services.map((f,i)=>{
+          this.$set(this.services_to_use, i, 1)
+
+        })
+      }
+      return (this.selectedProcedure.services ? this.selectedProcedure.services : [] )
+    }, 
     os(){
       return process.env.platform_os
     },
@@ -1256,16 +1266,17 @@ export default {
       return `${installed.length} / ${this.dependencies.length}`
     },
     serviceList(){
-      let serviceList = []
-      this.services.map((f,i)=>{
-          serviceList.push(i+1)
-      })
+      let serviceList = [] 
+      if (this.selectedProcedure.services){
+        this.selectedProcedure.services.map((f,i)=>{
+            serviceList.push(i+1)
+        })
+      }
       return serviceList
     },
     anyOutput(){
-      if (this.selectedProcedure && this.selectedProcedure.variables){
-        return Object.values(this.selectedProcedure.variables).some((f)=>{
-          console.log(f,"anyoutput")
+      if (this.selectedProcedure && this.selectedVersion.variables){
+        return Object.values(this.selectedVersion.variables).some((f)=>{
           return f.output
         })
       } else {
@@ -1274,8 +1285,8 @@ export default {
 
     },
     anyRender(){
-      if (this.selectedProcedure && this.selectedProcedure.variables){
-        return Object.values(this.selectedProcedure.variables).some((f)=>{
+      if (this.selectedProcedure && this.selectedVersion.variables){
+        return Object.values(this.selectedVersion.variables).some((f)=>{
           return f.element == 'render'
         })
       } else {
@@ -1284,8 +1295,8 @@ export default {
 
     },
     anyMainRender(){
-      if (this.selectedProcedure && this.selectedProcedure.variables){
-        return Object.values(this.selectedProcedure.variables).filter((f)=>{
+      if (this.selectedVersion && this.selectedVersion.variables){
+        return Object.values(this.selectedVersion.variables).filter((f)=>{
           return f.element == 'render' && f.main
         })
       } else {
@@ -1294,15 +1305,15 @@ export default {
 
     },
     latest(){
-      console.log("__", this.libraryVersions)
       return Math.max(...this.libraryVersions.map((f)=>{
         return f.version
       }))
     },
     additionals(){
         let ta= []
-        if (this.procedure && this.procedure.variables){
-            for (let [key, value ] of Object.entries(this.procedure.variables)){
+        console.log(this.configurations,this.configurations.variables,"//////////")
+        if (this.configurations && this.configurations.variables){
+            for (let [key, value ] of Object.entries(this.configurations.variables)){
                 if (!value.output){
                     value.name = key
                     if (!value.optionValue && value.options)[
@@ -1335,7 +1346,7 @@ export default {
     
     selected_procedure_index(){
       if (this.module && this.selectedVersion.name){
-        let index  = this.selectedVersion.procedures.findIndex(data => data === this.procedure)
+        let index  = this.selectedVersion.procedures.findIndex(data => data === this.configurations)
         if (index == -1){
           return 0
         } else{
@@ -1354,15 +1365,15 @@ export default {
     }
     this.selectedVersion = this.selected
     this.selectedProcedure = this.selected.procedures[0]
-    $this.getJobStatus()
+    // $this.getJobStatus()
     $this.getInstallStatus()
-    $this.getLibrary()
-    $this.defineProcedure()
-    this.interval = setInterval(()=>{
-        $this.getJobStatus()
-        $this.getInstallStatus()
-        // $this.getLibrary()
-    }, 2000)
+    // $this.getLibrary()
+    // $this.defineProcedure()
+    // this.interval = setInterval(()=>{
+    //     $this.getJobStatus()
+    //     $this.getInstallStatus()
+    //     // $this.getLibrary()
+    // }, 2000)
 },
   
     

@@ -1,7 +1,4 @@
-import { match } from "assert";
 import nestedProperty from "nested-property"
-import { remove } from "winston";
-import { store } from "../server/config/store/index.js";
 const cloneDeep = require("lodash.clonedeep"); 
 const path = require("path")   
 const lodash = require("lodash")    
@@ -21,36 +18,22 @@ export  class Configuration {     // Make the main procedure class for configura
         for(let[key, value] of Object.entries(config)){
             this[key] = value
         }
+        this.variables = config.variables
         this.watches = []
         this.watcher = null
-        
-        const obj = {
-            log: Object.keys(this.variables),
-            get latest() { // iterate through the logs
-              if (this.log.length === 0) {
-                return undefined;
-              }
-              return this.log[this.log.length - 1];
-            }
+        this.log = []
+        // const obj = {
+        //     get latest() { // iterate through the logs
+        //       if (this.log.length === 0) {
+        //         return undefined;
+        //       }
+        //       return this.log[this.log.length - 1];
+        //     }
           
-        };
-        this.obj = obj
+        // };
+        // this.obj = obj
         this.config = config
-        if (config.shared && config.shared.variables){ // Shared variables are shared across one or more procedures to reduce coding needs/bloat
-            for (let [key, value] of Object.entries(config.variables)){
-                if (value.shared){
-                    config.variables[key]= config.shared.variables[key] // Set the variable for a give procedure if it is required
-                }
-            }
-        }   
-        if (config.shared && config.shared.services){// Shared services are shared across one or more procedures to reduce coding needs/bloat
-            config.services.forEach((service,i)=>{ // Set the service for a give procedure if it is required
-                if (service.shared && config.shared.services[service.target]){
-                    config.services[i] = config.shared.services[service.target]
-                    
-                }
-            }) 
-        }
+       
         this.setDefaultVariables()
     }   
     destroy_interval(){
@@ -64,7 +47,7 @@ export  class Configuration {     // Make the main procedure class for configura
         }
     }
     setDefaultVariables(){
-        for (let [key, custom_variable] of Object.entries(this.variables)){ // loop through variables
+        for (let [key, custom_variable] of Object.entries(this.config.variables)){ // loop through variables
             if (!custom_variable.option && custom_variable.options){ // If no option selected for multi option variable, set to first index
                 custom_variable.option = 0
             } 
@@ -169,7 +152,6 @@ export  class Configuration {     // Make the main procedure class for configura
             if (variables){ // if there are variables for this configuration available
                 for (let [key, vari] of Object.entries(variables)){
                     try{
-
                         // IF an option is not set for a multi-option render variable, set to first one 
                         if (vari.options && vari.option >=0 ){
                             vari = vari.optionValue
@@ -234,7 +216,6 @@ export  class Configuration {     // Make the main procedure class for configura
                                             }) // Otherwise, assume the splitting type if tabular
                                             
                                         }
-                                     
                                         vari.source = vari.source.filter((f)=>{
                                             if (typeof f == 'object'){
                                                 for (let [key, value] of Object.entries(f)){
@@ -431,45 +412,54 @@ export  class Configuration {     // Make the main procedure class for configura
            
         }
     }
-    findObjectByLabel(obj, pattern) {
+    findObjectByLabel(obj, pattern,full) {
         const $this  = this
         
         if (obj && typeof obj == 'object'){ // If the object type is an object, there are values beneath, part of it, keep going
             Object.keys(obj).forEach(function (key) {
-               
-                if (typeof obj[key] === 'object') { // If the object type is an object, there are values beneath, part of it, keep going
-                    $this.findObjectByLabel(obj[key], pattern, $this) 
+                if (Array.isArray(obj[key])){
+                    obj[key].map((d,i)=>{
+                        if (typeof d == 'string'){
+                            obj[key][i] = $this.findObjectByLabel(obj[key][i], pattern, full)
+                        } else {
+                            obj[key][i] = $this.findObjectByLabel(obj[key][i], pattern, full) 
+                        }
+                    })
+                }
+                else if (typeof obj[key] === 'object') { // If the object type is an object, there are values beneath, part of it, keep going
+                    obj[key] = $this.findObjectByLabel(obj[key], pattern, full) 
                     
                      
                     // return null
                 } else if (typeof obj[key] == 'string'){ // If the object type is not an object, we are at the terminus of a branching pattern
                     
-                    var replace = `${pattern}`   
-                    var re = new RegExp(replace,"g");
-                    let fo = obj[key].match(re)
+                    // var replace = `${pattern}`   
+                    // var re = new RegExp(replace,"g");
+                    // let fo = obj[key].match(re)
+                    obj[key]=$this.findObjectByLabel(obj[key], pattern, full)
                     
-                    
-                    if (fo && Array.isArray(fo)){  // If there are one or more matches
-                        let original = cloneDeep(obj[key])
-                        Object.defineProperty(obj, key, {
-                            enumerable: true,    
-                            set: function(value){ 
-                                original = value 
-                            }, 
-                            get: function(){  // set getter that will update on all value changes if needed
-                                let fullstring = cloneDeep(original)  
-                                let final = $this.mapVariable(fullstring,obj)
+                    // if (fo && Array.isArray(fo)){  // If there are one or more matches
+                    //     let original = cloneDeep(obj[key])
+                    //     Object.defineProperty(obj, key, {
+                    //         enumerable: true,    
+                    //         set: function(value){ 
+                    //             original = value 
+                    //         }, 
+                    //         get: function(){  // set getter that will update on all value changes if needed
+                    //             let fullstring = cloneDeep(original)  
+                    //             let final = $this.mapVariable(fullstring,obj)
                                 
 
-                                if (final == 'undefined'){
-                                    return null
-                                } else { 
-                                    return final
-                                }
-                            }
-                        })
-                    }
-                } else {
+                    //             if (final == 'undefined'){
+                    //                 return null
+                    //             } else { 
+                    //                 return final
+                    //             }
+                    //         }
+                    //     })
+                    // }
+                } 
+                else {
                     return 
                 }
             }) 
@@ -482,10 +472,10 @@ export  class Configuration {     // Make the main procedure class for configura
                 fo.forEach((match)=>{  
                     try{
                         let id = match.replace(/[\%\{\}]/g, "")
-                        Object.defineProperty(obj, )
+                        
                         obj = { 
                             get: function(){
-                                let found =  nestedProperty.get($this, id)
+                                let found =  nestedProperty.get(full, id)
                                 fullstring  = fullstring.replaceAll(match, found)
                                 if (fullstring == 'undefined'){
                                     return null
@@ -507,7 +497,12 @@ export  class Configuration {     // Make the main procedure class for configura
         }
     }
     defineMapping(){ 
-        let final = this.findObjectByLabel(this, "(\%\{.+?\})") 
+        let test = {
+            first: "one",
+            second: ["%{first}", '%{first} %{first}']
+            
+        }
+        this.findObjectByLabel(this, "(\%\{.+?\})", cloneDeep(this)) 
         // console.log(this.variables.fastqs.options[1].bind.from,"end")
         // this.variables = {
         //     fastqs: {

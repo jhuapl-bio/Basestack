@@ -3,6 +3,8 @@ import { checkExists } from '../../../shared/IO.js';
 import { pullImage, pullImageSync } from '../controllers/post-installation.js';
 const cloneDeep = require("lodash.clonedeep"); 
 const os = require("os")
+const { spawn } = require('child_process');
+
 /*
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
@@ -226,35 +228,62 @@ export class Service {
             }
 		})
 	}
+    async native(params){
+        return new Promise((resolve, reject)=>{
+            console.log(this.config.command,"<<<<")
+            resolve()
+            // const ls = spawn('bash', ['-c', this.config.command[2]]);
+    
+            // ls.stdout.on('data', (data) => {
+            //     console.log(`stdout: ${data}`);
+            // });
+
+            // ls.stdout.on('error', (err) => {
+            //     console.log(`stderr: ${err}`);
+            //     reject(err)
+            // }); 
+    
+            // ls.stderr.on('data', (data) => {
+            //     console.error(`stderr: ${data}`);
+            // });
+    
+            // ls.on('close', (code) => {
+            //     console.log(`child process exited with code ${code}`);
+            //     resolve()
+            // });
+    
+        })
+    }
     async check_then_start(params, wait){
         const $this = this;
         return new Promise(function(resolve,reject){
             ( async ()=>{
                 let name = $this.name;
+                let skip;
+                store.logger.info(`starting service..${name}`)
+                await $this.native(params)
+                // let exists = await check_container($this.name)
+                // if ( (  $this.config.force_restart) ||  exists.exists ){
+                //     store.logger.info("Force restarting______________")
+                //     try{
+                //         await $this.stop()
+                //     } catch(err){
+                //         store.logger.error("Err in stopping container %o", err)
+                //     }
+                // }
                 
-                store.logger.info(`starting container..${name}`)
-                let exists = await check_container($this.name)
-                if ( (  $this.config.force_restart) ||  exists.exists ){
-                    store.logger.info("Force restarting______________")
-                    try{
-                        await $this.stop()
-                    } catch(err){
-                        store.logger.error("Err in stopping container %o", err)
-                    }
-                }
-                
-                $this.container = null
-                let skip = false 
-                exists = await check_image($this.config.image,true)
-                if (!exists){
-                    await pullImageSync($this.config.image)
-                }
+                // $this.container = null
+                // let skip = false 
+                // exists = await check_image($this.config.image,true)
+                // if (!exists){
+                //     await pullImageSync($this.config.image)
+                // }
     
-                skip = await $this.start(params, wait)
-                if ($this.status.cancelled){
-                    skip = true
-                }
-                store.logger.info(`started END run...${name}`)
+                // skip = await $this.start(params, wait)
+                // if ($this.status.cancelled){
+                //     skip = true
+                // }
+                // store.logger.info(`started END run...${name}`)
                 resolve(skip)
             })().catch((err)=>{
                 store.logger.error(err)

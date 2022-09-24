@@ -77,13 +77,13 @@
         >
         <v-data-table
             style="max-width: 100%"
-            :items="dependencies.items"
+            :items="dependencies"
             :headers="fields"
             :items-per-page="5"
             centered
             class="elevation-1 "			
             small dense
-            v-if="dependencies.items && dependencies.items.length > 0"
+            v-if="dependencies && dependencies.length > 0"
             :footer-props="{
             showFirstLastPage: true,
                 prevIcon: '$arrow-alt-circle-left',
@@ -248,7 +248,7 @@
                         >$slash
                     </v-icon>
                     </template>
-                    Depends on another dependency to install: {{ dependencies.items.filter((d,i)=>{
+                    Depends on another dependency to install: {{ dependencies.filter((d,i)=>{
                         return item.depends.indexOf(i) > -1
                     }).map((f)=>{
                         return f.label
@@ -400,7 +400,6 @@ export default {
     props: [ 'version', 'procedure', 'dependencies', 'status' ],
     watch: {
        dependencies(val){
-        console.log(";;;;;;;",val)
        }
     },
 	methods:{

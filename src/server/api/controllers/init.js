@@ -1,6 +1,7 @@
 const { store }  = require("../../config/store/index.js")
 
 var  logger  = store.logger
+import { fs } from "file-system"
 import path from "path"
 const { Module } = require("../orchestrators/module.js")
 const { Catalog } = require("../orchestrators/catalog.js")
@@ -68,15 +69,28 @@ export async function define_procedure(name, procedure){
 	})   
 }
 export async function import_configurations(){
-	try{
-		let data = await readFile(store.system.configurationFile)
-		data = JSON.parse(data)
-		return data   
-	} 
-	catch (err){
-		store.logger.error("Could not import config file %o ", err) 
-		throw err
-	}
+	return new Promise((resolve, reject)=>{
+		try{
+			fs.stat(store.system.configurationFile, (err, stat)=>{
+				if (err){
+					resolve({})
+				} else {
+					readFile(store.system.configurationFile).then((data)=>{
+						data = JSON.parse(data)
+						resolve(data) 	
+					}).catch((err)=>{
+						reject(err)
+					})
+				}
+			})
+			 
+		} 
+		catch (err){
+			store.logger.error("Could not import config file.... %o ", err) 
+			return {}
+		}
+	})
+	
 }
  
 export async function init_base_procedures(){
@@ -152,7 +166,6 @@ export async function init_modules(){
 		for (let [key, module] of Object.entries(store.library.all)) { //Loop through all modules and their respective services. Many services can be a part of modules
 			try{ 
 				if (module.imported){
-					// console.log(key,"<<<<<<<")
 					let latest = store.library.all[key].latest
 					let modl = store.library.create_module(latest)			
 				}		 
