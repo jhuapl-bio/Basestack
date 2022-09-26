@@ -20,23 +20,25 @@ const { spawnLog } = require("../controllers/logger.js")
  
 var logger = store.logger
 // var docker = new Docker();   
-const fs = require("file-system")     
+const fs = require("file-system")      
 let dockerObj;      
    
 export class Procedure { 
-	constructor(procedure){
+	constructor(procedure, variables){
 		this.name = procedure.name    
         this.type = 'procedure' 
-        this.config = procedure  
+        this.config = procedure     
+        this.variables = variables
+        this.services = [] 
         this.deployment = procedure.deployment ? procedure.deployment : "native"
-        this.baseConfig = procedure
-        this.lastJob = null
+        // this.baseConfig = procedure 
+        this.lastJob = null   
         const $this = this
-        Object.defineProperty(this, "spaceUsedTotal", {
+        Object.defineProperty(this, "spaceUsedTotal", {  
             enumerable: true,   
             get: function(){
-                let sum = 0
-                var sizes = {
+                let sum = 0 
+                var sizes = { 
                     "Bytes": 1,
                     "TB": 1024**4,
                     "GB": 1024**3,
@@ -85,12 +87,12 @@ export class Procedure {
         })
         this.buildStream = [],
         
-        this.services_config = cloneDeep(procedure.services)
+        // this.services_config = cloneDeep(procedure.services)
         this.service_steps = {}  
 		this.container = null; 
 		this.cmd = null; 
 		this.options = {};  
-        this.services = []; 
+        // this.services = []; 
 		this.streamObj = null;
         this.orchestrator = null; 
         this.status = {
@@ -107,9 +109,9 @@ export class Procedure {
             checking: false, 
             interval: this.create_interval() 
         } 
-        this.services_config.forEach((service)=>{
-            this.service_steps[service] = false
-        }) 
+        // this.services_config.forEach((service)=>{
+        //     this.service_steps[service] = false
+        // }) 
         
         this.checkDependenciesVersion()
         
@@ -117,8 +119,9 @@ export class Procedure {
 
 	}  
     async init(){ 
+
         this.dependencyCheck()
-        await this.initServices()
+        // await this.initServices()
         return  
     }
     async defineDependencies(){
@@ -126,13 +129,14 @@ export class Procedure {
         this.dependencies = [] 
        
     }
-    async initServices(token){
-        this.services_config.forEach((service, i)=>{
-            let service_obj = new Service(service)
-            service_obj.setOptions()
-            
-            this.services.push(service_obj)
-        })
+    async initServices(){
+        // this.config.services.forEach((service, i)=>{
+        //     console.log(i, service)
+        //     let service_obj = new Service(service, this.variables)
+        //     service_obj.setOptions()
+        //     this.services.push(service_obj)
+        // })
+        console.log("init services")
         return
     }
 
@@ -159,19 +163,18 @@ export class Procedure {
     }
     async define_services(){
         let promises = []
-        this.services = {};
+        // this.services = {};
         const $this = this
-        this.services_config.forEach((service)=>{
-            if (service in store.services){
-                $this.services[service] = store.services[service] 
-            }
-        })
-        console.log("Define services")
+        // this.services_config.forEach((service)=>{
+        //     if (service in store.services){
+        //         $this.services[service] = store.services[service] 
+        //     }
+        // })
 
         let services = {}
         for( let [key, service] of Object.entries(this.services)){
             services[key] = {
-                variables: service.config.variables
+                variables: service.variables
             } 
 
         }
@@ -325,8 +328,8 @@ export class Procedure {
             $this.dependencyCheck().then((dependencies)=>{
                 $this.services.forEach((service)=>{
                     if (service.env){
-                        if (typeof service.Config == 'object' ){
-                            $this.lastJob = {  ...service.Config    } 
+                        if (typeof service == 'object' ){
+                            $this.lastJob = {  ...service    } 
                         }
                     }
                     
@@ -432,35 +435,35 @@ export class Procedure {
             }    
             let service = new Service(    
                 cloneDeep(dependency.service), 
-                null,     
-                true 
+                null
             ) 
             if (dependency.workingdir){
-                service.config.workingdir = dependency.workingdir
+                service.workingdir = dependency.workingdir
             } 
+            service.setUser = true
             if (dependency.bind){  
-                if (!service.config.bind){
-                    service.config.bind = []
+                if (!service.bind){
+                    service.bind = []
                 }
-                service.config.bind.push(dependency.bind)
+                service.bind.push(dependency.bind)
             }  
             if (dependency.command){
                 if (Array.isArray(dependency.command)){
-                    service.config.command = dependency.command
+                    service.command = dependency.command
                 }else { 
-                    service.config.command = [dependency.command] 
+                    service.command = [dependency.command] 
                 }
             }
             dependency.status.building = true
             dependency.status.downloading = true
-            dependency.status.error = null
-              
+            dependency.status.error = null 
+                
             service.setOptions().then((f)=>{
                 service.check_then_start({}, null).catch((err)=>{
-                    store.logger.error(err) 
-                    dependency.status.building = false
-                    dependency.status.downloading= false
-                    dependency.status.error = err 
+                    store.logger.error(err)   
+                    dependency.status.building = false  
+                    dependency.status.downloading= false 
+                    dependency.status.error = err  
                 }).then((stream)=>{ 
                     if (service && service.stream){
                         dependency.streamObj = service.stream
@@ -468,6 +471,7 @@ export class Procedure {
                         dependency.status.stream =  log
                         try{
                             dependency.streamObj.on("end", (response)=>{
+                                store.logger.info(`Completed install of dependency ${dependency.target}`)
                                 dependency.status.building = false
                                 dependency.status.downloading= false
                                 dependency.status.error = null
@@ -546,7 +550,6 @@ export class Procedure {
                 dependency.streamObj.destroy()   
             } 
             fs.stat(dependency.build.path, (err, stat)=>{
-                console.log(err, stat)
                 if (err){
                     store.logger.error("Could not build from Dockerfile %s %o", dependency.build.path, err)
                     reject(err)

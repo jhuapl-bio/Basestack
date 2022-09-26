@@ -910,8 +910,11 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
-      let services =this.services_to_use.filter((i)=>{
-        return  i == 1
+      console.log(this.services_to_use)
+      let services =this.services_to_use.map((i,d)=>{
+        if (i==1){
+          return d
+        }
       })
       let images  = []
       if (this.custom_images ){
@@ -1365,15 +1368,15 @@ export default {
     }
     this.selectedVersion = this.selected
     this.selectedProcedure = this.selected.procedures[0]
-    // $this.getJobStatus()
+    $this.getJobStatus()
     $this.getInstallStatus()
-    // $this.getLibrary()
-    // $this.defineProcedure()
-    // this.interval = setInterval(()=>{
-    //     $this.getJobStatus()
-    //     $this.getInstallStatus()
-    //     // $this.getLibrary()
-    // }, 2000)
+    $this.getLibrary()
+    $this.defineProcedure()
+    this.interval = setInterval(()=>{
+        $this.getJobStatus()
+        $this.getInstallStatus()
+        // $this.getLibrary()
+    }, 2000)
 },
   
     

@@ -27,17 +27,14 @@ const fs = require("file-system")
 let dockerObj;  
  
 export class Service {
-	constructor(service, serviceIdx, orchestrated){
+	constructor(service, variables){
 		this.name = service.name
-        this.serviceIdx = serviceIdx
-        this.type = "service"
-        this.config = service  
-        this.orchestrated = orchestrated
-        this.dependencies = [], 
-        this.override = {},
         this.interval = {
             checking: false, 
             interval: this.create_interval()
+        }
+        for (let [key, value] of Object.entries(service)){
+            this[key]  = value
         }
         this.env = []
         this.mounts = []
@@ -55,19 +52,20 @@ export class Service {
                 info: [
                 ]
             },
-        };
-        this.jobInterval = null
-        let depends = this.config.depends
-        this.options = null
-        this.defineDependencies()
-        this.readVariables()
-        // this.config = this.mapConfigurations()
+        }
+        // console.log(service,"<<<")
+        // this.jobInterval = null
+        // let depends = this.depends
+        // this.options = null
+        // this.defineDependencies()
+        // this.readVariables()
+        // this = this.mapConfigurations()
 
 	}
     async readVariables(){
         const $this = this;
-        if ($this.config.variables){
-            // for (let [key, value] of Object.entries($this.config.variables)){
+        if ($this.variables){
+            // for (let [key, value] of Object.entries($this.variables)){
             //     if (value.options){
             //         if (!value.option){
             //             value.option = 0
@@ -105,13 +103,12 @@ export class Service {
     //     return interval
     }
 	defineConfig(){
-        let service = this.config
-        let optionsFile 
-        if (service.config ){
-            optionsFile = service.config
-        } else if ( ( typeof service.orchestrated == 'number' && service.orchestrated >= 0  ) && !service.config ){
+        let optionsFile  
+        if (this.config ){ 
+            optionsFile = this.config
+        } else if ( ( typeof this.orchestrated == 'number' && this.orchestrated >= 0  ) && !this ){
             optionsFile = store.system.orchestrators.subclient.path
-        } else if (service.orchestrator){
+        } else if (this.orchestrator){
             optionsFile = store.system.orchestrators.orchestrator.path
         } else {
             optionsFile = store.system.orchestrators.default.path
@@ -123,11 +120,11 @@ export class Service {
 		let container_name = this.name
 		const $this  = this;
 		return new Promise(function(resolve,reject){
-            // if (!$this.config.orchestrated){
+            // if (!$this.orchestrated){
                 const response = check_container($this.name).then((response)=>{
                     $this.status.exists = response
                     if (response && typeof response === 'object' ){
-                        $this.status.running = response.running
+                        // $this.status.running = response.running
                         if ('err' in response && response.err && !$this.status.cancelled){
                             $this.status.error = response.err
                         }
@@ -143,7 +140,6 @@ export class Service {
                     if (response && response.container && !$this.container){
                         $this.container = response.container
                     }
-                    $this.Config = response.container
                     resolve()
                 }).catch((err)=>{
                     reject(err)
@@ -156,8 +152,8 @@ export class Service {
         const $this = this;
         this.dependencies = []
 
-        if (this.config.depends){
-            this.config.depends.forEach((dependency)=>{
+        if (this.depends){
+            this.depends.forEach((dependency)=>{
                 if (dependency.type == 'module' && dependency.id in store.modules){
                     $this.dependencies.push(store.modules[dependency.id])
                 } 
@@ -197,7 +193,7 @@ export class Service {
 		return new Promise(function(resolve,reject){
 			// delete store.modules[container_name]
             
-            if ($this.config.orchestrated){
+            if ($this.orchestrated){
                 let process = $this.pid
                 let container = store.docker.getContainer(container_name).remove({force:true}, function(err,data){
                     if (err){
@@ -229,28 +225,57 @@ export class Service {
 		})
 	}
     async native(params){
+        const $this = this;
         return new Promise((resolve, reject)=>{
-            console.log(this.config.command,"<<<<")
-            resolve()
-            // const ls = spawn('bash', ['-c', this.config.command[2]]);
-    
-            // ls.stdout.on('data', (data) => {
-            //     console.log(`stdout: ${data}`);
-            // });
+            let formatted_command = []
+            if (!Array.isArray(this.command)){
+                let command = this.command.split(" ")
+                formatted_command.push(command[0])
+                formatted_command.push(command.slice(1))
 
-            // ls.stdout.on('error', (err) => {
-            //     console.log(`stderr: ${err}`);
-            //     reject(err)
-            // }); 
-    
-            // ls.stderr.on('data', (data) => {
-            //     console.error(`stderr: ${data}`);
-            // });
-    
-            // ls.on('close', (code) => {
-            //     console.log(`child process exited with code ${code}`);
-            //     resolve()
-            // });
+            }else{ 
+                let command = this.command
+                formatted_command.push(command[0])
+                if (command.length > 1){
+                    formatted_command.push(command.slice(1))
+                } else {
+                    formatted_command.push([""])
+                }
+            }
+            if ($this.dry){
+                $this.status.running = true
+                resolve() 
+            }  else {
+                const ls = spawn(formatted_command[0], formatted_command[1]);
+                $this.status.running = true
+                $this.status.error = null
+                this.process  = ls
+                // ls.kill()
+                console.log($this.dry)
+
+                ls.stdout.on('data', (data) => {
+                    logger.info(`stdout: ${data}`);
+                });
+
+                ls.stdout.on('error', (err) => {
+                    logger.error(`stderr: ${err}`);
+                    $this.status.error = `${err}`
+                    reject(err)
+                }); 
+        
+                ls.stderr.on('data', (err) => {
+                    logger.error(`stderr: ${err}`);
+                    $this.status.error = `${err}`
+                    reject(err)
+                });
+        
+                ls.on('close', (code) => {
+                    logger.info(`child process exited with code ${code}`);
+                    $this.status.running = true
+                    resolve()
+                });
+            }
+            
     
         })
     }
@@ -261,29 +286,33 @@ export class Service {
                 let name = $this.name;
                 let skip;
                 store.logger.info(`starting service..${name}`)
-                await $this.native(params)
-                // let exists = await check_container($this.name)
-                // if ( (  $this.config.force_restart) ||  exists.exists ){
-                //     store.logger.info("Force restarting______________")
-                //     try{
-                //         await $this.stop()
-                //     } catch(err){
-                //         store.logger.error("Err in stopping container %o", err)
-                //     }
-                // }
-                
-                // $this.container = null
-                // let skip = false 
-                // exists = await check_image($this.config.image,true)
-                // if (!exists){
-                //     await pullImageSync($this.config.image)
-                // }
-    
-                // skip = await $this.start(params, wait)
-                // if ($this.status.cancelled){
-                //     skip = true
-                // }
-                // store.logger.info(`started END run...${name}`)
+                if ($this.deployment == 'native'){
+                    await $this.native(params)
+                } else{
+                    
+                    let exists = await check_container($this.name)
+                    if ( (  $this.force_restart) ||  exists.exists ){
+                        store.logger.info("Force restarting______________")
+                        try{
+                            await $this.stop()
+                        } catch(err){
+                            store.logger.error("Err in stopping container %o", err)
+                        }
+                    } 
+                    
+                    $this.container = null
+                    let skip = false 
+                    exists = await check_image($this.image,true)
+                    if (!exists){
+                        await pullImageSync($this.image)
+                    }
+        
+                    skip = await $this.start(params, wait)
+                    if ($this.status.cancelled){
+                        skip = true
+                    }
+                }
+                store.logger.info(`started END run...${name}`)
                 resolve(skip)
             })().catch((err)=>{
                 store.logger.error(err)
@@ -411,16 +440,14 @@ export class Service {
     updateConfig(options){
 
         const $this = this
-        let service = this.config
+        let service = this
         if (service.ports && (Array.isArray(service.ports) )) {
             options  = $this.updatePorts(service.ports, options)
         }
-
         if (!options.Image){
             options.Image = service.image
         }  
         options.name = this.name
-  
         if (service.workingdir){
             options.WorkingDir = service.workingdir
         } 
@@ -457,7 +484,7 @@ export class Service {
         let portbinds = [] 
         const $this = this
         let seenTargetTos = [] 
-        let defaultVariables = this.config.variables 
+        let defaultVariables = this.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 
@@ -536,13 +563,13 @@ export class Service {
                 return  returnable
             }
             
-       }   
-        let defaultVariables = this.config.variables   
+       }    
+        let defaultVariables = this.variables   
         
         let promises  = [] 
-        if ($this.config.bind){ 
-            if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
-                let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
+        if ($this.bind){ 
+            if (Array.isArray($this.bind) || Array.isArray($this.bind.from)){   
+                let bnd = ( $this.bind.from ? $this.bind.from : $this.bind)                 
                     bnd.forEach((b)=>{
                         if (typeof b == 'object' && b.from){
                             promises.push(formatBind(
@@ -559,7 +586,7 @@ export class Service {
                         }
                     })   
             } else {
-                let b  = $this.config.bind
+                let b  = $this.bind
                 
                 if (b.from)
                 {
@@ -570,20 +597,20 @@ export class Service {
                 }
             } 
         } 
-        if (this.config.orchestrator){
+        if (this.orchestrator){
             // binds.push(`${path.join(store.system.writePath,  "workflows", this.name, "docker") }:/var/lib/docker`)
             binds.push(`basestack-docker-${$this.name}:/var/lib/docker`)
         } 
          
         if (defaultVariables){  
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
+                let from = selected_option.source
+                let to = selected_option.source 
                 if (selected_option.options){
                     selected_option = {... selected_option.options[(selected_option.option ? selected_option.option : 0)]}
                 }
                 
                 if (typeof selected_option == 'object' && selected_option.bind){
-                    let from = selected_option.source
-                    let to = selected_option.target 
                     
                     if (selected_option.bind && selected_option.bind.from){
                         from = selected_option.bind.from  
@@ -601,6 +628,7 @@ export class Service {
                         let s = from   
                         s.forEach((directory,i)=>{ 
                             let finalpath = to[i]    
+                            
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
                                 finalpath = $this.removeQuotes(finalpath)
                                 promises.push(formatBind(
@@ -614,7 +642,8 @@ export class Service {
                             }   
                             seenTargetTos.push(finalpath)
                         })  
-                    } else { 
+                    } else if (!Array.isArray(from)){ 
+                        
                         if (selected_option.bind == 'directory'){
                             let finalpath = path.dirname(to)
                             if (seenTargetTos.indexOf(finalpath) == -1 && from){
@@ -629,7 +658,6 @@ export class Service {
                             } 
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
-                            
                             selected_option.bind.to = $this.removeQuotes(selected_option.bind.to, selected_option.bind.from)
                             promises.push(formatBind( 
                                 path.resolve(selected_option.bind.from),
@@ -676,8 +704,8 @@ export class Service {
         if (selected_path && selected_path !==''){
             selected_path = this.setTarget(selected_path)
             if (!selected_path.startsWith("/")){
-                if (this.config.workingdir){
-                    selected_path = `${this.config.workingdir}/${selected_path}`
+                if (this.workingdir){
+                    selected_path = `${this.workingdir}/${selected_path}`
                 } else {
                     selected_path = `/${selected_path}`
                 }
@@ -692,7 +720,7 @@ export class Service {
     async defineCopies(){ 
         const $this = this; 
         let promises = []
-        let defaultVariables = this.config.variables
+        let defaultVariables = this.variables
         if (!defaultVariables){
             defaultVariables = {} 
         }
@@ -742,9 +770,10 @@ export class Service {
         let promises = []
         const $this=this 
         let binds = []
-        let defaultVariables = this.config.variables 
+        let defaultVariables = this.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
+                
                 if (selected_option.set && (!selected_option.manifest.source || selected_option.manifest.source.length == 0 ) ){
                     for (let i = 0; i < selected_option.set.length; i++){
                         let set  = selected_option.set[i]
@@ -772,7 +801,7 @@ export class Service {
                                     updates.push(rowupdate) 
                                 }) 
                                 
-                                nestedProperty.set($this.config, set.target, updates)
+                                nestedProperty.set($this, set.target, updates)
                                 set.target = updates
                             } catch (err){
                                 store.logger.error(`${err}, error in reading csv to set file`)
@@ -788,11 +817,12 @@ export class Service {
     async defineReads(){
         let promises = [] 
         let binds = []
-        let defaultVariables = this.config.variables 
+        let defaultVariables = this.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.define_columns){
-                    let defined = selected_option.define_columns
+                if (selected_option.samplesheet && selected_option.samplesheet.define_columns){
+                       
+                    let defined = selected_option.samplesheet.define_columns
                     let defined_keys = []
                     for (let [key, column] of Object.entries(defined)){
                         if (typeof column != 'object') {
@@ -868,7 +898,7 @@ export class Service {
         let bind = []    
         const $this = this;  
         let seenTargetTos = []  
-        let defaultVariables = $this.config.variables  
+        let defaultVariables = $this.variables  
         if (defaultVariables){   
             for (let [key, selected_option ] of Object.entries(defaultVariables)){
                 let full_item = cloneDeep(selected_option)
@@ -926,7 +956,7 @@ export class Service {
     async start(params, wait){  
 		const $this = this
         this.status.error = null
-        const setUser = $this.config.setUser
+        const setUser = $this.setUser
         this.status.running = true
         this.status.cancelled = false
         return new Promise(function(resolve,reject){ 
@@ -942,9 +972,9 @@ export class Service {
                         params = {} 
                     } 
                     
-                    let cmd = $this.config.command 
+                    let cmd = $this.command 
                     if (cmd){  
-                        options.Cmd = $this.config.command
+                        options.Cmd = $this.command
                     } 
                     let promises = [];  
                     let promisesInside = []
@@ -956,12 +986,12 @@ export class Service {
                     let seenTargetTos = []    
                     let seenTargetFrom = []     
                          
-                    // $this.config.variables = defaultVariables  
+                    // $this.variables = defaultVariables  
                     let envs = {}   
                     // $this.setTarget()
-                    defaultVariables = $this.config.variables 
-                    if ($this.config.serve ){      
-                        let variable_port = defaultVariables[$this.config.serve] 
+                    defaultVariables = $this.variables 
+                    if ($this.serve ){      
+                        let variable_port = defaultVariables[$this.serve] 
                         options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
                     }   
                     $this.defineEnv() 
@@ -980,7 +1010,7 @@ export class Service {
                     $this.definePortBinds()
                     // store.logger.info("define volumes")
                     // $this.defineVolumes()
-                    if ($this.config.orchestrator){
+                    if ($this.orchestrator){
                         // binds.push(`${path.join(store.system.writePath,  "workflows", this.name, "docker") }:/var/lib/docker`)
                         $this.binds.push(`basestack-docker-${$this.name}:/var/lib/docker`)
                     }
@@ -1002,7 +1032,6 @@ export class Service {
     
                         } 
                     }
-                      
                     if (defaultVariables &&  typeof defaultVariables == 'object'){
                         for (let [name, selected_option ] of Object.entries(defaultVariables)){
                             if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
@@ -1049,7 +1078,7 @@ export class Service {
                             }  
                         }
                     }
-                    let append = $this.config.append
+                    let append = $this.append
                     if (append){
                         if (append.placement || append.placement == 0){
                             if (append.position == 'start'){
@@ -1065,8 +1094,8 @@ export class Service {
                             }      
                         }     
                     }    
-                    if ($this.config.image){ 
-                        let img = $this.config.image
+                    if ($this.image){ 
+                        let img = $this.image
                         options.Image = img    
                     }   
                     if (! options.Image ){ 
@@ -1076,11 +1105,11 @@ export class Service {
                     if (typeof options.Cmd == "string"){    
                         options.Cmd = ['bash', '-c', options.Cmd]  
                     }     
-                    if (!$this.config.command) 
+                    if (!$this.command) 
                     {  
                         options.Cmd = null 
                     }  
-                    if ($this.override.image){
+                    if ($this.override && $this.override.image){
                         options.Image = $this.override.image
                     } 
                     options.Env = [...options.Env, ...$this.env ]  
@@ -1094,7 +1123,7 @@ export class Service {
                             options.HostConfig.Mounts.push(m)
                             seen[m.Target] = m.Source
                         }
-                        
+                         
                     })
                     $this.mounts.forEach((m)=>{
                         if (!seen[m.Target]){
@@ -1105,7 +1134,8 @@ export class Service {
                     store.logger.info("%o _____ ",options)
                     
                     logger.info(`starting the container ${options.name} `)
-                    if ($this.config.dry){ 
+                    if ($this.dry){ 
+                        $this.status.running = false 
                         resolve()  
                     } else {
                         Promise.all(promises).then((response)=>{
@@ -1184,7 +1214,7 @@ export class Service {
                                             } 
                                             reject(err)  
                                         }  
-                                        if (!wait || $this.config.continuous){
+                                        if (!wait || $this.continuous){
                                             resolve( false )
                                         } else {   
                                             

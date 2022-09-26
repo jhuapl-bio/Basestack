@@ -7,15 +7,14 @@ const { check_image, fetch_external_dockers } = require("../controllers/fetch.js
 const {  removeFile, readFile, decompress_file, checkExists } = require("../controllers/IO.js")
 const { spawnLog } = require("../controllers/logger.js")  
 const {  remove_images, removeVolume } = require("../controllers/post-installation.js")
-export  class Module {       
-	constructor(module, catalog, moduleIdx){       
-        this.name= module.name 
-        this.module = moduleIdx
-        this.catalog = catalog
-        this.variables = module.variables
-        this.type = 'module'
-        const $this = this
-        this.config = module
+  
+
+const { Configuration }  = require("../../../shared/configuration.js")
+
+export  class Module {        
+	constructor(module, catalog, moduleIdx){     
+        this.config = module 
+        this.initProcedures()
         this.procedures = []
         this.status =  { 
             fully_installed: false,
@@ -27,39 +26,52 @@ export  class Module {
         this.interval = {
             checking: false,
         }
-        this.create_interval() 
-        this.statusCheck() 
-        for (let [key, value] of Object.entries(this.variables)){
-            if (value.options){ 
-                if (!value.option){
-                    value.option = 0
-                } 
+        // this.create_interval() 
+        // this.statusCheck() 
+
+        // this.name= module.name 
+        // this.module = moduleIdx
+        // this.catalog = catalog
+        // this.variables = module.variables
+        // this.type = 'module'
+        // const $this = this
+        // this.config = module
+        // this.procedures = []
+        
+        
+        // this.defineConfiguration()
+        // for (let [key, value] of Object.entries(this.variables)){
+        //     if (value.options){ 
+        //         if (!value.option){
+        //             value.option = 0
+        //         } 
                 
-                value.optionValue = value.options[value.option]
-                if (typeof value.optionValue == 'object' && !value.optionValue.source && !value.optionValue.element && typeof value.optionValue != "string"   ){
-                    value.optionValue.source = true
-                }
+        //         value.optionValue = value.options[value.option]
+        //         if (typeof value.optionValue == 'object' && !value.optionValue.source && !value.optionValue.element && typeof value.optionValue != "string"   ){
+        //             value.optionValue.source = true
+        //         }
                 
-                if (typeof value.options[value.option] == 'object' && !value.options[value.option].source){
+        //         if (typeof value.options[value.option] == 'object' && !value.options[value.option].source){
                     
-                    if (typeof value.optionValue == 'string'){
-                        value.source = value.optionValue
-                    }else {
-                        value.source = value.optionValue.source
-                    }
-                } 
-            }
-            if (value.load){
-                readFile(value.load).then((data)=>{
-                    value.source = JSON.parse(data)
-                }).catch((err)=>{
-                    store.logger.error("%o error in reading file to load for server %s", err, $this.name)
-                })
-            }
-        }
+        //             if (typeof value.optionValue == 'string'){
+        //                 value.source = value.optionValue
+        //             }else {
+        //                 value.source = value.optionValue.source
+        //             }
+        //         } 
+        //     }
+        //     if (value.load){
+        //         readFile(value.load).then((data)=>{
+        //             value.source = JSON.parse(data) 
+        //         }).catch((err)=>{
+        //             store.logger.error("%o error in reading file to load for server %s", err, $this.name)
+        //         })
+        //     }
+        // }
 	} 
+    
     async create_interval (){
-        const $this = this
+        const $this = this  
         let interval = setInterval(()=>{
             if (!$this.interval.checking){
                 $this.interval.checking = true
@@ -135,8 +147,7 @@ export  class Module {
         Promise.allSettled(promises).then((response)=>{
             response.forEach((item, i)=>{
                 if (item.status == 'fulfilled'){
-                    
-                    $this.procedures.push(item.value)
+                    $this.procedures.push(item.value) 
                 } else {
                     store.logger.error("Error in initiating procedure... %o %s" , item, $this.config.procedures[i].name)
                 }
@@ -144,10 +155,9 @@ export  class Module {
         })
     }
     async defineProcedure(procedure, procedureIdx){
-        procedure.shared = this.config.shared
-        let proce = new Procedure(procedure, this.catalog, this.module, procedureIdx )
+        let proce = new Procedure(procedure, this.config.variables )
         await proce.init() 
-        return proce
+        return proce 
     }
     async fetchVersion(dependency){
         try{

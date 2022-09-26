@@ -43,11 +43,11 @@
       columns: 2
       column: 12
       sep: ","
-      bind:
-        from:  "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
-        to: "/opt/samplesheet/Samplesheet.csv"
+      bind: 
+        from: "${writePath}/workflows/taxtriage/samplesheets/Samplesheet.target.csv"
+        to: "${writePath}/workflows/taxtriage/samplesheets/Samplesheet.target.csv"
       create:
-        target: "<<directory(%{variables.csv.source})>>/Samplesheet.target.csv"
+        target: "${writePath}/workflows/taxtriage/samplesheets/Samplesheet.target.csv"
         sep: ","
         type: "list"
         header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
@@ -55,12 +55,20 @@
       source: []
       header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
       append_newline: false
+    csv: 
+      label: "Samplesheet CSV file"
+      element: "file"
+      optional: True
+      source: null
+      target: " --input %{variables.csv.source}"
+      arg: "--input"
     maxCPUs:
       label: "Maximum CPUs"
       element: "number"
       source: 3
       optional: true
-      target: "%{variables.maxCPUs.source}"
+      arg: "--max_cpus"
+      target: "--max_cpus %{variables.maxCPUs.source}"
       append:
         command: " --max_cpus \"${maxCPUs}\" "
         placement: 2
@@ -76,7 +84,7 @@
       element: "number"
       source: 12
       optional: true
-      target: "%{variables.maxMemory.source}"
+      target: "--max_memory %{variables.maxMemory.source}"
       append:
         command: " --max_memory \"${maxMemory}\"GB "
         placement: 2
@@ -86,29 +94,27 @@
     db:
       label: Classifier database
       class: wb-100 p-3 mb-1
+      name: "db"
       option: 0
+      target: " --db %{variables.db.source} "
       options:
         - element: null
           name: Minikraken2
-          source: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
-          target: /opt/databases/minikraken2
+          source: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE/"
+          bind: self
           warning: >-
             Requires roughly 7.5 GB of free RAM to load. If limited in RAM
             available, try to change Memory Mapping below to classify on the
             local filesystem. If your input file is large, however, this can
             take a long time
-          bind:
-            from: '%{variables.db.source}'
-            to: /opt/databases/minikraken2
         - element: dir
           name: Custom DB
           source: null
-          target: /opt/databases/<<basename(%{variables.db.source})>>
-          bind: self
     skip_assembly:
       label: "Skip De Novo Assembly"
       element: "checkbox"
       source: true
+      target: "--skip_assembly"
       hint: "Skip De Novo Assembly"
       define: 
         skip_assembly: "--skip_assembly"
@@ -116,6 +122,7 @@
       label: "Skip QC Plotting"
       element: "checkbox"
       source: true
+      target: "--skip_plots"
       hint: "Skip QC plotting"
       define: 
         skip_plots: "--skip_plots"
@@ -123,69 +130,34 @@
       label: "Resume Nextflow"
       element: "checkbox"
       source: true
+      target: "-resume"
       hint: "Pick up where you left off, useful if piplines are long-running or you're debugging issues with a failed midrun submission"
-      define: 
-        resume: "-resume"
     assembly_option: 
       label: "Assembly File Option"
       option: 0
+      target: "--assembly %{variables.assembly_option.source}"
       options:
         - element: null
           name: "NCBI Refseq Assembly Txt File"
           source:  "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-          target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
-          define: 
-            assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
-          bind: 
-            from: "%{variables.assembly_option.source}"
-            to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
         - element: null
           name: "Pull Assembly File Automatically"
           source: null
-          target: null
-          define: 
-            assembly: ""
         - element: "file"
           source: null
           name: "Custom Assembly Txt file"
           hint: "Must be in the same format as the ncbi assembly refseq file"
-          target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
-          bind: 
-            from: "%{variables.assembly_option.source}"
-            to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
-          define: 
-            assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
-    code: 
-      label: "code dir"
-      name: "code"
-      hidden: true
-      bind:
-        from:  "${writePath}/workflows/taxtriage/taxtriage"
-        to: "/opt/code"
-    autopull: 
-      label: "Automatically Pull Latest Code from GitHub"
-      name: pull
-      source: true
-      element: "checkbox"
-      target: null
-      append:
-        command: "git -C /opt/code pull ; "
-        placement: 2
-        position: "start"
-        services: 
-          - 0
-    filter_db:
-      label: "Filter Database"
-      element: "dir"
-      source: null
-      optional: true
-      hint: "Database to extract reads out of"
-      target: "/opt/database_filter"
-      bind: "self"
-      define:
-        filter: " --filter %{variables.filter_db.target} "
+    # filter_db:
+    #   label: "Filter Database"
+    #   element: "dir"
+    #   source: null
+    #   optional: true
+    #   hint: "Database to extract reads out of"
+    #   target: " --filter %{variables.filter_db.source} "
+      # bind: "self"
     profile:
       label: "Profile"
+      target: "-profile %{variables.profile.source}"
       options:
         - "docker"
         - "singularity"
@@ -197,8 +169,18 @@
       source: "<<directory(%{variables.csv.source})>>/taxtriage_output"
       path: "<<directory(%{variables.csv.source})>>/taxtriage_output"
       name: "Output Folder"
-      target: "/opt/output"
+      target: "--outdir %{variables.outdir.source}"
       bind: "self"
+    branch:
+      label: "Report"
+      element: "string"
+      source: "main"
+      target: "-r %{variables.branch.source}"
+    latest:
+      label: "Report"
+      element: "checkbox"
+      source: False
+      target: "-latest"
     report:
       label: "Report"
       element: file
@@ -212,7 +194,6 @@
     - name: nfcore_taxtriage #Top level is the left-hand selection of the menu and the major module to install 
       title: "TaxTriage (Native)"
       icon: "virus"
-      deployment: "native"
       module: True
       full_orientation: true
       init: false  
@@ -226,19 +207,27 @@
           orchestrator: true
           force_restart: false
           continuous: true
+          deployment: "native"
           force_init: false
           label: "TaxTriage"
           workingdir: "/opt/code"
           warning: "This process requires internet in its current state"
           command: [
-            "bash", "-c", "nextflow run https://github.com/jhuapl-bio/taxtriage/main.nf
-              --input %{variables.csv.source}
-              --db ${db}  
-              --outdir ${output}
-              --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
-              -profile ${profile} ${skip_plots} ${skip_assembly} 
-              ${assembly} --demux 
-              ${resume} ${filter}; '  "
+            "bash", "-c", "nextflow run  'https://github.com/jhuapl-bio/taxtriage'
+              --input %{variables.manifest.create.target}
+              %{variables.db.target}   
+              %{variables.outdir.target}  
+              %{variables.branch.target}   
+              %{variables.latest.target} 
+              %{variables.maxMemory.target}GB 
+              %{variables.maxCPUs.target} 
+              %{variables.profile.target} 
+              %{variables.skip_plots.target} 
+              %{variables.skip_assembly.target} 
+              %{variables.assembly_option.target}  
+              %{variables.filter_db.target} 
+              %{variables.resume.target} 
+              --demux ;   "
           ]
       tags: 
         - "Nextflow"
@@ -253,73 +242,70 @@
       full_orientation: true
       init: false  
       dependencies:
-        - name: "docker"
-          label: "Dockerized"
-          items:
-            - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
-              label: "jhuaplbio/basestack_orchestrator:v1.0.0"
-              type: "docker"
-              format: "docker"
-            - target: "bitnami/git"
-              label: "bitnami/git"
-              type: "docker"
-              format: "docker"
-            - source: 
-                url: "git clone  https://github.com/jhuapl-bio/taxtriage.git"
-                type: "dir"
-                remove: false
-                target: "${writePath}/workflows/taxtriage/taxtriage"
-              type: "orchestration" 
-              service:
-                command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
-                init: false
-                force_restart: true
-                image: "bitnami/git"
-                name: "nfcore_taxtriage_git"
-                force_init: false
-                config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
-                orchestrated: true
-                workingdir: "/opt"
-              target: "${writePath}/workflows/taxtriage/taxtriage"
-              format: dir
-              bind: 
-                from: "${writePath}/workflows/taxtriage"
-                to: "/opt/source"
-              workingdir: "/opt/source"
-              overwrite: true
-              command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
-              label: "Tax Triage Code" 
-            - source:
-                url: ftp.ncbi.nlm.nih.gov
-                type: "file"
-                user: anonymous
-                path: /genomes/refseq/assembly_summary_refseq.txt
-                password: null
-                protocol: ftp
-                remove: true
-                target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-              label: Assembly Refseq
-              type: "download"
-              format: "file"
-              target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-              overwrite: true
-            - source:
-                url: ftp.ccb.jhu.edu
-                type: file
-                user: anonymous
-                path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
-                password: null
-                protocol: ftp
-                remove: false
-                target: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
-              label: Minikraken2
-              type: download
-              format: dir
-              decompress:
-                format: tgz
-                source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
-              target: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
-              overwrite: true
+        - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          label: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          type: "docker"
+          format: "docker"
+        - target: "bitnami/git"
+          label: "bitnami/git"
+          type: "docker"
+          format: "docker"
+        - source: 
+            url: "git clone  https://github.com/jhuapl-bio/taxtriage.git"
+            type: "dir"
+            remove: false
+            target: "${writePath}/workflows/taxtriage/taxtriage"
+          type: "orchestration" 
+          service:
+            command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
+            init: false
+            force_restart: true
+            image: "bitnami/git"
+            name: "nfcore_taxtriage_git"
+            force_init: false
+            config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
+            orchestrated: true
+            workingdir: "/opt"
+          target: "${writePath}/workflows/taxtriage/taxtriage"
+          format: dir
+          bind: 
+            from: "${writePath}/workflows/taxtriage"
+            to: "/opt/source"
+          workingdir: "/opt/source"
+          overwrite: true
+          command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
+          label: "Tax Triage Code" 
+        - source:
+            url: ftp.ncbi.nlm.nih.gov
+            type: "file"
+            user: anonymous
+            path: /genomes/refseq/assembly_summary_refseq.txt
+            password: null
+            protocol: ftp
+            remove: true
+            target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+          label: Assembly Refseq
+          type: "download"
+          format: "file"
+          target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
+          overwrite: true
+        - source:
+            url: ftp.ccb.jhu.edu
+            type: file
+            user: anonymous
+            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
+            password: null
+            protocol: ftp
+            remove: false
+            target: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+          label: Minikraken2
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+          target: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
+          overwrite: true
       services:
         - name: taxtriage
           orchestrator: true
@@ -327,26 +313,22 @@
           continuous: true
           force_init: false
           label: "TaxTriage"
+          bind: 
+            from: "${writePath}/workflows/taxtriage/taxtriage"
+            to: "/opt/code"
           image: "jhuaplbio/basestack_orchestrator:v1.0.0"
           workingdir: "/opt/code"
           warning: "This process requires internet in its current state"
           command: [
             "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep ${sleepTime}; 
             nextflow run /opt/code/main.nf 
-              --input /opt/samplesheet/Samplesheet.csv
-              --db ${db}  
+              --input %{variables.manifest.create.target}
+              %{variables.db.target}
               --outdir /opt/output
-              --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
-              -profile ${profile} ${skip_plots} ${skip_assembly} 
+              ${maxMemory}GB ${maxCPUs} 
+              ${profile} ${skip_plots} ${skip_assembly} 
               ${assembly} --demux 
-              ${resume} ${filter}; '  "
-          ]
-        
-      tags: 
-        - "Nextflow"
-        - "metagenomics"
-        - "nanopore"
-        - "illumina"
-      
+              ${resume}; pkill -9 . '  "
+          ]      
       
     

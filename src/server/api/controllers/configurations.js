@@ -6,7 +6,7 @@ const { Job } = require("../orchestrators/job")
 const { getFolders, readFile, getFiles} = require("./IO.js") 
 import path from "path" 
 const YAML = require("js-yaml")    
- 
+  
 export function bytesToSize(bytes) {
    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
    if (bytes == 0) return '0 Byte';         
@@ -14,19 +14,19 @@ export function bytesToSize(bytes) {
    return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
 }  
 
-export async function create_job(config, params, services, procedure){
-    let job = new Job(procedure,config)   
-    if (!services){   
+export async function create_job(module, procedureIdx, params){
+    let job = new Job(module, procedureIdx)   
+    // if (!services){   
           
-        services = config.services.map ((d,i)=>{ 
-            return i  
-        })                   
-    }  
+    //     services = config.services.map ((d,i)=>{ 
+    //         return i  
+    //     })                   
+    // }  
     
-    await job.defineServices(services, params) 
-    if (params){       
-        job.setParams(params)      
-    }    
+    // await job.defineServices(services, params) 
+    // if (params){       
+    await job.setParams(params)    
+    // }    
     return job   
 }           
 

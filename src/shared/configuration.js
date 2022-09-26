@@ -54,22 +54,22 @@ export  class Configuration {     // Make the main procedure class for configura
             if (custom_variable.option >=0 && !custom_variable.source){
                 if (typeof custom_variable.options[custom_variable.option] == 'object'){ // if the variable has multiple choices of elements, set to the options source as source for variable
                     custom_variable.source = custom_variable.options[custom_variable.option].source
-                } else {
+                } else {   
                     custom_variable.source = custom_variable.options[custom_variable.option] /// if param is not an option, set base source
                 }
-            }
-        }
+            }        
+        } 
     }
     create_intervalWatcher(){ // set status checker at interval of 2000 milliseconds
-        const $this = this;
+        const $this = this;  
         $this.destroy_interval() // If creating, destroy any existing one to ensure no parallel processes doing same thing
         $this.getProgress().then((f)=>{ // Figure out the status of the output files
-            $this.watches = f
-        })
-        this.watcher = setInterval(()=>{
+            $this.watches = f 
+        })    
+        this.watcher = setInterval(()=>{ 
             $this.getProgress().then((f)=>{ // Figure out the status of the output files
                 $this.watches = f
-            }).catch((err)=>{
+            }).catch((err)=>{ 
                 console.error(err,"Error in watcher")
             })
         },2000)
@@ -121,15 +121,15 @@ export  class Configuration {     // Make the main procedure class for configura
                                 console.error("Error in getting status for watched location: %o", resp.reason )
                                 watches[index] = 
                                 { 
-                                    ...filtered_outputs[index]
-                                }
+                                    ...filtered_outputs[index]    
+                                } 
                             }
-                        })
+                        }) 
                         resolve(watches)
 
                     })
-                }
-            } catch (err){
+                } 
+            } catch (err){ 
                 console.error("%o error in get progress %s", err, $this.name)
                 reject(err)
             } 
@@ -228,16 +228,16 @@ export  class Configuration {     // Make the main procedure class for configura
                                                             vari.define_columns[key].element.forEach((element)=>{
                                                                 if (['file', 'dir', 'directory'].indexOf(element) > -1){
                                                                     console.log("not absolute", value, update_on.source, element)
-                                                                    seen = true
+                                                                    seen = true 
                                                                     
-                                                                }
-                                                            })
+                                                                } 
+                                                            })  
                                                         }
-                                                        if (seen){
+                                                        if (seen){ 
                                                             let abs = path.join(path.dirname(update_on.source), value)
-                                                            f[key] = abs 
-                                                        }
-                                                    }
+                                                            f[key] = abs  
+                                                        } 
+                                                    } 
                                                 }
                                             }
                                             return f
@@ -256,8 +256,8 @@ export  class Configuration {     // Make the main procedure class for configura
                         console.error(err)
                     }
                 }
-
-            }
+ 
+            } 
             let changed_variables = []
             const $this = this
             Promise.allSettled(promises).then((respo)=>{
@@ -267,7 +267,7 @@ export  class Configuration {     // Make the main procedure class for configura
                         try{
                             
                             // if (res.value.value ){ // If a source value is available
-                            if (res.value.value.source){
+                            if (res.value.value.source){ 
                                 $this.variables[res.value.key].source = res.value.value.source
                             } else {
                                 $this.variables[res.value.key].source = null
@@ -412,54 +412,45 @@ export  class Configuration {     // Make the main procedure class for configura
            
         }
     }
-    findObjectByLabel(obj, pattern,full) {
+    findObjectByLabel(obj, pattern) {
         const $this  = this
         
         if (obj && typeof obj == 'object'){ // If the object type is an object, there are values beneath, part of it, keep going
             Object.keys(obj).forEach(function (key) {
-                if (Array.isArray(obj[key])){
-                    obj[key].map((d,i)=>{
-                        if (typeof d == 'string'){
-                            obj[key][i] = $this.findObjectByLabel(obj[key][i], pattern, full)
-                        } else {
-                            obj[key][i] = $this.findObjectByLabel(obj[key][i], pattern, full) 
-                        }
-                    })
-                }
-                else if (typeof obj[key] === 'object') { // If the object type is an object, there are values beneath, part of it, keep going
-                    obj[key] = $this.findObjectByLabel(obj[key], pattern, full) 
+               
+                if (typeof obj[key] === 'object') { // If the object type is an object, there are values beneath, part of it, keep going
+                    $this.findObjectByLabel(obj[key], pattern, $this) 
                     
                      
                     // return null
                 } else if (typeof obj[key] == 'string'){ // If the object type is not an object, we are at the terminus of a branching pattern
                     
-                    // var replace = `${pattern}`   
-                    // var re = new RegExp(replace,"g");
-                    // let fo = obj[key].match(re)
-                    obj[key]=$this.findObjectByLabel(obj[key], pattern, full)
+                    var replace = `${pattern}`   
+                    var re = new RegExp(replace,"g");
+                    let fo = obj[key].match(re)
                     
-                    // if (fo && Array.isArray(fo)){  // If there are one or more matches
-                    //     let original = cloneDeep(obj[key])
-                    //     Object.defineProperty(obj, key, {
-                    //         enumerable: true,    
-                    //         set: function(value){ 
-                    //             original = value 
-                    //         }, 
-                    //         get: function(){  // set getter that will update on all value changes if needed
-                    //             let fullstring = cloneDeep(original)  
-                    //             let final = $this.mapVariable(fullstring,obj)
+                    
+                    if (fo && Array.isArray(fo)){  // If there are one or more matches
+                        let original = cloneDeep(obj[key])
+                        Object.defineProperty(obj, key, {
+                            enumerable: true,    
+                            set: function(value){ 
+                                original = value 
+                            }, 
+                            get: function(){  // set getter that will update on all value changes if needed
+                                let fullstring = cloneDeep(original)  
+                                let final = $this.mapVariable(fullstring,obj)
                                 
 
-                    //             if (final == 'undefined'){
-                    //                 return null
-                    //             } else { 
-                    //                 return final
-                    //             }
-                    //         }
-                    //     })
-                    // }
-                } 
-                else {
+                                if (final == 'undefined'){
+                                    return null
+                                } else { 
+                                    return final
+                                }
+                            }
+                        })
+                    }
+                } else {
                     return 
                 }
             }) 
@@ -472,10 +463,10 @@ export  class Configuration {     // Make the main procedure class for configura
                 fo.forEach((match)=>{  
                     try{
                         let id = match.replace(/[\%\{\}]/g, "")
-                        
+                        Object.defineProperty(obj, )
                         obj = { 
                             get: function(){
-                                let found =  nestedProperty.get(full, id)
+                                let found =  nestedProperty.get($this, id)
                                 fullstring  = fullstring.replaceAll(match, found)
                                 if (fullstring == 'undefined'){
                                     return null
@@ -503,25 +494,7 @@ export  class Configuration {     // Make the main procedure class for configura
             
         }
         this.findObjectByLabel(this, "(\%\{.+?\})", cloneDeep(this)) 
-        // console.log(this.variables.fastqs.options[1].bind.from,"end")
-        // this.variables = {
-        //     fastqs: {
-        //         source: ["/Users/1", "/Users/2" ]
-        //     },
-        //     outputDir: {
-        //         source: "/Users/merribb1/Desktop/test-data2/metagenome/flu_illumina"
-        //     },
-        //     file: {
-        //         source: ["/Users/merribb1/Desktop/test-data2/metagenome/flu_illumina/test2.fastq",
-        //         "/Users/merribb1/Desktop/test-data2/metagenome/flu_illumina/test1.fastq" ]
-        //     },
-        //     samplename: {
-        //         source: "sample"
-        //     }
-        // }
-        // let string = "<<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report.json"
-        // let final = this.mapVariable(string)
-
+    
  
         
     }  

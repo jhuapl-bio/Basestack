@@ -9,26 +9,30 @@ const { store }  = require("../../config/store/index.js")
 const path = require("path")
 var logger = store.logger
  
-export  class Job {  
-    constructor(procedure, config){         
-        this.config = config  
+export  class Job {   
+    constructor(module, procedureIdx){         
+        // this.config = config  
+        this.module = cloneDeep(module)
+        this.variables = cloneDeep(module.config.variables)
+        this.defaultModule = module.defaults
+        this.procedure = cloneDeep(module.config.procedures[procedureIdx])
+        this.services = this.procedure.services
         this.options = null  
-        this.deployment = procedure.deployment 
+        this.deployment = this.procedure.deployment 
         this.configurations = null 
         this.services = []
-        this.variables = {}
         this.runningConfig = {}
-        this.baseConfig = cloneDeep(config)
-        this.mergedConfig = cloneDeep(this.baseConfig)
+        // this.baseConfig = cloneDeep(config)
+        // this.mergedConfig = cloneDeep(this.baseConfig)
+        this.defineConfiguration()
         this.containers = []
         this.env = {}
-        this.procedure = procedure
         this.status = { 
             exists: false, 
             services_used: [],
             fully_installed: true,
-            procedure: procedure.status,
-            dependencies: procedure.dependencies.map((f)=>{
+            procedure: this.procedure.status,
+            dependencies: this.procedure.dependencies.map((f)=>{
                 return f.status
             }),
             error: null, 
@@ -67,19 +71,15 @@ export  class Job {
         }, 1500)
         return 
     }    
+   
     defineConfiguration (config) {
-        let configuration = new Configuration(cloneDeep(config)) 
+        let configuration = new Configuration(this) 
         configuration.defineMapping(); 
-        return  configuration
+        this.config = configuration
+        return   
     } 
-    // reformatPath(selected_path){
-    //     if (selected_path){
-    //         selected_path = selected_path.replaceAll(/\\/g, "/")
-    //     }
-    //     return selected_path
-    // }
     setValueVariable(value, obj, key){ 
-        const $this = this;
+        const $this = this; 
         try{      
             if (obj && obj.options){ 
                 if (obj.options ){  
@@ -88,7 +88,7 @@ export  class Job {
                     }   
                 }
             }
-              
+            
             
             if (value.source == 0 || value.source || ( typeof value == 'object' && 'source' in value)){
                 if (typeof value.source == 'string' || typeof value.source == 'number' || ! value.source){
@@ -104,6 +104,7 @@ export  class Job {
                     obj.source = obj.fallback
                 } 
             } 
+            
             if (!obj.target && obj.source){
                 obj.target = cloneDeep(obj.source)
             }
@@ -123,25 +124,29 @@ export  class Job {
                     if (!value.source){
                         obj.source = obj.options[obj.option].source
                     }
-                    $this.runningConfig.variables[key] = { ...obj.options[obj.option]}
+                    // $this.variables[key] = { ...obj.options[obj.option]}
                 }
                 
-                $this.runningConfig.variables[key].option = obj.option
+                
+                $this.variables[key].option = obj.option
+                
                 if (obj.source){
-                    $this.runningConfig.variables[key].source = obj.source
+                    $this.variables[key].source = obj.source
                 }
                
             }  else {
-                $this.runningConfig.variables[key].source = obj.source
+                $this.variables[key].source = obj.source
             }  
             
-            if (!$this.runningConfig.variables[key].target){
-                $this.runningConfig.variables[key].target = cloneDeep($this.runningConfig.variables[key].source)
+            
+            if (!$this.variables[key].target){
+                $this.variables[key].target = cloneDeep($this.variables[key].source)
             }
-            if ($this.runningConfig.variables[key].bind){
-                if ($this.runningConfig.variables[key].define_columns){
+            
+            if ($this.variables[key].bind){
+                if ($this.variables[key].define_columns){
                     let columns = []
-                    for (let [key2, val] of Object.entries(this.runningConfig.variables[key].define_columns)){
+                    for (let [key2, val] of Object.entries(this.variables[key].define_columns)){
                         if (val && typeof(val)  == 'object'){
                             if (!Array.isArray(val.element)){
                                 val.element = [val.element]
@@ -155,23 +160,33 @@ export  class Job {
                         }
                     }
 
-                    if (Array.isArray($this.runningConfig.variables[key].target)){
-                        $this.runningConfig.variables[key].target.forEach((f,i)=>{
+                    if (Array.isArray($this.produre.variables[key].target)){
+                        $this.variables[key].target.forEach((f,i)=>{
                             columns.forEach((col)=>{
-                                $this.runningConfig.variables[key].target[i][col] = $this.setTarget(f[col])                                
+                                $this.variables[key].target[i][col] = $this.setTarget(f[col])                                
                             })
                         })
                     }
                 } else {
-                    $this.runningConfig.variables[key].target = $this.setTarget($this.runningConfig.variables[key].target)
+                    $this.variables[key].target = $this.setTarget($this.variables[key].target)
                     
                 }
-                $this.runningConfig.variables[key].source = $this.setSource($this.runningConfig.variables[key].source)
-                console.log($this.runningConfig.variables[key].target)
+                
+                
+                $this.variables[key].source = $this.setSource($this.variables[key].source)
+            }
+            
+
+            if (!$this.variables[key].source){
+                $this.variables[key].target =null
             }
             
             
-
+            
+             
+            
+            
+ 
         } catch (Err){
             store.logger.error(Err) 
         }         
@@ -181,9 +196,9 @@ export  class Job {
         return new Promise ((resolve, reject)=>{ 
             let data = {} 
             data[target] = value  
-            let obj = this.runningConfig.variables[variable]
+            let obj = this.variables[variable]
             this.setValueVariable(data, obj, variable)
-            let variables = this.runningConfig.variables
+            let variables = this.variables
             let promises = [] 
             if (variables){ 
                 for (let [key, vari] of Object.entries(variables)){
@@ -281,17 +296,17 @@ export  class Job {
                     })
                 }
             } else {
-                if ($this.runningConfig.removal_override){
-                    let type = $this.runningConfig.removal_override
+                if ($this.procedure.removal_override){
+                    let type = $this.procedure.removal_override
                     if (!type){
                         type == 'file'
                     }
-                    if ($this.runningConfig.removal_override.source){
+                    if ($this.procedure.removal_override.source){
                         if(type == 'file') {
-                            promises.push(removeFile($this.runningConfig.removal_override.source))
+                            promises.push(removeFile($this.procedure.removal_override.source))
                         }
                         else{
-                            promises.push(removeFile($this.runningConfig.removal_override.source, 'dir'))
+                            promises.push(removeFile($this.procedure.removal_override.source, 'dir'))
                         }
                     }
                     
@@ -315,17 +330,23 @@ export  class Job {
             })
         })
     } 
-    setParams(params){
+    async setParams(params){
         if (params.images){
             params.images.forEach((service)=>{ 
                 this.services[service.service].override.image = service.image
             })
         }
+        if (!params.variables){
+            params.variables = {}
+        }
         
         this.services.forEach((service)=>{ 
             service.config.dry = params.dry
         })
-        this.mergeInputs(params, 'mergedConfig'  )
+        this.setVariables(params.variables) 
+        await this.defineServices(params.services, params)
+        console.log(this.variables.db)
+        // this.mergeInputs(params, 'mergedConfig'  )
         return   
  
  
@@ -334,7 +355,7 @@ export  class Job {
     updateCommand(service, command){ 
         const $this = this   
         if (command){
-            service.config.command = command  
+            service.command = command  
         }  
     }
     setSource(source){
@@ -347,59 +368,53 @@ export  class Job {
        
         if (target && typeof target == 'string'){
             target = target.replaceAll(/\\/g, "/")
-            target = target.replaceAll(/\s/g, '_')
-            target = target.replaceAll(/:/g, "_")
-            if (target && target != '' && !target.startsWith("/")){
-                target = `/${target}`
-            }
+            // target = target.replaceAll(/\s/g, '_')
+            // target = target.replaceAll(/:/g, "_")
+            // if (target && target != '' && !target.startsWith("/")){
+            //     target = `/${target}`
+            // }
         } 
         return target
 
     }
     setVariables(variables){  
         
-        this.variables = variables
         const $this = this
-        console.log(1)
         for(let [key, value] of Object.entries(variables)){
-            if (!$this.runningConfig.variables[key] && value.custom){
-                $this.runningConfig.variables[key] = value
+            if (!$this.variables[key] && value.custom){
+                $this.variables[key] = value
             } 
-
-            let obj = $this.runningConfig.variables[key]
+            let obj = $this.variables[key]
             this.setValueVariable(value, obj, key)
-             
         }
-
         
-        this.services.forEach((service)=>{ 
-            service.config.variables = $this.runningConfig.variables
+        
+        this.procedure.services.forEach((service)=>{ 
+            service.variables = $this.variables
         })
         return 
     }
-    async defineServices (services, params ) {
-        const $this = this;
-        
+    async defineServices (services, params ) { 
+        const $this = this; 
         for (let ix = 0; ix < services.length;  ix++){
             let serviceIdx = services[ix]
-            if (serviceIdx < this.baseConfig.services.length){
-                
-                let service = new Service($this.baseConfig.services[serviceIdx], serviceIdx)
+            if (serviceIdx < this.procedure.services.length){
+                let service = new Service($this.procedure.services[serviceIdx], $this.variables)
+                service.dry = params.dry
                 await service.setOptions()
                 let command;
                 let commandsIndex = -1
-
                 if (params.command){
                     commandsIndex = params.command.findIndex((d)=>{
                         return d.service == serviceIdx
-                    })
+                    }) 
                     if (commandsIndex>=0){
                         command = params.command[commandsIndex].command
                     }
                 }
-                service.config.setUser = params.setUser
-                $this.updateCommand(service, command)
-                this.services.push(service)
+                service.options.setUser = params.setUser
+                // $this.updateCommand(service, command)
+                $this.services.push(service)
             }
         }  
         this.status.services_used = services
@@ -410,7 +425,7 @@ export  class Job {
         const $this = this; 
         return new Promise(function(resolve,reject){
             try{
-                let variables = ( $this.runningConfig.variables ? $this.runningConfig.variables : $this.baseConfig.variables)
+                let variables = ( $this.variables ? $this.variables : $this.variables)
                 
                 let promises = [] 
                 if (variables ){ 
@@ -453,7 +468,7 @@ export  class Job {
             let promises = [] 
                 let running = false
                 let error = null 
-                $this.services.forEach((service, key)=>{
+                $this.services.map((service, key)=>{
                     let step = null;
                     if (service.status.error){
                         error = `Service: ${key}, Error: ${service.status.error}\n`
@@ -484,12 +499,12 @@ export  class Job {
                 let cancelled = $this.services.some((d)=>{
                     return d.status.cancelled
                 })
-                $this.status.fully_installed = $this.status.procedure.fully_installed
+                // $this.status.fully_installed = $this.status.procedure.fully_installed
                 $this.status.stream = $this.status.stream.splice(-350)
                 $this.status.success = success 
-                $this.status.complete = complete
+                $this.status.complete = complete 
                 $this.status.running = running
-                $this.status.error = error
+                $this.status.error = error 
                 
                 
                 
@@ -518,27 +533,27 @@ export  class Job {
         try{ 
             for (let i = 0; !end && i < $this.services.length; i++){
                 let service = $this.services[i]
+                
                 try{  
                     let skip        
                     store.logger.info("%s, Starting a new job service %s", i, service.name)
-                    console.log(this.deployment,"<<")
                     let procedures = $this.procedure
-                    if (this.deployment == 'native'){
-                        console.log("is native, skipping")
-                    } else {
+                    // if (this.deployment == 'native'){
+                    //     console.log("is native, skipping")
+                    // } else {
 
-                        let index = procedures.dependencies.findIndex((f)=>{
-                            return f.fulltarget == service.config.image
-                        })
-                        if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
-                            if (!autocheck){
-                                store.logger.info("Image doesnt exists %s", service.config.image, index)
-                            } else {
-                                store.logger.info("Image to be autochecked and built %s", service.config.image, index)
-                            }
-                            await procedures.build(false, index, true)
-                        }
-                    } 
+                    //     let index = procedures.dependencies.findIndex((f)=>{
+                    //         return f.fulltarget == service.config.image
+                    //     })
+                    //     if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
+                    //         if (!autocheck){
+                    //             store.logger.info("Image doesnt exists %s", service.config.image, index)
+                    //         } else {
+                    //             store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                    //         }
+                    //         await procedures.build(false, index, true)
+                    //     }
+                    // } 
                     skip = await service.check_then_start({ variables: $this.variables }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
@@ -587,17 +602,15 @@ export  class Job {
         if (!params.variables){
             params.variables = {} 
         }
-        store.logger.info("%s setting variables", $this.baseConfig.name)
-        // this.mergeInputs(params, 'mergedConfig'  )
-        this.runningConfig = this.defineConfiguration(this.mergedConfig)
-        this.setVariables(params.variables) 
+        store.logger.info("%s setting variables", $this.procedure.name)
+
         store.logger.info("%s closing existing streams if existent", $this.name)
-        this.promises.forEach((service)=>{
+        this.procedure.services.forEach((service)=>{
             if (service && service.streamObj){
                 service.streamObj.close()
             }
         })
-        store.logger.info("%s setting every complete status to false", $this.name)
+        store.logger.info("%s setting every complete status to false", $this.procedure.name)
 
         for (let i = 0; i < $this.services.length; i++){
             $this.services[i].status.complete = false

@@ -1,6 +1,7 @@
 import { resolve } from "path"
 import nestedProperty from "nested-property"
 import { config } from "winston"
+import { c } from "tar"
 const { parseConfigVariables } = require("../../../shared/definitions.js")
 const path = require("path")    
 const { store }  = require("../../config/store/index.js")
@@ -295,13 +296,13 @@ export  class Library {
             store.logger.info("Maade module, initiating procedures")
 
             modl.initProcedures()  
-             
             
             if (!store.library.catalog[module.name]){
                 store.logger.info("%s making catalog", module.name)
                 store.library.catalog[module.name] = new Catalog(module)
                 store.library.catalog[module.name] = modl
                 store.logger.info("defining tags for %s", module.name)
+                
                 Object.defineProperty(store.library.catalog[module.name], 'tags', {
                     get: ()=>{
                         let allTags = store.library.catalog[module.name].modules.map((d)=>{ 
@@ -311,14 +312,15 @@ export  class Library {
                                 return []
                             }
                         }) 
-                        let reducedAllTags = [].concat(...allTags);
+                        let reducedAllTags = [].concat(...allTags); 
                         reducedAllTags = [... new Set(reducedAllTags)]
                         return reducedAllTags
     
      
                     }
-                })
+                }) 
             } 
+            // console.log("done defining modl", store.library.catalog[module.name].config)
             store.logger.info("Returning module now... %s", module.name)
             return modl
         } catch(err){
