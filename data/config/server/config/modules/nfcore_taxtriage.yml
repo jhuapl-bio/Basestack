@@ -65,7 +65,7 @@
           format: dir
           bind: 
             from: "${writePath}/workflows/taxtriage"
-            to: "/opt/source"
+            to: "/root/.nextflow"
           workingdir: "/opt/source"
           overwrite: true
           command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
@@ -203,7 +203,7 @@
               - 1
         sleepTime:
           label: "Lag Time (s) between Pipeline start and Docker starting"
-          source: 5
+          source: 2
           element: number
         maxMemory:
           label: "Maximum Memory (GB)"
@@ -266,13 +266,9 @@
           options:
             - element: null
               name: "NCBI Refseq Assembly Txt File"
-              source:  "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-              target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
+              source:  "/root/.nextflow/assets/jhuapl-bio/taxtriage/examples/assembly_summary_refseq.txt"
               define: 
-                assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
-              bind: 
-                from: "%{variables.assembly_option.source}"
-                to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
+                assembly: "--assembly /root/.nextflow/assets/jhuapl-bio/taxtriage/examples/assembly_summary_refseq.txt"
             - element: null
               name: "Pull Assembly File Automatically"
               source: null
@@ -283,31 +279,31 @@
               source: null
               name: "Custom Assembly Txt file"
               hint: "Must be in the same format as the ncbi assembly refseq file"
-              target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
+              target: "/opt/assembly_option/<<basename(%{variables.assembly_option.source})>>"
               bind: 
                 from: "%{variables.assembly_option.source}"
-                to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
+                to: "/opt/assembly_option/<<basename(%{variables.assembly_option.target})>>"
               define: 
-                assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
-        code: 
-          label: "code dir"
-          name: "code"
-          hidden: true
-          bind:
-            from:  "${writePath}/workflows/taxtriage/taxtriage"
-            to: "/opt/code"
-        autopull: 
-          label: "Automatically Pull Latest Code from GitHub"
-          name: pull
-          source: true
-          element: "checkbox"
-          target: null
-          append:
-            command: "git -C /opt/code pull ; "
-            placement: 2
-            position: "start"
-            services: 
-              - 0
+                assembly: "--assembly /opt/assembly_option/<<basename(%{variables.assembly_option.target})>>"
+        # code: 
+        #   label: "code dir"
+        #   name: "code"
+        #   hidden: true
+        #   bind:
+        #     from:  "${writePath}/workflows/taxtriage/taxtriage"
+        #     to: "/opt/code"
+        # autopull: 
+        #   label: "Automatically Pull Latest Code from GitHub"
+        #   name: pull
+        #   source: true
+        #   element: "checkbox"
+        #   target: null
+        #   append:
+        #     command: "git -C /opt/code pull ; "
+        #     placement: 2
+        #     position: "start"
+        #     services: 
+        #       - 0
         filter_db:
           label: "Filter Database"
           element: "dir"
@@ -317,6 +313,28 @@
           bind: "self"
           define:
             filter: " --filter %{variables.filter_db.target} "
+        remove_taxids:
+          label: "Taxids to remove"
+          element: "string"
+          source: "9606"
+          target: null
+          hint: "Specific Taxids to remove from the kraken2 outputs"
+          define:
+            taxids_to_remove: "--remove_taxids \"%{variables.remove_taxids.source}\""
+        mark_branch:
+          label: "Branch of repo to use"
+          element: "main"
+          source: "main"
+          target: null
+        latest:
+          label: "Pull latest branch automatically"
+          element: "checkbox"
+          source: false
+          target: null
+          warning: "fails if no internet is available. Uncheck if without internet"
+          hint: "Warning: Fails if no internet is available. Uncheck if without internet"
+          define:
+            marklatest: " -latest "
         rundir:
           label: "Run Directory"
           element: "file"
@@ -351,12 +369,10 @@
             - "conda"
         outdir:
           label: "Output Directory"
-          output: True
+          output: false
           hint: "Directory to place your analysis results into"
-          source: "<<directory(%{variables.csv.source})>>/taxtriage_output"
-          path: "<<directory(%{variables.csv.source})>>/taxtriage_output"
+          source: null
           name: "Output Folder"
-          target: "/opt/output"
           bind: "self"
         report:
           label: "Report"
@@ -373,23 +389,27 @@
           force_restart: false
           continuous: true
           force_init: false
+          bind: 
+            - from: "${writePath}/workflows/taxtriage/code"
+              to: /root/.nextflow
+            - from: "${writePath}/workflows/taxtriage/workingdir"
+              to: "${writePath}/workflows/taxtriage/workingdir"
           label: "TaxTriage"
           image: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          workingdir: "/opt/code"
+          workingdir:  "${writePath}/workflows/taxtriage/workingdir"
           warning: "This process requires internet in its current state"
           # command: [
           #   "bash", "-c", "${pull}"
           # ]
           command: [
             "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep ${sleepTime}; 
-             nextflow run /opt/code/main.nf 
+             nextflow run 'https://github.com/jhuapl-bio/taxtriage'
               --input /opt/samplesheet/Samplesheet.csv
-              --db ${db}  
-              --outdir /opt/output
+              --db ${db}  -r ${mark_branch} ${marklatest}
+              --outdir ${outdir}
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
-              -profile ${profile} ${skip_plots} ${skip_assembly} 
+              -profile ${profile} ${skip_plots} ${skip_assembly} ${taxids_to_remove}
               ${assembly} --demux 
-              ${resume} ${filter}; chmod -R 777 /opt/output; chmod +x /opt/output/**/*html; 
-              pkill -9 .; '  "
+              ${resume} ${filter}; chmod -R 777 /opt/output; chmod +x /opt/output/**/*html;  '  "
           ]
     

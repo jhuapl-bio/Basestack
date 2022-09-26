@@ -507,13 +507,13 @@ export class Service {
         let promises  = [] 
         if ($this.config.bind){ 
             if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
-                let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
+                let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)   
                     bnd.forEach((b)=>{
                         if (typeof b == 'object' && b.from){
                             promises.push(formatBind(
                                 path.resolve(b.from),
                                 this.reformatPath(b.to)
-                            ))
+                            )) 
                         } else if (b) {
                             let y = b.split(":")
                             promises.push(formatBind(
@@ -865,21 +865,24 @@ export class Service {
                         env.push(`${key}=${selected_option}`)
                     }
                 }
-
                 if (selected_option.define && selected_option.source){
                     for( let [key, value] of Object.entries(selected_option.define)){
                         if (value){
                             env.push(`${key}=${value}`)
                         }
                     }
+                    
                 }  
                 if (full_item.define && full_item.source){
+                    
                     for( let [key, value] of Object.entries(full_item.define)){
                         if (value){
                             env.push(`${key}=${value}`)
                         }
                     }  
                 }  
+                
+                
               
             } 
         }  

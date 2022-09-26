@@ -470,7 +470,7 @@ export  class Job {
                 } )
                 let success = $this.services.every((d)=>{
                     return !d.status.error && d.status.complete
-                })
+                }) 
                 let complete = $this.services.every((d)=>{
                     return d.status.complete
                 })

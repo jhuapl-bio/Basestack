@@ -10,7 +10,7 @@ const {  remove_images, removeVolume } = require("../controllers/post-installati
 export  class Module {       
 	constructor(module, catalog, moduleIdx){       
         this.name= module.name 
-        this.module = moduleIdx
+        this.module = moduleIdx 
         this.catalog = catalog
         this.type = 'module'
         this.config = module

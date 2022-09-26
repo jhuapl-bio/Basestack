@@ -1,4 +1,6 @@
 C:
+Samplesheet*
+taxtriage_output
 client
 .DS_Store
 dist/electron/*
