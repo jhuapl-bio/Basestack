@@ -396,7 +396,7 @@
               to: "${writePath}/workflows/taxtriage/workingdir"
           label: "TaxTriage"
           image: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          workingdir:  "${writePath}/workflows/taxtriage/workingdir"
+          workingdir:  "/wokringdir"
           warning: "This process requires internet in its current state"
           # command: [
           #   "bash", "-c", "${pull}"

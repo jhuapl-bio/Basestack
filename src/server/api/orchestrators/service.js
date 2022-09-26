@@ -456,7 +456,8 @@ export class Service {
     removeQuotes(string){
         if (string){
             string = string.replace(/[\'\"]/g, "")
-            return string    
+            string = string.replace(/[\s]/g, "\ ")
+            return `${string}`
         } else {
             return null
         }
@@ -665,7 +666,7 @@ export class Service {
             if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
                 let targetBinding = selected_option
                 let full_item = cloneDeep(selected_option)   
-                      
+                       
                 if (selected_option.framework){ 
                     let validated_framework = validateFramework(selected_option.framework, defaultVariables)
                     selected_option.source = validated_framework
@@ -799,7 +800,8 @@ export class Service {
                                     //     bind.Target = path.dirname(this.reformatPath(row))
                                     // } else {  
                                         // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
-                                    bind.Source = path.resolve(row)
+                                    bind.Source = path.resolve(`${row}`)
+                                    console.log(row,"<<")
                                     bind.Target = this.reformatPath(row)
                                     // }
                                     if( row && binds.indexOf(bind) == -1){
