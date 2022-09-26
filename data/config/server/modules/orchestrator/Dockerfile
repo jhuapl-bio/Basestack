@@ -1,6 +1,5 @@
-FROM  docker:dind-rootless
+FROM  docker:dind
 WORKDIR /opt
-USER root
 #Install gcc for pip installation processes
 RUN  apk add --no-cache --virtual .build-deps gcc musl-dev curl bash  linux-headers
 # Install python/pip

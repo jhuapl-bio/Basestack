@@ -491,12 +491,12 @@ export  class Configuration {     // Make the main procedure class for configura
                                     return null
                                 } else {
                                     return fullstring
-                                }
-                            }
+                                } 
+                            } 
                         }
                     } catch(err)  {
                         console.error(err)
-                    }
+                    } 
                 })
                 return obj.get()
             }  else {

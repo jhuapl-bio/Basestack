@@ -63,9 +63,9 @@
             workingdir: "/opt"
           target: "${writePath}/workflows/taxtriage/taxtriage"
           format: dir
-          bind: 
-            from: "${writePath}/workflows/taxtriage"
-            to: "/root/.nextflow"
+          # bind: 
+          #   from: "${writePath}/workflows/taxtriage"
+          #   to: "/root/.nextflow"
           workingdir: "/opt/source"
           overwrite: true
           command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
@@ -390,8 +390,8 @@
           continuous: true
           force_init: false
           bind: 
-            - from: "${writePath}/workflows/taxtriage/code"
-              to: /root/.nextflow
+            # - from: "${writePath}/workflows/taxtriage/code"
+            #   to: /root/.nextflow
             - from: "${writePath}/workflows/taxtriage/workingdir"
               to: "${writePath}/workflows/taxtriage/workingdir"
           label: "TaxTriage"
@@ -410,6 +410,6 @@
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
               -profile ${profile} ${skip_plots} ${skip_assembly} ${taxids_to_remove}
               ${assembly} --demux 
-              ${resume} ${filter}; chmod -R 777 /opt/output; chmod +x /opt/output/**/*html;  '  "
+              ${resume} ${filter}; chmod -R 777 /opt/output; chmod +x /opt/output/**/*html;   '  "
           ]
     

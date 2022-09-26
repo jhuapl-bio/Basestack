@@ -11,8 +11,9 @@ var logger = store.logger
  
 export  class Job {  
     constructor(procedure, config){         
-        this.config = null  
-        this.options = null   
+        this.config = config  
+        this.options = null  
+        this.deployment = procedure.deployment 
         this.configurations = null 
         this.services = []
         this.variables = {}
@@ -21,6 +22,7 @@ export  class Job {
         this.mergedConfig = cloneDeep(this.baseConfig)
         this.containers = []
         this.env = {}
+        this.procedure = procedure
         this.status = { 
             exists: false, 
             services_used: [],
@@ -362,6 +364,7 @@ export  class Job {
             if (!$this.runningConfig.variables[key] && value.custom){
                 $this.runningConfig.variables[key] = value
             } 
+
             let obj = $this.runningConfig.variables[key]
             this.setValueVariable(value, obj, key)
              
@@ -470,7 +473,7 @@ export  class Job {
                 } )
                 let success = $this.services.every((d)=>{
                     return !d.status.error && d.status.complete
-                }) 
+                })
                 let complete = $this.services.every((d)=>{
                     return d.status.complete
                 })
@@ -507,7 +510,7 @@ export  class Job {
         let response = await Promise.allSettled(promises)
         return 
     }
-    async loopServices(){      
+    async loopServices(autocheck){      
         const $this  = this 
         let cancelled_or_skip = false
         let end = false  
@@ -516,8 +519,25 @@ export  class Job {
                 let service = $this.services[i]
                 try{  
                     let skip        
-                    store.logger.info("I: %s, Starting a new job service %s", i, service.name)
-                        
+                    store.logger.info("%s, Starting a new job service %s", i, service.name)
+                    console.log(this.deployment,"<<")
+                    let procedures = $this.procedure
+                    if (this.deployment == 'native'){
+                        console.log("is native, skipping")
+                    } else {
+
+                        let index = procedures.dependencies.findIndex((f)=>{
+                            return f.fulltarget == service.config.image
+                        })
+                        if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
+                            if (!autocheck){
+                                store.logger.info("Image doesnt exists %s", service.config.image, index)
+                            } else {
+                                store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                            }
+                            await procedures.build(false, index, true)
+                        }
+                    } 
                     skip = await service.check_then_start({ variables: $this.variables }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
@@ -562,6 +582,7 @@ export  class Job {
         $this.status.running = true 
         $this.status.complete = false
         let promises = []; 
+        let autocheck = params.autocheck
         if (!params.variables){
             params.variables = {} 
         }
@@ -583,7 +604,7 @@ export  class Job {
         
         store.logger.info("Job starting: %s", $this.name)
         try{
-            this.loopServices()
+            this.loopServices(autocheck)
             return 
         } catch (err){
             store.logger.error(err)
