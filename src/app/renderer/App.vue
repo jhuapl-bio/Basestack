@@ -320,11 +320,11 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "mytax",
+      selectedCatalogName: "nfcore_taxtriage",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
-			selected: 'procedures',
+			selected: 'defaults',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 
@@ -562,6 +562,7 @@ export default {
         }
       }
       this.importedLibrary = importedLibrary
+
       if (!this.selectedCatalog){
         let name = (this.selectedCatalogName && importedLibrary[this.selectedCatalogName] ? this.selectedCatalogName : first)
         this.selectedCatalogName = name

@@ -320,6 +320,7 @@ export default {
                 "configuration-file": "ConfigurationFile",
                 "json": "ConfigurationFile",
                 "dir": "Dir",
+                "directory": "Dir",
                 "list": "List"
 
             },

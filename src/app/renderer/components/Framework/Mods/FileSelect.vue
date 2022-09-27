@@ -7,9 +7,9 @@
   - # **********************************************************************
   -->
 <template>
-  <v-container id="file"   @drop.prevent="addDropFile" @dragover.prevent >
+  <div id="file"   @drop.prevent="addDropFile" @dragover.prevent style="overflow-y: auto" class="fill-width fill-height" >
       <v-file-input 
-          v-model="value"  class="fill-width"
+          v-model="value"  class="fill-width fill-height"
           :hint="hint" persistent-hint
           show-size  overlap
           counter 
@@ -19,14 +19,14 @@
           </v-icon>
           <v-divider vertical></v-divider>
           <v-dialog class="justify-end align-right"
-              v-model="dialog" 
+              v-model="dialog"  v-if="process && process.platform_os !== 'win' && source "
               
               max-width="290"
             >
               
-              <template v-slot:activator="{ on, attrs }">
-                <p class="ml-3" style="font-size:70%">Permissions</p>
-                <v-icon @click="dialog=true"  v-if="process && !process.system.isWin && source"  v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
+              <template v-slot:activator="{ on, attrs }" >
+                <p class="ml-3" style="font-size:70%" >Permissions</p> 
+                <v-icon @click="dialog=true"  v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
                 </v-icon>
               </template>
               <Permissions
@@ -46,7 +46,7 @@
    
   	
     
-  </v-container>
+  </div>
 </template>
 
 <script>

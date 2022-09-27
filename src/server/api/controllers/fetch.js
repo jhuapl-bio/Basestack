@@ -291,7 +291,7 @@ export async function getRemoteConfigurations(url){
  
 
 export async function fetch_external_yamls(key){
-	let url = `https://api.github.com/repos/jhuapl-bio/Basestack/git/trees/staging?recursive=1`
+	let url = `https://api.github.com/repos/jhuapl-bio/Basestack/git/trees/main?recursive=1`
 	try{
 		console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!",url)
 		let modules = []
@@ -302,7 +302,7 @@ export async function fetch_external_yamls(key){
 				return path.dirname(f.path) == 'data/config/server/config/modules'
 			})
 			.forEach(async (entry,i)=>{ 
-					let ur=`https://raw.githubusercontent.com/jhuapl-bio/Basestack/staging/${entry.path}`
+					let ur=`https://raw.githubusercontent.com/jhuapl-bio/Basestack/main/${entry.path}`
 					promises.push(axios.get(ur))
 				
 			})

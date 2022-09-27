@@ -9,15 +9,19 @@
 <template>
   <v-card >
       <v-sheet  elevation="1" 
-          height="50" :hint="hint" persistent-hint
-          max-width="600" class="px-8 pt-4" 
+          :hint="hint" persistent-hint
+          max-width="600"  
           style="" @drop.prevent="addDropFiles" @dragover.prevent >
-          
-            <v-icon
+            <v-btn
+              @click="electronOpenDir()"
+            > <v-icon
             small class="mr-2 "
             > $upload
             </v-icon>
-            Drag Folder here
+            Select Folder or Drag here
+
+            </v-btn>
+            
             <v-icon  v-if="directory" class="text--caption configure ml-5" @click="directory = null" color="grey" small>$times-circle
             </v-icon>
             <v-dialog
@@ -89,7 +93,7 @@ export default {
         const $this = this
         this.$electron.ipcRenderer.on('getValue', (evt, message)=>{
             $this.directory = message
-            $this.source = message
+            console.log(evt, message)
         })
         this.$electron.ipcRenderer.send("openDirSelect", "")
 		},

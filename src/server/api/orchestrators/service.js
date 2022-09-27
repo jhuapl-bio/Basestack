@@ -282,13 +282,13 @@ export class Service {
             } catch(err){
                 reject(err)
             }
-		})
+		}) 
 	}
     volume_bind(variable){
         let source = "";
         if (variable.bind_parent_dir){
             source = path.dirname(variable.source );
-        } else {
+        } else { 
             source = variable.source;
         }
 
@@ -435,18 +435,18 @@ export class Service {
                         }) 
                     } else if (Array.isArray(from) && !Array.isArray(to) ){
                         from.forEach((p,i)=>{
-                            portbinds.push([p, to ])
+                            portbinds.push([p, to ]) 
                         })
-                    } else if (!Array.isArray(from) && Array.isArray(to) ){
+                    } else if (!Array.isArray(from) && Array.isArray(to) ){  
                         to.forEach((p,i)=>{
                             portbinds.push([from, p ])
                         })
                     }
                     else {
-                        portbinds.push([from, to])
+                        portbinds.push([from, to]) 
                     }
 
-                    
+                     
                 }
             }
         } 
@@ -733,13 +733,13 @@ export class Service {
                                             rowupdate.push($this.reformatPath(row[head]))
                                         }else {
                                             rowupdate.push(row[head])
-                                        }
+                                        } 
                                     })
-                                    updates.push(rowupdate) 
+                                    updates.push(rowupdate)   
                                 }) 
-                                
+                                 
                                 nestedProperty.set($this.config, set.target, updates)
-                                set.target = updates
+                                set.target = updates 
                             } catch (err){
                                 store.logger.error(`${err}, error in reading csv to set file`)
                             }
@@ -862,7 +862,7 @@ export class Service {
                 } else if (Array.isArray(selected_option)){
                     console.log("array!")
                 } else{
-                    
+                     
                     if (selected_option){
                         env.push(`${key}=${selected_option}`)
                     }
@@ -870,7 +870,12 @@ export class Service {
                 if (selected_option.define && selected_option.source){
                     for( let [key, value] of Object.entries(selected_option.define)){
                         if (value){
-                            env.push(`${key}=${value}`)
+                            if (typeof value == 'object' && value.path){
+                                env.push(`${key}=${$this.reformatPath(value.target)}`)
+                            } else {
+                                env.push(`${key}=${value}`)
+                            }
+                            
                         }
                     }
                     
@@ -879,7 +884,12 @@ export class Service {
                     
                     for( let [key, value] of Object.entries(full_item.define)){
                         if (value){
-                            env.push(`${key}=${value}`)
+                            if (typeof value == 'object' && value.path){
+                                env.push(`${key}=${$this.reformatPath(value.target)}`)
+                            } else {
+                                env.push(`${key}=${value}`)
+                            }
+                            
                         }
                     }  
                 }  

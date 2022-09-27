@@ -1242,7 +1242,6 @@ export default {
     anyOutput(){
       if (this.selectedProcedure && this.selectedProcedure.variables){
         return Object.values(this.selectedProcedure.variables).some((f)=>{
-          console.log(f,"anyoutput")
           return f.output
         })
       } else {
@@ -1271,7 +1270,6 @@ export default {
 
     },
     latest(){
-      console.log("__", this.libraryVersions)
       return Math.max(...this.libraryVersions.map((f)=>{
         return f.version
       }))

@@ -318,7 +318,7 @@ export  class Job {
     setParams(params){
         if (params.images){
             params.images.forEach((service)=>{ 
-                this.services[service.service].override.image = service.image
+                this.services[service.service].override.image = service.image 
             })
         }
         
