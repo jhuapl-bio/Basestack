@@ -72,6 +72,16 @@
                                         })" :key="head.value + head.index">
                                             <v-list-item-content>    
                                                 <v-list-item-title class="justify-end"   v-if="head.value != 'actions'">Column Name: {{head.value}}</v-list-item-title> 
+                                                <v-checkbox 
+                                                    v-model="savedAll[head.value]"
+                                                    on-icon="$check-square"
+                                                    label="Change All Entries"
+                                                    class="text-xs-center" 
+                                                    off-icon="$square"
+                                                    color="primary"
+                                                >
+                                                
+                                                </v-checkbox>
                                                 <FileSelect v-if="!custom[head.value] && discerntype(head.value).type.indexOf('file') > -1"
                                                 :source="editedItem[head.value]"
                                                 :variable="editedItem"
@@ -286,9 +296,7 @@ export default {
                     if (data){ 
                         if (this.variable.samplesheet && this.variable.samplesheet.define_columns){
                             data = data.map((d)=>{
-                                console.log(d)
                                 for( let [key, val] of Object.entries(this.variable.samplesheet.define_columns)){
-                                    console.log(key, val)
                                     if (d[key] &&  ['file', 'dir', 'directory'].indexOf(val.element)> -1 && !path.isAbsolute(d[key])){
                                         d[key] = path.join(path.dirname(event), d[key])
                                     }
@@ -371,6 +379,11 @@ export default {
                         newItem[key] = value.path
                     }
                 }  
+                if (this.savedAll[key]){
+                    $this.source.map((d,i)=>{
+                        $this.source[i][key]  = newItem[key]
+                    })
+                }
                 if (newItem.index >-1){
                     $this.source[$this.editedIndex][key] = newItem[key]
                 } 
@@ -448,6 +461,7 @@ export default {
             values: [],
             csv: {},
             csvSource: null,
+            savedAll: {},
             dialog: false,
             editedIndex: -1,
             editedItem: {},

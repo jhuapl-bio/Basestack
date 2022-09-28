@@ -1213,11 +1213,11 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`)
 			if (found){          
 				store.logger.info("found job, cleaning it up")  
-				found.cleanup()           
+				found.cleanup()             
 				delete store.jobs.catalog[req.body.catalog][req.body.procedure]
 				store.logger.info("found job, cleaned up")     
 			}         
-			let skip = true  
+			let skip = true   
 			store.logger.info("Starting Job! with services: %s", services) 
   			let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
