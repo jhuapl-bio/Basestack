@@ -32,7 +32,7 @@
                         <v-toolbar-title>{{ ( title ? title : 'List Table' )  }}</v-toolbar-title>
                         <v-spacer></v-spacer>
                             <FileSelect 
-                            :source="csvSource"
+                            :source="csvSource" 
                             :variable="csv"
                             :fullhint="'Import CSV File'"
                             @updateValue="importCsv($event)"

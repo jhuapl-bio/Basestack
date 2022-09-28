@@ -26,10 +26,10 @@
             </v-icon>
             <v-dialog
               v-model="dialog"
-              max-width="290"
+              max-width="290" v-if="process && process.platform_os !== 'win' && directory "
             >
             <template v-slot:activator="{ on, attrs }">
-                <v-icon @click="dialog=true"  v-if="process && !process.system.isWin && source"  v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
+                <v-icon @click="dialog=true"   v-bind="attrs" small v-on="on"  class="configure ml-3" color="primary">$level-up-alt
                 </v-icon>
               </template>
               <Permissions

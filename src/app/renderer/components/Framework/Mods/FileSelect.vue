@@ -19,7 +19,7 @@
           </v-icon>
           <v-divider vertical></v-divider>
           <v-dialog class="justify-end align-right"
-              v-model="dialog"  v-if="process && process.platform_os !== 'win' && source "
+              v-model="dialog"  v-if="process && process.platform_os !== 'win' && value "
               
               max-width="290"
             >
