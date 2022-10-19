@@ -153,10 +153,7 @@ export class ClientMenu {
 				label: "Open Terminal",
 				click(){
 				let bat;
-				// $this.openTerminal()
-				sudo("echo yes").then((f)=>{
-					console.log("done",f)
-				})
+				$this.openTerminal()
 				}
 			},
 			...($this.system.isWin ? [
