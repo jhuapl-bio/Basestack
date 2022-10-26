@@ -72,7 +72,7 @@
                                         })" :key="head.value + head.index">
                                             <v-list-item-content>    
                                                 <v-list-item-title class="justify-end"   v-if="head.value != 'actions'">Column Name: {{head.value}}</v-list-item-title> 
-                                                <v-checkbox 
+                                                <!-- <v-checkbox 
                                                     v-model="savedAll[head.value]"
                                                     on-icon="$check-square"
                                                     label="Change All Entries"
@@ -81,7 +81,7 @@
                                                     color="primary"
                                                 >
                                                 
-                                                </v-checkbox>
+                                                </v-checkbox> -->
                                                 <FileSelect v-if="!custom[head.value] && discerntype(head.value).type.indexOf('file') > -1"
                                                 :source="editedItem[head.value]"
                                                 :variable="editedItem"
@@ -414,19 +414,18 @@ export default {
         editItem (item) {
             this.editedIndex = this.source.indexOf(item)
             this.dialog = true
-            console.log(item,"<<<<<", this.source, this.variable)
-            // let newItem = cloneDeep(item)
-            // for (let[name, value] of Object.entries(item) ){
-            //     console.log(name)
-            //     if (this.variable && this.variable.define_columns[name] && typeof value == 'string' && this.variable.define_columns && this.variable.define_columns[name] == 'file'){
-            //         var file = new File([value], value, {
-            //             type: "text/plain",
-            //         });
-            //         newItem[name] = file
-            //     } 
+            let newItem = cloneDeep(item)
+            for (let[name, value] of Object.entries(item) ){
+                console.log(name)
+                if (this.variable && this.variable.define_columns[name] && typeof value == 'string' && this.variable.define_columns && this.variable.define_columns[name] == 'file'){
+                    var file = new File([value], value, {
+                        type: "text/plain",
+                    });
+                    newItem[name] = file
+                } 
 
-            // }
-            // this.editedItem = Object.assign({}, newItem)
+            }
+            this.editedItem = Object.assign({}, newItem)
             this.dialog = true
         },
 

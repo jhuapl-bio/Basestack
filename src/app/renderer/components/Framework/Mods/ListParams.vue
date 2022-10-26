@@ -33,7 +33,7 @@
         :key="`listVariables-${key}`">
             
             <v-list-item-content >
-                <v-list-item-title v-text="item.label + '→${' + item.name  + '}' "></v-list-item-title>
+                <v-list-item-title v-text="item.label"></v-list-item-title>
                 
                 <v-list-item-subtitle class="text-wrap" v-if="item.hint">
                     {{item.hint}}
@@ -66,6 +66,13 @@
                         @updateValue="updateValue($event, false, item, key, item.name)"
                         >
                     </component>
+                    <v-tooltip bottom v-if="(item.element == 'file' || item.element == 'dir') &&  ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )">
+                        <template v-slot:activator="{ on }">
+                            <v-icon small v-on="on"  @click="electronOpenDir(item, $event)" class="configure" color="primary">$archive
+                            </v-icon>
+                        </template>
+                        {{  ( item.source ? item.source : item.options[item.option].source  )     }}
+                    </v-tooltip> 
                     
                     
                 </v-container>
@@ -112,13 +119,7 @@
                     
                 </v-list-item-action-text>
                 
-                <v-tooltip bottom v-if="(item.element == 'file' || item.element == 'dir') &&  ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )">
-                    <template v-slot:activator="{ on }">
-                        <v-icon small v-on="on"  @click="electronOpenDir(item, $event)" class="configure" color="primary">$archive
-                        </v-icon>
-                    </template>
-                    {{  ( item.source ? item.source : item.options[item.option].source  )     }}
-                </v-tooltip> 
+                
                 <v-tooltip bottom v-if="item.custom">
                     <template v-slot:activator="{ on }">
                         <v-icon v-on="on" @click="removeCustomVariable(item.name)" class="configure" small>$trash-alt

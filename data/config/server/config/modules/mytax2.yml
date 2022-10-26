@@ -128,7 +128,7 @@
                 "VSK-VMK001",
                 "VSK-VMK002",
                 "VSK-VMK003",
-                "Custom"
+                "CUSTOM-FLU"
               ]
             format: 
               custom: False

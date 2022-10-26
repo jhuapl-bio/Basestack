@@ -36,7 +36,13 @@
                 :source="source"
               ></Permissions>
             </v-dialog>
-           
+            <v-tooltip bottom v-if="directory">
+                    <template v-slot:activator="{ on }">
+                        <v-icon small v-on="on"  @click="this.$electron.shell.openPath(directory)" class="configure" color="primary">$archive
+                        </v-icon>
+                    </template>
+                    {{  directory    }}
+            </v-tooltip>            
       </v-sheet>
       <small class="text-caption" v-if="directory">
         {{directory}}

@@ -32,9 +32,17 @@
               <Permissions
                 :source="source"
               ></Permissions>
+              
             </v-dialog>
         </template>
       </v-file-input >
+        <v-tooltip bottom v-if="filepath">
+            <template v-slot:activator="{ on }">
+                <v-icon small v-on="on"  @click="this.$electron.shell.openPath(path.dirname(filepath))" class="configure" color="primary">$archive
+                </v-icon>
+            </template>
+            {{  filepath    }}
+        </v-tooltip> 
       
   
     
@@ -51,12 +59,15 @@
 
 <script>
 import Permissions from "./Permissions.vue";
+const path  = require("path")
+
 export default {
     name: "fileselect",
     data() {
         return {
             test: "placeholder",
             value: null,
+            filepath: null,
             process: null,
             dialog: false,
             cached: false
@@ -89,14 +100,17 @@ export default {
             this.value = file;
             this.cached = true;
         }
+        this.filepath = this.source
     },
     watch: {
         value(newValue, oldValue) {
             if (!newValue) {
                 this.$emit("updateValue", newValue);
+                this.filepath = newValue
             }
             else if (newValue.path && newValue.path !== "") {
                 this.$emit("updateValue", newValue.path);
+                this.filepath = newValue.path
                 this.cached = false;
             }
             else {
