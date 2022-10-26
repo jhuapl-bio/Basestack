@@ -33,7 +33,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.1.1
+          version: v2.1.2
           type: docker
           format: docker
         - target: "bitnami/git"
@@ -210,7 +210,7 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.1.1
+          image: jhuaplbio/basestack_mytax2:v2.1.2
           workingdir: /
           orchestrated: false
           init: false
