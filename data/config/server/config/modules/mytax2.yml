@@ -80,6 +80,9 @@
               options: [
                 "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
               ]
+            demux: 
+              custom: False
+              options: [True, False]
             platform: 
               custom: False
               options: ['illumina', 'oxford']
@@ -132,7 +135,7 @@
               ]
             format: 
               custom: False
-              options: ["file", "run", "directory"]
+              options: ["file", "directory"]
             compressed: 
               custom: False
               options: [True, False]
@@ -151,12 +154,12 @@
             target: "${writePath}/workflows/mytax2/samplesheets/Samplesheet.target.csv"
             sep: ","
             type: "list"
-            header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
+            header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
           class: "wb-50  p-3 mb-1"
           source: []
           defaults:
             sample: "unknown"
-          header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
+          header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
           append_newline: true
         custom_configuration:
           optional: true

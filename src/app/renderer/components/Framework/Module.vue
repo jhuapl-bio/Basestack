@@ -982,7 +982,7 @@ export default {
       procedure.create_intervalWatcher() 
       procedure.getProgress()
       let found = nestedProperty.get(this.$store.state, `catalog.${this.selectedVersion.name}.procedures.${this.procedureIdx}`)
-      
+      console.log("Found", found)
       if (found){
         try{
           procedure.mergeInputs(found)

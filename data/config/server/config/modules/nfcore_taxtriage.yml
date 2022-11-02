@@ -219,6 +219,7 @@
           label: "Filter Database"
           element: "dir"
           source: null
+          optional: true
           hint: "Database to extract reads out of"
           target: "/opt/database_filter"
           bind: "self"
@@ -234,9 +235,9 @@
             taxids_to_remove: "--remove_taxids \"%{variables.remove_taxids.source}\""
         mark_branch:
           label: "Branch of repo to use"
-          element: "main"
+          element: "string"
           source: "main"
-          target: null
+          target: "%{variables.mark_branch.source}"
         latest:
           label: "Pull latest branch automatically"
           element: "checkbox"

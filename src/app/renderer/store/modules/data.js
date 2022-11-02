@@ -56,7 +56,6 @@ const actions = {
 
 const mutations = {
   UPDATE_PROCEDURE (state, meta){
-    state.logger.info("yes")
     // nestedProperty.set(`state.catalog.${meta.catalog}.modules.${meta.module}.procedures${meta.procedure}`, meta)
     state.catalog = {new:1}
   },

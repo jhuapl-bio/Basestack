@@ -94,11 +94,11 @@ export  class Configuration {     // Make the main procedure class for configura
     mergeInputs(params, path){
         if (!path){
             path = ""
-        }
+        } 
         const $this = this;
         for (let [key, custom_variable] of Object.entries(params)){ // move thru all elements of the object 
             if (custom_variable && !custom_variable.element != 'confguration-file'){ // deprecated config file, 
-                if ( custom_variable && typeof custom_variable == 'object' ){
+                if ( custom_variable && this.variables[key] && typeof custom_variable == 'object' ){
                     this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`) // convert the store stored value for a variable to the new source
                 } else {
                     if (custom_variable){ 
@@ -127,7 +127,7 @@ export  class Configuration {     // Make the main procedure class for configura
                     })
                     Promise.allSettled(promises).then((response)=>{
                         response.forEach((resp, index)=>{
-                            if (resp.status == 'fulfilled'){
+                            if (resp.status == 'fulfilled'){ 
                                 //Assign the output variable to the new array
                                 watches[index] = resp.value.status
                                 watches[index] = {
