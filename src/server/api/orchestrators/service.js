@@ -230,7 +230,7 @@ export class Service {
         return new Promise(function(resolve,reject){
             ( async ()=>{
                 let name = $this.name;
-                
+                 
                 store.logger.info(`starting container..${name}`)
                 let exists = await check_container($this.name)
                 if ( (  $this.config.force_restart) ||  exists.exists ){
@@ -282,13 +282,13 @@ export class Service {
             } catch(err){
                 reject(err)
             }
-		})
+		}) 
 	}
     volume_bind(variable){
         let source = "";
         if (variable.bind_parent_dir){
             source = path.dirname(variable.source );
-        } else {
+        } else { 
             source = variable.source;
         }
 
@@ -399,14 +399,10 @@ export class Service {
 
         let tsv_file_content = item.map((d)=>{ 
             let full = []
-             
             if (header && !Array.isArray(d) && typeof d == 'object'){
                 header.forEach((head)=>{
                     full.push(d[head])
-                    // full.push()
                 })
-                // full = d
-
             }  else { 
                 full = d 
             }
@@ -439,18 +435,18 @@ export class Service {
                         }) 
                     } else if (Array.isArray(from) && !Array.isArray(to) ){
                         from.forEach((p,i)=>{
-                            portbinds.push([p, to ])
+                            portbinds.push([p, to ]) 
                         })
-                    } else if (!Array.isArray(from) && Array.isArray(to) ){
+                    } else if (!Array.isArray(from) && Array.isArray(to) ){  
                         to.forEach((p,i)=>{
                             portbinds.push([from, p ])
                         })
                     }
                     else {
-                        portbinds.push([from, to])
+                        portbinds.push([from, to]) 
                     }
 
-                    
+                     
                 }
             }
         } 
@@ -460,7 +456,8 @@ export class Service {
     removeQuotes(string){
         if (string){
             string = string.replace(/[\'\"]/g, "")
-            return string    
+            string = string.replace(/[\s]/g, "\ ")
+            return `${string}`
         } else {
             return null
         }
@@ -511,13 +508,13 @@ export class Service {
         let promises  = [] 
         if ($this.config.bind){ 
             if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
-                let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)                 
+                let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)   
                     bnd.forEach((b)=>{
                         if (typeof b == 'object' && b.from){
                             promises.push(formatBind(
                                 path.resolve(b.from),
                                 this.reformatPath(b.to)
-                            ))
+                            )) 
                         } else if (b) {
                             let y = b.split(":")
                             promises.push(formatBind(
@@ -636,11 +633,11 @@ export class Service {
             if (f.status == 'fulfilled'){
                 mounts.push(f.value)
             }
-        })
+        }) 
         // this.volumes.push(...binds)
         this.mounts.push(...mounts) 
-        return 
-    }  
+        return   
+    }     
     reformatPath(selected_path){
         if (selected_path && selected_path !==''){
             selected_path = this.setTarget(selected_path)
@@ -669,7 +666,7 @@ export class Service {
             if (!selected_option.optional || (selected_option.optional && selected_option.source ) ){
                 let targetBinding = selected_option
                 let full_item = cloneDeep(selected_option)   
-                      
+                       
                 if (selected_option.framework){ 
                     let validated_framework = validateFramework(selected_option.framework, defaultVariables)
                     selected_option.source = validated_framework
@@ -686,7 +683,8 @@ export class Service {
                 }   
                 if (selected_option.create){
                     if (selected_option.create.type == 'list' && selected_option.source.length > 0){
-                        let output = $this.createContentOutput(selected_option.source, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list', selected_option.resolve)
+                        console.log("create content!")
+                        let output = $this.createContentOutput(selected_option.target, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list', selected_option.resolve)
                         promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                             logger.error(err)  
                         }))
@@ -704,16 +702,16 @@ export class Service {
             }
         }
         await Promise.allSettled((promises))
-        return
+        return 
     }
-    async defineSet(){ 
+    async defineSet(){      
         let promises = []
-        const $this=this
+        const $this=this 
         let binds = []
         let defaultVariables = this.config.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.set ){
+                if (selected_option.set && (!selected_option.manifest.source || selected_option.manifest.source.length == 0 ) ){
                     for (let i = 0; i < selected_option.set.length; i++){
                         let set  = selected_option.set[i]
                         let exists = await fs.existsSync(set.source)
@@ -728,7 +726,6 @@ export class Service {
                                 f.forEach((row)=>{ 
                                     let rowupdate = []
                                     set.header.forEach((head)=>{
-                                        
                                         if (set.reformat && set.reformat.indexOf(head) !=-1){
                                             if (row[head] && !path.isAbsolute(row[head])){
                                                 row[head] = path.join(path.dirname(set.source), row[head])
@@ -736,12 +733,13 @@ export class Service {
                                             rowupdate.push($this.reformatPath(row[head]))
                                         }else {
                                             rowupdate.push(row[head])
-                                        }
+                                        } 
                                     })
-                                    updates.push(rowupdate) 
+                                    updates.push(rowupdate)   
                                 }) 
+                                 
                                 nestedProperty.set($this.config, set.target, updates)
-                                set.target = updates
+                                set.target = updates 
                             } catch (err){
                                 store.logger.error(`${err}, error in reading csv to set file`)
                             }
@@ -749,58 +747,79 @@ export class Service {
                     }
                 }
             }
+            
             return
         }
     }
     async defineReads(){
-        let promises = []
+        let promises = [] 
         let binds = []
         let defaultVariables = this.config.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.read){
-                    for (let i = 0; i < selected_option.read.length; i++){ 
-                        // selected_option.read.forEach(async (read)=>{
-                        let read  = selected_option.read[i]
-                        let exists = await fs.existsSync(read.source)
-                        if (exists){
-                            try{ 
-                                let f = await readCsv(read.source, read.sep)
-                                f.forEach((row)=>{  
-                                    let bind = {
-                                        Source: "",
-                                        Type: "bind",
-                                        RW: true,
-                                        Target: ""
-                                    }  
-                                    if(row[read.column] !== ''){
-                                        if (row[read.column] && !path.isAbsolute(row[read.column])){
-                                            row[read.column] = path.join(path.dirname(read.source), row[read.column])
-                                        }  
-                                        if (read.bind == 'directory'){
-                                            bind.Source = path.resolve(path.dirname(row[read.column]))
-                                            bind.Target = path.dirname(this.reformatPath(row[read.column]))
-                                                                                  } else {  
-                                            // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
-                                            bind.Source = path.resolve(row[read.column])
-                                            bind.Target = this.reformatPath(row[read.column])
-                                        }
-                                        if(row[read.column] && binds.indexOf(bind) == -1){
-                                            
-                                            if (read.bind == 'directory'){
-                                                binds.push(bind)
-                                            } else {
-                                                binds.push(bind)
-                                            }
-                                        }  
-                                    }
-                                     
-                                })
-                            } catch (err){
-                                store.logger.error(`${err}, error in reading csv file`)
+                if (selected_option.define_columns){
+                    let defined = selected_option.define_columns
+                    let defined_keys = []
+                    for (let [key, column] of Object.entries(defined)){
+                        if (typeof column != 'object') {
+                            continue
+                        }
+                        
+                        if (!Array.isArray(column.element)){
+                            column.element = [column.element]
+                        }
+                        
+                        let tr = false
+                        column.element.map((F)=>{
+                            if (['directory','dir', 'file'].indexOf(F) > -1){
+                                tr=true
                             }
+                        })
+                        if (tr){
+                            defined_keys.push(key)
                         }
                     }
+                    selected_option.source
+                        .forEach((read)=>{
+                        try{ 
+                            defined_keys.forEach((key)=>{
+                                let bind = {
+                                    Source: "",
+                                    Type: "bind",
+                                    RW: true,
+                                    Target: ""
+                                }  
+                                let row = read[key]
+                                let column = defined[key]
+                                if(row !== '' && row){ 
+                                    // if (row && !path.isAbsolute(row)){
+                                    //     row = path.join(path.dirname(read.source), row)
+                                    // }  
+                                    // if (column.element == 'file'){
+                                    //     bind.Source = path.resolve(path.dirname(row))
+                                    //     bind.Target = path.dirname(this.reformatPath(row))
+                                    // } else {  
+                                        // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
+                                    bind.Source = path.resolve(`${row}`)
+                                    console.log(row,"<<")
+                                    bind.Target = this.reformatPath(row)
+                                    // }
+                                    if( row && binds.indexOf(bind) == -1){
+                                        
+                                        if (column.element == 'directory' || column.element == 'dir'){
+                                            binds.push(bind)
+                                        } else {
+                                            binds.push(bind)
+                                        }
+                                    }  
+                                }
+                            })
+                        } catch (err){
+                            store.logger.error(`${err}, error in reading csv file`)
+                        }
+                    })
+                       
+                
                 }
             }
             return binds
@@ -829,7 +848,6 @@ export class Service {
                     } else {   
                         if (!Array.isArray(selected_option.target)){
                             if (selected_option.target || selected_option.source){
-                                // console.log(( selected_option.target ? selected_option.target : selected_option.source))
                                 env.push(`${key}=${( selected_option.target ? selected_option.target : selected_option.source)}`)                         
                             } 
                         } else {
@@ -844,30 +862,43 @@ export class Service {
                 } else if (Array.isArray(selected_option)){
                     console.log("array!")
                 } else{
-                    
+                     
                     if (selected_option){
                         env.push(`${key}=${selected_option}`)
                     }
                 }
-
                 if (selected_option.define && selected_option.source){
                     for( let [key, value] of Object.entries(selected_option.define)){
                         if (value){
-                            env.push(`${key}=${value}`)
+                            if (typeof value == 'object' && value.path){
+                                env.push(`${key}=${$this.reformatPath(value.target)}`)
+                            } else {
+                                env.push(`${key}=${value}`)
+                            }
+                            
                         }
                     }
+                    
                 }  
                 if (full_item.define && full_item.source){
+                    
                     for( let [key, value] of Object.entries(full_item.define)){
                         if (value){
-                            env.push(`${key}=${value}`)
+                            if (typeof value == 'object' && value.path){
+                                env.push(`${key}=${$this.reformatPath(value.target)}`)
+                            } else {
+                                env.push(`${key}=${value}`)
+                            }
+                            
                         }
                     }  
                 }  
+                
+                
               
             } 
         }  
-        
+           
         this.env.push(...env)
         return 
     }  
@@ -915,9 +946,12 @@ export class Service {
                     }   
                     $this.defineEnv() 
                     store.logger.info("define env done")  
+                    
                     let mounts = await $this.defineReads()
+                    
                     store.logger.info("define reads done")
-                    await $this.defineSet() 
+                    // await $this.defineSet() 
+                    
                     store.logger.info("define set done")
                     await $this.defineCopies()  
                     store.logger.info("define copies doen")
@@ -1034,7 +1068,9 @@ export class Service {
                     options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
                     let seen = {}
                     mounts.forEach((m)=>{
-                        if (!seen[m.Target]){
+                        if (!seen[m.Target]){ 
+                            // m.Target = `"${m.Target}"`
+                            // m.Source = `"${m.Source}"`
                             options.HostConfig.Mounts.push(m)
                             seen[m.Target] = m.Source
                         }

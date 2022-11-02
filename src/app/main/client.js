@@ -1,10 +1,16 @@
 
-import { ClientMenu } from "./menu" // Menu class (top of the app bar)
+import e from "cors";
+import { fs } from "file-system";
+import { store } from "../../server/config/store";
+import { ClientMenu, openTerminal } from "./menu" // Menu class (top of the app bar)
 import { Updater } from "./updater" // Updater class
 const { ipcMain, BrowserWindow, dialog, shell, Menu } = require('electron') // Basic electron processes
 const path = require("path") // Pathing module
 const { download } = require('electron-dl'); // For download electron package binaries and libs
 const { spawn } = require('child_process'); // used for spawning processes directly on host system
+var sudo = require('sudo-prompt');
+const { join } = require('path')
+
 
 export class  Client { // Create a class for the Electron main client
 	constructor(app){
@@ -20,8 +26,10 @@ export class  Client { // Create a class for the Electron main client
         
         this.system={
             'isMac': isMac,
-            'isWin': isWin
+            'isWin': isWin,
+            'isLinux': !isMac && !isWin  
         }
+        process.env.system = this.system
         const $this = this
         this.spawned_logs = function spawned_logs(bat, config){ // set function for making a log output for a spawned process piping process
             bat.stderr.on('data', (data) => { // Whenever any stderr is found, send to string
@@ -121,6 +129,94 @@ export class  Client { // Create a class for the Electron main client
         }
         ipcMain.on("changePort", (event, arg) => { // When receive a message from the renderer (vue.js), change the port to connect to 
           event.reply('changePort', process.env.PORT_SERVER)
+        })
+        ipcMain.on("sudoPrompt", (event, arg) => { // When receive a message from the renderer (vue.js), change the port to connect to 
+          var options = {
+            name: 'Sudo Prompt',
+            // icns: '/Applications/Electron.app/Contents/Resources/Electron.icns', // (optional)
+          };
+          let perms = `755`
+          if (arg.perms){
+            perms = ''
+            let sums = {User: 0, Other:0,Group:0}
+            for(let [key, value] of Object.entries(arg.perms)){
+              let add = 0
+              arg.perms[key].forEach((value,i)=>{
+                if (i==0 && value){
+                  add += 4
+                } else if (i==1 && value){
+                  add += 2
+                } else if (i==2 && value){
+                  add += 1
+                }
+              })
+
+              perms=`${perms}${add}`
+            }
+          }
+          
+          let cmd = ` chmod ${perms} ${arg.item}; `
+          // cmd = ` touch /Users/merribb1/Desktop/test-data2/mytax2/test3.txt`
+          // cmd = ` chown ${process.env.USER} /Users/merribb1/Desktop/test-data2/mytax2/test3.txt`
+          // fs.access(arg.item ,fs.constants. O_RDWR | fs.constants.O_EXCL, (error, stats)=>{
+          //   if (error){
+          //     $this.logger.error(error)
+          //     // dialog.showMessageBox($this.mainWindow, {
+          //     //     type: 'error',
+          //     //     defaultId: 0,
+          //     //     buttons: ['Ok'],
+          //     //     title: 'Error',
+          //     //     message: `${error}, failed to change permissions`,
+          //     //     detail: `Run: ${cmd} from your terminal`
+          //     // }); 
+          //   } else {
+          //     $this.logger.info(stats)
+          //     // dialog.showMessageBox($this.mainWindow, {
+          //     //   type: 'info',
+          //     //   defaultId: 0,
+          //     //   buttons: ['Ok'],
+          //     //   title: 'Info',
+          //     //   message: `${cmd} completed successfully`
+          //     // });
+          //   }
+            
+          // })
+          
+          sudo.exec(cmd, options,
+            function(error, stdout, stderr) {
+              let code = 0 
+              $this.logger.info(stdout)
+              $this.logger.error(stderr)
+              $this.logger.error(error)
+              if (error){
+                $this.logger.error(error)
+                code=1
+                dialog.showMessageBox($this.mainWindow, {
+                  type: 'error',
+                  defaultId: 0,
+                  buttons: ['Ok'],
+                  title: 'Error',
+                  message: `${error}`,
+                  detail: `Run
+                  
+                    ${cmd}
+                    
+                    from your terminal`
+                }); 
+              } else { 
+                // event.reply('sudoPrompt', {message: `${cmd} completed successfully`, type: 'info'} )
+                dialog.showMessageBox($this.mainWindow, {
+                  type: 'info',
+                  defaultId: 0,
+                  buttons: ['Ok'],
+                  title: 'Info',
+                  message: `${cmd} completed successfully`
+                });
+              }
+              
+              
+            }
+          );
         })
         ipcMain.on("getStore", (event, arg) => { // When receive a message from the renderer (vue.js) for the store, send store 
           event.reply('getStore', this.store)

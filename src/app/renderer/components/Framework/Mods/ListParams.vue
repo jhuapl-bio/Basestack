@@ -33,8 +33,24 @@
         :key="`listVariables-${key}`">
             
             <v-list-item-content >
-                <v-list-item-title v-text="item.label + '→${' + item.name  + '}' "></v-list-item-title>
-                
+                <v-list-item-title class="mt-3">
+                    {{item.label}}
+                    <v-tooltip bottom v-if="(item.create && item.create.target) ">
+                        <template v-slot:activator="{ on }">
+                            <v-icon small v-on="on"  @click="electronOpenDir(item, $event)" class="configure" color="primary">$archive
+                            </v-icon>
+                        </template>
+                        {{   item.create.target        }}
+                    </v-tooltip> 
+                    <v-tooltip bottom v-if=" (item.element == 'file' || item.element == 'dir') &&  ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )">
+                        <template v-slot:activator="{ on }">
+                            
+                            <v-icon small v-on="on"  @click="electronOpenDir(item, $event)" class="configure" color="primary">$archive
+                            </v-icon>
+                        </template>
+                        {{  ( item.source ? item.source : item.options[item.option].source  )     }}
+                    </v-tooltip>
+                </v-list-item-title> 
                 <v-list-item-subtitle class="text-wrap" v-if="item.hint">
                     {{item.hint}}
                 </v-list-item-subtitle>
@@ -66,6 +82,7 @@
                         @updateValue="updateValue($event, false, item, key, item.name)"
                         >
                     </component>
+                    
                     
                     
                 </v-container>
@@ -112,13 +129,7 @@
                     
                 </v-list-item-action-text>
                 
-                <v-tooltip bottom v-if="(item.element == 'file' || item.element == 'dir') &&  ( item && item.source ) || (item && item.options && (item.option >= 0) && item.options[item.option].source )">
-                    <template v-slot:activator="{ on }">
-                        <v-icon small v-on="on"  @click="electronOpenDir(item, $event)" class="configure" color="primary">$archive
-                        </v-icon>
-                    </template>
-                    {{  ( item.source ? item.source : item.options[item.option].source  )     }}
-                </v-tooltip> 
+                
                 <v-tooltip bottom v-if="item.custom">
                     <template v-slot:activator="{ on }">
                         <v-icon v-on="on" @click="removeCustomVariable(item.name)" class="configure" small>$trash-alt
@@ -145,7 +156,7 @@ import Number from '@/components/Framework/Mods/Number.vue';
 import String from '@/components/Framework/Mods/String.vue';
 import Checkbox from '@/components/Framework/Mods/Checkbox.vue';
 import Exists from '@/components/Framework/Mods/Exists.vue';
-import File from '@/components/Framework/Mods/File.vue';
+import FileSelect from '@/components/Framework/Mods/FileSelect.vue';
 import MultiFile from '@/components/Framework/Mods/MultiFile.vue';
 import Dir from '@/components/Framework/Mods/Dir.vue';
 import List  from '@/components/Framework/Mods/List.vue';
@@ -160,7 +171,7 @@ const path  = require("path")
 export default {
 	name: 'multi-select',
     components: {
-        File,
+        FileSelect,
         MultiFile,
         Validation,
         Number,
@@ -223,6 +234,7 @@ export default {
                 }
             this.$emit("updateValue", { src: item.source, option: false, variable: item.name }   )
         },
+        
         electronOpenDir(key){
             const $this = this
             if (key.options ){
@@ -230,6 +242,8 @@ export default {
             }
             if (key.element == 'file' || !key.element){
                 this.$electron.shell.openPath(path.dirname(key.source))
+            } else if (key.create){
+                this.$electron.shell.openPath(path.dirname(key.create.target))
             } else {
                 this.$electron.shell.openPath(key.source)
             }
@@ -313,12 +327,13 @@ export default {
                 "number": "Number",
                 "checkbox": "Checkbox",
                 "exists": "Exists",
-                "file": "File",
+                "file": "FileSelect",
                 "files": "MultiFile",
                 "render": "Render",
                 "configuration-file": "ConfigurationFile",
                 "json": "ConfigurationFile",
                 "dir": "Dir",
+                "directory": "Dir",
                 "list": "List"
 
             },

@@ -1,4 +1,4 @@
-- version: 1.1
+- version: 1.6
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -33,7 +33,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.1.1
+          version: v2.1.2
           type: docker
           format: docker
         - target: "bitnami/git"
@@ -58,35 +58,6 @@
           target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
           overwrite: false
       variables:
-        csv:
-          label: CSV File(s)
-          element: file
-          optional: false
-          fallback: "${writePath}/workflows/mytax2/Samplesheet.csv"
-          name: "Samplesheet"
-          read:
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "directory"
-              column: "path_1"
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "directory"
-              column: "path_2"
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "database"
-          set:
-            - target: "variables.manifest.source"
-              header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
-              reformat: ['database', 'path_1', 'path_2']
-              source: "%{variables.csv.source}"
-              sep: "," 
-          source: null
         manifest:
           label: "Input Samplesheet contents"
           element: "list"
@@ -94,28 +65,101 @@
           columns: 2
           column: 12
           sep: ","
+          define:
+            csv: 
+              path: true
+              target: "%{variables.manifest.bind.to}"
           define_columns: 
-            path_1: file
-            path_2: file
-            database: file
+            path_1: 
+              element: ['file', 'directory']
+            path_2: 
+              element: file
+            database: 
+              custom: True
+              element: dir
+              options: [
+                "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+              ]
+            demux: 
+              custom: False
+              options: [True, False]
+            platform: 
+              custom: False
+              options: ['illumina', 'oxford']
+            kits: 
+              custom: true
+              options: [
+                "EXP-NBD103",
+                "EXP-NBD104",
+                "EXP-NBD114",
+                "EXP-NBD196",
+                "EXP-PBC001",
+                "EXP-PBC096",
+                "OND-SQK-LP0096M",
+                "OND-SQK-LP0096MA",
+                "OND-SQK-LP0096S",
+                "OND-SQK-LP0768L",
+                "OND-SQK-RP0096M",
+                "OND-SQK-RP0096MA",
+                "OND-SQK-RP0384L",
+                "SQK-16S024",
+                "SQK-LWB001",
+                "SQK-MLK110-96-XL",
+                "SQK-MLK111-96-XL",
+                "SQK-NBD110-24",
+                "SQK-NBD110-96",
+                "SQK-NBD111-24",
+                "SQK-NBD111-96",
+                "SQK-NBD112-24",
+                "SQK-NBD112-96",
+                "SQK-PBK004",
+                "SQK-PCB109",
+                "SQK-PCB110",
+                "SQK-PCB111-24",
+                "SQK-RAB201",
+                "SQK-RAB204",
+                "SQK-RBK001",
+                "SQK-RBK004",
+                "SQK-RBK110-96",
+                "SQK-RBK111-24",
+                "SQK-RBK111-96",
+                "SQK-RBK112-24",
+                "SQK-RBK112-96",
+                "SQK-RLB001",
+                "SQK-RPB004",
+                "VSK-PTC001",
+                "VSK-VMK001",
+                "VSK-VMK002",
+                "VSK-VMK003",
+                "CUSTOM-FLU"
+              ]
+            format: 
+              custom: False
+              options: ["file", "directory"]
+            compressed: 
+              custom: False
+              options: [True, False]
+            pattern: 'barcode[0-9]+'
           tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
           update_on: 
             depends:
               - csv
             action: "read"
-            header: true
+            header: true 
             source: "%{variables.csv.source}"
           bind:
-            from:  "<<directory(%{variables.csv.source})>>/mytax2/Samplesheet.csv"
+            from:  "%{variables.manifest.create.target}"
             to: "/MYTAX/data/Samplesheet.csv"
           create:
-            target: "<<directory(%{variables.csv.source})>>/mytax2/Samplesheet.csv"
+            target: "${writePath}/workflows/mytax2/samplesheets/Samplesheet.target.csv"
             sep: ","
             type: "list"
-            header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
+            header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
           class: "wb-50  p-3 mb-1"
           source: []
-          header: ['sample','path_1','path_2','format','platform','database','compressed', 'kits', 'pattern']
+          defaults:
+            sample: "unknown"
+          header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
           append_newline: true
         custom_configuration:
           optional: true
@@ -169,11 +213,16 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.1.1
+          image: jhuaplbio/basestack_mytax2:v2.1.2
           workingdir: /
           orchestrated: false
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; source /opt/conda/etc/profile.d/conda.sh; conda activate mytax2; echo $PWD; cd /opt; npm run server   ']
+          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; 
+          source /opt/conda/etc/profile.d/conda.sh; 
+          conda activate mytax2; 
+          echo $PWD; 
+          cd /opt; 
+          npm run server   ']
         

@@ -10,7 +10,7 @@ const {  remove_images, removeVolume } = require("../controllers/post-installati
 export  class Module {       
 	constructor(module, catalog, moduleIdx){       
         this.name= module.name 
-        this.module = moduleIdx
+        this.module = moduleIdx 
         this.catalog = catalog
         this.type = 'module'
         this.config = module
@@ -96,16 +96,16 @@ export  class Module {
         clearInterval(this.interval.interval) 
         return
     } 
-    async initProcedures(){ 
+    async initProcedures(){  
         let promises = []   
-        const $this = this;
+        const $this = this; 
         cloneDeep(this.config.procedures).forEach((procedure, idx)=>{
             promises.push(this.defineProcedure(procedure, idx))
         }) 
         Promise.allSettled(promises).then((response)=>{
-            response.forEach((item, i)=>{
+            response.forEach((item, i)=>{ 
                 if (item.status == 'fulfilled'){
-                    
+                     
                     $this.procedures.push(item.value)
                 } else {
                     store.logger.error("Error in initiating procedure... %o %s" , item, $this.config.procedures[i].name)

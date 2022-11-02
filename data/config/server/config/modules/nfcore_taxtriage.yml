@@ -1,7 +1,7 @@
 - name: nfcore_taxtriage
   title: "TaxTriage"
   icon: "virus"
-  version: 1.1
+  version: 1.2
   basestack_released: 2.0
   module: True
   url: https://nf-co.re/viralrecon
@@ -10,7 +10,7 @@
     - "Nextflow"
     - "metagenomics"
     - "Nanopore"
-    - "Illumina"
+    - "Illumina" 
   shared:
     services:
       orchestrator:
@@ -34,12 +34,9 @@
       init: false 
       dependencies:
         - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          label: jhuaplbio/basestack_orchestrator
-          type: "docker-local"
-          build: 
-            path: ${configPath}/modules/orchestrator/Dockerfile
-            file: Dockerfile
-          format: "dockerfile"
+          label: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          type: "docker"
+          format: "docker"
         - target: "bitnami/git"
           label: "bitnami/git"
           type: "docker"
@@ -47,46 +44,6 @@
         - target: "basestack-docker-taxtriage"
           label: "TaxTriage Volume"
           type: "volume"
-          # git clone -b 'v0.0.1' --single-branch --depth 1 https://github.com/jhuapl-bio/taxtriage.git
-        - source: 
-            url: "git clone  https://github.com/jhuapl-bio/taxtriage.git"
-            type: "dir"
-            remove: false
-            target: "${writePath}/workflows/taxtriage/taxtriage"
-          type: "orchestration" 
-          service:
-            command: [ "sh", "-c", "git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
-            init: false
-            force_restart: true
-            image: "bitnami/git"
-            name: "nfcore_taxtriage_git"
-            force_init: false
-            config: "${configPath}/dockerConfigs/dockerConfigOrchestrator.json"
-            orchestrated: true
-            workingdir: "/opt"
-          target: "${writePath}/workflows/taxtriage/taxtriage"
-          format: dir
-          bind: 
-            from: "${writePath}/workflows/taxtriage"
-            to: "/opt/source"
-          workingdir: "/opt/source"
-          overwrite: true
-          command: [ "sh", "-c", "rm -rf taxtriage; git clone  https://github.com/jhuapl-bio/taxtriage.git" ]
-          label: "Tax Triage Code" 
-        - source:
-            url: ftp.ncbi.nlm.nih.gov
-            type: "file"
-            user: anonymous
-            path: /genomes/refseq/assembly_summary_refseq.txt
-            password: null
-            protocol: ftp
-            remove: true
-            target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-          label: Assembly Refseq
-          type: "download"
-          format: "file"
-          target: "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-          overwrite: true
         - source:
             url: ftp.ccb.jhu.edu
             type: file
@@ -110,65 +67,43 @@
         - "nanopore"
         - "illumina"
       variables:
-        csv:
-          label: "Samplesheet"
-          fallback: "${writePath}/workflows/nfcore_taxtriage/Samplesheet.csv"
-          warning: "Must be in .csv format (comma separated)"
-          hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
-          element: "file"
-          set:
-            - target: "variables.manifest.source"
-              header: ['single_end','fastq_1','fastq_2', 'sample', 'from',  'platform',  'sequencing_summary', 'barcode', 'trim']
-              reformat: ['sequencing_summary', 'from', 'fastq_1', 'fastq_2']
-              source: "%{variables.csv.source}"
-              sep: "," 
-          source: null
-          bind: self
-          read:
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "fastq_1"
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "fastq_2"
-            - type: "directory"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "from"
-            - type: "file"
-              sep: ","
-              source: "%{variables.csv.source}"
-              bind: "self"
-              column: "sequencing_summary"
         manifest:
           label: "Input Samplesheet contents"
           element: "list"
           hint: "Samplesheet contents"
           columns: 2
           column: 12
+          define:
+            csv: 
+              path: true
+              target: "%{variables.manifest.bind.to}"
           sep: ","
           define_columns: 
-            fastq_1: file
-            fastq_2: file
-            from: dir
-            sequencing_summary: file
-          update_on: 
-            depends:
-              - csv
-            action: "read"
-            sep: ","
-            header: true
-            source: "%{variables.csv.source}"
-          bind:
-            from:  "<<directory(%{variables.csv.source})>>/nfcore_taxtriage/Samplesheet.csv"
-            to: "/opt/samplesheet/Samplesheet.csv"
+            fastq_1: 
+              element: 'file'
+            fastq_2: 
+              element: file
+            from: 
+              element: dir
+            sequencing_summary: 
+              element: file
+            platform: 
+              custom: False
+              options: ['ILLUMINA', 'OXFORD']
+            barcode: 
+              custom: False
+              options: [True, False]
+            trim: 
+              custom: False
+              options: [True, False]
+            single_end: 
+              custom: False
+              options: [True, False]
+          bind:  
+            from: "${writePath}/workflows/taxtriage/samplesheets/Samplesheet.target.csv"
+            to: "${writePath}/workflows/taxtriage/samplesheets/Samplesheet.target.csv"
           create:
-            target: "<<directory(%{variables.csv.source})>>/nfcore_taxtriage/Samplesheet.csv"
+            target: "${writePath}/workflows/taxtriage/samplesheets/Samplesheet.target.csv"
             sep: ","
             type: "list"
             header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
@@ -176,6 +111,14 @@
           source: []
           header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
           append_newline: false
+        outdir:
+          label: "Output Directory"
+          element: "directory"
+          output: false
+          hint: "Directory to place your analysis results into"
+          source: null
+          name: "Output Folder"
+          bind: "self"
         maxCPUs:
           label: "Maximum CPUs"
           element: "number"
@@ -190,7 +133,7 @@
               - 1
         sleepTime:
           label: "Lag Time (s) between Pipeline start and Docker starting"
-          source: 5
+          source: 2
           element: number
         maxMemory:
           label: "Maximum Memory (GB)"
@@ -253,13 +196,9 @@
           options:
             - element: null
               name: "NCBI Refseq Assembly Txt File"
-              source:  "${writePath}/workflows/taxtriage/assembly_summary_refseq.txt"
-              target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
+              source:  "/root/.nextflow/assets/jhuapl-bio/taxtriage/examples/assembly_summary_refseq.txt"
               define: 
-                assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
-              bind: 
-                from: "%{variables.assembly_option.source}"
-                to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
+                assembly: "--assembly /root/.nextflow/assets/jhuapl-bio/taxtriage/examples/assembly_summary_refseq.txt"
             - element: null
               name: "Pull Assembly File Automatically"
               source: null
@@ -270,81 +209,50 @@
               source: null
               name: "Custom Assembly Txt file"
               hint: "Must be in the same format as the ncbi assembly refseq file"
-              target: "/opt/code/<<basename(%{variables.assembly_option.source})>>"
+              target: "/opt/assembly_option/<<basename(%{variables.assembly_option.source})>>"
               bind: 
                 from: "%{variables.assembly_option.source}"
-                to: "/opt/code/<<basename(%{variables.assembly_option.target})>>"
+                to: "/opt/assembly_option/<<basename(%{variables.assembly_option.target})>>"
               define: 
-                assembly: "--assembly /opt/code/<<basename(%{variables.assembly_option.target})>>"
-        code: 
-          label: "code dir"
-          name: "code"
-          hidden: true
-          bind:
-            from:  "${writePath}/workflows/taxtriage/taxtriage"
-            to: "/opt/code"
-        autopull: 
-          label: "Automatically Pull Latest Code from GitHub"
-          name: pull
-          source: true
-          element: "checkbox"
-          target: null
-          append:
-            command: "git -C /opt/code pull ; "
-            placement: 2
-            position: "start"
-            services: 
-              - 0
+                assembly: "--assembly /opt/assembly_option/<<basename(%{variables.assembly_option.target})>>"
         filter_db:
           label: "Filter Database"
           element: "dir"
           source: null
+          optional: true
           hint: "Database to extract reads out of"
           target: "/opt/database_filter"
           bind: "self"
           define:
             filter: " --filter %{variables.filter_db.target} "
-        rundir:
-          label: "Run Directory"
-          element: "file"
-          source: null
-          hint: "Requires a Samplesheet.csv with all relevant data in the same folder in terms of pathing as well as things like your fastq files and sequencing summary files"
-          target: "/opt/data"
-          bind: "self"
-        samplesheet:
-            label: "Samplesheet"
-            warning: "Must be in the root (same level) of the run directory"
-            hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. "
-            element: "exists"
-            source:  null
-            validations:
-              - type: "files"
-                error: "Must have a Samplesheet.csv file in the root directory (directly in your run directory)"
-                target: 
-                  type: "value"
-                  minimum: 1
-                  path: "%{variables.rundir.source}"
-                  value: "Samplesheet.csv$"
-            update_on: 
-              depends:
-                - rundir
-              action: "exists"
-              source: "%{variables.rundir.source}"
+        remove_taxids:
+          label: "Taxids to remove"
+          element: "string"
+          source: "9606"
+          target: null
+          hint: "Specific Taxids to remove from the kraken2 outputs"
+          define:
+            taxids_to_remove: "--remove_taxids \"%{variables.remove_taxids.source}\""
+        mark_branch:
+          label: "Branch of repo to use"
+          element: "string"
+          source: "main"
+          target: "%{variables.mark_branch.source}"
+        latest:
+          label: "Pull latest branch automatically"
+          element: "checkbox"
+          source: false
+          target: null
+          warning: "fails if no internet is available. Uncheck if without internet"
+          hint: "Warning: Fails if no internet is available. Uncheck if without internet"
+          define:
+            marklatest: " -latest "
         profile:
           label: "Profile"
           options:
             - "docker"
             - "singularity"
             - "conda"
-        outdir:
-          label: "Output Directory"
-          output: True
-          hint: "Directory to place your analysis results into"
-          source: "<<directory(%{variables.csv.source})>>/taxtriage_output"
-          path: "<<directory(%{variables.csv.source})>>/taxtriage_output"
-          name: "Output Folder"
-          target: "/opt/output"
-          bind: "self"
         report:
           label: "Report"
           element: file
@@ -360,23 +268,22 @@
           force_restart: false
           continuous: true
           force_init: false
+          bind: 
+            - from: "${writePath}/workflows/taxtriage/workingdir"
+              to: "${writePath}/workflows/taxtriage/workingdir"
           label: "TaxTriage"
           image: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          workingdir: "/opt/code"
+          workingdir:  "/wokringdir"
           warning: "This process requires internet in its current state"
-          # command: [
-          #   "bash", "-c", "${pull}"
-          # ]
           command: [
             "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep ${sleepTime}; 
-             nextflow run /opt/code/main.nf 
-              --input /opt/samplesheet/Samplesheet.csv
-              --db ${db}  
-              --outdir /opt/output
+             nextflow run 'https://github.com/jhuapl-bio/taxtriage'
+              --input ${csv}
+              --db ${db}  -r ${mark_branch} ${marklatest}
+              --outdir ${outdir}
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
-              -profile ${profile} ${skip_plots} ${skip_assembly} 
+              -profile ${profile} ${skip_plots} ${skip_assembly} ${taxids_to_remove}
               ${assembly} --demux 
-              ${resume} ${filter};
-              pkill -9 .';  "
+              ${resume} ${filter}; chmod -R 777 /opt/output; chmod +x /opt/output/**/*html; pkill -9 .   '  "
           ]
     

@@ -470,12 +470,12 @@ export class Procedure {
                     dependency.status.building = false
                     dependency.streamObj.destroy()
                 } catch(err){    
-                    store.logger.error(err) 
-                }        
-            }    
-            let service = new Service(    
+                    store.logger.error(err)  
+                }          
+            }     
+            let service = new Service(      
                 cloneDeep(dependency.service), 
-                null,     
+                null,      
                 true 
             ) 
             if (dependency.workingdir){
@@ -705,24 +705,24 @@ export class Procedure {
                 dependency_obj.status.building = true
                 objs.push(dependency_obj) 
                 let overwrite_idx = false
-                if (!overwrite){
+                if (!overwrite){ 
                     if (dependency_obj.overwrite){  
                         overwrite_idx = true
-                    }
-                }   else {
-                    overwrite_idx = true
-                } 
-                if (Array.isArray(overwrite) && overwrite[i]){ 
-                    overwrite_idx = overwrite[i]
+                    } 
+                }   else {      
+                    overwrite_idx = true 
+                }   
+                if (Array.isArray(overwrite) && overwrite[i]){  
+                    overwrite_idx = overwrite[i]    
                 }
                 if (dependency_obj.type == 'docker' && !dependency_obj.build && !dependency_obj.local ){
-                    
+                     
                     promises.push($this.pullImage(dependency_obj))
                 }   else if (dependency_obj.type == 'docker-local' && dependency_obj.build ){
                     promises.push($this.buildImage(dependency_obj))
                 }   else if (dependency_obj.type == 'volume'){
                     promises.push(createVolumes([dependency_obj.target]).then((f)=>{
-                        dependency_obj.status.building = false
+                        dependency_obj.status.building = false 
                     }).catch((err)=>{
                         dependency_obj.status.building = false
                         dependency_obj.status.error = err

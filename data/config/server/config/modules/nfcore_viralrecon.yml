@@ -409,6 +409,6 @@
             --platform illumina
             --protocol ${protocol} 
             --genome ${genome}
-            -profile ${profile} ${skip_kraken2_var} --max_memory ${maxMemory}GB --max_cpus ${maxCPUs}'   "
+            -profile ${profile} ${skip_kraken2_var} --max_memory ${maxMemory}GB --max_cpus ${maxCPUs}; chmod -R 777 ${outdir}; pkill -9 .;'     "
           ]
     

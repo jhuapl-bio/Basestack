@@ -20,12 +20,9 @@
       init: false 
       dependencies:
         - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
-          label: jhuaplbio/basestack_orchestrator
-          type: "docker-local"
-          build: 
-            path: ${configPath}/modules/orchestrator/Dockerfile
-            file: Dockerfile
-          format: "dockerfile"
+          label: "jhuaplbio/basestack_orchestrator"
+          type: "docker"
+          format: "docker"
       tags: 
         - "Quality Check"
         - "Stats"
