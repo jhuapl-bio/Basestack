@@ -97,11 +97,11 @@ export  class Configuration {     // Make the main procedure class for configura
         } 
         const $this = this;
         for (let [key, custom_variable] of Object.entries(params)){ // move thru all elements of the object 
-            if (custom_variable && !custom_variable.element != 'confguration-file'){ // deprecated config file, 
-                if ( custom_variable && this.variables[key] && typeof custom_variable == 'object' ){
+            if (custom_variable &&  !custom_variable.element != 'confguration-file'){ // deprecated config file, 
+                if ( custom_variable && typeof custom_variable == 'object' ){
                     this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`) // convert the store stored value for a variable to the new source
                 } else {
-                    if (custom_variable){ 
+                    if (custom_variable  ){ 
                         
                         nestedProperty.set($this, `${path}.${key}`, custom_variable)
                     }

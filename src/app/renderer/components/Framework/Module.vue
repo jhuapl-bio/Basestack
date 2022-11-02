@@ -977,14 +977,19 @@ export default {
       }
       let procedure = new Configuration(cloneDeep(procedureConfig))
       
-      
       procedure.defineMapping()
       procedure.create_intervalWatcher() 
       procedure.getProgress()
       let found = nestedProperty.get(this.$store.state, `catalog.${this.selectedVersion.name}.procedures.${this.procedureIdx}`)
-      console.log("Found", found)
       if (found){
         try{
+          if (found.variables && procedure.variables){
+            for (let key of Object.keys(found.variables)){
+              if (!procedure.variables[key]){
+                delete found.variables[key]
+              }
+            }
+          }
           procedure.mergeInputs(found)
         } catch (Err){
           console.error(Err,"<<<") 
