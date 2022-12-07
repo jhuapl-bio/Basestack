@@ -11,8 +11,9 @@ var logger = store.logger
  
 export  class Job {  
     constructor(procedure, config){         
-        this.config = null  
-        this.options = null   
+        this.config = config  
+        this.options = null  
+        this.deployment = procedure.deployment 
         this.configurations = null 
         this.services = []
         this.variables = {}
@@ -21,6 +22,7 @@ export  class Job {
         this.mergedConfig = cloneDeep(this.baseConfig)
         this.containers = []
         this.env = {}
+        this.procedure = procedure
         this.status = { 
             exists: false, 
             services_used: [],
@@ -103,7 +105,7 @@ export  class Job {
                 } 
             } 
             if (!obj.target && obj.source){
-                obj.target = obj.source
+                obj.target = cloneDeep(obj.source)
             }
             let getter = Object.getOwnPropertyDescriptor(obj, 'source');
             if (getter && getter.get){
@@ -134,11 +136,38 @@ export  class Job {
             }  
             
             if (!$this.runningConfig.variables[key].target){
-                $this.runningConfig.variables[key].target = $this.runningConfig.variables[key].source
+                $this.runningConfig.variables[key].target = cloneDeep($this.runningConfig.variables[key].source)
             }
-            if (this.runningConfig.variables[key].bind){
-                this.runningConfig.variables[key].target = this.setTarget($this.runningConfig.variables[key].target)
-                this.runningConfig.variables[key].source = this.setSource($this.runningConfig.variables[key].source)
+            if ($this.runningConfig.variables[key].bind){
+                if ($this.runningConfig.variables[key].define_columns){
+                    let columns = []
+                    for (let [key2, val] of Object.entries(this.runningConfig.variables[key].define_columns)){
+                        if (val && typeof(val)  == 'object'){
+                            if (!Array.isArray(val.element)){
+                                val.element = [val.element]
+                            }
+                            let true_filesystem_variable = val.element.some((el)=>{
+                                return ['file', 'directory','dir'].indexOf(el) > -1
+                            })
+                            if (true_filesystem_variable){
+                                columns.push(key2)
+                            }
+                        }
+                    }
+
+                    if (Array.isArray($this.runningConfig.variables[key].target)){
+                        $this.runningConfig.variables[key].target.forEach((f,i)=>{
+                            columns.forEach((col)=>{
+                                $this.runningConfig.variables[key].target[i][col] = $this.setTarget(f[col])                                
+                            })
+                        })
+                    }
+                } else {
+                    $this.runningConfig.variables[key].target = $this.setTarget($this.runningConfig.variables[key].target)
+                    
+                }
+                $this.runningConfig.variables[key].source = $this.setSource($this.runningConfig.variables[key].source)
+                console.log($this.runningConfig.variables[key].target)
             }
             
             
@@ -289,7 +318,7 @@ export  class Job {
     setParams(params){
         if (params.images){
             params.images.forEach((service)=>{ 
-                this.services[service.service].override.image = service.image
+                this.services[service.service].override.image = service.image 
             })
         }
         
@@ -309,21 +338,21 @@ export  class Job {
         }  
     }
     setSource(source){
-        if (source && typeof source == 'string'){
+        if (source && typeof source == 'string'){ 
             source = source.replaceAll(/\s/g, "\ ")
         }
         return source
     }
     setTarget(target){
+       
         if (target && typeof target == 'string'){
             target = target.replaceAll(/\\/g, "/")
             target = target.replaceAll(/\s/g, '_')
             target = target.replaceAll(/:/g, "_")
-            if (!target.startsWith("/")){
+            if (target && target != '' && !target.startsWith("/")){
                 target = `/${target}`
             }
-        }
-        
+        } 
         return target
 
     }
@@ -335,6 +364,7 @@ export  class Job {
             if (!$this.runningConfig.variables[key] && value.custom){
                 $this.runningConfig.variables[key] = value
             } 
+
             let obj = $this.runningConfig.variables[key]
             this.setValueVariable(value, obj, key)
              
@@ -480,7 +510,7 @@ export  class Job {
         let response = await Promise.allSettled(promises)
         return 
     }
-    async loopServices(){      
+    async loopServices(autocheck){      
         const $this  = this 
         let cancelled_or_skip = false
         let end = false  
@@ -489,8 +519,25 @@ export  class Job {
                 let service = $this.services[i]
                 try{  
                     let skip        
-                    store.logger.info("I: %s, Starting a new job service %s", i, service.name)
-                        
+                    store.logger.info("%s, Starting a new job service %s", i, service.name)
+                    console.log(this.deployment,"<<")
+                    let procedures = $this.procedure
+                    if (this.deployment == 'native'){
+                        console.log("is native, skipping")
+                    } else {
+
+                        let index = procedures.dependencies.findIndex((f)=>{
+                            return f.fulltarget == service.config.image
+                        })
+                        if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
+                            if (!autocheck){
+                                store.logger.info("Image doesnt exists %s", service.config.image, index)
+                            } else {
+                                store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                            }
+                            await procedures.build(false, index, true)
+                        }
+                    } 
                     skip = await service.check_then_start({ variables: $this.variables }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
@@ -535,6 +582,7 @@ export  class Job {
         $this.status.running = true 
         $this.status.complete = false
         let promises = []; 
+        let autocheck = params.autocheck
         if (!params.variables){
             params.variables = {} 
         }
@@ -556,7 +604,7 @@ export  class Job {
         
         store.logger.info("Job starting: %s", $this.name)
         try{
-            this.loopServices()
+            this.loopServices(autocheck)
             return 
         } catch (err){
             store.logger.error(err)

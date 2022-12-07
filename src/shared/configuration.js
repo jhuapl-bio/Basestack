@@ -94,14 +94,14 @@ export  class Configuration {     // Make the main procedure class for configura
     mergeInputs(params, path){
         if (!path){
             path = ""
-        }
+        } 
         const $this = this;
         for (let [key, custom_variable] of Object.entries(params)){ // move thru all elements of the object 
-            if (custom_variable && !custom_variable.element != 'confguration-file'){ // deprecated config file, 
+            if (custom_variable &&  !custom_variable.element != 'confguration-file'){ // deprecated config file, 
                 if ( custom_variable && typeof custom_variable == 'object' ){
                     this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`) // convert the store stored value for a variable to the new source
                 } else {
-                    if (custom_variable){ 
+                    if (custom_variable  ){ 
                         
                         nestedProperty.set($this, `${path}.${key}`, custom_variable)
                     }
@@ -127,7 +127,7 @@ export  class Configuration {     // Make the main procedure class for configura
                     })
                     Promise.allSettled(promises).then((response)=>{
                         response.forEach((resp, index)=>{
-                            if (resp.status == 'fulfilled'){
+                            if (resp.status == 'fulfilled'){ 
                                 //Assign the output variable to the new array
                                 watches[index] = resp.value.status
                                 watches[index] = {
@@ -216,10 +216,11 @@ export  class Configuration {     // Make the main procedure class for configura
                                 promises.push(
                                     func.then((f)=>{ // Ingest the raw data of the file
                                         vari.sep = ( vari.sep == "tab" ? "\t" : vari.sep )
+                                        
                                         f  = f.filter(function (el) {
                                             return el != null && el !== '';
                                         }); 
-                                        console.log(f)
+                                        
                                         if (header || make_header) {
                                             vari.source = f 
 
@@ -235,6 +236,29 @@ export  class Configuration {     // Make the main procedure class for configura
                                         }
                                      
                                         vari.source = vari.source.filter((f)=>{
+                                            if (typeof f == 'object'){
+                                                for (let [key, value] of Object.entries(f)){
+                                                    if (f[key] && !path.isAbsolute(value) && vari.define_columns && vari.define_columns[key]){
+                                                        let seen = false
+                                                        if (typeof vari.define_columns[key] == 'object' && vari.define_columns[key].element){
+                                                            if (!Array.isArray(vari.define_columns[key].element)){
+                                                                vari.define_columns[key].element = [vari.define_columns[key].element]
+                                                            }
+                                                            vari.define_columns[key].element.forEach((element)=>{
+                                                                if (['file', 'dir', 'directory'].indexOf(element) > -1){
+                                                                    console.log("not absolute", value, update_on.source, element)
+                                                                    seen = true
+                                                                    
+                                                                }
+                                                            })
+                                                        }
+                                                        if (seen){
+                                                            let abs = path.join(path.dirname(update_on.source), value)
+                                                            f[key] = abs 
+                                                        }
+                                                    }
+                                                }
+                                            }
                                             return f
                                         })
                                         returnedVari.value = vari
@@ -467,12 +491,12 @@ export  class Configuration {     // Make the main procedure class for configura
                                     return null
                                 } else {
                                     return fullstring
-                                }
-                            }
+                                } 
+                            } 
                         }
                     } catch(err)  {
                         console.error(err)
-                    }
+                    } 
                 })
                 return obj.get()
             }  else {
@@ -670,9 +694,7 @@ export  class Configuration {     // Make the main procedure class for configura
                 returnable.push([entry])
             }
         })  
-        // if(key.label == 'Output SAM File'){
-        //     console.log(returnable,key,"-----------")
-        // }
+        
 
         
         returnable = returnable.map((f)=>{

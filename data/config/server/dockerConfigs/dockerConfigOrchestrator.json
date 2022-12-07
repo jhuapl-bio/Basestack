@@ -8,7 +8,8 @@
         "Privileged": true,
         "Binds": [
             "basestack-docker-certs-ca:/certs/ca",
-            "basestack-docker-certs-client:/certs/client"
+            "basestack-docker-certs-client:/certs/client",
+            "assets-nextflow:/root/.nextflow/assets"
         ],	 
         "PortBindings": {
         },
@@ -16,7 +17,6 @@
     },
     "Volumes": {
     },  
-
     "Env": [
         "DOCKER_TLS_CERTDIR=/certs"
     ], 

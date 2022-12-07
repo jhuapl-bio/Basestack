@@ -128,13 +128,13 @@
       })
       this.$electron.ipcRenderer.send("queryRelease", "")
       this.$electron.ipcRenderer.on('mainNotification', (evt, message)=>{
-        console.log(message)
         this.$swal.fire({
                 position: 'center',
                 icon: message.icon,
                 showConfirmButton:true,
-                title:  "",
-                html: message.message,
+                title:  (message.header ? message.header : ""),
+                footer: (message.footer  ? message.footer: ""),
+                html: ( message.message ? message.message : ""),
                 didOpen: () => {
                   if (message.loading){
                     $this.$swal.showLoading()

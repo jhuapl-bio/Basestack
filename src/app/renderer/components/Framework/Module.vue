@@ -977,14 +977,19 @@ export default {
       }
       let procedure = new Configuration(cloneDeep(procedureConfig))
       
-      
       procedure.defineMapping()
       procedure.create_intervalWatcher() 
       procedure.getProgress()
       let found = nestedProperty.get(this.$store.state, `catalog.${this.selectedVersion.name}.procedures.${this.procedureIdx}`)
-      
       if (found){
         try{
+          if (found.variables && procedure.variables){
+            for (let key of Object.keys(found.variables)){
+              if (!procedure.variables[key]){
+                delete found.variables[key]
+              }
+            }
+          }
           procedure.mergeInputs(found)
         } catch (Err){
           console.error(Err,"<<<") 
@@ -1101,6 +1106,7 @@ export default {
       dialogLog: false,
       customDrawer: false,
       totalSpaceUsed: "0 Bytes",
+      dry: false,
       installStatus: {},
       setUser: (process.env.platform_os == 'linux' ? true : false),
       stored: {},
@@ -1241,7 +1247,6 @@ export default {
     anyOutput(){
       if (this.selectedProcedure && this.selectedProcedure.variables){
         return Object.values(this.selectedProcedure.variables).some((f)=>{
-          console.log(f,"anyoutput")
           return f.output
         })
       } else {
@@ -1270,7 +1275,6 @@ export default {
 
     },
     latest(){
-      console.log("__", this.libraryVersions)
       return Math.max(...this.libraryVersions.map((f)=>{
         return f.version
       }))

@@ -1,7 +1,7 @@
-FROM  docker:20.10.14-dind
+FROM  docker:dind
 WORKDIR /opt
 #Install gcc for pip installation processes
-RUN apk add --no-cache --virtual .build-deps gcc musl-dev curl bash  linux-headers
+RUN  apk add --no-cache --virtual .build-deps gcc musl-dev curl bash  linux-headers
 # Install python/pip
 
 RUN apk add --no-cache \

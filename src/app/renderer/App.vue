@@ -562,6 +562,7 @@ export default {
         }
       }
       this.importedLibrary = importedLibrary
+
       if (!this.selectedCatalog){
         let name = (this.selectedCatalogName && importedLibrary[this.selectedCatalogName] ? this.selectedCatalogName : first)
         this.selectedCatalogName = name

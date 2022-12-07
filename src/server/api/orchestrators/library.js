@@ -6,7 +6,7 @@ const path = require("path")
 const { store }  = require("../../config/store/index.js")
 const lodash = require("lodash")  
 const {removeDep} = require("../controllers/post-installation.js")
-const {   fetch_external_config } = require("../controllers/fetch.js") 
+const {   fetch_external_config, fetch_external_yamls } = require("../controllers/fetch.js") 
 const { removeFile } = require("../controllers/IO.js")
 const {  init_modules } = require("../controllers/init.js")
 const {   import_cfgs } = require("../controllers/configurations.js") 
@@ -398,15 +398,18 @@ export  class Library {
     }
     async getRemotes(target, catalog){
         const $this = this;
-        let modules = await fetch_external_config(target)
-        modules = parseConfigVariables(JSON.stringify(modules), store.system)
+        // let modules = await fetch_external_config(target)
+        let modules = await fetch_external_yamls()
+        // modules = parseConfigVariables(JSON.stringify(modules), store.system)
+        console.log(modules,"..............................")
         modules.forEach((module)=>{
             if (module ){
                 this.addRemote(module, module.name)
-            } else {
+            } else {  
                 store.logger.info("No modules found at remote location")
             }  
         })
+        console.log($this.remotes)
         return $this.remotes
        
         
