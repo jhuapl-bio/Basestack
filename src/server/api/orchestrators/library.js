@@ -344,23 +344,7 @@ export  class Library {
                 con.remote = false 
                 con.removable = false
                 this.locals[name].push(con)
-                // if (idx == -1){
-                //     con.idx = maxIdx + 1
-                //     maxIdx +=1
-                //     con.imported = false
-                //     con.local = true
-                //     con.remote = false 
-                //     con.removable = false
-                //     this.locals[name].push(con)
-                // } else {
-                //     con.idx = maxIdx + 1
-                //     maxIdx +=1
-                //     con.imported = false
-                //     con.local = true
-                //     con.removable = false
-                //     con.remote = false
-                //     this.locals[name][idx] = con
-                // }
+                
                 
                   
             })
@@ -377,14 +361,7 @@ export  class Library {
             config.removable = false
             config.local = true
             this.locals[name].push(config) 
-            // } else {
-            //     config.idx = maxIdx + 1
-            //     config.imported = false 
-            //     config.local = true
-            //     config.remote = false
-            //     config.removable = false
-            //     this.locals[name][idx] = config
-            // }
+         
         }  
     }
     addRemote(config, name){
@@ -398,43 +375,26 @@ export  class Library {
                     return f.version == con.version
                 })
                 
-                // if (idx == -1){
                     con.idx = maxIdx + 1
                     maxIdx +=1
                     con.imported = false
                     con.remote = true
                     con.removable = false
                     this.remotes[name].push(con)
-                // } else {
-                //     con.idx = maxIdx + 1
-                //     maxIdx +=1
-                //     con.imported = false
-                //     con.removable = false
-                //     con.remote = true
-                //     this.remotes[name][idx] = con
-                // }
+             
             })            
         } else { 
             let maxIdx = this.remotes[name].length - 1
             let idx = this.remotes[name].findIndex((f)=>{
                 return f.version == config.version
             })
-            // if (idx == -1){
                 config.idx = maxIdx + 1
                 config.imported = false 
                 config.remote = true
                 config.removable = false
-                this.remotes[name].push(config) 
-            // } else {
-            //     config.idx = maxIdx + 1
-            //     config.imported = false 
-            //     config.removable = false
-            //     config.remote = true
-            //     this.remotes[name][idx] = config
-            // }
-            
+                this.remotes[name].push(config)             
         }   
-        return
+        return   
     }
     async getRemotes(target, catalog){
         const $this = this;

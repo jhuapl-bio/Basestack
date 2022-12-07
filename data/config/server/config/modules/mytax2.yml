@@ -1,4 +1,4 @@
-- version: 1.1
+- version: 1.6
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -40,6 +40,20 @@
           label: "bitnami/git"
           type: "docker"
           format: "docker"
+        - source:
+            url: 
+              https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz
+            type: file
+            remove: true
+            target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
+          type: download
+          format: file
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
+          label: 2021 Marine Mitogenome database
+          target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
+          overwrite: true
         - source:
             url: ftp.ccb.jhu.edu
             type: file

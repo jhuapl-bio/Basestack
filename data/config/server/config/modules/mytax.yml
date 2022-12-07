@@ -189,9 +189,9 @@
                 to: /opt/databases/flukraken2
             - element: null
               name: Marine Mitogenome
-              target: >-
+              target: 
                 /opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629
-              source: >-
+              source: 
                 /opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629
             - element: dir
               name: Custom DB
