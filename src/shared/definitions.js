@@ -26,7 +26,15 @@ export var validateSchema = function(configTesting, schema){ // deprecated, in d
   console.log("validating schema")
 
 }
-
+export var importDependencies  = async function(config){
+  try {
+    const doc = YAML.load(fs.readFileSync(config.dependenciesPath, 'utf8'));
+    return doc
+  } catch (e) {
+    console.log(e);
+    return null
+  }
+}
 export var define_configuration = async function(config){
     return new Promise((resolve, reject)=>{
       

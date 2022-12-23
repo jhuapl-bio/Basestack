@@ -108,7 +108,6 @@ export class Updater {
             try{
                 console.log('Basestack update not available.');
                 $this.releaseNotes=info
-                console.log(`${JSON.stringify(info)}`)
                 $this.mainWindow.webContents.send('releaseNotes', $this.releaseNotes)
             } catch (error) {
                 console.error(error)

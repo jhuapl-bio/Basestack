@@ -10,6 +10,7 @@ const { download } = require('electron-dl'); // For download electron package bi
 const { spawn } = require('child_process'); // used for spawning processes directly on host system
 var sudo = require('sudo-prompt');
 const { join } = require('path')
+const { getDependency } = require('./dependencies.js'); // For download electron package binaries and libs
 
 
 export class  Client { // Create a class for the Electron main client
@@ -156,31 +157,7 @@ export class  Client { // Create a class for the Electron main client
           }
           
           let cmd = ` chmod ${perms} ${arg.item}; `
-          // cmd = ` touch /Users/merribb1/Desktop/test-data2/mytax2/test3.txt`
-          // cmd = ` chown ${process.env.USER} /Users/merribb1/Desktop/test-data2/mytax2/test3.txt`
-          // fs.access(arg.item ,fs.constants. O_RDWR | fs.constants.O_EXCL, (error, stats)=>{
-          //   if (error){
-          //     $this.logger.error(error)
-          //     // dialog.showMessageBox($this.mainWindow, {
-          //     //     type: 'error',
-          //     //     defaultId: 0,
-          //     //     buttons: ['Ok'],
-          //     //     title: 'Error',
-          //     //     message: `${error}, failed to change permissions`,
-          //     //     detail: `Run: ${cmd} from your terminal`
-          //     // }); 
-          //   } else {
-          //     $this.logger.info(stats)
-          //     // dialog.showMessageBox($this.mainWindow, {
-          //     //   type: 'info',
-          //     //   defaultId: 0,
-          //     //   buttons: ['Ok'],
-          //     //   title: 'Info',
-          //     //   message: `${cmd} completed successfully`
-          //     // });
-          //   }
-            
-          // })
+         
           
           sudo.exec(cmd, options,
             function(error, stdout, stderr) {
@@ -233,57 +210,15 @@ export class  Client { // Create a class for the Electron main client
             }
           })
         }
+        
+        ipcMain.on('download', async (event,  data   ) => { // In development
+          console.log("download!!!!!")
+          
+          
+        });
         ipcMain.on('downloadDocker', async (event,  data   ) => { // In development
           // Check the OS, and download the necessary binaries for Docker automatically to Downloads
-          const win2 = BrowserWindow.getFocusedWindow();
-          let bat;
-          if (data.platform == 'darwin'){ 
-            let url;
-            // determine the url to pull the binary from 
-            if (data.arch == 'x64'){
-              url ="https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-amd64"
-            } else {
-              url = "https://desktop.docker.com/mac/main/arm64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-arm64"
-            }
-            // Utilize the electron-download package properly to download a binary, report a progress bar
-            let downloading = download(win2, url, {
-              overwrite: true,
-              openFolderWhenDone: true
-            }); 
-            //Send to the renderer the download status starting
-            this.mainWindow.webContents.send("dockerDownloadStatus", {
-              "type": "info",
-              "message": `Downloading file now.. check toolbar for status. Please open the file when complete`
-            })
-            downloading.then((event)=>{ // At the end of the above download, send to renderer that it is done and should be executed manually 
-              let filepath = event.getSavePath()
-              this.mainWindow.webContents.send("dockerDownloadStatus", {
-                "type": "success",
-                "info": `Downloaded success to: ${ filepath }. `,
-                message: "Please open the .dmg (double-click) file to extract and complete installation"
-              })
-            })
-
-           
-          } else if (data.platform == 'linux') { // If linux, instead pull bash script and auto run it 
-            let url;
-            if (data.arch == 'x64'){
-              url = "curl -sSL https://get.docker.com/ | sh"
-            } else {
-              url = "curl -sSL https://get.docker.com/ | sh"
-            }            
-          } else {
-            let url = "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe"
-            let downloading = download(win2, url, {
-              overwrite: true,
-            });
-            downloading.then((event)=>{
-              this.mainWindow.webContents.send("dockerDownloadStatus", {
-                "type": "success",
-                "message": `Downloaded success to: ${event.getSavePath()}`
-              })
-            })
-          }
+          // downloadDocker(data)
           
           
         });

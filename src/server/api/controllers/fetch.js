@@ -72,7 +72,7 @@ export async function getPrimerDirsVersions(filepath, primerNameDir){
 				})
 			}
 		})
-	})
+	}) 
 }
 export async function fetch_protocols(){
 	const server_config = store.config.modules['rampart']['config']
@@ -286,14 +286,13 @@ export async function getRemoteConfigurations(url){
 	} catch(err){
 		logger.error(`${err} error in fetching external url`)
 		throw err  
-	}  
+	}   
 }
  
 
 export async function fetch_external_yamls(key){
 	let url = `https://api.github.com/repos/jhuapl-bio/Basestack/git/trees/main?recursive=1`
 	try{
-		console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!",url)
 		let modules = []
 		let promises = []
 		let json = await axios.get(url)

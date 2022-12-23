@@ -1,5 +1,5 @@
 "use strict";
-import nestedProperty from "nested-property"
+import nestedProperty from "nested-property" 
 
 var  { store }  = require("../../config/store/index.js") 
    

@@ -50,6 +50,7 @@ export var store = {
 		configFile:  path.resolve(path.join(resourcePath,  "config","app", "meta.yaml")),
 		configPath:  path.resolve(path.join(resourcePath,  "config", 'app')),
 		logPath: path.join(writePath, "logs"),
+		dependenciesPath: path.resolve(path.join(resourcePath,  "config", "dependencies.yaml")),
 		logs: {
 			docker: path.resolve(path.join(writePath, "logs", "docker.log")),
 			error: path.resolve(path.join(writePath, "logs", "basestackError.log")),

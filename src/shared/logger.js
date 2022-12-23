@@ -9,6 +9,7 @@
    const { createLogger, format, transports } = require('winston');
    const { combine, timestamp, label, printf } = format;
    import path  from "path"
+   import fs from "file-system"
   //  const { store }  = require("../../config/store/index.js")
    const myFormat = printf(({ level, message, label, timestamp }) => {
      try{
@@ -44,7 +45,7 @@
         new transports.File({ filename: errorFile, maxsize: 2000000,  maxFiles: 1, level: 'error', tailable:true, options: { flags: 'a' } }),
         new transports.File({ filename: logFile, maxsize: 2000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
       ]})
-         
+
       //
       // If we're not in production then log to the `console` with the format:
       // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
@@ -52,10 +53,11 @@
       if (process.env.NODE_ENV !== 'production') {
         logger.add(new transports.Console());
       }
+      
       return logger
   
    }
-   
+ 
    export function dockerlogger(dockerLogFile){
      return createLogger({
       level: 'info',

@@ -104,6 +104,9 @@ router.get("/log/system", (req,res,next)=>{
 	try {
 		(async function(){
 			let log = await readFile(store.system.logs.info, true) // based on the meta.yml: logs.info params 
+			log = log.slice(-200).filter((f)=>{
+				return f && f !== ""
+			})
 			res.status(200).json({status: 200, message: "Got system log", data: log});
 		})().catch((err)=>{
 			store.logger.error(err)
@@ -973,7 +976,7 @@ router.post("/procedure/build", (req,res,next)=>{ // build workflow according to
 		try {
 			let module = store.library.catalog[req.body.catalog]
 			let procedure = module.procedures[req.body.procedure]
-			let response = await procedure.build( req.body.skip, null)
+			let response = await procedure.build( req.body.skip, req.body.dependency)
 			logger.info(`Success in beginning to building of procedure dependencies for: ${req.body.catalog}: ${req.body.procedure}`)
 			res.status(200).json({status: 200, message: "Completed module build", data: response });
 		} catch(err2){
@@ -1226,7 +1229,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			store.logger.info("Completed or Exited Job!")
  
 			if (!skip){
-				res.status(200).json({status: 200, message: "Initiated job " + procedure.name, skip: skip });
+				res.status(200).json({status: 200, message: `${procedure.name} job completed or cancelled ` , skip: skip });
 			} else {
 				res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
 			}	    

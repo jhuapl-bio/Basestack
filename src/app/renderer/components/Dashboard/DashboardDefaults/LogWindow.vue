@@ -7,9 +7,9 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="logs" class="mt-3" ref="logs" v-if="info">
-    <span class="center-align-icon configure"  
-        style="float:right" 
+  <div id="logs" class="mt-3 mx-5" ref="logs" v-if="info">
+    <span class=" configure"  
+        style="float:left" 
         v-tooltip="{
             content: (scroll ? 'Autoscroll Enabled' : 'Autoscroll Disabled'),
             placement: 'top',
@@ -30,7 +30,7 @@
     Open Log Folder
     </v-btn>
     <div class="logWindow" >
-        <div v-if="info" class="logDiv" style="max-height: 900px; overflow-y:auto; ">
+        <div v-if="info" class="logDiv" style="max-height: 900px; border: none; overflow-y:auto; ">
             <code >
                 <p v-for="(line, index) in info"  v-bind:key="index">{{ line }}</p>
             </code>

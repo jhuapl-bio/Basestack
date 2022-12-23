@@ -135,7 +135,7 @@
                   medium class="mr-3"
                 >$comment
               </v-icon>
-              Log Viewer
+              Job Logs
             </v-btn>
           </template>
           <template v-slot:default="dialogLog">
@@ -282,29 +282,44 @@
             <v-card-title v-else class="text-h5">
               Module Status
             </v-card-title>
-            <v-card-subtitle>{{showInstalled}} up-to-date dependencies</v-card-subtitle>
+            <v-card-subtitle>{{showInstalled.required}} Required installed and usable</v-card-subtitle>
+            <v-card-subtitle>{{showInstalled.all}} Usable and installed dependencies</v-card-subtitle>
             <v-card-text class="text-h6 my-0 py-0" v-if="installStatus.fully_installed">All dependencies installed</v-card-text>
             <v-card-text class="text-h6 my-0 py-0" v-else>Missing 1 or more dependencies</v-card-text>
             <v-card-text  class="text-h6 my-0 py-0">Total Space Used: ~{{totalSpaceUsed}}</v-card-text>
+            <v-card-text>
+              <v-btn
+                  v-on="on" v-bind="attrs"
+                  class="text-caption" color="secondary" icon-and-text
+                  dark small @click="buildModule(true)"
+              >
+                Build Required Only
+                <v-icon small class="ml-3"
+                >
+                  $download
+                </v-icon>
+              </v-btn>
+            </v-card-text>
             <v-card-actions>
               <v-btn
                   v-on="on" v-bind="attrs"
                   class="text-caption"
-                  dark small 
+                  light small 
               >
                 Check
                 <looping-rhombuses-spinner  
                   :animation-duration="6000" v-if="installStatus.building"
                   :size="3" class="ml-1"
-                  :color="'white'"
+                  :color="'black'"
                   />  
               </v-btn>
+              <v-spacer></v-spacer>
               <v-btn
                   v-on="on" v-bind="attrs"
                   class="text-caption" color="primary" icon-and-text
                   dark small @click="buildModule()"
               >
-                Build
+                Build All
                 <v-icon small class="ml-3"
                 >
                   $download
@@ -632,12 +647,21 @@ export default {
 			e.stopPropagation()
 			this.openUrl(link)
     },
-    async buildModule(){
+    async buildModule(requiredOnly){
         const $this = this
         let procedureIdx  = this.procedureIdx
+        let indic = []
+        if (requiredOnly){
+            this.dependencies.map((f,i)=>{
+                if(!f.optional){
+                    indic.push(i)
+                }
+            })
+        }
         FileService.buildProcedure({
             catalog: $this.selectedVersion.name,
-            procedure: procedureIdx
+            procedure: procedureIdx, 
+            dependency: indic
         })
         .then((response)=>{
             this.$swal({
@@ -865,12 +889,12 @@ export default {
         catalog: $this.selected.name,
         token: $this.$store.token,
       }).then((response)=>{
-        this.$swal.fire({
-          position: 'center',
-          icon: 'success',
-          showConfirmButton:true,
-          title:  response.data.message
-        })
+        // this.$swal.fire({
+        //   position: 'center',
+        //   icon: 'success',
+        //   showConfirmButton:true,
+        //   title:  response.data.message
+        // })
       }).catch((error)=>{
         console.error(error)
         this.$swal.fire({
@@ -1235,7 +1259,13 @@ export default {
       let installed = this.dependencies.filter((f)=>{
         return f.status.exists
       })
-      return `${installed.length} / ${this.dependencies.length}`
+      let required = this.dependencies.filter((f)=>{
+        return !f.optional && f.status.exists
+      })
+      return {
+        required: `Required: ${required.length} / ${this.dependencies.filter((f)=>{return !f.optional}).length}` ,
+        all: `Total: ${installed.length} / ${this.dependencies.length}`
+      }
     },
     serviceList(){
       let serviceList = []

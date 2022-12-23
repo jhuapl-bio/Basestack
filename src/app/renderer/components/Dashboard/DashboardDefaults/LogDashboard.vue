@@ -21,22 +21,22 @@
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow'
 import FileService from "@/services/File-service.js"
  
-import Multiselect from 'vue-multiselect'
 
 export default {
 	name: 'logdashboard',
 	components:{
-		Multiselect,
 		LogWindow,
 	},
 	computed:{
 		
 	},
-	props: ['modules'],
+	beforeDestroy(){
+		// clearInterval(this.interval)
+	},
+	props: ['logs'],
 	data(){
 		return{
 			link: null,
-			logs: [],
 		}
 	},
 	created(){ 
@@ -48,12 +48,7 @@ export default {
 	async mounted(){
 		const $this = this	
 	
-		$this.checking = true
-			
-		FileService.fetchLogs().then((response)=>{
-			console.log(response)
-			this.logs = response.data.data
-		})
+		$this.checking = false
 
 
 	},

@@ -514,11 +514,11 @@ export async function downloadSource(url, target, params)  {
 					let request = fnct.get(url).on("response", (response)=>{
 						var len = parseInt(response.headers['content-length'], 10);
 						response.on("close", (err)=>{
-							logger.error("err %o", err)
+							store.logger.error("err %o", err)
 							try{
 								response.destroy()
 							} catch(Err){ 
-								logger.error(Err)
+								store.logger.error(Err)
 							}
 						})
 						response.on('data', function(chunk) {
@@ -526,7 +526,7 @@ export async function downloadSource(url, target, params)  {
 								downloaded += chunk.length;
 								if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
 									let percent= (100 * downloaded/len ).toFixed(0)
-									store.logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
+									logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
 									 seen.start =  .02 + downloaded/len   
 									seen.end =  seen.end + .02  
 									writer.status = percent

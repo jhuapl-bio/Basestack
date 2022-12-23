@@ -9,7 +9,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
  
-import { faLock, faDesktop, faBan, faCheckDouble, faVirus, faPuzzlePiece, faCampground, faCapsules, faMountain,  faChartArea, faChevronDown, faChevronUp, faEyeDropper, faChessKnight, faBroom, faMagic, faExclamationTriangle, faBolt, faBicycle, faFile, faRecycle, faCheckSquare, faFolder, faTags, faPencilAlt, faUpload, faQuestion, faEdit, faCircle, faChessRook, faServer, faChessPawn, faChess, faCaretSquareUp, faStepBackward,  faStepForward, faCaretDown, faArrowAltCircleRight, faArrowAltCircleLeft,  faSquare, faSquareFull, faEnvelope, faDownload,   faChevronLeft, faChevronRight, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
+import { faLock, faDesktop, faBan,faArrowAltCircleUp, faCheckDouble, faVirus, faPuzzlePiece, faCampground, faCapsules, faMountain,  faChartArea, faChevronDown, faChevronUp, faEyeDropper, faChessKnight, faBroom, faMagic, faExclamationTriangle, faBolt, faBicycle, faFile, faRecycle, faCheckSquare, faFolder, faTags, faPencilAlt, faUpload, faQuestion, faEdit, faCircle, faChessRook, faServer, faChessPawn, faChess, faCaretSquareUp, faStepBackward,  faStepForward, faCaretDown, faArrowAltCircleRight, faArrowAltCircleLeft,  faSquare, faSquareFull, faEnvelope, faDownload,   faChevronLeft, faChevronRight, faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, faExclamation, faVideo, faTimes, faQuestionCircle, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, faViruses, faBookOpen, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle} from '@fortawesome/free-solid-svg-icons'
 let list_icons_fa =  [
     "download", "ban", "check-double",  "virus", "exclamation-triangle", "eye-dropper", "capsules", "mountain",  "server", "magic", "bolt", "magnifying-glass", "chess-knight", "broom", "campground", "edit", "file", "check-square", "circle", "chess", "chess-pawn", "upload", "chess-rook",
     "envelope", "caret-square-up", "tags", "bicycle", "desktop",
@@ -20,7 +20,7 @@ let list_icons_fa =  [
     "highlighter", "anchor", "eternal-link-alt", 
     "book", "handshake-slash", "slash", "phone",  
     "unlock-alt", "check-circle", "user-lock", 
-    "arrow-alt-circle-down", "home", "circle-notch", "recycle",
+    "arrow-alt-circle-down", "arrow-alt-circle-up", "home", "circle-notch", "recycle",
     "exclamation", "video", "times", "question-circle", 
     "comment", "comment-slash", "level-up-alt", 
     "play-circle",  
@@ -39,7 +39,7 @@ library.add(
     faLock, faEnvelope, faBan, faCheckDouble, faVirus, faPuzzlePiece, faServer, faChevronDown, faCapsules, faChartArea, faChevronUp, faEyeDropper, faMountain, faChessKnight, faBroom, faMagic, faDesktop, faBolt, faCampground, faBicycle, faFile, faRecycle, faTags,faCircle, faCheckSquare, faEdit, faUpload, faExclamationTriangle, faChessPawn, faChessRook, faChess, faCaretSquareUp, faStepForward,  faStepBackward, faCaretDown, faSquare,  faSquareFull, faArrowAltCircleRight, faArrowAltCircleLeft,
     faDownload, faChevronLeft, faChevronRight,   faFolder, 
     faBinoculars, faChartPie, faHighlighter, faAnchor, faExternalLinkAlt, faBook, 
-    faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleDown, faHome, faCircleNotch, 
+    faHandshakeSlash, faSlash, faPhone, faUnlockAlt, faCheckCircle, faUserLock, faArrowAltCircleUp, faArrowAltCircleDown, faHome, faCircleNotch, 
     faExclamation, faVideo, faTimes, faQuestionCircle, faQuestion, faComment, faCommentSlash, faLevelUpAlt, faPlayCircle, faDna, faArchive, faSave, 
     faWrench, faPlus, faMinus, faAngleUp, faCheck, faTimesCircle, faAngleDown, faChalkboard, faTrashAlt, faCog, faGlobe, 
     faViruses, faBookOpen, faPencilAlt, faTree, faHourglassStart, faStopCircle, faSync, faAddressCard, faBars, faMinusCircle 

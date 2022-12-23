@@ -218,7 +218,6 @@ export var loadImage = function(obj){
 
 export var pullImage  = function(name){
 	return new Promise(function(resolve,reject){
-	console.log(name,"<<<< name pull")
     store.docker.pull(name)
       .then((stream, error)=>{
         if(error){

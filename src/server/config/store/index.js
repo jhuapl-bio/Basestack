@@ -43,6 +43,7 @@ export var store = {
 		configFile: path.join(resourcePath, "config", "server",  "meta.yaml"),
 		logPath: path.join(writePath, "logs"),
 		configPath: path.join(resourcePath, "config" ,'server' ), 
+		dependenciesPath: path.join(resourcePath, "config", "server", "dependencies.yaml"),
 		logs: { 
 			docker: path.resolve(path.join(writePath, "logs", "docker.log")),
 			error: path.resolve(path.join(writePath, "logs", "serverError.log")),

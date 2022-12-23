@@ -1161,13 +1161,13 @@ export class Service {
                                             } else {
                                                 $this.status.error = err
                                             } 
+                                            $this.status.running = false
+                                            $this.status.complete = false
                                             reject(err)  
                                         }  
                                         if (!wait || $this.config.continuous){
-                                            resolve( false )
-                                        } else {   
-                                            
-                                            // if (process.platform == 'win32'){
+                                            resolve( true )
+                                        } else {                                               
                                             let ended = false
                                             $this.jobInterval = setInterval(()=>{
                                                 if (ended){

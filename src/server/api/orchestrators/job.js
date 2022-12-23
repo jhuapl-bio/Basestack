@@ -520,7 +520,6 @@ export  class Job {
                 try{  
                     let skip        
                     store.logger.info("%s, Starting a new job service %s", i, service.name)
-                    console.log(this.deployment,"<<")
                     let procedures = $this.procedure
                     if (this.deployment == 'native'){
                         console.log("is native, skipping")
@@ -545,10 +544,12 @@ export  class Job {
                         end = true 
                     }
                 } catch(err){
-                    logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
+                    logger.error("!!!!!!!!!!!!!!!!!Job Failure %o Error in procedure: %s, key: %s", err, $this.name, i)
                     end = true
                     cancelled_or_skip = true
                     $this.status.error = err
+                    $this.status.running = false
+                    throw err
                 }
             }
             store.logger.info("Job completed or skipped/exited")
@@ -575,6 +576,9 @@ export  class Job {
             }
         }
     } 
+    async checkRequired(){
+
+    }
     async start(params){       
         const $this = this
         let services;  
@@ -589,7 +593,7 @@ export  class Job {
         store.logger.info("%s setting variables", $this.baseConfig.name)
         // this.mergeInputs(params, 'mergedConfig'  )
         this.runningConfig = this.defineConfiguration(this.mergedConfig)
-        this.setVariables(params.variables) 
+        this.setVariables(params.variables)  
         store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{
             if (service && service.streamObj){
@@ -604,7 +608,22 @@ export  class Job {
         
         store.logger.info("Job starting: %s", $this.name)
         try{
-            this.loopServices(autocheck)
+            store.logger.info("Checking if all required dependencies are installed")
+            if (this.procedure.status.fully_installed){
+                store.logger.info("All required dependencies installed")
+
+            } else {
+                store.logger.info("Not all deps required are installed, exiting")
+                throw new Error("Not all required dependencies are installed")
+
+            }
+            // await this.checkRequired()
+        } catch (err){
+            store.logger.error(err)
+            throw err
+        }
+        try{
+            await this.loopServices(autocheck)
             return 
         } catch (err){
             store.logger.error(err)

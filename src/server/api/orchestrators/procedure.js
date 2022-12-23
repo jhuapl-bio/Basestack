@@ -1,5 +1,4 @@
 import { bytesToSize } from "../controllers/configurations.js";
-
 const cloneDeep = require("lodash.clonedeep");
 
 /*
@@ -16,7 +15,7 @@ const { readFile, checkExists,  removeFile, downloadSource, decompress_file, ite
 const { remove_images, removeVolume, checkVolumeExists, pullImage, loadImage, createVolumes, removeDep } = require("../controllers/post-installation.js")
 const {  check_image, fetch_external_dockers } = require("../controllers/fetch.js")
 const { Service }  = require("./service.js") 
-const { spawnLog } = require("../controllers/logger.js")
+const { spawnLog, myStream } = require("../controllers/logger.js")
 
 var logger = store.logger
 // var docker = new Docker();   
@@ -94,6 +93,7 @@ export class Procedure {
                 error: null, 
                 stream: null,
                 fully_installed: false,
+                required_installed: false,
                 partial_install: false
             }
             d.status= status
@@ -316,9 +316,7 @@ export class Procedure {
 				})
                 $this.status.buildStream = logs
                 $this.status.building = building
-                let fully_installed = v.every((dependency)=>{
-                    return dependency
-                })
+                
                 let exists_any = $this.dependencies.some((dependency)=>{
                     
                     if (dependency && dependency.status){
@@ -327,18 +325,23 @@ export class Procedure {
                         return false
                     } 
                 })
-                
-                let exists_all = $this.dependencies.every((dependency)=>{
-                    if (dependency && dependency.status){
-                        return dependency.status.exists
+                let required_installed = $this.dependencies.every((dependency)=>{
+                    if (dependency && dependency.status && !dependency.optional ){
+                        return  dependency.status.exists
                     } else {
-                        return false
+                        return  true
+                    } 
+                })
+                let exists_all = $this.dependencies.every((dependency)=>{
+                    if (dependency && dependency.status ){
+                        return ( dependency.optional ? true : dependency.status.exists)
+                    } else {
+                        return ( dependency.optional ? true : false )
                     }
                 })
-               
+                $this.status.required_installed = required_installed
                 $this.status.fully_installed = exists_all
                 $this.status.partial_install = exists_any
-                // $this.status.fully_installed = fully_installed
 				resolve()
 			}).catch((err)=>{
 				store.logger.error(`${err} Error in checking target dependencies`)
@@ -419,8 +422,6 @@ export class Procedure {
                     
                     store.logger.info("Closing since it already exists as a stream obj %o", dependency.target)
                     dependency.streamObj.destroy()
-                    // dependency.streamObj.close()
-                    // dependency.streamObj.end()  
                     dependency.status.downloading = false
                     dependency.status.building = false
                 } catch(err){ 
@@ -551,7 +552,7 @@ export class Procedure {
                             store.logger.error(`ERROR ${error}`)
                             reject(error) 
                         }       
-                         
+                          
                         // $this.buildlog = spawnLog(stream, $this.logger)
                         stream.on("close", ()=>{ 
                             // store.logger.info("Completed download of %o", dependency.source)
@@ -696,9 +697,13 @@ export class Procedure {
         let objs = [] 
         let dependencies = this.dependencies
         this.status.building = true
-        if (params || params == 0){
+        if (Array.isArray(params) && params.length > 0){
+            dependencies = params.map((f)=>{
+                return $this.dependencies[f]
+            })
+        } else if ( ( params || params == 0 )  && !Array.isArray(params)){
             dependencies = [dependencies[params]]
-        }
+        } 
         try{
             dependencies.forEach((dependency_obj, i)=>{ 
                 dependency_obj.status.downloading = true

@@ -103,7 +103,11 @@
                                                 
                                                     v-model="editedItem[head.value]"
                                                     :items="variable.define_columns[head.value].options"
+                                                    :hint="`Select a pre-defined database`"
                                                 >
+                                                    <!-- <template v-if="variable.define_columns[head.value].optionPath" v-slot:item="{ item }">
+                                                        {{basename_path(item)}}
+                                                    </template> -->
 
                                                 </v-select>
                                                 
@@ -289,6 +293,9 @@ export default {
     //   },
     },
     methods: {
+        basename_path(patt){
+            return path.basename(patt)
+        },
         async importCsv(event){
             if (event){
                 try{

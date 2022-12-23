@@ -45,6 +45,13 @@
         </v-tooltip>
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
+                <v-icon medium color="secondary" v-on="on" class="configure mr-3 ml-3 " @click="buildModule(true)">$download</v-icon>
+            </template>
+            
+            Build Required
+        </v-tooltip>
+        <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
                 <v-icon v-on="on" medium color="indigo "  v-on:click="fetchRemoteCatalog(version.name)" style="text-align:right" class="configure ml-2 mr-3">$external-link-alt</v-icon>
             </template>
             Fetch Versions for Module
@@ -94,17 +101,7 @@
             responsive
         >
             <template v-slot:item.status.exists="{ item }">
-                <v-tooltip bottom>
-                    <template v-slot:activator="{ on }">
-                    <v-icon class=""  v-on="on" :color="(item.status.exists ? 'green ' : 'orange darken-1')" 
-                        x-small> {{ (item.status.exists  ? '$check' : '$times-circle'  )}}
-                    </v-icon>
-                    </template>
-                    
-                    Existence Status (Downloaded + Installed)
-                </v-tooltip>
-            </template>
-            <template v-slot:item.status.building="{ item }">
+                
                 <v-badge :dot="!item.status.progress" :content="( item.status.progress ? `${item.status.progress}%` : null)" v-if="item.status.building "  x-small color="info" >
                     <v-progress-circular x-small  bottom
                         indeterminate  
@@ -125,8 +122,27 @@
                     </template>
                     {{ ( item.status.error ? item.status.error : 'No Errors' ) }}
                 </v-tooltip> 
+                <v-tooltip v-else bottom>
+                    <template v-slot:activator="{ on }">
+                    <v-icon class=""  v-on="on" :color="(item.status.exists ? 'green ' : 'red darken-1')" 
+                        x-small> {{ (item.status.exists  ? '$check' : '$times-circle'  )}}
+                    </v-icon>
+                    </template>
+                    
+                    Existence Status (Downloaded + Installed)
+                </v-tooltip>
             </template>
-            
+            <template v-slot:item.optional="{ item }">
+                <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                    <v-icon class=""  v-on="on" :color="(!item.optional ? 'green' : 'orange lighten-1')" 
+                        x-small> {{ (!item.optional  ? '$check' : ''  )}}
+                    </v-icon>
+                    </template>
+                    
+                    This is {{!item.optional ? "not" : ""}} optional
+                </v-tooltip>
+            </template>
             <template v-slot:item.format="{ item }">
                 <v-tooltip v-if="item.format == 'file' || item.format == 'dir'" bottom>
                     <template v-slot:activator="{ on }">
@@ -343,6 +359,13 @@ export default {
                     class: "table-text"
                 },
                 {
+                    value: 'optional',
+                    text: "Required",
+                    sortable: false,
+                    align: "center",
+                    class: "table-text"
+                },
+                {
                     value: 'status.exists',
                     text: 'Exists',
                     align: "center",
@@ -352,11 +375,6 @@ export default {
                     value: 'build',
                     align: "center",
                     text: 'Install'
-                },
-                {
-                    value: 'status.building',
-                    align: "center",
-                    text: 'Building'
                 },
                 {
                     value: 'skip',
@@ -541,14 +559,22 @@ export default {
                 
             }) 
         },
-        async buildModule(){
+        async buildModule(requiredOnly){
             const $this = this
+            let indic = []
             let procedureIdx  = this.procedure
-            console.log(this.skips,"SKIP")
+            if (requiredOnly){
+                this.dependencies.map((f,i)=>{
+                    if(!f.optional){
+                        indic.push(i)
+                    }
+                })
+            }
             FileService.buildProcedure({
                 module: $this.moduleIdx,
                 catalog: $this.version.name,
                 procedure: procedureIdx,
+                dependency: indic,
                 skip: this.skips
             })
             .then((response)=>{

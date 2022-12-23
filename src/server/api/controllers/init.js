@@ -23,7 +23,7 @@ export async function docker_init(params){
 	}
 	return dockerObj  
 }  
- 
+   
 
 export async function init_dind(){  
 	try{  
@@ -34,7 +34,7 @@ export async function init_dind(){
 		let responseVolumes = await createVolumes([  
 			"basestack-docker-certs-ca", 
 			"basestack-docker-certs-client" 
-		])
+		])     
 		return   
 	} catch (err){
 		store.logger.error(`${err}, error in init procedure`)
@@ -67,14 +67,14 @@ export async function define_procedure(name, procedure){
 	})   
 }
 export async function import_configurations(){
-	try{
+	try{ 
 		let data = await readFile(store.system.configurationFile)
 		data = JSON.parse(data)
 		return data  
 	} catch (err){
 		store.logger.error("Could not import config file %o ", err) 
 		throw err
-	}
+	} 
 }
  
 export async function init_base_procedures(){
