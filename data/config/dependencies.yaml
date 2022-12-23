@@ -1,0 +1,70 @@
+- name: "conda"
+  type: "binary"
+  reference: 
+  description: "Anaconda, runnable on all OS types by versioning of software might be different by OS so be aware!"
+  installation:
+    win: #platform == "win"
+      - url: "https://repo.anaconda.com/archive/Anaconda3-2022.10-Windows-x86_64.exe"
+        archs: ["amd64"]
+        download: true
+        reference: "https://docs.anaconda.com/anaconda/install/windows/"
+        terminal: false
+        install_command: null
+    linux:  #platform == "linux"
+      - url: "https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh"
+        archs: ["amd64", "x86", "x64"]
+        download: false
+        reference: "https://docs.anaconda.com/anaconda/install/linux/"
+        terminal: true
+        install_command: [
+          "curl https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh | sh"
+        ]
+      - url: "https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-aarch64.sh"
+        archs: ["arm64"]
+        download: false
+        reference: "https://docs.anaconda.com/anaconda/install/linux/"
+        terminal: true
+        install_command: [
+          "curl https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-aarch64.sh | sh"
+        ]
+    darwin: #platform == "darwin (mac)"
+      - url: "https://repo.anaconda.com/archive/Anaconda3-2022.10-MacOSX-arm64.pkg"
+        archs: ["arm64", "m1"]
+        reference: "https://docs.anaconda.com/anaconda/install/mac-os/"
+        download: true
+        install_command: false
+        terminal: false
+      - url: "https://repo.anaconda.com/archive/Anaconda3-2022.10-MacOSX-x86_64.pkg"
+        archs: ["x64", "amd64", "x86"]
+        reference: "https://docs.anaconda.com/anaconda/install/mac-os/"
+        download: true
+        install_command: false
+        terminal: false
+- name: "docker"
+  type: "binary"
+  reference: ""
+  description: "Docker Package required to run all pipelines that use containerization. Also required for Nextflow"
+  installation:
+    win: #platform == "win"
+      - url: "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe"
+        archs: ["amd64"]
+        download: true
+        terminal: false
+        install_command: null
+    linux:  #platform == "linux"
+      - url: "https://get.docker.com/"
+        archs: ["amd64", "arm64", "x86"]
+        download: false
+        terminal: true
+        install_command: "curl -sSL https://get.docker.com/ | sh"
+    darwin: #platform == "darwin (mac)"
+      - url: "https://desktop.docker.com/mac/main/arm64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-arm64"
+        archs: ["arm64"]
+        download: true
+        install_command: false
+        terminal: false
+      - url: "https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-amd64"
+        archs: ["x64", "amd64"]
+        download: true
+        install_command: false
+        terminal: false
