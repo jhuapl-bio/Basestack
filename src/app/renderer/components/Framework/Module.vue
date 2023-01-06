@@ -1132,7 +1132,7 @@ export default {
       totalSpaceUsed: "0 Bytes",
       dry: false,
       installStatus: {},
-      setUser: (process.env.platform_os == 'linux' ? true : false),
+      setUser: (process.env.platform_os == 'linux' ? false : false),
       stored: {},
       custom_images: {},
       mini: true,
