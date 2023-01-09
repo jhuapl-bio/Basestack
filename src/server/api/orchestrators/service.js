@@ -828,12 +828,12 @@ export class Service {
         }
         
     }
-   
     
-    defineEnv(){
+    
+    defineEnv(){ 
         let env = []   
         let bind = []    
-        const $this = this;  
+        const $this = this;    
         let seenTargetTos = []  
         let defaultVariables = $this.config.variables  
         if (defaultVariables){   
@@ -867,42 +867,55 @@ export class Service {
                         env.push(`${key}=${selected_option}`)
                     }
                 }
-                if (selected_option.define && selected_option.source){
-                    for( let [key, value] of Object.entries(selected_option.define)){
-                        if (value){
-                            if (typeof value == 'object' && value.path){
-                                env.push(`${key}=${$this.reformatPath(value.target)}`)
-                            } else {
-                                env.push(`${key}=${value}`)
+                if ((selected_option.define || full_item.define) && selected_option.source){
+                    if (full_item.define){
+                        for( let [key, value] of Object.entries(full_item.define)){
+                            if (value){
+                                if (typeof value == 'object' && value.path){
+                                    env.push(`${key}=${$this.reformatPath(value.target)}`)
+                                } else {
+                                    env.push(`${key}=${value}`)
+                                }
+                                
                             }
-                            
+                        }  
+                    } else {
+                        for( let [key, value] of Object.entries(selected_option.define)){
+                            if (value){
+                                if (typeof value == 'object' && value.path){
+                                    env.push(`${key}=${$this.reformatPath(value.target)}`)
+                                } else {
+                                    env.push(`${key}=${value}`)
+                                }
+                                
+                            } 
                         }
                     }
                     
                 }  
-                if (full_item.define && full_item.source){
+                // if (full_item.define && full_item.source){
                     
-                    for( let [key, value] of Object.entries(full_item.define)){
-                        if (value){
-                            if (typeof value == 'object' && value.path){
-                                env.push(`${key}=${$this.reformatPath(value.target)}`)
-                            } else {
-                                env.push(`${key}=${value}`)
-                            }
+                //     for( let [key, value] of Object.entries(full_item.define)){
+                //         if (value){
+                //             if (typeof value == 'object' && value.path){
+                //                 env.push(`${key}=${$this.reformatPath(value.target)}`)
+                //             } else {
+                //                 env.push(`${key}=${value}`)
+                //             }
                             
-                        }
-                    }  
-                }  
+                //         }
+                //     }  
+                // }  
                 
                 
-              
+               
             } 
-        }  
+        }    
            
         this.env.push(...env)
         return 
     }  
-
+ 
     async start(params, wait){  
 		const $this = this
         this.status.error = null
@@ -926,21 +939,21 @@ export class Service {
                     if (cmd){  
                         options.Cmd = $this.config.command
                     } 
-                    let promises = [];  
-                    let promisesInside = []
-                    let values = [] 
+                    let promises = [];    
+                    let promisesInside =  []  
+                    let values = []    
                     options = cloneDeep($this.updateConfig(options))
                     /////////////////////////////////////////////////
                     let custom_variables = params.variables 
-                    let defaultVariables = {}     
-                    let seenTargetTos = []    
-                    let seenTargetFrom = []     
-                         
-                    // $this.config.variables = defaultVariables  
-                    let envs = {}   
-                    // $this.setTarget()
+                    let defaultVariables = {}      
+                    let seenTargetTos = []       
+                    let seenTargetFrom = []      
+                              
+                    // $this.config.variable s = defaultVariables  
+                    let envs = {}       
+                    // $this.setTarget()  
                     defaultVariables = $this.config.variables 
-                    if ($this.config.serve ){      
+                    if ($this.config.serve  ){      
                         let variable_port = defaultVariables[$this.config.serve] 
                         options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
                     }   
@@ -949,7 +962,7 @@ export class Service {
                     
                     let mounts = await $this.defineReads()
                     
-                    store.logger.info("define reads done")
+                    store.logger.info("define reads done  ")
                     // await $this.defineSet() 
                     
                     store.logger.info("define set done")

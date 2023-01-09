@@ -6,21 +6,21 @@
 
 import { store } from "./config/store/index.js"
 
-let { Server } = require("./serverClass.js") 
+let { Server } = require("./serverClass.js")  
 
 export async function create_server(port){ 
     return new Promise((resolve, reject)=>{ 
-        
+           
         if (store.server ){
-            try{
-                store.server.close()
+            try{ 
+                store.server.close() 
             } catch (err){
                 console.error(err)
             }
         }        
         let server = new Server((port ? port : process.env.PORT_SERVER))
         store.server = server
-        
+         
         server.server_configuration().then((response)=>{ /// define configuration setup based on the meta.yml file
             store.logger.info("Server config done")
             server.initiate_cache().catch((err)=>{ // create  a cache on teh server to remember variables and configs

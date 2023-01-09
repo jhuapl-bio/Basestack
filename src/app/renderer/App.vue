@@ -177,12 +177,12 @@
           <v-btn color="cyan" @click="selected == 'defaults'; tab=1">Library</v-btn>
           to import your first one
         </v-alert>
-        <v-btn @click="downloadDependency(0)"  >
+        <!-- <v-btn @click="downloadDependency(0)"  >
           Conda
           <v-icon color="red" medium>
             $download
           </v-icon>
-        </v-btn>
+        </v-btn> -->
         <v-row  v-if="!runningServer">
           <v-alert type="warning" shaped icon="$exclamation-triangle"
             text > Server is not Running at specified port: {{selectedPort}}
