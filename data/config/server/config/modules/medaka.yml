@@ -14,7 +14,7 @@
   tooltip: "Run Medaka Toolkit"
   procedures:
     - name: medaka_consensus #Top level is the left-hand selection of the menu and the major module to install 
-      title: "Medaka Consensus"
+      title: "Medaka Consensus Generation"
       icon: "magic"
       module: True
       init: false 
@@ -29,7 +29,7 @@
         - "genomics"
       variables:
         ref:
-          label: "Reference to align against"
+          label: "Reference file to align and make consensuses from"
           hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
           element: "file" 
           bind: 
