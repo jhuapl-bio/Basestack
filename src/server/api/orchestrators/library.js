@@ -27,6 +27,7 @@ export  class Library {
             get: function(){
                 let base = {}
                 let seen = {}
+                
                 for (let [key,value] of Object.entries(this.remotes)){
                     if (!base[key]){
                         base[key] = {
@@ -37,16 +38,10 @@ export  class Library {
                     value.forEach((choice)=>{
                         let idx = base[key].choices.findIndex((f)=>{
                             return f.version == choice.version
-                        })
-                        
-                        // if (idx == -1){
-                            base[key].choices.push(choice)
-                        // } else {
-                        //     base[key].choices[idx] = choice
-                        // }
+                        })                        
+                        base[key].choices.push(choice)
                     })
                 }
-                
                 for (let [key,value] of Object.entries($this.locals)){
                     if (!base[key]){
                         base[key] = {
@@ -59,14 +54,7 @@ export  class Library {
                         let idx = base[key].choices.findIndex((f)=>{
                             return f.version == choice.version
                         }) 
-                        
-                        // if (idx == -1){
-                            base[key].choices.push(choice)
-                        // } else {
-                            
-                            // choice.imported = true
-                            // base[key].choices[idx] = choice 
-                        // }
+                        base[key].choices.push(choice)
                     })
                 }
                 for (let [key,value] of Object.entries($this.imported)){
@@ -75,20 +63,16 @@ export  class Library {
                             choices: []
                         }
                     }
-                    seen[key] = 1
+                    seen[key] = 1 
                     value.forEach((choice)=>{
                         let idx = base[key].choices.findIndex((f)=>{
                             return f.version == choice.version
-                        })
-                        
-                        // if (idx == -1){
-                            base[key].choices.push(choice)
-                        // } else {
-                        //     base[key].choices[idx] = choice
-                        // }  
+                        })                        
+                        base[key].choices.push(choice)
                     })   
                     
                 } 
+                
                 
                 
                 
@@ -104,9 +88,7 @@ export  class Library {
                         let idx = base[key].choices.findIndex((f)=>{
                             return f.version == choice.version
                         })
-                        // if (idx == -1){ 
-                            base[key].choices.push(choice)
-                        // }  
+                        base[key].choices.push(choice)
                     })
                     
                 }
@@ -127,15 +109,26 @@ export  class Library {
                     base[key].choices = base[key].choices.map((f,i)=>{
                         f.idx = i
                         return f
-                    }) 
+                    })  
                 }
                 for (let [name, module] of Object.entries(seen)){
                     const $this = this
                     Object.defineProperty(base[name], "latest", {
                         enumerable: true,   
                         get: function(){
+                            
                             let sorted  = base[name].choices.sort((a,b)=>{
                                 b.version - a.version
+                            })
+                            sorted = sorted.sort((a,b)=>{
+                                
+                                if (a.remote || a.imported) {
+                                    return -1;
+                                }
+                                if ( b.remote){
+                                    return 1;
+                                }
+                                return 0;
                             })
                             return sorted[0]
                             
@@ -154,10 +147,7 @@ export  class Library {
                         enumerable: true,   
                         get: function(){
                             let base2 = $this.getIndexVersion(name)
-                            // for (let [key,value] of Object.entries(base[name].choices)){
-                            //     base2[key] = 
-                                
-                            // }
+                            
                             return base2
             
                         }
@@ -400,16 +390,15 @@ export  class Library {
         const $this = this;
         // let modules = await fetch_external_config(target)
         let modules = await fetch_external_yamls()
-        // modules = parseConfigVariables(JSON.stringify(modules), store.system)
-        console.log(modules,"..............................")
         modules.forEach((module)=>{
-            if (module ){
-                this.addRemote(module, module.name)
+            if (module && module.length > 0){
+                module.forEach((f)=>{
+                    this.addRemote(f, f.name)    
+                })
             } else {  
                 store.logger.info("No modules found at remote location")
             }  
         })
-        console.log($this.remotes)
         return $this.remotes
        
         

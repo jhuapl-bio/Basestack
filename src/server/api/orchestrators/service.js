@@ -939,7 +939,7 @@ export class Service {
                     if (cmd){  
                         options.Cmd = $this.config.command
                     } 
-                    let promises = [];    
+                    let promises = [];       
                     let promisesInside =  []  
                     let values = []    
                     options = cloneDeep($this.updateConfig(options))

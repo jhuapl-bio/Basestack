@@ -292,9 +292,10 @@ export async function getRemoteConfigurations(url){
 
 export async function fetch_external_yamls(key){
 	let url = `https://api.github.com/repos/jhuapl-bio/Basestack/git/trees/main?recursive=1`
-	try{
-		let modules = []
-		let promises = []
+	try{ 
+		let modules = [] 
+		let promises = [] 
+		
 		let json = await axios.get(url)
 		if (json  && typeof json == 'object' && json.data.tree){
 			json.data.tree.filter((f)=>{
@@ -306,17 +307,15 @@ export async function fetch_external_yamls(key){
 				 
 			})
 		}
-		Promise.allSettled(promises).then((f)=>{
-			modules = f.filter((entry)=>{
-				return entry.status == 'fulfilled'
-			}).map((entry)=>{
-				return YAML.load(entry.value.data)
-			})
-			return modules
-		}).catch((err)=>{
-			store.logger.error(err)
-			throw err
+		let mods = await Promise.allSettled(promises)
+		modules = mods.filter((entry)=>{
+			return entry.status == 'fulfilled'
+		}).map((entry)=>{
+			
+			let d = YAML.load(entry.value.data)
+			return d
 		})
+		return modules
 	} catch(err){
 		store.logger.error(err)
 		throw err
