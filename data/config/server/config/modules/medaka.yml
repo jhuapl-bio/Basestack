@@ -1,7 +1,7 @@
 - name: medaka
-  title: "Medaka Local"
+  title: "Medaka"
   icon: "magic"
-  version: 1.0 
+  version: 1.1
   schema_version: 1
   basestack_released: 2.0
   description: "A versatile pairwise aligner for genomic and spliced nucleotide sequences"
@@ -14,7 +14,7 @@
   tooltip: "Run Medaka Toolkit"
   procedures:
     - name: medaka_consensus #Top level is the left-hand selection of the menu and the major module to install 
-      title: "Medaka Consensus Generation"
+      title: "Medaka Consensus Making"
       icon: "magic"
       module: True
       init: false 
@@ -43,12 +43,12 @@
                 value: ".*(fasta|fa|fna)$"
           target: "/opt/refile/<<basename(%{variables.ref.source})>>"
         output:
-          label: "Consensu FASTA File"
-          type: file
+          label: "Consensus FASTA File location"
+          type: directory
           pattern: "fasta"
           output: true
-          source: "<<directory(%{variables.input.source})>>/medaka/"
-          path:  "<<directory(%{variables.input.source})>>/medaka/"
+          source: "%{variables.input.bind.from}/medaka"
+          path:   "%{variables.input.bind.from}/medaka"
         input:
           label: "Input Sequencing Data"
           hint: "Must be in Fastq format. This is(are) the input sequencing file(s)"
@@ -111,12 +111,6 @@
           target: False
           source: False
           element: "checkbox"
-          # append: 
-          #   command: "gzip -d %{variables.input.target}; "
-          #   position: "start"
-          #   placement: 2
-          #   services: 
-          #     - 0
       services:
         - name: medaka_consensus
           label: "Medaka Consensus"

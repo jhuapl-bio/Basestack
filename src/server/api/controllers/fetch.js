@@ -227,10 +227,10 @@ export async function fetch_external_config_target(key,catalog){
 		let json =  await axios.get(`${url}`)
 		logger.info("returned json: %s", url)
 		try{
-			json.data.data.map((d)=>{
+			json.data.data.map((d)=>{ 
 				d.remote = true
-				d.local = false
-			})
+				d.local = false 
+			}) 
 			return json.data.data
 		} catch(err){
 			logger.error(`${err} error in fetching external url____________`)
@@ -249,7 +249,7 @@ export  function fetch_external_config(key){
 		axios.get(`${url}`).then((json)=>{
 			logger.info("returned json: %s", url)
 			json.data.data.map((d)=>{
-				d.remote = true 
+				d.remote = true  
 				d.local = false
 			})
 			resolve(json.data.data)
@@ -259,7 +259,7 @@ export  function fetch_external_config(key){
 		})
 		
 	}) 
-	
+	 
 }
 
 
@@ -286,7 +286,7 @@ export async function getRemoteConfigurations(url){
 	} catch(err){
 		logger.error(`${err} error in fetching external url`)
 		throw err  
-	}   
+	}    
 }
  
 

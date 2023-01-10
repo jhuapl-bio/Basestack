@@ -60,14 +60,14 @@ export  class Configuration {     // Make the main procedure class for configura
             } catch(err){
                 console.error(err)
 
-            }
+            } 
         }
-    }
+    }  
     setDefaultVariables(){
         for (let [key, custom_variable] of Object.entries(this.variables)){ // loop through variables
             if (!custom_variable.option && custom_variable.options){ // If no option selected for multi option variable, set to first index
                 custom_variable.option = 0
-            } 
+            }  
             if (custom_variable.option >=0 && !custom_variable.source){
                 if (typeof custom_variable.options[custom_variable.option] == 'object'){ // if the variable has multiple choices of elements, set to the options source as source for variable
                     custom_variable.source = custom_variable.options[custom_variable.option].source
@@ -102,7 +102,7 @@ export  class Configuration {     // Make the main procedure class for configura
                     this.mergeInputs(custom_variable, `${path}${(path !== '' ? "." : "")}${key}`) // convert the store stored value for a variable to the new source
                 } else {
                     if (custom_variable  ){ 
-                        
+                         
                         nestedProperty.set($this, `${path}.${key}`, custom_variable)
                     }
                 }
@@ -160,6 +160,7 @@ export  class Configuration {     // Make the main procedure class for configura
         let variable = params.variable
         let value = params.src
         let target = variable
+        const $this = this;
         
         return new Promise ((resolve, reject)=>{
             let data = {}
@@ -170,9 +171,11 @@ export  class Configuration {     // Make the main procedure class for configura
                 for (let [key, vari] of Object.entries(variables)){
                     try{
 
+
                         // IF an option is not set for a multi-option render variable, set to first one 
                         if (vari.options && vari.option >=0 ){
                             vari = vari.optionValue
+                            variables[key].bind = vari.bind
                         }
                         // if a variable should be changed based on the current one changing, do so here
                         if (vari && vari.update_on && vari.update_on.depends && vari.update_on.depends.indexOf(variable) > -1){
@@ -294,7 +297,12 @@ export  class Configuration {     // Make the main procedure class for configura
                                 
                             if ($this.variables[res.value.key].optionValue){ // If there is a multi choice option for variable, set source 
                                 $this.variables[res.value.key].optionValue = res.value.value
+                                 Object.keys(this.variables[res.value.key].optionValue).forEach((key)=>{
+                                    $this.variables[key] = $this.variables[res.value.key].optionValue[key]
+
+                                 })
                             }
+                           
                             
                         } catch(err){
                             console.error(err)

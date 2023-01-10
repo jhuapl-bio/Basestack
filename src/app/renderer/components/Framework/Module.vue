@@ -985,6 +985,7 @@ export default {
       this.procedure.updates(value).then((f)=>{
         if (f){
           f.forEach((changed)=>{
+
             if ($this.procedure[changed.key]){
               $this.procedure.variables[changed.key] = changed.value.source
             }
@@ -1247,6 +1248,10 @@ export default {
         this.services_selected = newValue.services
         this.loadProcedure(newValue)
       }
+    },
+    selectedVersion(newVersion){
+      this.selectedProcedure = newVersion.procedures[0]
+      this.defineProcedure()
     }
 
   },

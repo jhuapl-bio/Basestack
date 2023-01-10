@@ -131,7 +131,7 @@ export default new Vuex.Store({
         commit("clearAll")
         resolve()
       })      
-    },
+    }, 
     clearCatalog ({commit}, params){
       commit("clearCatalog", params)     
     }

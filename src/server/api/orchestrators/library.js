@@ -102,9 +102,9 @@ export  class Library {
                             b.version = 0
                         }
                         return b.version - a.version
-                    }) 
-                       
-                }
+                    })  
+                         
+                } 
                 for (let [key, value] of Object.entries(base)  ){
                     base[key].choices = base[key].choices.map((f,i)=>{
                         f.idx = i
@@ -120,16 +120,17 @@ export  class Library {
                             let sorted  = base[name].choices.sort((a,b)=>{
                                 b.version - a.version
                             })
-                            sorted = sorted.sort((a,b)=>{
-                                
-                                if (a.remote || a.imported) {
-                                    return -1;
-                                }
-                                if ( b.remote){
-                                    return 1;
-                                }
-                                return 0;
-                            })
+                            // if (process.env.NODE_ENV == "production"){
+                            //     sorted = sorted.sort((a,b)=>{
+                            //         if (a.remote || a.imported) {
+                            //             return -1;
+                            //         }
+                            //         if ( b.remote){
+                            //             return 1;
+                            //         }
+                            //         return 0;
+                            //     })
+                            // } 
                             return sorted[0]
                             
                         }
