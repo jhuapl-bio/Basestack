@@ -90,7 +90,7 @@ router.get("/docker/status/get", (req,res,next)=>{
 		fetch_docker_stats().then((response)=>{ // Run the dockerode api to get the basic status of docker
 			res.status(200).json({status: 200, data: response, message: "Docker is running" });
 		}).catch((Err)=>{
-			res.status(419).send({status: 419, message: error_alert(Err) });
+			res.status(419).send({status: 419, message: error_alert(Err) }); 
 		})
 	} catch(err){
 		logger.error(`Error in docker status fetch ${err}`)
@@ -236,7 +236,7 @@ router.get("/procedure/export/config/:catalog/:module/:procedure/", (req,res,nex
 		if (config && config.mergedConfig){
 			console.log("found running config")
 			res.status(200).json({status: 200, message: "config", data: config.mergedConfig  });
-		} else  {
+		} else  { 
 			console.log("no running config available, getting base procedure config")
 			config = nestedProperty.get(store, `catalog.${req.params.catalog}.modules.${req.params.module}.procedures.${req.params.procedure}`)
 			if (!config){
@@ -253,7 +253,7 @@ router.get("/procedure/export/config/:catalog/:module/:procedure/", (req,res,nex
 //USED
 router.post("/procedure/save/config", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
-		try {
+		try { 
 			let token = req.params.token
 			if (!req.body.token){
 				token = "development"
@@ -351,10 +351,10 @@ router.get("/library/get", (req,res,next)=>{ // build workflow according to name
 		let data = [] 
 		for (let [name, value] of Object.entries(cloneDeep(catalog))){
 			if (value.status.installed){
-				delete value['interval']
-				let { modules, ...returnable } = value;
+				delete value['interval']  
+				let { modules, ...returnable } = value; 
 				data.push(returnable)
-			}
+			} 
 		}
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
 	} catch(err2){
@@ -367,6 +367,7 @@ router.get("/library/get", (req,res,next)=>{ // build workflow according to name
 //Used
 router.get("/modules/imported/all", (req,res,next)=>{ // build workflow according to name and index
 	try {
+		
 		let data =  store.library.getSortedImported()
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
 	} catch(err2){ 
@@ -523,8 +524,9 @@ router.get("/procedures/get/:catalog/:token", (req,res,next)=>{ // build workflo
 	}	 
 })
 //Used
-router.get("/procedure/get/:catalog/:procedure/:token", (req,res,next)=>{ // build workflow according to name and index
+router.get("/procedure/get/:catalog/:version/:procedure/:token", (req,res,next)=>{ // build workflow according to name and index
 	try { 
+		
 		let procedure = store.library.catalog[req.params.catalog].procedures[req.params.procedure]
 		let data = []   
 		let token = req.params.token
@@ -532,7 +534,7 @@ router.get("/procedure/get/:catalog/:procedure/:token", (req,res,next)=>{ // bui
 			token = 'development'
 		}
 		let config = procedure.config
-		let returnable =  {
+		let returnable =  { 
 			status: procedure.status,
 			dependencies: [],
 			services: [], 
@@ -758,7 +760,7 @@ router.post("/module/save/text", (req,res,next)=>{ // build workflow according t
 router.post("/module/create", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
 		try {
-			let library = store.library.imported
+			let library = store.library.all
 			let data = library[req.body.catalog]
 			let index = req.body.index
 			let module = data.choices[index]
@@ -772,7 +774,7 @@ router.post("/module/create", (req,res,next)=>{ // build workflow according to n
 			} catch (err){
 				store.logger.error("err in cleaning up already loaded catalog: %s", err)
 			} 
-			let modl = store.library.create_module(module)
+			let modl = await store.library.create_module(module)
 			store.library.catalog[module.name] = modl
 			logger.info("Module(s) copied %s", req.body.source)
 			res.status(200).json({status: 200, message: `Completed module copy`, data: '' });

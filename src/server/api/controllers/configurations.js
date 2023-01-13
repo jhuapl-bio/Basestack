@@ -55,13 +55,13 @@ export async function import_cfgs(module, type){
                             promises_files.push(readFile(path.join( dir.path,  module.filename )    )     )
                             files_marked.push(path.join( dir.path,  module.filename )    )
                         } else {  
-                            promises_files.push(readFile( dir )     )
+                            promises_files.push(readFile( dir )     ) 
                             
                             files_marked.push(( dir  ))
                         }
                     } catch(err){
-                        console.error(err)
-                    }
+                        console.error(err) 
+                    } 
                 })
             })
         } 
@@ -76,6 +76,7 @@ export async function import_cfgs(module, type){
                     if(config){
                         return_data.push(config)
                     }
+                    
                 } catch (err_2){ 
                     store.logger.error(`______Init YAML/JSON ERROR for ${result.value}___________`)
                     store.logger.error(err_2)
@@ -131,6 +132,7 @@ export const  define_base = async function(){
         defaults.forEach((item)=>{ 
             promises.push(import_cfgs(item))
         })
+        
         results_default = await Promise.allSettled(promises)
         results_default.forEach((result)=>{
             if (result.status == 'fulfilled'){ 
@@ -140,7 +142,6 @@ export const  define_base = async function(){
                         let idx = store.default.findIndex((f)=>{
                             return f.name == config.name
                         }) 
-                        store.logger.info("%s idx %s",conf,idx)
                         if (idx == -1){
                             store.default.push(conf)
                         } else {
@@ -155,7 +156,6 @@ export const  define_base = async function(){
        
         return 
     } catch(err){
-        console.error(err)
         store.logger.error(`${err}, error in defining  base environment of static and workflow modules`)
         throw err
     }

@@ -17,6 +17,9 @@ const { getFiles, readFile,  writeFile, writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 const { spawn } = require("child_process")
 const axios = require("axios")
+if (process.env.GH_TOKEN){
+	axios.defaults.headers.common["Authorization"] = `Bearer ${process.env.GH_TOKEN}`
+}
 const YAML = require("js-yaml") 
 const { parseConfigVariables } = require("../../../shared/definitions.js")
 
@@ -291,33 +294,53 @@ export async function getRemoteConfigurations(url){
  
 
 export async function fetch_external_yamls(key){
-	let url = `https://api.github.com/repos/jhuapl-bio/Basestack/git/trees/main?recursive=1`
+	
 	try{ 
+		
+		let base = 'data/config/server/config/modules'
 		let modules = [] 
 		let promises = [] 
+		let url = `https://api.github.com/repos/jhuapl-bio/Basestack/git/trees/main?recursive=1`
 		
-		let json = await axios.get(url)
+		let json = await axios.get(url) 
 		if (json  && typeof json == 'object' && json.data.tree){
+			
 			json.data.tree.filter((f)=>{
-				return path.dirname(f.path) == 'data/config/server/config/modules'
+				if (key){
+					return path.dirname(f.path) == base 
+
+				} else { 
+					return path.dirname(f.path) == base
+				}
 			})
 			.forEach(async (entry,i)=>{ 
 					let ur=`https://raw.githubusercontent.com/jhuapl-bio/Basestack/main/${entry.path}`
 					promises.push(axios.get(ur))
-				 
-			})
+				
+			}) 
 		}
+		
+		
+		
 		let mods = await Promise.allSettled(promises)
-		modules = mods.filter((entry)=>{
+		mods.filter((entry)=>{
 			return entry.status == 'fulfilled'
-		}).map((entry)=>{
 			
-			let d = YAML.load(entry.value.data)
-			return d
+		}).map((entry)=>{
+			let parsed = parseConfigVariables(entry.value.data, store.system) 
+			parsed.forEach((mod)=>{
+				modules.push(mod)
+			})
 		})
+		if (key){{ 
+			modules = modules.filter((f)=>{
+				return f.name == key
+			})
+		}}
 		return modules
 	} catch(err){
 		store.logger.error(err)
+		// store.logger.error("fail")
 		throw err
 	}
 

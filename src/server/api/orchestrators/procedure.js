@@ -121,8 +121,8 @@ export class Procedure {
 
         this.interval = {
             checking: false, 
-            interval: this.create_interval() 
         } 
+        this.create_interval() 
         this.services_config.forEach((service)=>{
             this.service_steps[service] = false
         }) 
@@ -171,7 +171,7 @@ export class Procedure {
        
     }
     async initServices(token){
-        this.services_config.forEach((service, i)=>{
+        this.services_config.forEach((service, i)=>{ 
             let service_obj = new Service(service)
             service_obj.setOptions()
             
@@ -179,7 +179,10 @@ export class Procedure {
         })
         return
     }
-
+    cleanup(){
+        clearInterval(this.interval.interval)
+        return 
+    }
 
 
     async create_interval (){ 
@@ -196,9 +199,7 @@ export class Procedure {
                 })
             }
         }, 1500)
-
-
-        return interval
+        this.interval.interval = interval 
 
     }
     async define_services(){

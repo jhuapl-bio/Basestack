@@ -55,6 +55,7 @@ export function define_module(key, module){
 }
 export async function define_procedure(name, procedure){
 	return new Promise(function(resolve,reject){
+		console.log(name, procedure)
 		var  procedure_obj = new Procedure (
 			name, 
 			procedure 
@@ -83,7 +84,7 @@ export async function init_base_procedures(){
 		let promises = []
 		let returned = await create_procedure(procedures_default)
 		if (returned){
-			returned.forEach((value)=>{
+			returned.forEach((value)=>{ 
 				store.procedures[value.name]= value
 			})
 		}
@@ -92,7 +93,7 @@ export async function init_base_procedures(){
 		logger.error("%s %o", "error in init procedures", err)  
 		throw err 
 	}  
-}
+} 
 
 export function create_service(key, service){
 	try{    
@@ -126,31 +127,31 @@ export async function create_procedure(procedures_default){
 		logger.error("%s %o", "error in init procedures", err)  
 		throw err 
 	}      
-}    
+}     
 export async function init_base_services(){      
 		// for (let [key, service] of store.config.services.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
 		// 	try{   
 		// 	} catch(err){   
 		// 		logger.error("%o error in defining service %s", err, key)
 		// 	}
-		// }
+		// } 
 		// return 
 }
-
-export async function init_base_modules(){ 
+  
+export async function init_base_modules(){  
 	try{ 
 		store.logger.info("Initiating status of modules and meta in fetch.........................") 
-		
+		  
 		for (let [key, module] of store.config.modules.entries()) { //Loop through all modules and their respective services. Many services can be a part of modules
 			store.library.addLocal(module, module.name)
-		}
+		} 
 
 		  
 		return 
 	} catch(err){
 		store.ogger.error("%s %o", "error in init modules", err)
 		throw err  
-	} 
+	}  
 }     
    
 export async function init_modules(){    
@@ -158,10 +159,9 @@ export async function init_modules(){
 		store.logger.info("Initiating catalog modules .........................",">")
 		for (let [key, module] of Object.entries(store.library.all)) { //Loop through all modules and their respective services. Many services can be a part of modules
 			try{ 
-				if (module.imported){
-					// console.log(key,"<<<<<<<")
+				if (module){
 					let latest = store.library.all[key].latest
-					let modl = store.library.create_module(latest)			
+					store.library.create_module(latest)			
 				}		 
 			} catch(err){ 
 				store.logger.error("%s error in creating module %s", err, key)

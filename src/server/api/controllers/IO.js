@@ -679,18 +679,32 @@ export async function archive(filepath, gzip){
 
 export async function writeFile(filepath, content){
 	return new Promise((resolve, reject)=>{
-			const directory = path.dirname(filepath) 
-			mkdirp(directory).then(response=>{
-				fs.writeFile(filepath, content,(errFile)=>{
-					if (errFile){
-						store.logger.error("Error in writing file... %o", errFile)
-						reject(errFile)   
-					}
-					resolve("Success in writingfile")
-				})
-			}).catch((errmkdrir)=>{
-				store.logger.error(errmkdrir); reject(errmkdrir)
-			})	
+			const directory = path.dirname(filepath) ;
+			(async function(){
+				try{
+					await fs.rmSync(filepath, { recursive: true, force: true });
+				} catch(err) {
+					store.logger.info(err)
+				} finally{
+					mkdirp(directory).then(response=>{
+						fs.writeFile(filepath, content,(errFile)=>{
+							if (errFile){
+								store.logger.error("Error in writing file... %o", errFile)
+								reject(errFile)   
+							}
+							resolve("Success in writingfile")
+						})
+					}).catch((errmkdrir)=>{
+						store.logger.error(errmkdrir);
+						reject(errmkdrir)
+					})
+				}
+				
+			})().catch((err)=>{
+				reject(err)
+			})
+			
+				 		 	
 	})
 }
 export async function writeFolder(directory){

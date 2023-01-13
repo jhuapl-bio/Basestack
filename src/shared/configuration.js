@@ -297,10 +297,10 @@ export  class Configuration {     // Make the main procedure class for configura
                                 
                             if ($this.variables[res.value.key].optionValue){ // If there is a multi choice option for variable, set source 
                                 $this.variables[res.value.key].optionValue = res.value.value
-                                 Object.keys(this.variables[res.value.key].optionValue).forEach((key)=>{
-                                    $this.variables[key] = $this.variables[res.value.key].optionValue[key]
+                                //  Object.keys(this.variables[res.value.key].optionValue).forEach((key)=>{
+                                //     $this.variables[key] = $this.variables[res.value.key].optionValue[key]
 
-                                 })
+                                //  })
                             }
                            
                             

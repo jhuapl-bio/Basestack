@@ -615,7 +615,7 @@ export class Service {
                                 )
                                 
                                 )
-                            }  
+                            }   
                             
                             seenTargetTos.push(to)
                         } 
@@ -946,8 +946,6 @@ export class Service {
                     /////////////////////////////////////////////////
                     let custom_variables = params.variables 
                     let defaultVariables = {}      
-                    let seenTargetTos = []       
-                    let seenTargetFrom = []      
                               
                     // $this.config.variable s = defaultVariables  
                     let envs = {}       

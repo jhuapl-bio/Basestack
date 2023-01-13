@@ -352,7 +352,7 @@ export default {
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
-			selected: 'procedures',
+			selected: 'defaults',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 
