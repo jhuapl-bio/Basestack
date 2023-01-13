@@ -30,7 +30,7 @@
       <v-autocomplete 
         v-model="selectedVersion"
         :items="libraryVersions" 
-        @change="updateStagedVersion($event)"
+        @change="updateStagedVersion"
         item-text="version"
         item-value="idx"
         clearable dense
@@ -40,9 +40,9 @@
         :return-object="true"
         single-line
       >
-        <template v-slot:selection="{ item }">
-            <v-list-item-title >{{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}</v-list-item-title>
-            <v-list-item-subtitle>v{{ item.version }}</v-list-item-subtitle>
+        <template v-slot:selection="{  }">
+            <v-list-item-title >{{ ( selectedVersion.version != latest ? "Not Latest" : 'Latest' ) }}  {{ selectedVersion.remote   ? "Remote" : "Local"}}</v-list-item-title>
+            <v-list-item-subtitle>v{{ selectedVersion.version }}</v-list-item-subtitle>
         </template>
         <template v-slot:item="{ item }">
           <v-list-item-avatar
@@ -53,8 +53,8 @@
             </v-icon>
           </v-list-item-avatar>
           <v-list-item-content>
-            <v-list-item-title >{{`v${item.version}`}}, {{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}</v-list-item-title>
-            <v-list-item-subtitle v-text="(!item.imported && !item.local ? 'Not imported from remote or not pre-packaged' : ( item.imported && !item.local ? 'Imported from remote database' : 'Pre-packaged default with Basestack' )  )"></v-list-item-subtitle>
+            <v-list-item-title > {{`v${item.version}`}}, {{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}</v-list-item-title>
+            <v-list-item-subtitle v-text="( item.imported && item.local ? 'Imported from remote and not base version' : ( item.remote ? 'Imported from REMOTE database, not downloaded' : 'Pre-packaged default with Basestack' )  )"></v-list-item-subtitle>
           </v-list-item-content>
           <v-list-item-action>
             <v-list-item-subtitle v-if="item.local">
@@ -623,6 +623,13 @@ export default {
         console.error(err)
       }
     }
+    if (this.intervalFetchRemote){
+      try{
+        clearInterval(this.intervalFetchRemote)
+      } catch(err){
+        console.error(err)
+      }
+    }
   },
   methods: {
     setProcedure(event){
@@ -751,6 +758,7 @@ export default {
     async getInstallStatus(){
       FileService.getProcedure({
         procedure: this.procedureIdx, 
+        version: this.selected_version_index,
         catalog: this.selectedVersion.name,
         token: this.$store.token
       }).then((f)=>{
@@ -763,27 +771,22 @@ export default {
           
       }) 
     },
-    async fetchRemoteCatalog(name){
+    async fetchRemoteCatalog(name, ignore){
            
         const $this = this
         FileService.fetchRemoteCatalog('stagedModules', name).then((f)=>{
-          this.getLibrary().then((f)=>{
-            let idx2 = this.selectedVersion.procedures.findIndex((f,i)=>{
-              return f.name == this.selectedProcedure.name
-            })
-            
-          }).catch((err)=>{
-            console.error(err)
-          })
           
         })
         .catch((err)=>{
+          if (!ignore){
             this.$swal.fire({
                 position: 'center',
                 icon: 'error',
                 showConfirmButton:true,
                 title: err.response.data.message
             })
+          }
+            
             
         }) 
     },
@@ -793,13 +796,16 @@ export default {
         let libraryVersions = response.data.data
         let idx = libraryVersions.findIndex((f,i)=>{
           return f.version == this.selectedVersion.version
-        })
-        if (idx != null && idx !== -1 && this.selectedVersion){
-          this.selectedVersion = libraryVersions[idx]
+        }) 
+        // if (idx != null && idx !== -1 && this.selectedVersion){
+        //   this.selectedVersion = libraryVersions[idx]
           
-          this.updates +=1
-        }
+        //   this.updates +=1
+        // }
+        console.log(libraryVersions)
+        console.log(this.selectedVersion.remote, this.selectedVersion.local, this.selected_version_index)
         this.libraryVersions = libraryVersions
+        // this.$set(this, 'libraryVersions', libraryVersions)
       }catch (Err){
         console.error(Err)
       }
@@ -1033,10 +1039,11 @@ export default {
     },
     updateStagedVersion(event){
       let index = 0
+      this.changeVersion()
     },
     async changeVersion(){
       await FileService.createModule({
-        index: this.selectedVersion.idx,
+        index: this.selected_version_index,
         catalog: this.name
       }).then((response)=>{
       }).catch((error)=>{
@@ -1165,6 +1172,7 @@ export default {
 
       },
       interval: null,
+      intervalFetchRemote: {},
       count:0,
       tab:0,
       defaultModule: 1,
@@ -1251,6 +1259,7 @@ export default {
     },
     selectedVersion(newVersion){
       this.selectedProcedure = newVersion.procedures[0]
+      
       this.defineProcedure()
     }
 
@@ -1347,7 +1356,18 @@ export default {
       }
       return values
     },
-    
+    selected_version_index(){
+      if (this.module && this.selectedVersion.name){
+        let index  = this.libraryVersions.findIndex(data => data === this.selectedVersion)
+        if (index == -1){
+          return 0
+        } else{
+          return index
+        }
+      } else{
+        return 0
+      }
+    },
     selected_procedure_index(){
       if (this.module && this.selectedVersion.name){
         let index  = this.selectedVersion.procedures.findIndex(data => data === this.procedure)
@@ -1367,17 +1387,27 @@ export default {
     if (this.interval){
         clearInterval(this.interval)
     }
+    if (this.intervalFetchRemote){
+        clearInterval(this.intervalFetchRemote) 
+    }
     this.selectedVersion = this.selected
+    console.log(this.selected)
     this.selectedProcedure = this.selected.procedures[0]
     $this.getJobStatus()
     $this.getInstallStatus()
+    this.fetchRemoteCatalog(this.selectedVersion.name)
     $this.getLibrary()
+    
     $this.defineProcedure()
     this.interval = setInterval(()=>{
         $this.getJobStatus()
         $this.getInstallStatus()
-        // $this.getLibrary()
+        
     }, 2000)
+    this.intervalFetchRemote = setInterval(()=>{
+      this.fetchRemoteCatalog(this.selectedVersion.name, ignore)
+        
+    }, 300000)
 },
   
     

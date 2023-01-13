@@ -56,7 +56,7 @@ class FileService {
     return Api().post(`${baseEndpoint.get()}/procedure/build/dependency`, params)    
   }
   getProcedure(params){ // used
-    return Api().get(`${baseEndpoint.get()}/procedure/get/${params.catalog}/${params.procedure}/${params.token}`)    
+    return Api().get(`${baseEndpoint.get()}/procedure/get/${params.catalog}/${params.version}/${params.procedure}/${params.token}`)    
   }
   getProcedures(params){ // used
     return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.token}`)    
