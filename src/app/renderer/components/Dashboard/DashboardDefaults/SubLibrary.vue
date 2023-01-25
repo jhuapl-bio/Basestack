@@ -101,7 +101,7 @@
             responsive
         >
             <template v-slot:item.status.exists="{ item }">
-                
+                {{ item.status.progress  }} ;;;;;;;;;
                 <v-badge :dot="!item.status.progress" :content="( item.status.progress ? `${item.status.progress}%` : null)" v-if="item.status.building "  x-small color="info" >
                     <v-progress-circular x-small  bottom
                         indeterminate  

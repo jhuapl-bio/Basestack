@@ -348,11 +348,11 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "nfcore_taxtriage",
+      selectedCatalogName: "medaka",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
-			selected: 'defaults',
+			selected: 'procedures',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 

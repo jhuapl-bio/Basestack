@@ -1391,11 +1391,10 @@ export default {
         clearInterval(this.intervalFetchRemote) 
     }
     this.selectedVersion = this.selected
-    console.log(this.selected)
     this.selectedProcedure = this.selected.procedures[0]
     $this.getJobStatus()
     $this.getInstallStatus()
-    this.fetchRemoteCatalog(this.selectedVersion.name)
+    this.fetchRemoteCatalog(this.selectedVersion.name, true)
     $this.getLibrary()
     
     $this.defineProcedure()
@@ -1405,7 +1404,7 @@ export default {
         
     }, 2000)
     this.intervalFetchRemote = setInterval(()=>{
-      this.fetchRemoteCatalog(this.selectedVersion.name, ignore)
+      this.fetchRemoteCatalog(this.selectedVersion.name, true)
         
     }, 300000)
 },

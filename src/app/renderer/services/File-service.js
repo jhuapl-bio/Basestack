@@ -27,7 +27,7 @@ class FileService {
   updateCacheServiceVariable(params) { // Used
     return Api().post(`${baseEndpoint.get()}/session/cache/service/variable`, params)    
   }
-  getDefaults(){ // USed
+  getDefaults(){ // USed  
     return Api().get(`${baseEndpoint.get()}/defaults/get`)    
   }
   setRemoteModule(params){ // Used

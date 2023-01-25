@@ -1,4 +1,4 @@
-- version: 1.7
+- version: 1.8
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -33,7 +33,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.2.2
+          version: v2.2.3
           type: docker
           format: docker
         - target: "bitnami/git"
@@ -195,6 +195,14 @@
             sample: "unknown"
           header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
           append_newline: true
+        custom_naming:
+          optional: true
+          label: Custom TSV File for extra names
+          hint: "a 2 column TSV mapping ncbi taxid's to any number of names to append to the plots"
+          element: file
+          source: null
+          bind: self
+          target: "/opt/server/data/names.tsv"
         custom_configuration:
           optional: true
           label: Custom Barcode Cfg file
@@ -247,7 +255,7 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.2.2
+          image: jhuaplbio/basestack_mytax2:v2.2.3
           workingdir: /
           orchestrated: false
           init: false
