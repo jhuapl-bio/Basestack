@@ -10,10 +10,10 @@ const express  = require('express')
 const app = express()  
 const http  = require("http")    
 const cors =  require("cors")          
-const path = require('path')     
+const path = require('path')      
 var bodyParser = require('body-parser'); 
   
-
+ 
 app.use(express.json())
 app.use(express.urlencoded({extended: true, limit: '500mb'}));
 app.use(bodyParser.text({ type: 'text/*' }))

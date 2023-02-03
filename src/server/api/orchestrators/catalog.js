@@ -8,7 +8,7 @@ export class Catalog {
         this.title = config.title      
         this.name = config.name  
         this.tags = []
-        this.modules = []  
+        this.modules = []   
         this.interval = {
             checking: false, 
             
