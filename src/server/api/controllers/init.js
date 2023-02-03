@@ -92,9 +92,9 @@ export async function init_base_procedures(){
 	} catch(err){
 		logger.error("%s %o", "error in init procedures", err)  
 		throw err 
-	}  
+	}   
 } 
-
+ 
 export function create_service(key, service){
 	try{    
 		let procedures_default = store.config.procedures

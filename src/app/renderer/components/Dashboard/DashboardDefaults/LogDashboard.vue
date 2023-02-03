@@ -7,7 +7,7 @@
   - # **********************************************************************
   -->
 <template>
-	<v-card class="mx-5" style="margin-top: 5%; margin-right: 5%;">
+	<v-card  class="mx-5" style="margin-top: 5%; margin-right: 5%;">
 		<v-row id="topLogs" >
 			<LogWindow v-if="logs" :info="logs" :link="link"></LogWindow>
 		</v-row>

@@ -79,6 +79,7 @@
             remove: false
             target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           label: Minikraken2
+          size_estimate: "7 GB"
           type: download
           format: dir
           decompress:

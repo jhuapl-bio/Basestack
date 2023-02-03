@@ -479,18 +479,13 @@ export class Service {
         let volumes = []
         const $this = this
         let seenTargetTos = []
-        function formatVolume(source, target){
-            return `${source}:${target}`
-        }
         async function formatBind(source, target, element){
-            
             let exists = await checkExists(source)
             let returnable = {
                 Source: `${source}`, 
                 Type: "bind", 
                 Target: `${target}`
             }
-            
             if (exists && exists.exists){
                 store.logger.info(`${source} exists, skipping creation`)
                 return returnable
@@ -502,7 +497,7 @@ export class Service {
                 return  returnable
             }
             
-       }   
+        }   
         let defaultVariables = this.config.variables   
         
         let promises  = [] 
@@ -546,11 +541,10 @@ export class Service {
                 if (selected_option.options){
                     selected_option = {... selected_option.options[(selected_option.option ? selected_option.option : 0)]}
                 }
-                
                 if (typeof selected_option == 'object' && selected_option.bind){
                     let from = selected_option.source
                     let to = selected_option.target 
-                    
+                     
                     if (selected_option.bind && selected_option.bind.from){
                         from = selected_option.bind.from  
                     }
@@ -589,23 +583,35 @@ export class Service {
                                         path.resolve(path.dirname(from)), 
                                         this.reformatPath(finalpath),
                                         selected_option.element
-                                    )
+                                    ) 
                                 )
                                 // binds.push(`${path.resolve(path.dirname(from))}:${this.reformatPath(finalpath)}`) 
                             } 
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
-                            
-                            selected_option.bind.to = $this.removeQuotes(selected_option.bind.to, selected_option.bind.from)
-                            promises.push(formatBind( 
-                                path.resolve(selected_option.bind.from),
-                                this.reformatPath(selected_option.bind.to),
-                                selected_option.element
+                            if (Array.isArray(selected_option.bind)){
+                                 selected_option.bind.forEach((bd)=>{
+                                    bd.to = $this.removeQuotes(bd.to, bd.from)
+                                    promises.push(formatBind( 
+                                        path.resolve(bd.from),
+                                        this.reformatPath(bd.to),
+                                        selected_option.element
 
-                            )) 
+                                    )) 
+                                 })
+                            } else {
+                                selected_option.bind.to = $this.removeQuotes(selected_option.bind.to, selected_option.bind.from)
+                                promises.push(formatBind( 
+                                    path.resolve(selected_option.bind.from),
+                                    this.reformatPath(selected_option.bind.to),
+                                    selected_option.element
+
+                                )) 
+                            }
+                            
                             // binds.push(`${path.resolve(selected_option.bind.from)}:${this.reformatPath(selected_option.bind.to)}`) 
                             seenTargetTos.push(selected_option.bind.to)
-                        }  else {    
+                        }  else {     
                             if (seenTargetTos.indexOf(to) == -1 && from){ 
                                 to = $this.removeQuotes(to)
                                 promises.push(
@@ -683,7 +689,7 @@ export class Service {
                 }   
                 if (selected_option.create){
                     if (selected_option.create.type == 'list' && selected_option.source.length > 0){
-                        console.log("create content!")
+                        console.log("create content!", selected_option.create.target)
                         let output = $this.createContentOutput(selected_option.target, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list', selected_option.resolve)
                         promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                             logger.error(err)  
@@ -712,6 +718,7 @@ export class Service {
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (selected_option.set && (!selected_option.manifest.source || selected_option.manifest.source.length == 0 ) ){
+                    
                     for (let i = 0; i < selected_option.set.length; i++){
                         let set  = selected_option.set[i]
                         let exists = await fs.existsSync(set.source)
@@ -737,7 +744,7 @@ export class Service {
                                     })
                                     updates.push(rowupdate)   
                                 }) 
-                                 
+                                
                                 nestedProperty.set($this.config, set.target, updates)
                                 set.target = updates 
                             } catch (err){
@@ -757,19 +764,19 @@ export class Service {
         let defaultVariables = this.config.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.define_columns){
+                if (selected_option.define_columns){  
                     let defined = selected_option.define_columns
                     let defined_keys = []
+
                     for (let [key, column] of Object.entries(defined)){
                         if (typeof column != 'object') {
                             continue
                         }
-                        
                         if (!Array.isArray(column.element)){
                             column.element = [column.element]
-                        }
+                        } 
                         
-                        let tr = false
+                        let tr = false 
                         column.element.map((F)=>{
                             if (['directory','dir', 'file'].indexOf(F) > -1){
                                 tr=true
@@ -782,6 +789,7 @@ export class Service {
                     selected_option.source
                         .forEach((read)=>{
                         try{ 
+                            
                             defined_keys.forEach((key)=>{
                                 let bind = {
                                     Source: "",
@@ -792,23 +800,18 @@ export class Service {
                                 let row = read[key]
                                 let column = defined[key]
                                 if(row !== '' && row){ 
-                                    // if (row && !path.isAbsolute(row)){
-                                    //     row = path.join(path.dirname(read.source), row)
-                                    // }  
-                                    // if (column.element == 'file'){
-                                    //     bind.Source = path.resolve(path.dirname(row))
-                                    //     bind.Target = path.dirname(this.reformatPath(row))
-                                    // } else {  
-                                        // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
+                                    
                                     bind.Source = path.resolve(`${row}`)
-                                    console.log(row,"<<")
                                     bind.Target = this.reformatPath(row)
-                                    // }
+                                    
                                     if( row && binds.indexOf(bind) == -1){
-                                        
                                         if (column.element == 'directory' || column.element == 'dir'){
                                             binds.push(bind)
                                         } else {
+                                            if (column.binddir){
+                                                bind.Source = path.dirname(bind.Source)
+                                                bind.Target = path.dirname(bind.Target)
+                                            }
                                             binds.push(bind)
                                         }
                                     }  

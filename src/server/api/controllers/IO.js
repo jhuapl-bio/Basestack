@@ -286,10 +286,10 @@ export async function checkExists(location, globSet){
 								)
 							} else{
 								resolve(
-									{location: location, size: 0, exists: true}
+									{location: location, size: 0, exists: false}
 								)
 							}
-						})
+						}) 
 					} else {
 						if (exists.size){
 							size = bytesToSize(exists.size)
@@ -397,6 +397,7 @@ export async function downloadSource(url, target, params)  {
 			writeFolder(dirpath).then(()=>{ 
 				writer = fs.createWriteStream(p)
 				console.log("folder made if not existing, or continuing...") 
+				writer.status = 0
 				if (params && params.protocol == "git"){
 					store.logger.info("git protocol called to get file")
 					clone(url, dirpath, {}, (err, stream)=>{ 
@@ -420,19 +421,21 @@ export async function downloadSource(url, target, params)  {
 									reject(err)
 								}
 								c.get(params.path, function(err, stream) {
-									
+									stream.status = 0
 									if (err) { 
 										store.logger.error("Error in getting item: %s", params.path)
 
 										reject(err)
 									} else {
-										resolve(stream)
+										logger.info("Returning stream!!!!!!!!")
+										
+										resolve(writer)
 									}
 									stream.on('close', function() { 
-										console.log("closed stream")
+										logger.info("closed stream")
 										stream.end(); });
 									stream.on('end', function() { 
-										console.log("ended stream")
+										logger.info("ended stream")
 										stream.destroy(); });
 									stream.on("data", (buffer)=>{
 										var segmentLength = buffer.length;
@@ -443,8 +446,8 @@ export async function downloadSource(url, target, params)  {
 											seen.start =  .02 + downloaded/len
 											seen.end =  seen.end + .02 
 											writer.status = percent
+											stream.status = percent
 										} 
-										// console.log("Progress:\t" + ((downloaded/len *100).toFixed(2) + "%"));
 									}) 
 									stream.on('destroy', function () {
 										c.end()
@@ -503,10 +506,7 @@ export async function downloadSource(url, target, params)  {
 					}
 				} else { 
 					store.logger.info("http(s) protocol called to get file %s", url)
-					// if (!url.startsWith("http://")){
-					// 	store.logger.info("url not beginning with http://, appending now..")
-					// 	url = "http://" + url
-					// }
+					
 					let fnct = https
 					if (url.startsWith("http:")){
 						fnct  = http

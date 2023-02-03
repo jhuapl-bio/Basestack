@@ -23,12 +23,12 @@
             </template>
             Unload or Remove the Module (Custom or Remote)
         </v-tooltip> -->
-        <v-badge   class="mt-5" v-if="selectedProcedure.status" overlap x-small :color="(selectedProcedure.status  && selectedProcedure.status.fully_installed ? 'green' : 'orange darken-2')">
+        <v-badge   class="mt-5" v-if="selectedProcedure.status" overlap medium :color="(selectedProcedure.status  && selectedProcedure.status.fully_installed ? 'green' : 'orange darken-2')">
             <template v-slot:badge>
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
                         <v-icon 
-                            x-small   v-on="on">
+                            medium  v-on="on">
                             {{ ( selectedProcedure.status && selectedProcedure.status.fully_installed ? '$check' : '$exclamation' ) }}
                         </v-icon>
                     </template>
@@ -100,10 +100,9 @@
             }"
             responsive
         >
-            <template v-slot:item.status.exists="{ item }">
-                {{ item.status.progress  }} ;;;;;;;;;
-                <v-badge :dot="!item.status.progress" :content="( item.status.progress ? `${item.status.progress}%` : null)" v-if="item.status.building "  x-small color="info" >
-                    <v-progress-circular x-small  bottom
+            <template v-slot:item.exists="{ item }">
+                <v-badge :dot="!item.status.progress" :content="( item.status.progress ? `${item.status.progress}%` : null)" v-if="item.status.building "  medium color="info" >
+                    <v-progress-circular medium bottom
                         indeterminate  
                         :size="15"
                         color="blue-grey"
@@ -111,23 +110,32 @@
                 </v-badge>
                 <v-tooltip bottom v-else-if="item.status.error">
                     <template v-slot:activator="{ on }">
-                        <v-icon x-small v-on="on"
+                        <v-icon medium v-on="on"
                             color="green "
                             v-if="!item.status.error"
                         >
                         </v-icon>
-                        <v-icon v-on="on" x-small v-else color="red darken-2">
+                        <v-icon v-on="on" medium v-else color="red darken-2">
                             $times-circle
                         </v-icon>
                     </template>
                     {{ ( item.status.error ? item.status.error : 'No Errors' ) }}
                 </v-tooltip> 
+                <v-tooltip v-else-if="item.status.exists && item.size_estimate" bottom>
+                    <template v-slot:activator="{ on }">
+                        <v-icon class=""  v-on="on" :color="(item.size_estimate != item.status.size || !item.status.exists ? 'orange lighten-1' : 'green ' )" 
+                            medium> {{ (item.size_estimate == item.status.size  ? '$check' : '$times-circle'  )}}
+                        </v-icon> 
+                    </template>
+                    Incomplete Download {{ item.status.size ? item.status.size : 'Empty' }} / Estimated: {{ item.size_estimate }}
+                </v-tooltip>
                 <v-tooltip v-else bottom>
                     <template v-slot:activator="{ on }">
-                    <v-icon class=""  v-on="on" :color="(item.status.exists ? 'green ' : 'red darken-1')" 
-                        x-small> {{ (item.status.exists  ? '$check' : '$times-circle'  )}}
-                    </v-icon>
-                    </template>
+                    
+                        <v-icon class=""   v-on="on" :color="(item.status.exists ? 'green ' : 'red darken-1')" 
+                            medium> {{ (item.status.exists  ? '$check' : '$times-circle'  )}}
+                        </v-icon>
+                        </template>
                     
                     Existence Status (Downloaded + Installed)
                 </v-tooltip>
@@ -136,7 +144,7 @@
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
                     <v-icon class=""  v-on="on" :color="(!item.optional ? 'green' : 'orange lighten-1')" 
-                        x-small> {{ (!item.optional  ? '$check' : ''  )}}
+                    medium> {{ (!item.optional  ? '$check' : ''  )}}
                     </v-icon>
                     </template>
                     
@@ -148,7 +156,7 @@
                     <template v-slot:activator="{ on }">
                         <v-icon  
                             v-on="on" class="configure" color="primary" @click="openDir(item.target, item.format)"
-                            x-small>$archive
+                            medium>$archive
                         </v-icon>
                     </template>
                     Open: {{item.target}}
@@ -157,7 +165,7 @@
                     <template v-slot:activator="{ on }">
                         <v-icon  
                             v-on="on" class="configure" color="primary" 
-                            x-small>$question-circle
+                            medium>$question-circle
                         </v-icon>
                         
                     </template>
@@ -168,16 +176,16 @@
                 
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
-                        <v-icon x-small v-on="on"
+                        <v-icon medium v-on="on"
                             color="green "
                             v-if="item.status.latest && item.status.version && item.status.latest == item.status.version "
                         >
                             $check
                         </v-icon>
-                        <v-icon v-on="on" x-small v-else-if="item.status.latest !== item.status.version && item.status.version" color="orange lighten-2">
+                        <v-icon v-on="on" medium v-else-if="item.status.latest !== item.status.version && item.status.version" color="orange lighten-2">
                             $times-circle
                         </v-icon>
-                        <v-icon v-on="on" x-small v-else color="teal darken-2">
+                        <v-icon v-on="on" medium v-else color="teal darken-2">
                             $exclamation-triangle
                         </v-icon>
                     </template>
@@ -276,7 +284,7 @@
                 </v-icon>
             </template>
             <template v-slot:item.size="{ item, index }">
-                <p>{{item.size}}</p>
+                {{item.status.size}}
             </template>
             <template v-slot:item.cancel="{ item, index }">
                 <v-icon class="configure" small color="light" 
@@ -366,7 +374,7 @@ export default {
                     class: "table-text"
                 },
                 {
-                    value: 'status.exists',
+                    value: 'exists',
                     text: 'Exists',
                     align: "center",
                     class:"table-text"
@@ -382,7 +390,7 @@ export default {
                     text: 'Skip'
                 },
                 {
-                    value: 'status.size',
+                    value: 'size',
                     align: "center",
                     text: 'Size'
                 },
@@ -392,16 +400,16 @@ export default {
                     align: "center",
                     text: 'Cancel'
                 },
-                {
-                    value: 'status.latest',
-                    align: "center",
-                    text: 'Latest'
-                },
-                {
-                    value: 'tags',
-                    align: "center",
-                    text: 'Versions'
-                },
+                // {
+                //     value: 'status.latest',
+                //     align: "center",
+                //     text: 'Latest'
+                // },
+                // {
+                //     value: 'tags',
+                //     align: "center",
+                //     text: 'Versions'
+                // },
                 {
                     value: 'remove',
                     align: "center",
@@ -414,7 +422,7 @@ export default {
 	},
     props: [ 'version', 'procedure', 'dependencies', 'status' ],
     watch: {
-       
+      
     },
 	methods:{
         async error_alert(err, title){

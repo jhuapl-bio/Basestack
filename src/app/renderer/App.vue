@@ -236,8 +236,8 @@
 			>
 				
         <v-card-actions>
-          <v-expansion-panels style="padding:0; margin:0; background-color: #1976d2" >
-            <v-expansion-panel  style="padding:0; margin:0; background-color: #1976d2" 
+          <v-expansion-panels  v-model="panel" style="padding:0; margin:0; background-color: #1976d2" >
+            <v-expansion-panel   style="padding:0; margin:0; background-color: #1976d2" 
             > 
               <v-expansion-panel-header   class="hoverheader"  style="color: white">
                 Logs: {{logs[logs.length-1]}}
@@ -249,6 +249,11 @@
               </v-expansion-panel-header>
               <v-expansion-panel-content>
                 <LogDashboard   :logs="logs"></LogDashboard> 
+                
+                <v-icon color="white" :hidden="panel" class="mt-5" @click="panel=[]">
+                  $arrow-alt-circle-down
+                </v-icon>
+              
               </v-expansion-panel-content>
             </v-expansion-panel>
           </v-expansion-panels>
@@ -339,6 +344,7 @@ export default {
     return {
       tab: 0,
 			mini:true,
+      panel: [],
       logs:["Initializing Logs"],
       defaultModule: {},
       latestLibrary: {},
@@ -348,7 +354,7 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "medaka",
+      selectedCatalogName: "mytax2",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},

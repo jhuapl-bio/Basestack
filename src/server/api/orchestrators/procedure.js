@@ -241,6 +241,9 @@ export class Procedure {
                         store.logger.error(err)
                     })
                 }
+
+                
+                
             })
            
         })
@@ -265,7 +268,9 @@ export class Procedure {
                 else { 
                     promises.push(checkExists(dependency.target)) 
                 }
-                if (dependency.streamObj && dependency.streamObj.status){
+                
+                if (dependency.streamObj && (dependency.streamObj.status || dependency.streamObj.status == 0)){
+                    
                     dependency.status.progress = cloneDeep(dependency.streamObj.status)
                 }
 			}) 
@@ -281,7 +286,7 @@ export class Procedure {
                             dependencies[index].status.version = dependency.value.version
                             dependencies[index].status.exists = true
                         } else {
-                            dependencies[index].status.exists = ( dependency.value && typeof dependency.value == 'object'  ? true : dependency.value )
+                            dependencies[index].status.exists = ( dependency.value && typeof dependency.value == 'object'  ? dependency.value.exists  : dependency.value )
                         }
                         if (dependency.value.size){
                             dependencies[index].status.size = dependency.value.size
@@ -293,6 +298,9 @@ export class Procedure {
                         dependencies[index].status.size = 0
 					}
                     
+                    if (!dependencies[index].status.progress){
+                        dependencies[index].status.progress = 0
+                    }
                     if (dependencies[index].status && dependencies[index].status.stream && Array.isArray(dependencies[index].status.stream.info)){
                             
                         logs.push(...dependencies[index].status.stream.info)
@@ -440,6 +448,8 @@ export class Procedure {
                 $this.log  = spawnLog(stream, $this.logger)
                 dependency.status.stream = $this.log
                 dependency.streamObj = stream 
+                
+                
                 $this.buildlog = spawnLog(stream, $this.logger)
                 stream.on("close", (err, data)=>{
                     console.log("closed....")
@@ -543,8 +553,12 @@ export class Procedure {
             checkExists(dependency.source.target).then((exists)=>{
                 if (!exists.exists || exists && overwrite){  
                     if (dependency.streamObj){
-                        dependency.streamObj.close() 
-                        dependency.streamObj.end()
+                        try{
+                            dependency.streamObj.close() 
+                            dependency.streamObj.end()
+                        } catch (err){
+                            store.logger.error(err)
+                        }
                     } 
                     downloadSource(dependency.source.url, dependency.source.target, dependency.source ).then((stream, error)=>{
                         // dependency.status.stream = spawnLog(stream, $this.logger)
@@ -672,10 +686,23 @@ export class Procedure {
                             // dependency.streamObj.remove({force:true})
                         } else{
                             // promises.push(dependency.streamObj.end())
-                            dependency.streamObj.close()
-
-                            dependency.streamObj.end()
-                            dependency.streamObj.destroy()
+                            try{
+                                dependency.streamObj.close()
+                            } catch (err){
+                                store.logger.error(err)
+                            }
+                            try{
+                                dependency.streamObj.end()
+                            } catch (err){
+                                store.logger.error(err)
+                            }
+                            try{
+                                dependency.streamObj.destroy()
+                            } catch (err){
+                                store.logger.error(err)
+                            }
+                            dependency.status.downloading = false
+                            dependency.status.building = false
                         }
                     } else { 
                         // promises.push(new Promise((resolve, reject)=>{ resolve(`Skipping removal due to it not running`) }))

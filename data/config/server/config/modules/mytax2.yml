@@ -33,7 +33,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.2.3
+          version: v2.2.4
           type: docker
           format: docker
         - target: "bitnami/git"
@@ -83,6 +83,7 @@
           type: download
           format: dir
           optional: true
+          size_estimate: "7 GB"
           decompress:
             format: tgz
             source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
@@ -103,8 +104,10 @@
           define_columns: 
             path_1: 
               element: ['file', 'directory']
+              binddir: true
             path_2: 
               element: file
+              binddir: true
             database: 
               custom: True
               element: dir
@@ -182,8 +185,8 @@
             header: true 
             source: "%{variables.csv.source}"
           bind:
-            from:  "%{variables.manifest.create.target}"
-            to: "/MYTAX/data/Samplesheet.csv"
+              - from:  "%{variables.manifest.create.target}"
+                to: "/MYTAX/data/Samplesheet.csv"
           create:
             target: "${writePath}/workflows/mytax2/samplesheets/Samplesheet.target.csv"
             sep: ","
@@ -255,7 +258,7 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.2.3
+          image: jhuaplbio/basestack_mytax2:v2.2.4
           workingdir: /
           orchestrated: false
           init: false

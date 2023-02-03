@@ -260,6 +260,7 @@
     <v-col sm="3" class="shrink">
       <v-dialog 
           transition="dialog-bottom-transition"
+          v-model="librarydialog"
       >
       <template v-slot:activator="{ on, attrs }">
           <v-card
@@ -756,6 +757,7 @@ export default {
       return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
     },
     async getInstallStatus(){
+      let init = this.init
       FileService.getProcedure({
         procedure: this.procedureIdx, 
         version: this.selected_version_index,
@@ -768,8 +770,12 @@ export default {
       })
       .catch((err)=>{
           console.error(err)
-          
-      }) 
+      }).finally((f)=>{
+        this.init = false
+        if (init && !this.installStatus.required_installed){
+            this.librarydialog = true
+        }
+      })
     },
     async fetchRemoteCatalog(name, ignore){
            
@@ -1135,6 +1141,7 @@ export default {
     return{
       drawer: true,
       dialog: false,
+      librarydialog: false,
       dialogLog: false,
       customDrawer: false,
       totalSpaceUsed: "0 Bytes",
@@ -1159,6 +1166,7 @@ export default {
       selectedNewVersion: null,
       custom_command: {},
       selected_index: 0,
+      init: true,
       logdialog: false,
       modules: [],
       factory: {
@@ -1252,6 +1260,7 @@ export default {
     },
     selectedProcedure(newValue){
       const $this = this
+      this.init = true
       if (newValue){
         this.services_selected = newValue.services
         this.loadProcedure(newValue)
@@ -1393,7 +1402,7 @@ export default {
     this.selectedVersion = this.selected
     this.selectedProcedure = this.selected.procedures[0]
     $this.getJobStatus()
-    $this.getInstallStatus()
+    $this.getInstallStatus(this.init)
     this.fetchRemoteCatalog(this.selectedVersion.name, true)
     $this.getLibrary()
     

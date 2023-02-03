@@ -82,7 +82,7 @@ export  class Library {
             return a.imported
         })
         return any 
-    }
+    } 
     sorting(a,b){
         if (a.version < b.version){
             return 1
@@ -91,7 +91,7 @@ export  class Library {
         } else if (b.remote){
             return 1
         } else {
-            return -1
+            return -1 
         }
     }
     getSortedImported(name){ 

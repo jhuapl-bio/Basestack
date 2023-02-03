@@ -56,6 +56,7 @@
           label: Minikraken2
           type: download
           format: dir
+          size_estimate: "7 GB"
           decompress:
             format: tgz
             source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
