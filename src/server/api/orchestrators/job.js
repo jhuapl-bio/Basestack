@@ -397,6 +397,7 @@ export  class Job {
                     }
                 }
                 service.config.setUser = params.setUser
+                service.config.gpu = params.gpu
                 $this.updateCommand(service, command)
                 this.services.push(service)
             }

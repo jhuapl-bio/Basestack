@@ -10,6 +10,7 @@
   
   <v-row>
     <v-col sm="12" >
+      
     <v-toolbar   cyan width="100%" class=" elevation-12 "> 
       <v-toolbar-title>{{title}}</v-toolbar-title>
       <v-divider vertical inset class="ml-4 mr-8"></v-divider>
@@ -94,6 +95,7 @@
       <template v-slot:extension >
         <v-subheader>Procedures
         </v-subheader>
+        
         <v-tabs
           v-model="procedureIdx"
           align-with-title 
@@ -110,6 +112,12 @@
             {{index}}. {{ item.title }}
           </v-tab>
         </v-tabs>
+        <v-switch
+          v-model="gpu" :label="`GPU`" @click="snackbar=gpu" class="mx-2" v-if="os == 'linux' "
+        >
+        </v-switch>
+        
+        <v-spacer></v-spacer>
         <v-btn
           color="primary"
           class="text-caption"
@@ -118,9 +126,10 @@
           <v-icon class="mr-3" small color="primary lighten-2" >
               $cog 
           </v-icon>
-          Reset Default
+          Reset
         </v-btn>
         
+        <v-spacer></v-spacer>
         <v-dialog
           transition="dialog-bottom-transition"
           max-width="80vh" v-model="dialogLog"
@@ -354,6 +363,30 @@
       </v-banner>
     </v-col>
     <v-col sm="9">
+      <v-snackbar
+        v-model="snackbar" multi-line
+        :timeout="22000" location="center"
+      >
+        Allow GPU access inside Docker Containers on Windows or Linux. <br>
+        Ensure that <code>nvidia-container-toolkit</code> is installed and <code>Docker</code> then restarted with <br>
+        <code>`sudo systemctl restart docker`</code>
+        <v-btn
+          color="blue"
+          @click="openExternalURL('https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#step-2-install-nvidia-container-toolkit')" 
+        >
+          See Instructions for <code>nvidia-container-toolkit</code> (REQUIRED)
+        </v-btn>
+        <template v-slot:action="{ attrs }">
+          <v-btn
+            color="blue"
+            text
+            v-bind="attrs"
+            @click="snackbar = false"
+          >
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
       <v-subheader class="overflow-x-visible mx-4 indigo lighten-5" v-if="selectedVersion.description">{{selectedVersion.description}}</v-subheader>
       <v-stepper  v-model="el" class="pb-0" v-if="services" >
           <v-stepper-header
@@ -648,6 +681,9 @@ export default {
 			  }
       return url
     },
+    openExternalURL(link){
+			this.$electron.shell.openExternal(link)
+		},
     openUrl(link){
 			this.$electron.shell.openExternal(this.getUrl(link))
 		},
@@ -962,6 +998,7 @@ export default {
         dry: $this.dry,
         services: services,
         command: custom_command,
+        gpu: $this.gpu,
         setUser: setUser,
         variables: variables
       }).then((response)=>{
@@ -1141,6 +1178,7 @@ export default {
     return{
       drawer: true,
       dialog: false,
+      gpu: false,
       librarydialog: false,
       dialogLog: false,
       customDrawer: false,
@@ -1186,6 +1224,7 @@ export default {
       defaultModule: 1,
       shared: [],
       status: {},
+      snackbar: false,
       module: {},
       job: null,
       tabService: 0,

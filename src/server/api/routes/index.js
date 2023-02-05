@@ -55,32 +55,7 @@ router.get("/server/ping", (req,res,next)=>{ // Used
 		res.status(419).send({status: 419, message: error_alert(err) });
 	}
 })
-// //Used
-// router.post("/server/close", (req,res,next)=>{ // Used
-// 	try {
-// 		store.server.close().then((f)=>{
-// 			res.status(200).send({status: 200, message: `Server is closed at port: ${process.env.PORT_SERVER}` });
-// 		}).catch((err)=>{
-// 			res.status(419).send({status: 419, message: error_alert(err) });
-// 		})
-// 	} catch(err){
-// 		logger.error(`Error in server status ping ${err}`)
-// 		res.status(419).send({status: 419, message: error_alert(err) });
-// 	} 
-// })
-// //Used
-// router.post("/server/start", (req,res,next)=>{ // Used  
-// 	try {    
-// 		store.server.initiate_server().then((f)=>{  
-// 			res.status(200).send({status: 200, message: `Server is now running at port: ${process.env.PORT_SERVER}` });
-// 		}).catch((err)=>{   
-// 			res.status(419).send({status: 419, message: error_alert(err) });  
-// 		})    
-// 	} catch(err){ 
-// 		logger.error(`Error in server status ping ${err}`)
-// 		res.status(419).send({status: 419, message: error_alert(err) });
-// 	} 
-// })
+
  
 //Used 
 
@@ -1224,7 +1199,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			}         
 			let skip = true   
 			store.logger.info("Starting Job! with services: %s", services) 
-  			let job = await create_job(procedure.config, req.body, services, procedure)
+  		let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
 			skip = await job.start(req.body) 

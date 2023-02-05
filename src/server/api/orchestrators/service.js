@@ -1096,21 +1096,23 @@ export class Service {
                             seen[m.Target] = m.Source
                         }
                     })
-                  
-                    options.HostConfig.DeviceRequests = [
-                        {
-                            "Driver": "",
-                            "Count": -1,
-                            "DeviceIDs": null,
-                            "Capabilities": [
-                                [
-                                    "gpu"
-                                ]
-                            ],
-                            "Options": {}
-                        }
-                    ]
-                    store.logger.info("%o _____ ",options)
+                    if ($this.config.gpu){
+                        options.HostConfig.DeviceRequests = [
+                            {
+                                "Driver": "",
+                                "Count": -1,
+                                "DeviceIDs": null,
+                                "Capabilities": [
+                                    [
+                                        "gpu"
+                                    ]
+                                ],
+                                "Options": {}
+                            }
+                        ]
+                    }
+                    store.logger.info("%o", $this.config)
+                    // store.logger.info("%o _____ ",options)
                     logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 
                         resolve()  
