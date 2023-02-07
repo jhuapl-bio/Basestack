@@ -1,7 +1,7 @@
 - name: nfcore_taxtriage
   title: "TaxTriage"
   icon: "virus"
-  version: 1.21
+  version: 1.3
   basestack_released: 2.0
   module: True
   url: https://github.com/jhuapl-bio/taxtriage
@@ -177,6 +177,13 @@
           hint: "Skip De Novo Assembly"
           define: 
             skip_assembly: "--skip_assembly"
+        low_memory:
+          label: "Low Memory Mode"
+          element: "checkbox"
+          source: true
+          hint: "Don't load kraken2 database into memory, read directly. Slower but less memory intensive"
+          define: 
+            low_memory: "--low_memory"
         skip_plots:
           label: "Skip QC Plotting"
           element: "checkbox"
@@ -281,7 +288,7 @@
              nextflow run 'https://github.com/jhuapl-bio/taxtriage'
               --input ${csv}
               --db ${db}  -r ${mark_branch} ${marklatest}
-              --outdir ${outdir} --trim 
+              --outdir ${outdir} --trim ${low_memory}
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
               -profile ${profile} ${skip_plots} ${skip_assembly} ${taxids_to_remove}
               ${assembly} --demux 

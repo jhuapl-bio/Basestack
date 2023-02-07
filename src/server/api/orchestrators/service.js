@@ -162,7 +162,7 @@ export class Service {
                     $this.dependencies.push(store.services[dependency.id])
                 }
             }) 
-        }
+        } 
     }
     async setOptions(){
         const $this = this
