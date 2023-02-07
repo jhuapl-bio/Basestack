@@ -1,7 +1,7 @@
 - name: nfcore_taxtriage
   title: "TaxTriage"
   icon: "virus"
-  version: 1.21
+  version: 1.3
   basestack_released: 2.0
   module: True
   url: https://nf-co.re/viralrecon
