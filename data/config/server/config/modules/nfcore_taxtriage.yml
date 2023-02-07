@@ -1,10 +1,10 @@
 - name: nfcore_taxtriage
   title: "TaxTriage"
   icon: "virus"
-  version: 1.2
+  version: 1.21
   basestack_released: 2.0
   module: True
-  url: https://nf-co.re/viralrecon
+  url: https://github.com/jhuapl-bio/taxtriage
   # description: "nf-core/viralrecon is a bioinformatics analysis pipeline used to perform assembly and intra-host/low-frequency variant calling for viral samples."
   tags: 
     - "Nextflow"
