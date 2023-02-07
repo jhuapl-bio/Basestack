@@ -17,7 +17,6 @@ export function bytesToSize(bytes) {
 export async function create_job(config, params, services, procedure){
     let job = new Job(procedure,config)   
     if (!services){   
-          
         services = config.services.map ((d,i)=>{ 
             return i  
         })                   
