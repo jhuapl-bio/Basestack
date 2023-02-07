@@ -161,7 +161,7 @@ export class Service {
                 if (dependency.type == 'service' && dependency.id in store.modules){
                     $this.dependencies.push(store.services[dependency.id])
                 }
-            })
+            }) 
         }
     }
     async setOptions(){
