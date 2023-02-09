@@ -1,4 +1,4 @@
-- version: 1.8
+- version: 1.9
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -41,6 +41,34 @@
           type: "docker"
           optional: false
           format: "docker"
+        # - source:
+        #     url: https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy_5.1.15_linux64.tar.gz
+        #     type: file
+        #     remove: true
+        #     target: "${writePath}/workflows/mytax/guppy_gpu.tar.gz"
+        #   optional: true
+        #   type: download
+        #   format: file
+        #   decompress:
+        #     format: tgz
+        #     source: "${writePath}/workflows/mytax/guppy_gpu.tar.gz"
+        #   label: ONT GUPPY GPU v5.1.15
+        #   target: "${writePath}/workflows/mytax/ont-guppy"
+        #   overwrite: true
+        # - source:
+        #     url: https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy-cpu_5.1.15_linux64.tar.gz
+        #     type: file
+        #     remove: true
+        #     target: "${writePath}/workflows/mytax/guppy_cpu.tar.gz"
+        #   optional: true
+        #   type: download
+        #   format: file
+        #   decompress:
+        #     format: tgz
+        #     source: "${writePath}/workflows/mytax/guppy_cpu.tar.gz"
+        #   label: ONT GUPPY CPU Only v5.1.15
+        #   target: "${writePath}/workflows/mytax/ont-guppy-cpu"
+        #   overwrite: true
         - source:
             url: 
               https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz
@@ -198,6 +226,20 @@
             sample: "unknown"
           header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
           append_newline: true
+        cpuMode: 
+          label: "CPU Only Mode "
+          hint: Required for anyone not using GPU
+          source: true
+          element: checkbox
+        guppy_version:
+          label: Guppy Version
+          class: wb-100 p-3 mb-1
+          hint: If you dont want to use v5.1.15 of Guppy built-into the software
+          element: dir
+          name: Custom Guppy Version
+          source: null
+          target: /opt/ont-guppy
+          bind: self
         custom_naming:
           optional: true
           label: Custom TSV File for extra names
@@ -264,10 +306,12 @@
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' nginx;/etc/init.d/nginx status; 
+          command: ['bash', '-c', "nginx;/etc/init.d/nginx status; 
           source /opt/conda/etc/profile.d/conda.sh; 
           conda activate mytax2; 
-          echo $PWD; 
-          cd /opt; 
-          npm run server']
+          cd /opt;
+          if [[ $cpuMode != 'true' ]]; then 
+            ln -sf /opt/ont-guppy/bin/guppy_barcoder /usr/local/bin/guppy_barcoder; 
+          fi; 
+          npm run server"]
         

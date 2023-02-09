@@ -113,7 +113,7 @@
           </v-tab>
         </v-tabs>
         <v-switch
-          v-model="gpu" :label="`GPU`" @click="snackbar=gpu" class="mx-2" v-if="os == 'linux' "
+          v-model="gpu" :label="`GPU`" @click="snackbar=gpu" class="mx-2" v-if="1==1||os == 'linux' "
         >
         </v-switch>
         

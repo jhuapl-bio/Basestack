@@ -566,7 +566,7 @@ export async function downloadSource(url, target, params)  {
 								request.end()  
 							} 
 						}).on("error", (err)=>{
-							store.logger.error("err %o", err)
+							store.logger.error("err %o Error in trying to download the file", err)
 							reject(err)
 						})
 						resolve(writer)

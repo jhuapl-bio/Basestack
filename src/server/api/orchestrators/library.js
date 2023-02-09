@@ -353,11 +353,11 @@ export  class Library {
             let idx = this.all[name].choices.findIndex((f)=>{
                 return f.version == config.version && !f.local && !f.imported && f.remote
             })
-                config.idx = maxIdx + 1
-                config.imported = false 
+                config.idx = maxIdx + 1  
+                config.imported = false  
                 config.remote = true
                 config.removable = false
-                if (idx > -1){
+                if (idx > -1){ 
                     this.all[name][idx] = config    
                 } else {
                     this.all[name].choices.push(config) 
@@ -376,8 +376,8 @@ export  class Library {
             store.logger.info("No modules found at remote location")
         }  
         return modules
-       
-        
+         
+         
     }
     removeDependencies(choices){
         let targets = []
