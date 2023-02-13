@@ -1,3 +1,4 @@
+import { resolve } from "path";
 import { bytesToSize } from "../controllers/configurations.js";
 const cloneDeep = require("lodash.clonedeep");
 
@@ -460,8 +461,9 @@ export class Procedure {
                     console.log("ended...")
                     dependency.status.downloading = false
                     dependency.status.building = false
+                    resolve()   
                 })
-                resolve()   
+                
             }).catch((err)=>{  
                 store.logger.error("%s %s %o","Error in pulling docker image for: ", dependency.target , err)
                 dependency.status.downloading = false
@@ -708,10 +710,9 @@ export class Procedure {
                         // promises.push(new Promise((resolve, reject)=>{ resolve(`Skipping removal due to it not running`) }))
                         store.logger.info("Skipping removal due to it not running")
                     }
-                    // Promise.allSettled(promises).then((resp)=>{
-                    //     resolve(resp)
-                    // })
-                    resolve()
+                    Promise.allSettled(promises).then((resp)=>{
+                        resolve(resp)
+                    })
                 })
             } catch(err){
                 store.logger.error("%s error in cancelling build",  err)
@@ -720,103 +721,104 @@ export class Procedure {
         });
     }
 	async build( overwrite, params){
-		const $this = this;
-        let promises = []
-        let objs = [] 
-        let dependencies = this.dependencies
-        this.status.building = true
-        if (Array.isArray(params) && params.length > 0){
-            dependencies = params.map((f)=>{
-                return $this.dependencies[f]
-            })
-        } else if ( ( params || params == 0 )  && !Array.isArray(params)){
-            dependencies = [dependencies[params]]
-        } 
-        try{
-            dependencies.forEach((dependency_obj, i)=>{ 
-                dependency_obj.status.downloading = true
-                dependency_obj.status.building = true
-                objs.push(dependency_obj) 
-                let overwrite_idx = false
-                if (!overwrite){ 
-                    if (dependency_obj.overwrite){  
-                        overwrite_idx = true
-                    } 
-                }   else {      
-                    overwrite_idx = true 
-                }   
-                if (Array.isArray(overwrite) && overwrite[i]){  
-                    overwrite_idx = overwrite[i]    
-                }
-                if (dependency_obj.type == 'docker' && !dependency_obj.build && !dependency_obj.local ){
-                     
-                    promises.push($this.pullImage(dependency_obj))
-                }   else if (dependency_obj.type == 'docker-local' && dependency_obj.build ){
-                    promises.push($this.buildImage(dependency_obj))
-                }   else if (dependency_obj.type == 'volume'){
-                    promises.push(createVolumes([dependency_obj.target]).then((f)=>{
-                        dependency_obj.status.building = false 
-                    }).catch((err)=>{
-                        dependency_obj.status.building = false
-                        dependency_obj.status.error = err
-                    }))
-                }   else if (dependency_obj.type == 'docker' && dependency_obj.local  ){
-                    promises.push($this.loadImage(dependency_obj))
-                } else if (dependency_obj.type == 'orchestration'  ){
-                    promises.push($this.orchestrateDownload(dependency_obj).catch((err)=>{
-                        store.logger.error("Error in downloading source url: %o", err);
-                        dependency_obj.status.downloading = false
-
-                    }))
-                } else {
-                    promises.push($this.downloadSource(dependency_obj, overwrite_idx).then((response)=>{
-                        dependency_obj.status.downloading = false  
-                        store.logger.info(`______Item download: ${dependency_obj.source.target}`)
-                        checkExists(dependency_obj.source.target).then((exists)=>{
-                            if (dependency_obj.decompress){ 
-                                store.logger.info("Decompressing required, doing so now for final target... %s", dependency_obj.target)
-                                checkExists(dependency_obj.target).then((exists)=>{
-                                    if (!exists.exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
-                                        dependency_obj.status.building = true
-                                        
-                                        decompress_file(dependency_obj.decompress.source, path.dirname(dependency_obj.target)).then(()=>{
-                                            dependency_obj.status.building = false
-                                        }).catch((err) =>{
-                                            store.logger.error("Error in decompressing file: %o %o", dependency_obj.source, err)
-                                            dependency_obj.status.building = false
-                                        } )                                       
-                                    } else {
-                                        store.logger.info(`Skipping dependency decompression: ${dependency_obj.target} due to it existing`)
-                                         dependency_obj.status.building = false
-                                        
-                                    }
-                                })
-                            } 
-                        })
-                    }).catch((err)=>{ 
-                        store.logger.error("Error in downloading source url: %o", err);
-                        dependency_obj.status.downloading = false
-                        dependency_obj.status.error = err
-                    }) ) 
-                } 
-                Promise.allSettled(promises).then((res)=>{
-                    store.logger.info("Finished building module")
-                }).catch((err)=>{
-                    store.logger.error("error in building process: %o", err)
-                    dependency_obj.status.building = false
+        return new Promise((resolve, reject)=>{
+            const $this = this;
+            let promises = []
+            let objs = [] 
+            let dependencies = this.dependencies
+            this.status.building = true
+            if (Array.isArray(params) && params.length > 0){
+                dependencies = params.map((f)=>{
+                    return $this.dependencies[f]
                 })
-            })
-            
-        } catch(err){
-            this.status.errors = err
-            console.error("EDD")
-            throw err 
-        } finally {
-            // $this.dependencies.forEach((dependency, index)=>{
-            //     $this.dependencies[index].status.building = false
-            // })
-        }
-        return `Building dependencies for module:  ${$this.name} ${dependencies}`
+            } else if ( ( params || params == 0 )  && !Array.isArray(params)){
+                dependencies = [dependencies[params]]
+            } 
+            try{
+                dependencies.forEach((dependency_obj, i)=>{ 
+                    dependency_obj.status.downloading = true
+                    dependency_obj.status.building = true
+                    objs.push(dependency_obj) 
+                    let overwrite_idx = false
+                    if (!overwrite){ 
+                        if (dependency_obj.overwrite){  
+                            overwrite_idx = true
+                        } 
+                    }   else {      
+                        overwrite_idx = true 
+                    }   
+                    if (Array.isArray(overwrite) && overwrite[i]){  
+                        overwrite_idx = overwrite[i]    
+                    }
+                    if (dependency_obj.type == 'docker' && !dependency_obj.build && !dependency_obj.local ){
+                        
+                        promises.push($this.pullImage(dependency_obj))
+                    }   else if (dependency_obj.type == 'docker-local' && dependency_obj.build ){
+                        promises.push($this.buildImage(dependency_obj))
+                    }   else if (dependency_obj.type == 'volume'){
+                        promises.push(createVolumes([dependency_obj.target]).then((f)=>{
+                            dependency_obj.status.building = false 
+                        }).catch((err)=>{
+                            dependency_obj.status.building = false
+                            dependency_obj.status.error = err
+                        }))
+                    }   else if (dependency_obj.type == 'docker' && dependency_obj.local  ){
+                        promises.push($this.loadImage(dependency_obj))
+                    } else if (dependency_obj.type == 'orchestration'  ){
+                        promises.push($this.orchestrateDownload(dependency_obj).catch((err)=>{
+                            store.logger.error("Error in downloading source url: %o", err);
+                            dependency_obj.status.downloading = false
+
+                        }))
+                    } else {
+                        promises.push($this.downloadSource(dependency_obj, overwrite_idx).then((response)=>{
+                            dependency_obj.status.downloading = false  
+                            store.logger.info(`______Item download: ${dependency_obj.source.target}`)
+                            checkExists(dependency_obj.source.target).then((exists)=>{
+                                if (dependency_obj.decompress){ 
+                                    store.logger.info("Decompressing required, doing so now for final target... %s", dependency_obj.target)
+                                    checkExists(dependency_obj.target).then((exists)=>{
+                                        if (!exists.exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
+                                            dependency_obj.status.building = true
+                                            
+                                            decompress_file(dependency_obj.decompress.source, path.dirname(dependency_obj.target)).then(()=>{
+                                                dependency_obj.status.building = false
+                                            }).catch((err) =>{
+                                                store.logger.error("Error in decompressing file: %o %o", dependency_obj.source, err)
+                                                dependency_obj.status.building = false
+                                            } )                                       
+                                        } else {
+                                            store.logger.info(`Skipping dependency decompression: ${dependency_obj.target} due to it existing`)
+                                            dependency_obj.status.building = false
+                                            
+                                        }
+                                    })
+                                } 
+                            })
+                        }).catch((err)=>{ 
+                            store.logger.error("Error in downloading source url: %o", err);
+                            dependency_obj.status.downloading = false
+                            dependency_obj.status.error = err
+                        }) ) 
+                    } 
+                    Promise.allSettled(promises).then((res)=>{
+                        store.logger.info("Finished building module")
+                        resolve()
+                    }).catch((err)=>{
+                        store.logger.error("error in building process: %o", err)
+                        dependency_obj.status.building = false
+                        reject(err)
+                    })
+                })
+                
+            } catch(err){
+                this.status.errors = err
+                console.error("EDD")
+                reject(err)
+            } 
+        })
+		
+        // return `Building dependencies for module:  ${$this.name} ${dependencies}`
 	} 
     async remove ( dependencyIdx ){
 		const $this = this; 

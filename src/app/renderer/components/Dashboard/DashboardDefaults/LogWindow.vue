@@ -8,7 +8,7 @@
   -->
 <template>
   <div id="logs" class="mt-3 mx-5" ref="logs" v-if="info">
-    <span class=" configure"  
+    <!-- <span class=" configure"  
         style="float:left" 
         v-tooltip="{
             content: (scroll ? 'Autoscroll Enabled' : 'Autoscroll Disabled'),
@@ -18,7 +18,7 @@
             targetClasses: ['it-has-a-tooltip'],
         }" @click="scroll=!scroll">
             <font-awesome-icon :icon="(scroll ? 'comment' : 'comment-slash')"/>
-    </span>	
+    </span>	 -->
     <v-btn
         icon-and-text
         color="secondary" small
@@ -73,9 +73,9 @@ export default {
 		
 	},
 	updated: function(){
-		this.$nextTick(()=>{
-            this.scroll ? this.$el.querySelector('.logDiv').scrollTop = this.$el.querySelector('.logDiv').scrollHeight : ''
-		})
+		// this.$nextTick(()=>{
+    //         this.scroll ? this.$el.querySelector('.logDiv').scrollTop = this.$el.querySelector('.logDiv').scrollHeight : ''
+		// })
 	},
 	mounted() {
     },

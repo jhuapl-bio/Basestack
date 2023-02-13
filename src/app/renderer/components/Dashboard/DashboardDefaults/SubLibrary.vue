@@ -12,7 +12,7 @@
     <v-toolbar flat  class="pb-10 mb-5">
         <!-- <v-tooltip bottom  v-if="!selectedProcedure.local">
             <template v-slot:activator="{ on }">
-                <v-btn small icon class="mr-3">
+                <v-btn large icon class="mr-3">
                     <v-icon
                         color="indigo" 
                         
@@ -23,12 +23,12 @@
             </template>
             Unload or Remove the Module (Custom or Remote)
         </v-tooltip> -->
-        <v-badge   class="mt-5" v-if="selectedProcedure.status" overlap medium :color="(selectedProcedure.status  && selectedProcedure.status.fully_installed ? 'green' : 'orange darken-2')">
+        <v-badge   class="mt-5" v-if="selectedProcedure.status" overlap large :color="(selectedProcedure.status  && selectedProcedure.status.fully_installed ? 'green' : 'orange darken-2')">
             <template v-slot:badge>
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
                         <v-icon 
-                            medium  v-on="on">
+                            large  v-on="on">
                             {{ ( selectedProcedure.status && selectedProcedure.status.fully_installed ? '$check' : '$exclamation' ) }}
                         </v-icon>
                     </template>
@@ -38,33 +38,43 @@
         </v-badge>        
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-                <v-icon medium color="primary" v-on="on" class="configure mr-3 ml-3 " @click="buildModule(version.name)">$download</v-icon>
+                <v-btn medium v-on="on" fab  @click="buildModule(version.name)">
+                    <v-icon large color="primary" class="configure  ">$download</v-icon>
+                </v-btn>
             </template>
             
             Build Entire Module
         </v-tooltip>
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-                <v-icon medium color="secondary" v-on="on" class="configure mr-3 ml-3 " @click="buildModule(true)">$download</v-icon>
+                <v-btn class="mx-2"  medium v-on="on" fab  @click="buildModule(true)">
+                    <v-icon large color="secondary"  class="configure  ">$download</v-icon>                
+                </v-btn>
             </template>
             
             Build Required
         </v-tooltip>
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-                <v-icon v-on="on" medium color="indigo "  v-on:click="fetchRemoteCatalog(version.name)" style="text-align:right" class="configure ml-2 mr-3">$external-link-alt</v-icon>
+                <v-btn class="mx-2"  medium v-on="on" fab v-on:click="fetchRemoteCatalog(version.name)" >
+                    <v-icon  large color="indigo "  style="text-align:right" class="configure">$external-link-alt</v-icon>                
+                </v-btn>
             </template>
             Fetch Versions for Module
         </v-tooltip>
         <v-tooltip bottom v-if="selected.status && selected.status.building">
             <template v-slot:activator="{ on }">    
-                <v-icon v-on="on" medium color="light " v-on:click="cancelModule(version.name)"   style="text-align:right" class="configure ml-2 mr-3">$times-circle</v-icon>
+                <v-btn class="mx-2" medium v-on="on" v-on:click="cancelModule(version.name)" fab>
+                    <v-icon  large color="light "    style="text-align:right" class="configure">$times-circle</v-icon>
+                </v-btn>
             </template>
             Cancel Module Build
         </v-tooltip>
         <v-tooltip bottom >
             <template v-slot:activator="{ on }">
-                <v-icon v-on="on"  color="orange darken-2"    medium v-on:click="deleteModule(version)" style="" class="configure ml-4 mr-3">$trash-alt</v-icon>
+                <v-btn class="mx-2" medium v-on="on" v-on:click="deleteModule(version)"  fab>
+                    <v-icon  color="orange darken-2"    large style="" class="configure">$trash-alt</v-icon>
+                </v-btn>
             </template>
             Delete Entire Module and its dependencies 
         </v-tooltip>
@@ -72,8 +82,8 @@
         </v-spacer>
         <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-                <v-btn icon-and-text small color="primary" @click="pruneImages()" v-on="on">
-                    <v-icon medium  class=" mr-3 ml-3 " >$recycle</v-icon>Prune Images
+                <v-btn icon-and-text large color="primary" @click="pruneImages()" v-on="on">
+                    <v-icon large  class=" mr-2 ml-1 " >$recycle</v-icon>Prune Images
                 </v-btn>
             </template>
             Removes unused Docker images, frees up space
@@ -89,7 +99,7 @@
             :items-per-page="5"
             centered
             class="elevation-1 "			
-            small dense
+            large dense
             v-if="dependencies && dependencies.length > 0"
             :footer-props="{
             showFirstLastPage: true,
@@ -100,22 +110,22 @@
             }"
             responsive
         >
-            <template v-slot:item.exists="{ item }">
-                <v-badge :dot="!item.status.progress" :content="( item.status.progress ? `${item.status.progress}%` : null)" v-if="item.status.building "  medium color="info" >
-                    <v-progress-circular medium bottom
+            <template v-slot:[`item.exists`]="{ item }">
+                <v-badge :dot="!item.status.progress" :content="( item.status.progress ? `${item.status.progress}%` : null)" v-if="item.status.building "  large color="info" >
+                    <v-progress-circular large bottom
                         indeterminate  
-                        :size="15"
+                        :size="25"
                         color="blue-grey"
                     ></v-progress-circular>                                
                 </v-badge>
                 <v-tooltip bottom v-else-if="item.status.error">
                     <template v-slot:activator="{ on }">
-                        <v-icon medium v-on="on"
+                        <v-icon large v-on="on"
                             color="green "
                             v-if="!item.status.error"
                         >
                         </v-icon>
-                        <v-icon v-on="on" medium v-else color="red darken-2">
+                        <v-icon v-on="on" large v-else color="red darken-2">
                             $times-circle
                         </v-icon>
                     </template>
@@ -124,7 +134,7 @@
                 <v-tooltip v-else-if="item.status.exists && item.size_estimate" bottom>
                     <template v-slot:activator="{ on }">
                         <v-icon class=""  v-on="on" :color="(item.size_estimate != item.status.size || !item.status.exists ? 'orange lighten-1' : 'green ' )" 
-                            medium> {{ (item.size_estimate == item.status.size  ? '$check' : '$times-circle'  )}}
+                            large> {{ (item.size_estimate == item.status.size  ? '$check' : '$times-circle'  )}}
                         </v-icon> 
                     </template>
                     Incomplete Download {{ item.status.size ? item.status.size : 'Empty' }} / Estimated: {{ item.size_estimate }}
@@ -133,30 +143,30 @@
                     <template v-slot:activator="{ on }">
                     
                         <v-icon class=""   v-on="on" :color="(item.status.exists ? 'green ' : 'red darken-1')" 
-                            medium> {{ (item.status.exists  ? '$check' : '$times-circle'  )}}
+                            large> {{ (item.status.exists  ? '$check' : '$times-circle'  )}}
                         </v-icon>
                         </template>
                     
                     Existence Status (Downloaded + Installed)
                 </v-tooltip>
             </template>
-            <template v-slot:item.optional="{ item }">
+            <template v-slot:[`item.optional`]="{ item }">
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
                     <v-icon class=""  v-on="on" :color="(!item.optional ? 'green' : 'orange lighten-1')" 
-                    medium> {{ (!item.optional  ? '$check' : ''  )}}
+                    large> {{ (!item.optional  ? '$check' : ''  )}}
                     </v-icon>
                     </template>
                     
                     This is {{!item.optional ? "not" : ""}} optional
                 </v-tooltip>
             </template>
-            <template v-slot:item.format="{ item }">
+            <template v-slot:[`item.format`]="{ item }">
                 <v-tooltip v-if="item.format == 'file' || item.format == 'dir'" bottom>
                     <template v-slot:activator="{ on }">
                         <v-icon  
                             v-on="on" class="configure" color="primary" @click="openDir(item.target, item.format)"
-                            medium>$archive
+                            large>$archive
                         </v-icon>
                     </template>
                     Open: {{item.target}}
@@ -165,27 +175,27 @@
                     <template v-slot:activator="{ on }">
                         <v-icon  
                             v-on="on" class="configure" color="primary" 
-                            medium>$question-circle
+                            large>$question-circle
                         </v-icon>
                         
                     </template>
                     Docker Image
                 </v-tooltip>
             </template>
-            <template v-slot:item.status.latest="{ item }">
+            <template v-slot:[`item.status.latest`]="{ item }">
                 
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on }">
-                        <v-icon medium v-on="on"
+                        <v-icon large v-on="on"
                             color="green "
                             v-if="item.status.latest && item.status.version && item.status.latest == item.status.version "
                         >
                             $check
                         </v-icon>
-                        <v-icon v-on="on" medium v-else-if="item.status.latest !== item.status.version && item.status.version" color="orange lighten-2">
+                        <v-icon v-on="on" large v-else-if="item.status.latest !== item.status.version && item.status.version" color="orange lighten-2">
                             $times-circle
                         </v-icon>
-                        <v-icon v-on="on" medium v-else color="teal darken-2">
+                        <v-icon v-on="on" large v-else color="teal darken-2">
                             $exclamation-triangle
                         </v-icon>
                     </template>
@@ -200,16 +210,18 @@
                     <p v-else> Version not available</p>
                 </v-tooltip> 
             </template>                        
-            <template v-slot:item.label="{ item }">
-                {{ ( item.label ? item.label : item.target   )}}{{ ( item.version ? ':'+item.version : '')  }}
+            <template v-slot:[`item.label`]="{ item }">
+                <div :class="[ $vuetify.breakpoint.lgOnly?'text-left':'text-right', 'text-subtitle-1']">
+                    {{ ( item.label ? item.label : item.target   )}}{{ ( item.version ? ':'+item.version : '')  }}
+                </div>
             </template>
-            <template v-slot:item.tags="{ item }">
+            <template v-slot:[`item.tags`]="{ item }">
                 <v-dialog v-if="item.type == 'docker' && item.tags && item.tags.length > 0"
                     transition="dialog-bottom-transition"
                     max-width="600"
                     >
                     <template v-slot:activator="{ on,attrs  }">                    
-                        <v-icon class="mr-3 configure" v-on="on" v-bind="attrs" small  color="primary lighten-2" >
+                        <v-icon class="mr-3 configure" v-on="on" v-bind="attrs" large  color="primary lighten-2" >
                             $cog 
                         </v-icon>
                     </template>
@@ -244,7 +256,7 @@
                 
                     
             </template>
-            <template v-slot:item.skip="{ item,index }">
+            <template v-slot:[`item.skip`]="{ index }">
                 
                     <v-checkbox
                         v-model="skips[index]"
@@ -256,15 +268,15 @@
                     
                     </v-checkbox> 
             </template>
-            <template v-slot:item.build="{ item, index }">
-                <v-icon  class="configure" small color="primary" 
+            <template v-slot:[`item.build`]="{ item, index }">
+                <v-icon  class="configure" large color="primary" 
                     style="" v-if="item.status.dependComplete"
                     @click="buildModuleDependency(version.name, index)">$download
                 </v-icon>
                 
                 <v-tooltip bottom v-else>
                     <template v-slot:activator="{ on }">
-                    <v-icon v-on="on" class="" small color="warning" 
+                    <v-icon v-on="on" class="" large color="warning" 
                         style="" 
                         >$slash
                     </v-icon>
@@ -277,17 +289,17 @@
                 </v-tooltip>
               
             </template>
-            <template v-slot:item.remove="{ item, index }">
-                <v-icon class="configure" small color="orange darken-1" 
+            <template v-slot:[`item.remove`]="{  index }">
+                <v-icon class="configure" large color="orange darken-1" 
                     style="" 
                     @click="removeModuleDependency(version.name, index)">$trash-alt
                 </v-icon>
             </template>
-            <template v-slot:item.size="{ item, index }">
+            <template v-slot:[`item.size`]="{ item }">
                 {{item.status.size}}
             </template>
-            <template v-slot:item.cancel="{ item, index }">
-                <v-icon class="configure" small color="light" 
+            <template v-slot:[`item.cancel`]="{ item, index }">
+                <v-icon class="configure" large color="light" 
                     style="" v-if="item.status.building"
                     @click="cancelModuleDependency(version.name, index)">$times-circle
                 </v-icon>
@@ -295,7 +307,7 @@
         
         </v-data-table>
     </div>
-    <LogWindow   :info="procedureLogs" :key="'logwindowModules'"></LogWindow> 
+    <LogWindow   :info="procedureLogs.slice().reverse()" :key="'logwindowModules'"></LogWindow> 
   </v-card> 
 </template>
 
@@ -570,14 +582,24 @@ export default {
         async buildModule(requiredOnly){
             const $this = this
             let indic = []
+            let names = []
             let procedureIdx  = this.procedure
             if (requiredOnly){
                 this.dependencies.map((f,i)=>{
                     if(!f.optional){
                         indic.push(i)
+                        names.push(f.label ? f.label : f.target)
                     }
                 })
+                names = names.join(", ")
             }
+            this.$swal({
+                title: `${$this.version.name}`,
+                text: `Module Build Dependency Starting for ${names}`,
+                icon: 'info',
+                showConfirmButton: true,
+                allowOutsideClick: true
+            });
             FileService.buildProcedure({
                 module: $this.moduleIdx,
                 catalog: $this.version.name,
@@ -587,9 +609,9 @@ export default {
             })
             .then((response)=>{
                 this.$swal({
-                    title: "Module Build Initiated",
-                    text: "Please wait.. this may take some time",
-                    icon: 'info',
+                    title: `${$this.version.name}`,
+                    text: `Module Build Dependency Completed for ${names}`,
+                    icon: 'success',
                     showConfirmButton: true,
                     allowOutsideClick: true
                 });
@@ -599,7 +621,8 @@ export default {
                     position: 'center',
                     icon: 'error',
                     showConfirmButton:true,
-                    title: err.response.data.message
+                    title: `${$this.version.name}-${names}`,
+                    text: err.response.data.message
                 })
                 
             }) 
@@ -643,6 +666,7 @@ export default {
         async buildModuleDependency(name, index){
             let procedureIdx  = this.procedure
             const $this = this
+            let label = this.dependencies[index].label   ?   this.dependencies[index].label  : this.dependencies[index].target      
             let skip = this.skips[index]
             FileService.buildProcedureDependency({
                 catalog: $this.version.name,
@@ -652,9 +676,9 @@ export default {
             })
             .then((response)=>{
                 this.$swal({
-                    title: "Dependency install started",
-                    text: "Please wait.. this may take some time",
-                    icon: 'info',
+                    title: `${$this.version.name}`,
+                    text: `Build completed for dependency: ${label}`,
+                    icon: 'success',
                     showConfirmButton: true,
                     allowOutsideClick: true
                 });
@@ -665,13 +689,22 @@ export default {
                     position: 'center',
                     icon: 'error',
                     showConfirmButton:true,
-                    title: err.response.data.message
+                    title: err.response.data.message,
+                    text: `${$this.version.name}, ${label}`,
                     })
                 }) 
+            this.$swal({
+              title: `${this.version.name}: ${name}`,
+              text: "Module Build Initiated. Please wait.. this may take some time",
+              icon: 'info',
+              showConfirmButton: true,
+              allowOutsideClick: true
+            });   
         },
 
         async removeModuleDependency(name, index){
             let procedureIdx  = this.procedure
+            let depname = this.dependencies[index].label ?  this.dependencies[index].label : this.dependencies[index].target
             FileService.removeProcedureDependency({
                 catalog: this.version.name,
                 procedure: procedureIdx,
@@ -679,9 +712,9 @@ export default {
             })
             .then((response)=>{
                 this.$swal({
-                    title: "Dependency removed",
-                    text: "Please wait.. this may take some time",
-                    icon: 'info',
+                    title: `${name}`,
+                    text: `Completely removed ${depname}`,
+                    icon: 'success',
                     showConfirmButton: true,
                     allowOutsideClick: true
                 });
@@ -692,11 +725,28 @@ export default {
                     position: 'center',
                     icon: 'error',
                     showConfirmButton:true,
-                    title: err.response.data.message
-                    })
-                }) 
+                    title: `${name}`,
+                    text: err.response.data.message
+                })
+            }) 
+
+            this.$swal({
+                title: `${name}`,
+                text: `Please wait.. this may take some time to remove ${depname}`,
+                icon: 'info',
+                showConfirmButton: true,
+                allowOutsideClick: true
+            });
         },
         async cancelModuleDependency(name, index){
+            let depname = this.dependencies[index].label ?  this.dependencies[index].label : this.dependencies[index].target
+            this.$swal({
+                title: `${name}`,
+                text: `Canceling Build: ${depname}. Please wait.. this may take some time`,
+                icon: 'info',
+                showConfirmButton: true,
+                allowOutsideClick: true
+            });
             FileService.cancelProcedureDependency({
                 catalog: this.version.name,
                 procedure: this.procedure,
@@ -705,11 +755,12 @@ export default {
             .then((response)=>{
                 this.$swal({
                     title: "Dependency install process cancelled",
-                    text: "Please wait.. this may take some time",
-                    icon: 'info',
+                    text: "Depency Install Process Cancelled",
+                    icon: 'success',
                     showConfirmButton: true,
                     allowOutsideClick: true
                 });
+                console.log(response)
             })
             .catch((err)=>{
                 console.error(err)
@@ -717,7 +768,8 @@ export default {
                     position: 'center',
                     icon: 'error',
                     showConfirmButton:true,
-                    title: err.response.data.message
+                    title: `${name}`,
+                    text: err.response.data.message
                 })
             }) 
         },

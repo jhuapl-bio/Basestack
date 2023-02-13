@@ -209,10 +209,8 @@ router.get("/procedure/export/config/:catalog/:module/:procedure/", (req,res,nex
 		}
 		let config = nestedProperty.get(store, `jobs.catalog.${req.params.catalog}.${req.params.module}.${req.params.procedure}`)
 		if (config && config.mergedConfig){
-			console.log("found running config")
 			res.status(200).json({status: 200, message: "config", data: config.mergedConfig  });
 		} else  { 
-			console.log("no running config available, getting base procedure config")
 			config = nestedProperty.get(store, `catalog.${req.params.catalog}.modules.${req.params.module}.procedures.${req.params.procedure}`)
 			if (!config){
 				res.status(419).send({status: 419, message: error_alert(new Error("No Config available"))});
@@ -513,7 +511,7 @@ router.get("/procedure/get/:catalog/:version/:procedure/:token", (req,res,next)=
 			status: procedure.status,
 			dependencies: [],
 			services: [], 
-			...config
+			...config 
 		}
 		let dependencies = procedure.dependencies.map((d,i)=>{
 			let { streamObj, ...ret } = d
@@ -789,7 +787,7 @@ router.post("/module/import", (req,res,next)=>{ // build workflow according to n
 			} catch (err){   
 				store.logger.error("err in cleaning up already loaded catalog: %s", err)
 			}   
-			let modl = store.library.create_module(module) 
+			let modl = await store.library.create_module(module) 
 			store.library.catalog[module.name] = modl	 
 			store.library.addImported(module, module.name,true)
 			res.status(200).json({status: 200, message: `Completed module copy`, data: '' });
@@ -814,7 +812,6 @@ router.post("/session/cache/service/variable", (req,res,next)=>{ // build workfl
 			let response = store.server.cache.get(req.body.token)
 			let tokenVals = store.server.cache.get(req.body.token)  
 			let variables = nestedProperty.get(tokenVals, `catalog.${req.body.catalog}.${req.body.module}.${req.body.procedure}.${req.body.service}`)
-			console.log("cached", variables)
 			res.status(200).json({status: 200, message: "Completed caching of service variables", data: response });
 		} catch(err2){
 			logger.error("%s %s", "Error in caching variables", err2)
@@ -1199,7 +1196,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			}         
 			let skip = true   
 			store.logger.info("Starting Job! with services: %s", services) 
-  		let job = await create_job(procedure.config, req.body, services, procedure)
+  			let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
 			skip = await job.start(req.body) 

@@ -241,7 +241,19 @@ export class Service {
                         store.logger.error("Err in stopping container %o", err)
                     }
                 }
-                
+                // let index = procedures.dependencies.findIndex((f)=>{
+                //     return f.fulltarget == service.config.image
+                // })
+                // try{
+                //     if (autocheck){
+                //         console.log("buidling")
+                //         await procedures.build(false, index, true)
+                //         console.log("doen building")
+                //     }
+                // } catch (err){
+                //     store.logger.error(`${err} error in autopulling docker image`)
+                // }
+                    
                 $this.container = null
                 let skip = false 
                 skip = await $this.start(params, wait)
@@ -488,14 +500,16 @@ export class Service {
             }
             if (exists && exists.exists){
                 store.logger.info(`${source} exists, skipping creation`)
-                return returnable
+                
             } else { 
                 store.logger.info(`${source} source does not exist, creating folder`)
                 if (element !== "file"){
                     await writeFolder(source)
                 }
-                return  returnable
+                
             }
+            
+            return  returnable
             
         }   
         let defaultVariables = this.config.variables   
@@ -532,7 +546,6 @@ export class Service {
             } 
         } 
         if (this.config.orchestrator){
-            // binds.push(`${path.join(store.system.writePath,  "workflows", this.name, "docker") }:/var/lib/docker`)
             binds.push(`basestack-docker-${$this.name}:/var/lib/docker`)
         } 
          
@@ -552,43 +565,41 @@ export class Service {
                         to  = selected_option.bind.to
                     }  
                     if (!from){
-                        continue
+                        continue 
                     }
                     if (from == '.'){
                         from = null
                     }  
+                    
                     if (Array.isArray(selected_option.source) && selected_option.element != 'list'){
                         let s = from   
-                        s.forEach((directory,i)=>{ 
+                        s.forEach((directory,i)=>{  
                             let finalpath = to[i]    
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
                                 finalpath = $this.removeQuotes(finalpath)
-                                promises.push(formatBind(
-                                    path.resolve(directory), 
-                                    this.reformatPath(finalpath)),
-                                    selected_option.element
-                                
-                                )
-                                
-                                // binds.push(`${path.resolve(directory)}:${this.reformatPath(finalpath)}`) 
+                                promises.push(formatBind(path.resolve(directory), this.reformatPath(finalpath),selected_option.element))
                             }   
+                            
                             seenTargetTos.push(finalpath)
                         })  
                     } else { 
-                        if (selected_option.bind == 'directory'){
+                        if (selected_option.bind == 'directory' || selected_option.bind == 'dir'){
                             let finalpath = path.dirname(to)
                             if (seenTargetTos.indexOf(finalpath) == -1 && from){
                                 finalpath = $this.removeQuotes(finalpath)
+                                
                                 promises.push(formatBind(
                                         path.resolve(path.dirname(from)), 
                                         this.reformatPath(finalpath),
                                         selected_option.element
                                     ) 
                                 )
+                                
                                 // binds.push(`${path.resolve(path.dirname(from))}:${this.reformatPath(finalpath)}`) 
                             } 
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
+                            console.log("asdasddasd")
                             if (Array.isArray(selected_option.bind)){
                                  selected_option.bind.forEach((bd)=>{
                                     bd.to = $this.removeQuotes(bd.to, bd.from)
@@ -604,14 +615,14 @@ export class Service {
                                 promises.push(formatBind( 
                                     path.resolve(selected_option.bind.from),
                                     this.reformatPath(selected_option.bind.to),
-                                    selected_option.element
+                                    selected_option.element 
 
                                 )) 
                             }
                             
                             // binds.push(`${path.resolve(selected_option.bind.from)}:${this.reformatPath(selected_option.bind.to)}`) 
                             seenTargetTos.push(selected_option.bind.to)
-                        }  else {     
+                        }  else {      
                             if (seenTargetTos.indexOf(to) == -1 && from){ 
                                 to = $this.removeQuotes(to)
                                 promises.push(
@@ -637,10 +648,11 @@ export class Service {
         store.logger.info("Done creating all mounts")
         promiseMounts.forEach((f)=>{
             if (f.status == 'fulfilled'){
-                mounts.push(f.value)
+                if (f.value.Source && f.value.Target){
+                    mounts.push(f.value)
+                }
             }
         }) 
-        // this.volumes.push(...binds)
         this.mounts.push(...mounts) 
         return   
     }     
@@ -1113,7 +1125,7 @@ export class Service {
                     }
                     // store.logger.info("%o", $this.config)
                     store.logger.info("%o _____ ",options)
-                    logger.info(`starting the container ${options.name} `)
+                    // logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 
                         resolve()  
                     } else {

@@ -525,20 +525,24 @@ export  class Job {
                     if (this.deployment == 'native'){
                         console.log("is native, skipping")
                     } else {
-
-                        let index = procedures.dependencies.findIndex((f)=>{
-                            return f.fulltarget == service.config.image
-                        })
-                        if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
-                            if (!autocheck){
-                                store.logger.info("Image doesnt exists %s", service.config.image, index)
-                            } else {
-                                store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                        try{
+                            let index = procedures.dependencies.findIndex((f)=>{
+                                return f.fulltarget == service.config.image
+                            })
+                            if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
+                                if (!autocheck){
+                                    store.logger.info("Image doesnt exists %s", service.config.image, index)
+                                } else {
+                                    store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                                }
+                                await procedures.build(false, index, true)
                             }
-                            await procedures.build(false, index, true)
+                        } catch (Err){
+                            store.logger.error(`${Err} error in checking image presence`)
                         }
                     } 
-                    skip = await service.check_then_start({ variables: $this.variables }, true)
+                    console.log("doen checkthenstart")
+                    skip = await service.check_then_start({ variables: $this.variables, autocheck: autocheck }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
                         cancelled_or_skip = skip

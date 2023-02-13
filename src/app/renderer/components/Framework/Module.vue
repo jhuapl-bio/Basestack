@@ -113,7 +113,11 @@
           </v-tab>
         </v-tabs>
         <v-switch
-          v-model="gpu" :label="`GPU`" @click="snackbar=gpu" class="mx-2" v-if="1==1||os == 'linux' "
+          v-model="gpu" :label="`GPU`" @click="snackbar=gpu" class="mx-2" v-if="os == 'linux' "
+        >
+        </v-switch>
+        <v-switch
+          v-model="autocheck" :label="`Autopull Images`" class="mx-2" 
         >
         </v-switch>
         
@@ -182,14 +186,16 @@
       </v-tooltip>
       <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-              <v-icon v-on="on" medium color="indigo "  v-on:click="fetchRemoteCatalog(selectedVersion.name)" style="text-align:right" class="configure ml-2 mr-3">$external-link-alt</v-icon>
+              <v-btn v-on="on" fab  v-on:click="fetchRemoteCatalog(selectedVersion.name)" class="mx-2">
+                <v-icon  medium color="indigo "   style="text-align:right" class="configure">$external-link-alt</v-icon>          
+              </v-btn>
           </template>
           Fetch Versions for Module
       </v-tooltip>
       <v-divider vertical inset ></v-divider>
       <v-tooltip top>
           <template v-slot:activator="{ on }">
-              <v-btn v-on="on" icon @click="start_procedure()">
+              <v-btn v-on="on"  class="mx-2" fab  @click="start_procedure()">
                   <v-icon   color="primary" medium>
                       $play-circle
                   </v-icon>
@@ -199,7 +205,7 @@
       </v-tooltip>
       <v-tooltip top v-if="job && job.running">
           <template v-slot:activator="{ on }">
-              <v-btn v-on="on" medium icon @click="cancel_procedure()" >
+              <v-btn v-on="on" fab    class="mx-2"  @click="cancel_procedure()" >
                   <v-icon color="orange darken-2" medium>
                   $times
                   </v-icon>
@@ -367,7 +373,7 @@
         v-model="snackbar" multi-line
         :timeout="22000" location="center"
       >
-        Allow GPU access inside Docker Containers on Windows or Linux. <br>
+        Allow GPU access inside Docker Containers on Linux ONLY<br>
         Ensure that <code>nvidia-container-toolkit</code> is installed and <code>Docker</code> then restarted with <br>
         <code>`sudo systemctl restart docker`</code>
         <v-btn
@@ -390,13 +396,11 @@
       <v-subheader class="overflow-x-visible mx-4 indigo lighten-5" v-if="selectedVersion.description">{{selectedVersion.description}}</v-subheader>
       <v-stepper  v-model="el" class="pb-0" v-if="services" >
           <v-stepper-header
-              class="configure"
+              class="configure" v-for="(entry, key) in services" :key="key+'-entry'"
           >
-            <template v-for="(entry, key) in services"  >
-              
+            <template >
                 <v-stepper-step
                     :complete="(status[key] ? status[key].success : false)"
-                    :key="key+'-entry'"
                     :disabled="true"
                     complete-icon="$check"
                     :rules="[()=>{
@@ -417,7 +421,7 @@
                           </template>
                           Click to Disable
                       </v-tooltip>
-                      <v-tooltip top :key="key+'-entryDi'" v-else >
+                      <v-tooltip top v-else >
                           <template v-slot:activator="{ on }">
                               <v-icon v-on="on"  class="ml-2" small color="warning lighten-1" @click="services_to_use[key] = 1">
                                   $slash
@@ -695,12 +699,16 @@ export default {
         const $this = this
         let procedureIdx  = this.procedureIdx
         let indic = []
+        let names = []
         if (requiredOnly){
             this.dependencies.map((f,i)=>{
                 if(!f.optional){
                     indic.push(i)
+                    names.push(f.label ? f.label : f.target)
                 }
             })
+            names = names.join(", ")
+
         }
         FileService.buildProcedure({
             catalog: $this.selectedVersion.name,
@@ -709,9 +717,9 @@ export default {
         })
         .then((response)=>{
             this.$swal({
-                title: "Module Build Initiated",
-                text: "Please wait.. this may take some time",
-                icon: 'info',
+                title: `${$this.selectedVersion.name}`,
+                text: `Module Build Dependency Completed for ${names}`,
+                icon: 'success',
                 showConfirmButton: true,
                 allowOutsideClick: true
             });
@@ -721,10 +729,18 @@ export default {
                 position: 'center',
                 icon: 'error',
                 showConfirmButton:true,
-                title: err.response.data.message
+                title: err.response.data.message,
+                text: `Module Build Dependency Failed for ${names}`
             })
-            
         }) 
+        this.$swal({
+            title: `${$this.selectedVersion.name}`,
+            text: `Module Build Dependency Starting for ${names}`,
+            icon: 'info',
+            showConfirmButton: true,
+            allowOutsideClick: true
+        });
+         
     },
     async removeModule(index,name){
       this.$swal({
@@ -844,7 +860,6 @@ export default {
           
         //   this.updates +=1
         // }
-        console.log(libraryVersions)
         console.log(this.selectedVersion.remote, this.selectedVersion.local, this.selected_version_index)
         this.libraryVersions = libraryVersions
         // this.$set(this, 'libraryVersions', libraryVersions)
@@ -1000,6 +1015,7 @@ export default {
         command: custom_command,
         gpu: $this.gpu,
         setUser: setUser,
+        autocheck: $this.autocheck,
         variables: variables
       }).then((response)=>{
         if (!response.data.skip){
@@ -1179,6 +1195,7 @@ export default {
       drawer: true,
       dialog: false,
       gpu: false,
+      autocheck: true, 
       librarydialog: false,
       dialogLog: false,
       customDrawer: false,
