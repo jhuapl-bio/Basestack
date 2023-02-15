@@ -26,7 +26,7 @@
         - "consensus"
       dependencies: 
         - target: "jhuaplbio/irma"
-          label: jhuaplbio/irma:v1.0.0
+          label: jhuaplbio/irma
           version: v1.0.0
           type: "docker-local"
           build: 
