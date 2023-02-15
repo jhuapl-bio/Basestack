@@ -25,7 +25,7 @@
         - "cdc"
         - "consensus"
       dependencies: 
-        - target: "jhuaplbio/irma:v1.0.0"
+        - target: "jhuaplbio/irma"
           label: jhuaplbio/irma:v1.0.0
           version: v1.0.0
           type: "docker-local"
