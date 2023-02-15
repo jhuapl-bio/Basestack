@@ -27,6 +27,7 @@
       dependencies: 
         - target: "jhuaplbio/irma:v1.0.0"
           label: jhuaplbio/irma:v1.0.0
+          version: v1.0.0
           type: "docker-local"
           build: 
             path: ${configPath}/modules/irma/Dockerfile
