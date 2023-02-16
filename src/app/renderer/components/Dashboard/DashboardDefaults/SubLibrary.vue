@@ -212,7 +212,7 @@
             </template>                        
             <template v-slot:[`item.label`]="{ item }">
                 <div :class="[ $vuetify.breakpoint.lgOnly?'text-left':'text-right', 'text-subtitle-1']">
-                    {{ ( item.label ? item.label : item.target   )}}{{ ( item.version ? ':'+item.version : '')  }}
+                    {{ ( item.label ? item.label : item.target   )}}
                 </div>
             </template>
             <template v-slot:[`item.tags`]="{ item }">
@@ -307,7 +307,7 @@
         
         </v-data-table>
     </div>
-    <LogWindow   :info="procedureLogs.slice().reverse()" :key="'logwindowModules'"></LogWindow> 
+    <LogWindow v-if="procedureLogs"  :info="procedureLogs.slice().reverse()" :key="'logwindowModules'"></LogWindow> 
   </v-card> 
 </template>
 

@@ -1078,7 +1078,7 @@ export class Service {
                     if (! options.Image ){ 
                         throw new Error("No Image available")  
                     }   
-                         
+                          
                     if (typeof options.Cmd == "string"){    
                         options.Cmd = ['bash', '-c', options.Cmd]  
                     }     
@@ -1113,13 +1113,13 @@ export class Service {
                             { 
                                 "Driver": "",
                                 "Count": -1,
-                                "DeviceIDs": null,
-                                "Capabilities": [
+                                "DeviceIDs": null, 
+                                "Capabilities": [   
                                     [
                                         "gpu"
                                     ] 
                                 ], 
-                                "Options":  {}
+                                "Options":  {} 
                             } 
                         ]
                     }

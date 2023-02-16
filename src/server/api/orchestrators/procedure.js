@@ -81,11 +81,10 @@ export class Procedure {
             
             if (d.type == 'docker' || d.type == 'docker-local'){
                 if (d.version){
-                    d.fulltarget = `${d.target}:${d.version}`
-                } else {
-                    d.fulltarget = d.target
-                }
+                    d.target = `${d.target.replace(d.version, '')}:${d.version}`
+                } 
             }
+            
             let status = { 
                 downloading: false, 
                 decompressing: false, 
@@ -257,11 +256,11 @@ export class Procedure {
             let building=false   
 			dependencies.forEach((dependency, index)=>{ 
 				if (dependency.type == "docker"){
-                    let target = dependency.fulltarget
+                    let target = dependency.target
 					promises.push(check_image(target))
                      
 				} else if (dependency.type == "docker-local"){ 
-                    let target = dependency.fulltarget
+                    let target = dependency.target
 					promises.push(check_image(target))
 				} else if (dependency.type == 'volume'){
                     promises.push(checkVolumeExists(dependency.target))
@@ -439,9 +438,7 @@ export class Procedure {
                 }
             }
             let target = dependency.target
-            if (dependency.version){
-                target = `${dependency.target}:${dependency.version}`
-            }
+            
             pullImage(target, dependency).then((stream, error)=>{
                 dependency.status.building = true
                 dependency.status.downloading = true
@@ -572,7 +569,7 @@ export class Procedure {
                           
                         // $this.buildlog = spawnLog(stream, $this.logger)
                         stream.on("close", ()=>{ 
-                            // store.logger.info("Completed download of %o", dependency.source)
+                            store.logger.info("Completed download of %o", dependency.source)
                              
                             dependency.status.building = false
                             dependency.status.error = null 
@@ -607,7 +604,6 @@ export class Procedure {
                 dependency.streamObj.destroy()   
             } 
             fs.stat(dependency.build.path, (err, stat)=>{
-                console.log(err, stat)
                 if (err){
                     store.logger.error("Could not build from Dockerfile %s %o", dependency.build.path, err)
                     reject(err)
@@ -622,31 +618,32 @@ export class Procedure {
                     try{
                         store.docker.buildImage(conf,
                         {
-                            t: dependency.target
+                            t: `${dependency.target}`
                         }, (err, stream)=>{
                             if (err){  
-                                store.logger.error("%s %s %o","Error in building docker image for: ", dependency.target , err)
+                                store.logger.error("%s %s %o","Error in building local docker image (file-building) for: ", dependency.target , err)
                                 dependency.status.downloading = false
                                 dependency.status.building = false
-                                dependency.status.error = err
+                                dependency.status.error = err.message
                                 reject(err)
+                            } else {
+                                dependency.status.downloading = true
+                                dependency.status.building = true
+                                
+                                dependency.status.stream  = spawnLog(stream, $this.logger)
+                                dependency.streamObj = stream
+                                stream.on("close", (err, data)=>{
+                                    dependency.status.downloading = false  
+                                    dependency.status.building = false
+                                    if (err){
+                                        dependency.status.error = err
+                                    }
+                                    resolve()
+                                }) 
+            
+                                $this.buildlog = spawnLog(stream,store.logger) 
                             }
-                            dependency.status.downloading = true
-                            dependency.status.building = true
-                            
-                            dependency.status.stream  = spawnLog(stream, $this.logger)
-                            dependency.streamObj = stream
-                            stream.on("close", (err, data)=>{
-                                dependency.status.downloading = false  
-                                dependency.status.building = false
-                                if (err){
-                                    dependency.status.error = err
-                                }
-                            }) 
-        
-                            $this.buildlog = spawnLog(stream,store.logger)   
-                            resolve()  
-                        
+                              
                         }) 
                     } catch(err){        
                         store.logger.info("Error in build image")
@@ -673,45 +670,41 @@ export class Procedure {
                     selectedDep  = [ $this.dependencies[dependencyIdx] ]
                 }
                 selectedDep.map((dependency)=>{
+                    
                     let status = dependency.status; 
-                    if (dependency.streamObj){
-                        // promises.push(dependency.streamObj.close())
-                        if(dependency.type == 'docker'){
-                            // promises.push(dependency.streamObj.destroy())
-                            dependency.streamObj.destroy()
-                            // promises.push(dependency.streamObj.destroy())
-                        } else if(dependency.type == 'orchestration'){
-                            dependency.streamObj.end() 
-                            dependency.status.downloading = false
-                            dependency.status.building = false
-                            dependency.streamObj.destroy() 
-                            // dependency.streamObj.remove({force:true})
-                        } else{
-                            // promises.push(dependency.streamObj.end())
-                            try{
-                                dependency.streamObj.close()
-                            } catch (err){
-                                store.logger.error(err)
-                            }
-                            try{
-                                dependency.streamObj.end()
-                            } catch (err){
-                                store.logger.error(err)
-                            }
-                            try{
-                                dependency.streamObj.destroy()
-                            } catch (err){
-                                store.logger.error(err)
-                            }
-                            dependency.status.downloading = false
-                            dependency.status.building = false
+                    if(dependency.type == 'docker'){
+                        promises.push(dependency.streamObj.destroy())
+                    } else if(dependency.type == 'orchestration'){
+                        promises.push(dependency.streamObj.end()) 
+                        dependency.status.downloading = false
+                        dependency.status.building = false
+                        promises.push(dependency.streamObj.destroy()) 
+                    } else{
+                        try{
+                            promises.push(dependency.streamObj.close())
+                        } catch (err){
+                            store.logger.error(`${err} error in closing stream for ${dependency.target}`)
                         }
-                    } else { 
-                        // promises.push(new Promise((resolve, reject)=>{ resolve(`Skipping removal due to it not running`) }))
-                        store.logger.info("Skipping removal due to it not running")
+                        try{
+                            promises.push(dependency.streamObj.end())
+                        } catch (err){
+                            store.logger.error(`${err} error in ending stream for ${dependency.target}`)
+                        }
+                        try{
+                            promises.push(dependency.streamObj.destroy())
+                        } catch (err){
+                            store.logger.error(`${err} error in destroying stream for ${dependency.target}`)
+                        }
+                        dependency.status.downloading = false
+                        dependency.status.building = false
+                        dependency.status.cancelled = true
                     }
+                    
                     Promise.allSettled(promises).then((resp)=>{
                         resolve(resp)
+                    }).catch((err)=>{
+                        store.logger.error(`${err} error in canceling builds`)
+                        reject(err)
                     })
                 })
             } catch(err){
@@ -727,6 +720,7 @@ export class Procedure {
             let objs = [] 
             let dependencies = this.dependencies
             this.status.building = true
+            
             if (Array.isArray(params) && params.length > 0){
                 dependencies = params.map((f)=>{
                     return $this.dependencies[f]
@@ -737,6 +731,7 @@ export class Procedure {
             try{
                 dependencies.forEach((dependency_obj, i)=>{ 
                     dependency_obj.status.downloading = true
+                    dependency_obj.status.cancelled = false
                     dependency_obj.status.building = true
                     objs.push(dependency_obj) 
                     let overwrite_idx = false
@@ -775,7 +770,7 @@ export class Procedure {
                             dependency_obj.status.downloading = false  
                             store.logger.info(`______Item download: ${dependency_obj.source.target}`)
                             checkExists(dependency_obj.source.target).then((exists)=>{
-                                if (dependency_obj.decompress){ 
+                                if (dependency_obj.decompress && !dependency_obj.status.cancelled){ 
                                     store.logger.info("Decompressing required, doing so now for final target... %s", dependency_obj.target)
                                     checkExists(dependency_obj.target).then((exists)=>{
                                         if (!exists.exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
@@ -801,7 +796,7 @@ export class Procedure {
                             dependency_obj.status.error = err
                         }) ) 
                     } 
-                    Promise.allSettled(promises).then((res)=>{
+                    Promise.all(promises).then((res)=>{
                         store.logger.info("Finished building module")
                         resolve()
                     }).catch((err)=>{

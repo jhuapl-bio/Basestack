@@ -33,14 +33,14 @@
 						<v-list-item-action>
               <v-badge   dot left v-if="entry.status && !entry.status.latest_installed " color="orange darken-2">
                 <v-tooltip top>
-                <template v-slot:activator="{ on }">
+                <template v-slot:activator="{  }">
                   <v-icon  :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
                 </template>
                 {{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
                 </v-tooltip>
               </v-badge>
               <v-tooltip top v-else>
-              <template v-slot:activator="{ on }">
+              <template v-slot:activator="{  }">
                 <v-icon  :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
               </template>
               {{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
@@ -247,8 +247,8 @@
                   </v-icon>
                 </template>
               </v-expansion-panel-header>
-              <v-expansion-panel-content>
-                <LogDashboard   :logs="logs"></LogDashboard> 
+              <v-expansion-panel-content >
+                <LogDashboard   :logs="logs.slice().reverse()"></LogDashboard> 
                 
                 <v-icon color="white" :hidden="panel" class="mt-5" @click="panel=[]">
                   $arrow-alt-circle-down
@@ -354,7 +354,7 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "irma",
+      selectedCatalogName: "mytax",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
@@ -378,9 +378,7 @@ export default {
       ready:false,
       interval: null,
       catalogInterval: null,
-      modules: false,
       services: false,
-      procedures: false,
       defaults: [],
       runningServer: false, 
       running: false

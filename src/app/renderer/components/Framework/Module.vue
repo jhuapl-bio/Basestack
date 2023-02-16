@@ -33,17 +33,35 @@
         :items="libraryVersions" 
         @change="updateStagedVersion"
         item-text="version"
-        item-value="idx"
-        clearable dense
+        :item-value="['id']"
+        dense
         class="mx-auto "
+        auto-select-first
         style="max-width: 50%;"
         label="Select Item"
         :return-object="true"
-        single-line
+        single-line 
       >
-        <template v-slot:selection="{  }">
-            <v-list-item-title >{{ ( selectedVersion.version != latest ? "Not Latest" : 'Latest' ) }}  {{ selectedVersion.remote   ? "Remote" : "Local"}}</v-list-item-title>
-            <v-list-item-subtitle>v{{ selectedVersion.version }}</v-list-item-subtitle>
+        <template v-slot:selection="{  item }">
+            <v-list-item-title >{{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}  {{ item.remote   ? "Remote" : "Local"}}</v-list-item-title>
+            <v-list-item-subtitle>v{{ item.version }}</v-list-item-subtitle>
+            <v-tooltip top class="ml-2" :key="`${item.imported}-importedkey`" v-if="item.removable && item.imported">
+              <template v-slot:activator="{ on }">
+                <v-btn @click="removeModule(item.id)" v-on="on" icon >
+                  <v-icon color="orange" medium>
+                    $trash-alt
+                  </v-icon>
+                </v-btn>
+              </template>
+              Remove saved module
+            </v-tooltip>
+            <v-tooltip top class="ml-2" >
+              <template v-slot:activator="{ on }">
+                <v-icon  v-on="on" @click="importVersion(item.id)" medium color="primary">$download</v-icon>
+              </template>
+              Import module for offline use
+            </v-tooltip>
+            
         </template>
         <template v-slot:item="{ item }">
           <v-list-item-avatar
@@ -64,17 +82,10 @@
             <v-list-item-subtitle v-else>
               Not Base Version
             </v-list-item-subtitle>
+            
           </v-list-item-action>
         </template>
-        <template v-slot:append>
-          <v-tooltip top class="ml-2" >
-            <template v-slot:activator="{ on }">
-              <v-icon  v-on="on" @click="importVersion" medium color="primary">$download</v-icon>
-            </template>
-            Import module for offline use
-          </v-tooltip>
-          
-        </template>
+      
         <template v-slot:prepend>
           <v-subheader>Version</v-subheader>
           <v-icon medium color="primary">$tags</v-icon>
@@ -174,16 +185,7 @@
         </v-dialog>
       </template>
       
-      <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.removable && selectedVersion.imported">
-        <template v-slot:activator="{ on }">
-          <v-btn @click="removeModule(selectedVersion.idx, selectedVersion.name)" v-on="on" icon >
-            <v-icon color="orange" medium>
-              $trash-alt
-            </v-icon>
-          </v-btn>
-        </template>
-        Remove saved module
-      </v-tooltip>
+      
       <v-tooltip bottom>
           <template v-slot:activator="{ on }">
               <v-btn v-on="on" fab  v-on:click="fetchRemoteCatalog(selectedVersion.name)" class="mx-2">
@@ -273,6 +275,7 @@
       </v-navigation-drawer>
      
     <v-col sm="3" class="shrink">
+      <Docker :mini="true"></Docker>
       <v-dialog 
           transition="dialog-bottom-transition"
           v-model="librarydialog"
@@ -367,6 +370,7 @@
         </v-tooltip>
         {{ ( latest ? 'A newer version is available' : 'Could not fetch latest version' ) }}
       </v-banner>
+      
     </v-col>
     <v-col sm="9">
       <v-snackbar
@@ -390,108 +394,105 @@
             @click="snackbar = false"
           >
             Close
-          </v-btn>
+          </v-btn>  
         </template>
       </v-snackbar>
       <v-subheader class="overflow-x-visible mx-4 indigo lighten-5" v-if="selectedVersion.description">{{selectedVersion.description}}</v-subheader>
-      <v-stepper  v-model="el" class="pb-0" v-if="services" >
-          <v-stepper-header
-              class="configure" v-for="(entry, key) in services" :key="key+'-entry'"
-          >
-            <template >
-                <v-stepper-step
-                    :complete="(status[key] ? status[key].success : false)"
-                    :disabled="true"
-                    complete-icon="$check"
-                    :rules="[()=>{
-                        return (status[key] && status[key].error ? !status[key].error : true) 
-                    }]"
-                    error-icon="$times-circle"
-                    @click="el = key+1"
-                    :step="key+1"
+     
+      <v-stepper  v-model="el"  v-if="services" > 
+          <v-stepper-header 
+          >      
+          <template  v-for="(entry, key) in services"  >
+            <v-stepper-step 
+                :complete="(status[key] ? status[key].success : false)" 
+                :disabled="true"     complete-icon="$check"   
+                :rules="[()=>{ 
+                    return (status[key] && status[key].error ? !status[key].error : true) 
+                }]"  
+                error-icon="$times-circle" 
+                @click="el = key+1" 
+                :step="key+1"
+            >
+              {{ ( entry.label ? entry.label : entry.name ) }} 
+              <small class="">{{ services_to_use[key] >= 1 || !services_to_use[key] == null ? 'Enabled' : "Disabled" }}
+                <v-tooltip top   v-if="services_to_use[key] >= 1 || !services_to_use[key] == null" >
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on"  class="ml-2" small color="primary lighten-2" @click="services_to_use[key] = 0">
+                            $check
+                        </v-icon>
+                    </template>
+                    Click to Disable
+                </v-tooltip>
+                <v-tooltip top v-else >
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on"  class="ml-2" small color="warning lighten-1" @click="services_to_use[key] = 1">
+                            $slash
+                        </v-icon>
+                    </template>
+                    Click to Enable
+                </v-tooltip>
+                <v-tooltip top v-if="status && status[key] && status[key].error">
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" class="ml-2"  small color="orange darken-2">
+                            $exclamation-triangle
+                        </v-icon>
+                    </template>
+                    {{status[key].error}}
+                </v-tooltip>
+                <v-tooltip top v-else-if="status && status[key] && status[key].cancelled">
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on"  class="ml-2" small color="orange darken-2">
+                            $ban
+                        </v-icon>
+                    </template>
+                    Cancelled!
+                </v-tooltip>
+                <v-dialog
+                  transition="dialog-bottom-transition"
+                  max-width="600"
                 >
-                    
-                    {{ ( entry.label ? entry.label : entry.name ) }} 
-                    <small class="">{{ services_to_use[key] >= 1 || !services_to_use[key] == null ? 'Enabled' : "Disabled" }}
-                      <v-tooltip top  :key="key+'-entryDi'" v-if="services_to_use[key] >= 1 || !services_to_use[key] == null" >
-                          <template v-slot:activator="{ on }">
-                              <v-icon v-on="on"  class="ml-2" small color="primary lighten-2" @click="services_to_use[key] = 0">
-                                  $check
-                              </v-icon>
-                          </template>
-                          Click to Disable
-                      </v-tooltip>
-                      <v-tooltip top v-else >
-                          <template v-slot:activator="{ on }">
-                              <v-icon v-on="on"  class="ml-2" small color="warning lighten-1" @click="services_to_use[key] = 1">
-                                  $slash
-                              </v-icon>
-                          </template>
-                          Click to Enable
-                      </v-tooltip>
-                      <v-tooltip top v-if="status && status[key] && status[key].error">
-                          <template v-slot:activator="{ on }">
-                              <v-icon v-on="on" class="ml-2"  small color="orange darken-2">
-                                  $exclamation-triangle
-                              </v-icon>
-                          </template>
-                          {{status[key].error}}
-                      </v-tooltip>
-                      <v-tooltip top v-else-if="status && status[key] && status[key].cancelled">
-                          <template v-slot:activator="{ on }">
-                              <v-icon v-on="on"  class="ml-2" small color="orange darken-2">
-                                  $ban
-                              </v-icon>
-                          </template>
-                          Cancelled!
-                      </v-tooltip>
-                      <v-dialog
-                        transition="dialog-bottom-transition"
-                        max-width="600"
-                      >
-                        <template v-slot:activator="{ on,attrs }">                        
-                            <v-icon  v-bind="attrs" v-on="on" class="ml-2" small color="primary lighten-2" >
-                                $cog
-                            </v-icon>
-                        </template>
-                        <template v-slot:default="dialog">
-                          <v-card>
-                            <v-toolbar
-                              color="light"
-                              dark
-                            >Adjust Configuration for service: {{entry.label}}
-                            <v-spacer>
-                            </v-spacer>
-                            </v-toolbar>
-                            <v-card-text>
-                              <small>Default image: {{entry.image}}</small>
-                              <v-text-field
-                                label="Service Image to Use"
-                                v-model="custom_images[key]"
-                                single-line
-                              ></v-text-field>
-                              <v-btn
-                                text @click="custom_images[key]=entry.image"
-                              >Default</v-btn>
-                            </v-card-text>
-                            <v-card-actions class="justify-end">
-                              <v-btn
-                                text
-                                @click="dialog.value = false"
-                              >Close</v-btn>
-                            </v-card-actions>
-                          </v-card>
-                        </template>
-                      </v-dialog>
-                    </small>
-                </v-stepper-step>
-                <v-divider
-                    v-if="key !== services.length - 1"
-                    :key="key"
-                ></v-divider>
-            </template>
+                  <template v-slot:activator="{ on,attrs }">                        
+                      <v-icon  v-bind="attrs" v-on="on" class="ml-2" small color="primary lighten-2" >
+                          $cog
+                      </v-icon>
+                  </template>
+                  <template v-slot:default="dialog">
+                    <v-card>
+                      <v-toolbar
+                        color="light"
+                        dark
+                      >Adjust Configuration for service: {{entry.label}}
+                      <v-spacer>
+                      </v-spacer>
+                      </v-toolbar>
+                      <v-card-text>
+                        <small>Default image: {{entry.image}}</small>
+                        <v-text-field
+                          label="Service Image to Use"
+                          v-model="custom_images[key]"
+                          single-line
+                        ></v-text-field>
+                        <v-btn
+                          text @click="custom_images[key]=entry.image"
+                        >Default</v-btn>
+                      </v-card-text>
+                      <v-card-actions class="justify-end">
+                        <v-btn
+                          text
+                          @click="dialog.value = false"
+                        >Close</v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </template>
+                </v-dialog>
+              </small>
+            </v-stepper-step>
+            <v-divider
+              v-if="key !== services.length - 1"
+              :key="`${key}-dividerKey`"
+            ></v-divider>
+          </template>
         </v-stepper-header>
-          
       </v-stepper>
       <v-card  v-if="anyOutput" class="scroll ">
         <Progresses
@@ -553,84 +554,12 @@
       >
       </ListParams>
     </v-col>
-    <!-- <v-footer
-      v-bind="{
-        absolute: true,
-      }"
-      app
-      :padless="false"
-    >
-      <v-dialog
-        transition="dialog-bottom-transition"
-        max-width="80vh" v-model="dialogLog"
-      >
-        <template v-slot:activator="{ on, attrs }">
-          <v-card
-            flat
-            tile
-            width="100%"
-            class="red lighten-1 text-center"
-          >
-              <v-card-text>
-              <v-btn
-                icon
-                v-bind="attrs" class="justify-center text-center"
-                v-on="on"
-              >
-                <v-icon
-                  medium
-                >$comment
-                </v-icon>
-              </v-btn>
-            </v-card-text>
-          </v-card>
-        </template>
-        <template v-slot:default="dialogLog">
-          <v-card
-          >
-            <v-toolbar
-              color="indigo"
-              dark
-            >Log output</v-toolbar>
-            <v-card-text>
-              <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow> 
-            </v-card-text>
-            <v-card-actions class="justify-center">
-              <v-btn
-                text
-                @click="dialogLog.value = false"
-              >Close</v-btn>
-            </v-card-actions>
-          </v-card>
-          
-        </template>
-        
-      </v-dialog>
-    </v-footer> -->
-    <!-- <v-col :sm="!selectedProcedure.full_orientation ? 6 : 12" v-if="headers.length > 0 && procedure "  >
-      <v-card height="90vh" class="scroll fill-height"> -->
-        <!-- <Progresses
-          :progresses="procedure.watches"
-          :status="status"
-          :job="job"
-          :catalog="module"
-          :procedure="procedureIdx"
-          :removal_override="procedure.removal_override"
-          @removeCustomVariable="removeCustomVariable"
-          :defaultHeaders="outputHeaders"
-        >
-        </Progresses> -->
-        <!-- <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow>  -->
-        
-      <!-- </v-card> -->
-    <!-- </v-col> -->
   </v-row>
 </template>
 
 <script>
 const cloneDeep = require("lodash.clonedeep");
 import nestedProperty from 'nested-property';
-
 import { Configuration } from '../../../../shared/configuration';
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
 import FileService from '@/services/File-service.js'
@@ -651,7 +580,6 @@ export default {
     Docker,
     SubLibrary,
     LoopingRhombusesSpinner,
-    FulfillingBouncingCircleSpinner,
   },
   beforeDestroy: function(){
     if (this.interval){
@@ -672,6 +600,9 @@ export default {
   methods: {
     setProcedure(event){
       this.procedure_selected_index = event
+    },
+    getIndex(evt){
+      console.log(evt,"<")
     },
     getUrl(link){
 			  let url 
@@ -742,7 +673,13 @@ export default {
         });
          
     },
-    async removeModule(index,name){
+    async removeModule(item){
+      let index = this.libraryVersions.findIndex((f)=>{
+        return item == f.id
+      })
+      if (!index || index < 0){
+        index = 0
+      }
       this.$swal({
           title: 'Are you sure you want to remove this version?',
           type: 'warning',
@@ -752,9 +689,8 @@ export default {
           denyButtonText: `Remove from Imports`,
       }).then((res) => {
           if (res.value !='cancel' && res.isConfirmed){
-
               FileService.removeModule({
-                  catalog: name,
+                  catalog: this.selectedVersion.name,
                   index: index,
                   dependencies: true,
               }).then((response)=>{
@@ -764,7 +700,9 @@ export default {
                       showConfirmButton:true,
                       title:  response.data.message
                   })
-                  this.selectedVersion.imported=false
+                  this.libraryVersions.splice(index, 1)
+                  this.selectedVersion = this.libraryVersions[0]
+                  
               })
               .catch((err)=>{
                   console.error(err)
@@ -772,13 +710,14 @@ export default {
                       position: 'center',
                       icon: 'error',
                       showConfirmButton:true,
-                      title:  error.response.data.message
+                      title:  err.response.data.message
                   })
               }) 
+              
           }
           else if (res.value !='cancel' && res.isDenied){
               FileService.removeModule({
-                  catalog: name,
+                  catalog: this.selectedVersion.name,
                   index: index
               }).then((response)=>{
                   this.$swal.fire({
@@ -787,7 +726,8 @@ export default {
                       showConfirmButton:true,
                       title:  response.data.message
                   })
-                  this.selectedVersion.imported=false
+                  this.libraryVersions.splice(index, 1)
+                  this.selectedVersion = this.libraryVersions[0]
               })
               .catch((err)=>{
                   console.error(err)
@@ -795,7 +735,7 @@ export default {
                       position: 'center',
                       icon: 'error',
                       showConfirmButton:true,
-                      title:  error.response.data.message
+                      title:  err.response.data.message
                   })
               }) 
               
@@ -854,15 +794,8 @@ export default {
         let libraryVersions = response.data.data
         let idx = libraryVersions.findIndex((f,i)=>{
           return f.version == this.selectedVersion.version
-        }) 
-        // if (idx != null && idx !== -1 && this.selectedVersion){
-        //   this.selectedVersion = libraryVersions[idx]
-          
-        //   this.updates +=1
-        // }
-        console.log(this.selectedVersion.remote, this.selectedVersion.local, this.selected_version_index)
+        })       
         this.libraryVersions = libraryVersions
-        // this.$set(this, 'libraryVersions', libraryVersions)
       }catch (Err){
         console.error(Err)
       }
@@ -952,12 +885,7 @@ export default {
         catalog: $this.selected.name,
         token: $this.$store.token,
       }).then((response)=>{
-        // this.$swal.fire({
-        //   position: 'center',
-        //   icon: 'success',
-        //   showConfirmButton:true,
-        //   title:  response.data.message
-        // })
+     
       }).catch((error)=>{
         console.error(error)
         this.$swal.fire({
@@ -1130,27 +1058,34 @@ export default {
         this.intervalChecking = false
       }
     },
-    async importVersion(){
+    async importVersion(item){
+      let index = this.libraryVersions.findIndex((f)=>{
+        return item == f.id
+      })
+      if (!index || index < 0){
+        index = 0
+      }
       await FileService.importModule({
-        index: this.selectedVersion.idx,
+        index: index,
         catalog: this.name
       }).then((response)=>{
         this.$swal.fire({
           position: 'center',
           icon: 'success',
           showConfirmButton:true,
-          title:  response.data.message
+          title: `${this.name}-Imported Successfully`,
+          text:  response.data.message
         })
   			this.count +=1
         this.selectedVersion.imported = true
-        // this.getStatus()
       }).catch((error)=>{
         console.error(error)
         this.$swal.fire({
           position: 'center',
           icon: 'error',
           showConfirmButton:true,
-          title:  error.response.data.message
+          title: `${this.name}-Failed Import`,
+          text:  error.response.data.message
         })
       })
     },
@@ -1196,7 +1131,7 @@ export default {
       dialog: false,
       gpu: false,
       autocheck: true, 
-      librarydialog: false,
+      librarydialog: true,
       dialogLog: false,
       customDrawer: false,
       totalSpaceUsed: "0 Bytes",

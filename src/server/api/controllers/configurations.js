@@ -71,7 +71,12 @@ export async function import_cfgs(module, type){
                 let config = [];
                 
                 try{
+                    
                     config = parseConfigVariables(result.value, store.system)
+                    if (files_marked[i]){
+                        config.path = files_marked[i]
+                    }
+                    config.id = `${config.path}-${config.version}-${config.imported}-${config.removable}-${config.name}-${config.remote}`
                     if(config){
                         return_data.push(config)
                     }

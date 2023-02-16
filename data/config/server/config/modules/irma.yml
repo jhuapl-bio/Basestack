@@ -25,8 +25,8 @@
         - "cdc"
         - "consensus"
       dependencies: 
-        - target: "jhuaplbio/irma:v1.0.0"
-          label: jhuaplbio/irma:v1.0.0
+        - target: "jhuaplbio/irma"
+          label: jhuaplbio/irma
           version: v1.0.0
           type: "docker-local"
           build: 
@@ -79,7 +79,7 @@
           hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
           bind_parent_dir: false
           type: file
-          pattern: ".fasta"
+          pattern: ".fa"
           source: "%{variables.outputDir.source}/%{variables.samplename.source}"
           target: "%{variables.outputDir.source}/%{variables.samplename.source}"
           path: "%{variables.outputDir.source}/%{variables.samplename.source}"

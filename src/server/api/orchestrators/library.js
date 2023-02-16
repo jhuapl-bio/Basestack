@@ -79,8 +79,8 @@ export  class Library {
     }
     getImported(name){
         let any = this.all[name].choices.some((a)=>{
-            return a.imported
-        })
+            return a.imported 
+        }) 
         return any 
     } 
     sorting(a,b){
@@ -89,9 +89,9 @@ export  class Library {
         } else if (a.version > b.version){
             return -1
         } else if (b.remote){
-            return 1
+            return -1
         } else {
-            return -1 
+            return 1 
         }
     }
     getSortedImported(name){ 
@@ -304,7 +304,8 @@ export  class Library {
                 con.local = true
                 con.remote = false 
                 con.removable = false
-                this.all[name].choices.push(con)
+                con.id = `${con.path}-${con.version}-${con.imported}-${con.removable}-${con.name}-${con.remote}-local`
+                this.all[name].choices.unshift(con)
             })
             
         } else { 
@@ -319,7 +320,8 @@ export  class Library {
             config.remote = false
             config.removable = false
             config.local = true
-            this.all[name].choices.push(config) 
+            config.id = `${config.path}-${config.version}-${config.imported}-${config.removable}-${config.name}-${config.remote}-local`
+            this.all[name].choices.unshift(config) 
             
          
         }  
@@ -340,10 +342,15 @@ export  class Library {
                     con.imported = false
                     con.remote = true
                     con.removable = false
+                    con.id = `${con.path}-${con.version}-${con.imported}-${con.removable}-${con.name}-${con.remote}-remote`
                     if (idx > -1){
                         this.all[name][idx] = con
-                    } else {
-                        this.all[name].choices.push(con) 
+                    } else { 
+                        if (process.env.NODE_ENV == 'development'){
+                            this.all[name].choices.push(con) 
+                        } else {
+                            this.all[name].choices.unshift(con) 
+                        }
                     }
                     
              
@@ -357,10 +364,15 @@ export  class Library {
                 config.imported = false  
                 config.remote = true
                 config.removable = false
+                config.id = `${config.path}-${config.version}-${config.imported}-${config.removable}-${config.name}-${config.remote}`
                 if (idx > -1){ 
                     this.all[name][idx] = config    
-                } else {
-                    this.all[name].choices.push(config) 
+                } else { 
+                    if (process.env.NODE_ENV == 'development'){
+                        this.all[name].choices.push(config) 
+                    } else {
+                        this.all[name].choices.unshift(config) 
+                    }
                 }
         }   
         return   
@@ -389,7 +401,7 @@ export  class Library {
                     })
                     if (idx == -1){
                         targets.push(parseConfigVariables(JSON.stringify(u), store.system))
-                    }
+                    } 
                 })
             })
         })
@@ -400,6 +412,7 @@ export  class Library {
         
     }
     async removeModule(name, idx, dependencies){
+        
         if (dependencies && this.all[name].choices){
             try{ 
                 if (idx >=0 ){
@@ -414,29 +427,34 @@ export  class Library {
         try{  
             if (idx >=0 && this.all[name] ){
                 try{ 
-                    if (this.all[name] && 
+                    if (this.all[name] &&  
                         this.all[name].choices[idx] && 
                         this.all[name].choices[idx].path && 
                         this.all[name].choices[idx].removable
                     ){ 
+                        
                         removeFile(this.all[name].choices[idx].path)
-                        this.all[name].choices[idx].path = null
-                        this.all[name].choices[idx].imported = false
+                        this.all[name].choices.splice(idx, 1)
+                        
                     }
                      
                 } catch(er){
-                    store.logger.error("%s error in removing path to yaml file %s", er, name)
+                    store.logger.error("%o error in removing path to yaml file %s", er, name)
                 } 
             } else if (this.all[name]) {   
                 try{  
+                    let indices = []
                     this.all[name].choices.forEach((m,i)=>{
+                        
                         if (m && m.path && m.path && m.removable){ 
                             removeFile(m.path) 
                             m.path = null
                             m.imported = false
+                            indices.push(i)
                         }
-                         
+                        
                     })   
+                   
                 } catch(er){
                     store.logger.error("%s error in removing path to yaml file %s", er, name)
                 }

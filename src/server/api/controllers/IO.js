@@ -350,7 +350,7 @@ export async function removeFile(filepath, type, silentExists){
 			    } else {
 			    	rimraf(path.join(filepath), (err) => {
 					  if (err) {
-					  	store.logger.error("%s %s", "error in folderpath", err)
+					  	store.logger.error("%s %o", "error in folderpath", err)
 					    reject(err)
 					  }
 					  resolve("Removed folder: " + filepath)
@@ -477,6 +477,7 @@ export async function downloadSource(url, target, params)  {
 										c.destroy()
 									})
 									stream.pipe(writer)
+									resolve(writer)
 								});
 							})
 								
@@ -493,6 +494,10 @@ export async function downloadSource(url, target, params)  {
 						c.on('end',(err)=>{
 							logger.info(`${err}, ended ftp protocol get`)
 							c.destroy()
+							resolve()
+						});
+						c.on('destroy',(err)=>{
+							logger.info(`${err}, destroyed ftp protocol get`)
 							resolve()
 						});
 						c.connect({ 
