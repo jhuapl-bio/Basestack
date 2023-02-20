@@ -86,6 +86,8 @@ if (process.env.NODE_ENV === 'production') {
       'process.env.NODE_ENV': '"production"'
     })
   )
+} else{
+  console.log("DEVELOPMENT")
 }
 
 module.exports = mainConfig

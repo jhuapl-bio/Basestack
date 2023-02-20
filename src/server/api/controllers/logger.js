@@ -47,7 +47,7 @@ export const logger = createLogger({
 
 export const dockerlogger = createLogger({
   level: 'info',
-  format: combine(
+  format: combine( 
     label({ label: 'server log' }),
     timestamp(),
     format.splat(),

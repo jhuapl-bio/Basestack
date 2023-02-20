@@ -973,7 +973,18 @@ export default {
         option: value.option,
         catalog: $this.selected.name, 
         procedure: $this.procedureIdx
+      }).then((f) => {
+        console.log("f")
+        try {
+          // $this.$electron.ipcRenderer.send('terminal-into', '\b \b');
+          console.log($this.procedure.variables)
+          $this.$electron.ipcRenderer.send('terminal-into', `${$this.procedure.services[0].command.join("  ")}`);
+        } catch (err) {
+          console.error(err)
+        }
       })
+      
+      
       this.procedure.variables[value.variable].source = value.src
       this.procedure.updates(value).then((f)=>{
         if (f){

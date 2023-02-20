@@ -9,7 +9,6 @@
    const { createLogger, format, transports } = require('winston');
    const { combine, timestamp, label, printf } = format;
    import path  from "path"
-  //  const { store }  = require("../../config/store/index.js")
   // Create a custom format for the log generation
    const myFormat = printf(({ level, message, label, timestamp }) => {
      try{
@@ -25,12 +24,11 @@
    
    export function logger(errorFile, logFile){ 
     let logger = createLogger({ // Make the logger objct info, and set up custom formatting 
-      level: 'info',
       format: combine(
         label({ label: 'server log' }),
         timestamp(),
         format.json(),
-        format.splat(),
+        format.splat(), 
         format.prettyPrint(),
         myFormat // <---- custom format function for stdout/stderr
       ),
@@ -43,8 +41,8 @@
         // - Write all logs error (and below) to `error.log`.
         // - Write max size in MB as 2 MB
         //
-        new transports.File({ filename: errorFile, maxsize: 2000000,  maxFiles: 1, level: 'error', tailable:true, options: { flags: 'a' } }),
-        new transports.File({ filename: logFile, maxsize: 2000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
+        // new transports.File({ filename: errorFile, maxsize: 2000000,  maxFiles: 1, level: 'error', tailable:true, options: { flags: 'a' } }),
+        // new transports.File({ filename: logFile, maxsize: 2000000, maxFiles: 1,  tailable: true, options: { flags: 'a' } })
       ]})
          
       //
@@ -54,6 +52,7 @@
       if (process.env.NODE_ENV !== 'production') {
         logger.add(new transports.Console());
       }
+     
       return logger
   
    }

@@ -54,7 +54,9 @@
     "dev-tools": "vue-devtools",
     "dev:up": "docker compose up basestack_orchestrator",
     "dev:down": "docker compose down basestack_orchestrator",
-    "install_modules": "npm install --force",
+    "install": "npm install && npm run rebuild-node-pty",
+    "rebuild": "electron-rebuild",
+    "rebuild-node-pty": "electron-rebuild -f -w node-pty",
     "e2e": "npm run pack && mocha test/e2e",
     "lint": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter src",
     "lint:fix": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter --fix src",
@@ -126,6 +128,9 @@
       "executableName": "Basestack",
       "artifactName": "${name}.${arch}.${ext}"
     },
+    "asar": {
+      "unpack": "**/node_modules/node-pty/build/Release/*"
+    },
     "nsis": {
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
@@ -144,6 +149,7 @@
     "@vuelidate/core": "^2.0.0-alpha.38",
     "@vuelidate/validators": "^2.0.0-alpha.28",
     "axios": "^0.21.1",
+    "chokidar": "^2.1.8",
     "cors": "^2.8.5",
     "csv-parse": "^5.3.0",
     "csv-parser": "^2.3.3",
@@ -173,6 +179,7 @@
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.6",
     "node-gzip": "^1.1.2",
+    "node-pty": "^0.10.1",
     "rimraf": "^3.0.2",
     "simple-git": "^2.48.0",
     "source-map-support": "^0.5.19",
@@ -202,7 +209,10 @@
     "vuex-electron": "^1.0.3",
     "vuex-logger-plugin": "^1.0.1",
     "vuex-map-fields": "^1.4.1",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "xterm": "^5.1.0",
+    "xterm-addon-fit": "^0.7.0",
+    "xterm-addon-web-links": "^0.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.14.8",
@@ -232,6 +242,7 @@
     "electron-debug": "^1.5.0",
     "electron-devtools-installer": "^2.2.4",
     "electron-notarize": "^1.0.0",
+    "electron-rebuild": "^3.2.9",
     "electron-winstaller": "^5.0.0",
     "eslint": "^7.18.0",
     "eslint-config-standard": "^11.0.0",

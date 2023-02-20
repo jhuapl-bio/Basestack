@@ -30,7 +30,7 @@
     Open Log Folder
     </v-btn>
     <div class="logWindow" >
-        <div v-if="info" class="logDiv" style="max-height: 50vh; border: none; overflow-y:auto; ">
+        <div v-if="info" class="logDiv" style="max-height: 70vh; border: none; overflow-y:auto; ">
             <code v-for="(line, index) in info"  v-bind:key="index" class="align-start">
                 {{ line }}
                 <v-divider></v-divider>

@@ -215,7 +215,7 @@
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report}  ${file}  ']
+          command: ['export KRAKEN2_DEFAULT_DB=%{variables.db.optionValue.target}; kraken2  --output %{shared.variables.report.target}.out  --report %{shared.variables.report.target} %{variables.file.target}  ']
           # command: [ "bash", '-c', "\" export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report}  ${file} \""]
         - name: mytax_create_json
           label: Create Report JSON
@@ -228,7 +228,7 @@
           init: false
           force_restart: false
           force_init: false
-          command: [bash, "-c", ' python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes} && bash krakenreport2json.sh -i ${report}.fullstring -o ${report}.json ' ]
+          command: ['python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes} && bash krakenreport2json.sh -i ${report}.fullstring -o ${report}.json ' ]
     - name: mytax_visualization
       title: Kraken2 Mytax Visualization
       icon: chart-pie

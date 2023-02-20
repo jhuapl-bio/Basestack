@@ -9,10 +9,10 @@ const { Service } = require("../orchestrators/service.js")
 const { createNetworks, createVolumes } = require("./post-installation.js")
 const Docker = require("dockerode")
 const {  readFile } = require("./IO.js")  
- 
-export async function docker_init(params){
-	let config = null 
-	 
+   
+export async function docker_init(params){ 
+	let config = null   
+	  
 	const meta  = store.dockerConfig
 	let dockerObj;
 	if (params){

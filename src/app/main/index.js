@@ -44,7 +44,7 @@ const {fs} = require("fs")
  */
 let releaseNotes;
 
-let os = require("os")
+
 
 // If in prod move, setup the auto updater to set the current version of basestack to render
 if (process.env.NODE_ENV !== 'development') {
@@ -52,7 +52,7 @@ if (process.env.NODE_ENV !== 'development') {
   process.env.version_basestack = autoUpdater.currentVersion
   releaseNotes = {
     releaseNotes: "None Available",
-    version: "Not Available",
+    version: "Not Available", 
     releaseDate: "NA"
   };
 } else {
@@ -125,6 +125,7 @@ client.app.on('ready', async () => {
       })
       process.env.errorfile = config.logs.error
       client.logger = logger;
+      
       if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdates()
       client.logger.info("Creating window")
       client.createWindow()

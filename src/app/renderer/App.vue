@@ -8,7 +8,8 @@
   -->
 
 <template>
-  <v-app id="app" class="px-0 py-0" 
+  <div id="app">
+  <v-app id="app-v" class="px-0 py-0" 
 	>
 		<v-navigation-drawer
 				v-model="drawer"  
@@ -117,6 +118,7 @@
         >
         </v-img>
         <v-spacer></v-spacer>
+        <v-btn @click="navigation = !navigation">Toggle Info Panel</v-btn>
         <v-autocomplete
           :items="Object.values(latestLibrary)"
           chips dense
@@ -183,7 +185,8 @@
             $download
           </v-icon>
         </v-btn> -->
-        <v-row  v-if="!runningServer">
+        <v-row  v-if="!runningServer" class="mx-10 px-10">
+          
           <v-alert type="warning" shaped icon="$exclamation-triangle"
             text > Server is not Running at specified port: {{selectedPort}}
           </v-alert>
@@ -192,6 +195,7 @@
         </v-row>
         
         <v-row  style="height: 10vh" v-if="selected == 'procedures' && selectedCatalog">
+          
           <v-col sm="12" v-if="importedLibrary[selectedCatalog.name] && importedLibrary[selectedCatalog.name].choices" >
             <component 
               :is="'Module'" 
@@ -224,7 +228,7 @@
 			</v-container>
       
 		</v-main>
-    
+    <InformationPanel :navigationPanel="navigation" :logs="logs"></InformationPanel>
 		<v-footer
 			 absolute inset app
        class=""
@@ -234,8 +238,10 @@
 				color="primary"
 				class="lighten-1 text-center "
 			>
+         
 				
-        <v-card-actions>
+        <!-- <v-card-actions>
+          
           <v-expansion-panels  v-model="panel" style="padding:0; margin:0; background-color: #1976d2" >
             <v-expansion-panel   style="padding:0; margin:0; background-color: #1976d2" 
             > 
@@ -257,14 +263,15 @@
               </v-expansion-panel-content>
             </v-expansion-panel>
           </v-expansion-panels>
-        </v-card-actions>
+          
+        </v-card-actions> -->
         <v-card-text class="white--text">
 				{{  version  }} — <strong>Basestack</strong>
 				</v-card-text>
 			</v-card>
 		</v-footer>
 	</v-app>
-
+  </div>
 
 </template>
 
@@ -272,22 +279,24 @@
 import FileService from '@/services/File-service.js'
 import Module from '@/components/Framework/Module'
 import Dashboard from "@/components/Dashboard/Dashboard"
-import LogDashboard from "@/components/Dashboard/DashboardDefaults/LogDashboard"
 import CustomGenerator from "@/components/Dashboard/DashboardDefaults/CustomGenerator"
 import PlayDashboard from "@/components/Dashboard/DashboardDefaults/PlayDashboard"
 import Sys from "@/components/Dashboard/System/Sys"
 import Library from '@/components/Dashboard/DashboardDefaults/Library'
 import {FulfillingBouncingCircleSpinner } from 'epic-spinners'
+import InformationPanel from '@/components/Dashboard/DashboardDefaults/InformationPanel'
 
 const moment = require('moment');
 const {dialog}=require("electron")
 export default {
-	name: 'client',
+  name: 'client',
+  watch: {
+  },
 	components:{
-		Module,
+    Module,
+    InformationPanel,
 		Dashboard,
 		Library,
-		LogDashboard,
 		CustomGenerator,
 		PlayDashboard,
 		Sys,
@@ -345,9 +354,11 @@ export default {
       tab: 0,
 			mini:true,
       panel: [],
+      navigation: false,
       logs:["Initializing Logs"],
       defaultModule: {},
       latestLibrary: {},
+      toggleInformationPanel: false,
       stagedLatest: null,
 			drawer:false,
 			tabProcedure: 1, 
@@ -358,7 +369,7 @@ export default {
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
-			selected: 'defaults',
+			selected: 'procedures',
       colorList: [
         "rgb(43, 88, 185",
         "rgb(96, 125, 139", 
@@ -552,7 +563,7 @@ export default {
 		},
 		emitChange(value){
 			this[value.target] = value.value
-	    },
+	  },
 		hovered(event, entry){
 			entry.hovered = event
 			return event

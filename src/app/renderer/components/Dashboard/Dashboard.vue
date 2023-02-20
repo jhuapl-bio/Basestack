@@ -9,6 +9,7 @@
 <template>
 	<v-row  class="max-height: 10vh" >
 		<v-col cols="6"  >
+			
 			<v-card >
 				<v-img  
 					contain
@@ -81,7 +82,7 @@ export default {
 		Sys,
 		Docker, 
 		Library,
-		About
+		About,
 	},
 	
 	props: ['modules', 'defaults', "moduleIdx"],

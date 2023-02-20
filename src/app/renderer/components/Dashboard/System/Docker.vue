@@ -7,7 +7,7 @@
           text v-else>Docker is running 
         </v-alert>
         <v-btn
-          icon-and-text v-if="!docker"
+          icon-and-text v-if="!docker || 1==1"
           color="primary"
           @click="installDocker()"
         >Install Docker
