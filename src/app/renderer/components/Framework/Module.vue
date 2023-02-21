@@ -229,8 +229,7 @@
     </v-col>
     <v-navigation-drawer
         v-model="customDrawer"
-        absolute right
-        temporary
+        absolute right 
         style="min-width: 500px"
       >
         <v-list-item>
@@ -273,7 +272,137 @@
           
         </v-card>
       </v-navigation-drawer>
-     
+    <v-col sm="4" class="shrink" v-if="anyOutput">
+      <v-navigation-drawer
+            v-model="variablesDrawer"
+            left class="elevation-12" 
+            style="min-width: 100%; overflow-y:auto;"
+            rail
+            permanent  
+          >
+          <ListParams
+              :items="additionals"
+              v-if="additionals.length > 0"
+              :defaultHeaders="headers"
+              @updateValue="updateValue"
+              :key="updates"
+              @removeCustomVariable="removeCustomVariable"
+          >
+          </ListParams>
+      </v-navigation-drawer>
+    </v-col>
+    <v-col sm="4" class="" v-if="anyOutput">
+      <!-- <v-subheader class="overflow-x-visible mx-4 indigo lighten-5" v-if="selectedVersion.description">{{ selectedVersion.description }}</v-subheader> -->
+      <v-stepper vertical v-model="el"  v-if="services" style="min-height: 20%"> 
+          <v-stepper-header  
+          >      
+          <template  v-for="(entry, key) in services"  >
+            <v-stepper-step 
+                :complete="(status[key] ? status[key].success : false)" 
+                :disabled="true"     complete-icon="$check"   
+                :rules="[() => {
+                  return (status[key] && status[key].error ? !status[key].error : true)
+                }]"  
+                error-icon="$times-circle" 
+                @click="el = key + 1" 
+                :step="key + 1"
+            >
+              {{ (entry.label ? entry.label : entry.name) }} 
+              <small class="">{{ services_to_use[key] >= 1 || !services_to_use[key] == null ? 'Enabled' : "Disabled" }}
+                <v-tooltip top   v-if="services_to_use[key] >= 1 || !services_to_use[key] == null" >
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on"  class="ml-2" small color="primary lighten-2" @click="services_to_use[key] = 0">
+                            $check
+                        </v-icon>
+                    </template>
+                    Click to Disable
+                </v-tooltip>
+                <v-tooltip top v-else >
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on"  class="ml-2" small color="warning lighten-1" @click="services_to_use[key] = 1">
+                            $slash
+                        </v-icon>
+                    </template>
+                    Click to Enable
+                </v-tooltip>
+                <v-tooltip top v-if="status && status[key] && status[key].error">
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" class="ml-2"  small color="orange darken-2">
+                            $exclamation-triangle
+                        </v-icon>
+                    </template>
+                    {{ status[key].error }}
+                </v-tooltip>
+                <v-tooltip top v-else-if="status && status[key] && status[key].cancelled">
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on"  class="ml-2" small color="orange darken-2">
+                            $ban
+                        </v-icon>
+                    </template>
+                    Cancelled!
+                </v-tooltip>
+                <v-dialog
+                  transition="dialog-bottom-transition"
+                  max-width="600"
+                >
+                  <template v-slot:activator="{ on, attrs }">                        
+                      <v-icon  v-bind="attrs" v-on="on" class="ml-2" small color="primary lighten-2" >
+                          $cog
+                      </v-icon>
+                  </template>
+                  <template v-slot:default="dialog">
+                    <v-card>
+                      <v-toolbar
+                        color="light"
+                        dark
+                      >Adjust Configuration for service: {{ entry.label }}
+                      <v-spacer>
+                      </v-spacer>
+                      </v-toolbar>
+                      <v-card-text>
+                        <small>Default image: {{ entry.image }}</small>
+                        <v-text-field
+                          label="Service Image to Use"
+                          v-model="custom_images[key]"
+                          single-line
+                        ></v-text-field>
+                        <v-btn
+                          text @click="custom_images[key] = entry.image"
+                        >Default</v-btn>
+                      </v-card-text>
+                      <v-card-actions class="justify-end">
+                        <v-btn
+                          text
+                          @click="dialog.value = false"
+                        >Close</v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </template>
+                </v-dialog>
+              </small>
+            </v-stepper-step>
+            <v-divider
+              v-if="key !== services.length - 1" vertical
+              :key="`${key}-dividerKey`"
+            ></v-divider>
+          </template>
+        </v-stepper-header>
+      </v-stepper>
+      <v-card   class="scroll mt-5">
+        <Progresses
+          :progresses="procedure.watches"
+          :status="status"
+          :job="job"
+          :catalog="module"
+          :procedure="procedureIdx"
+          :removal_override="procedure.removal_override"
+          @removeCustomVariable="removeCustomVariable"
+          :defaultHeaders="outputHeaders"
+        >
+        </Progresses>
+      
+      </v-card>
+    </v-col>
     <v-col sm="3" class="shrink">
       <Docker :mini="true"></Docker>
       <v-dialog 
@@ -397,118 +526,6 @@
           </v-btn>  
         </template>
       </v-snackbar>
-      <v-subheader class="overflow-x-visible mx-4 indigo lighten-5" v-if="selectedVersion.description">{{selectedVersion.description}}</v-subheader>
-     
-      <v-stepper  v-model="el"  v-if="services" > 
-          <v-stepper-header 
-          >      
-          <template  v-for="(entry, key) in services"  >
-            <v-stepper-step 
-                :complete="(status[key] ? status[key].success : false)" 
-                :disabled="true"     complete-icon="$check"   
-                :rules="[()=>{ 
-                    return (status[key] && status[key].error ? !status[key].error : true) 
-                }]"  
-                error-icon="$times-circle" 
-                @click="el = key+1" 
-                :step="key+1"
-            >
-              {{ ( entry.label ? entry.label : entry.name ) }} 
-              <small class="">{{ services_to_use[key] >= 1 || !services_to_use[key] == null ? 'Enabled' : "Disabled" }}
-                <v-tooltip top   v-if="services_to_use[key] >= 1 || !services_to_use[key] == null" >
-                    <template v-slot:activator="{ on }">
-                        <v-icon v-on="on"  class="ml-2" small color="primary lighten-2" @click="services_to_use[key] = 0">
-                            $check
-                        </v-icon>
-                    </template>
-                    Click to Disable
-                </v-tooltip>
-                <v-tooltip top v-else >
-                    <template v-slot:activator="{ on }">
-                        <v-icon v-on="on"  class="ml-2" small color="warning lighten-1" @click="services_to_use[key] = 1">
-                            $slash
-                        </v-icon>
-                    </template>
-                    Click to Enable
-                </v-tooltip>
-                <v-tooltip top v-if="status && status[key] && status[key].error">
-                    <template v-slot:activator="{ on }">
-                        <v-icon v-on="on" class="ml-2"  small color="orange darken-2">
-                            $exclamation-triangle
-                        </v-icon>
-                    </template>
-                    {{status[key].error}}
-                </v-tooltip>
-                <v-tooltip top v-else-if="status && status[key] && status[key].cancelled">
-                    <template v-slot:activator="{ on }">
-                        <v-icon v-on="on"  class="ml-2" small color="orange darken-2">
-                            $ban
-                        </v-icon>
-                    </template>
-                    Cancelled!
-                </v-tooltip>
-                <v-dialog
-                  transition="dialog-bottom-transition"
-                  max-width="600"
-                >
-                  <template v-slot:activator="{ on,attrs }">                        
-                      <v-icon  v-bind="attrs" v-on="on" class="ml-2" small color="primary lighten-2" >
-                          $cog
-                      </v-icon>
-                  </template>
-                  <template v-slot:default="dialog">
-                    <v-card>
-                      <v-toolbar
-                        color="light"
-                        dark
-                      >Adjust Configuration for service: {{entry.label}}
-                      <v-spacer>
-                      </v-spacer>
-                      </v-toolbar>
-                      <v-card-text>
-                        <small>Default image: {{entry.image}}</small>
-                        <v-text-field
-                          label="Service Image to Use"
-                          v-model="custom_images[key]"
-                          single-line
-                        ></v-text-field>
-                        <v-btn
-                          text @click="custom_images[key]=entry.image"
-                        >Default</v-btn>
-                      </v-card-text>
-                      <v-card-actions class="justify-end">
-                        <v-btn
-                          text
-                          @click="dialog.value = false"
-                        >Close</v-btn>
-                      </v-card-actions>
-                    </v-card>
-                  </template>
-                </v-dialog>
-              </small>
-            </v-stepper-step>
-            <v-divider
-              v-if="key !== services.length - 1"
-              :key="`${key}-dividerKey`"
-            ></v-divider>
-          </template>
-        </v-stepper-header>
-      </v-stepper>
-      <v-card  v-if="anyOutput" class="scroll ">
-        <Progresses
-          :progresses="procedure.watches"
-          :status="status"
-          :job="job"
-          :catalog="module"
-          :procedure="procedureIdx"
-          :removal_override="procedure.removal_override"
-          @removeCustomVariable="removeCustomVariable"
-          :defaultHeaders="outputHeaders"
-        >
-        </Progresses>
-        
-      </v-card>
-      
       <div style="display:flex" v-if="job && job.running">
         <v-tooltip  bottom v-for="item in anyMainRender" :key="item.label">
           <template v-slot:activator="{ on }">
@@ -542,18 +559,9 @@
           color="primary"
       ></v-checkbox>
     </v-col>
-    <v-col :sm="!selectedProcedure.full_orientation ? 12 : 12" v-if="procedure && procedure.variables" class="mx-0 px-0 overflow:auto; ">
-      
-      <ListParams
-          :items="additionals"
-          v-if="additionals.length > 0"
-          :defaultHeaders="headers"
-          @updateValue="updateValue"
-          :key="updates"
-          @removeCustomVariable="removeCustomVariable"
-      >
-      </ListParams>
-    </v-col>
+    <!-- <v-col :sm="!selectedProcedure.full_orientation ? 12 : 12" v-if="procedure && procedure.variables" class="mx-0 px-0 overflow:auto; "> -->
+    
+    <!-- </v-col> -->
   </v-row>
 </template>
 
@@ -765,7 +773,7 @@ export default {
       }).finally((f)=>{
         this.init = false
         if (init && !this.installStatus.required_installed){
-            this.librarydialog = true
+            // this.librarydialog = true
         }
       })
     },
@@ -974,14 +982,12 @@ export default {
         catalog: $this.selected.name, 
         procedure: $this.procedureIdx
       }).then((f) => {
-        console.log("f")
         try {
-          // $this.$electron.ipcRenderer.send('terminal-into', '\b \b');
-          console.log($this.procedure.variables)
-          $this.$electron.ipcRenderer.send('terminal-into', `${$this.procedure.services[0].command.join("  ")}`);
+          // $this.$electron.ipcRenderer.send('terminal-clear');
+          // $this.$electron.ipcRenderer.send('terminal-into', `${$this.procedure.services[0].command.join("  ")}`);
         } catch (err) {
-          console.error(err)
-        }
+          console.error(err) 
+        } 
       })
       
       
@@ -1142,8 +1148,9 @@ export default {
       dialog: false,
       gpu: false,
       autocheck: true, 
-      librarydialog: true,
+      librarydialog: false,
       dialogLog: false,
+      variablesDrawer: true,
       customDrawer: false,
       totalSpaceUsed: "0 Bytes",
       dry: false,
@@ -1152,6 +1159,7 @@ export default {
       stored: {},
       custom_images: {},
       mini: true,
+      miniVariables: true,
       el: 1,
       services: [],
       dependencies:[],

@@ -25,7 +25,7 @@ export class Client { // Create a class for the Electron main client
     if (!process.env.APPDATA) {
       process.env.APPDATA = this.app.getPath('userData')//If the env is production level
     }
-
+    this.ptyProcess = null
     this.system = {
       'isMac': isMac,
       'isWin': isWin,
@@ -228,22 +228,73 @@ export class Client { // Create a class for the Electron main client
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     var shell = os.platform() === "win32" ? "powershell.exe" : "bash";
-   
-    var ptyProcess = pty.spawn(shell, [], {
-      name: 'xterm-color',
-      cols: 80,
-      rows: 24,
-      cwd: process.env.HOME,
-      env: process.env
-    });
-
-    ptyProcess.on("data", (data) => {
-      $this.mainWindow.webContents.send("terminal-incData", data);
-    });
-    ptyProcess.write('');
-    ipcMain.on("terminal-into", (event, data) => {
-      ptyProcess.write(data);
+    let i = 0
+    function startProcess() {
+      try {
+        delete $this.ptyProcess
+      } catch (e) {
+        $this.logger.error(`${e} error in destroying process`)
+      }
+      console.log("new process")
+      $this.ptyProcess = pty.spawn(shell, [], {
+        name: 'xterm-color',
+        cols: 80,
+        rows: 24,
+        cwd: process.env.HOME,
+        env: process.env
+      });
+      i+=1
+      $this.ptyProcess.on("data", (data) => {
+        console.log(data, i, "<<<<<<")
+        $this.mainWindow.webContents.send("terminal-incData", data);
+      });
+      $this.ptyProcess.on("exit", (data) => {
+        console.log("<<<<exit<<")
+      });
+      
+    }
+    startProcess()
+    
+    ipcMain.on("terminal-clear", (event, data) => {
+      $this.mainWindow.webContents.send("terminal-clear", data);
     })
+    ipcMain.on("terminal-destroy", (event, data) => {
+      try {
+        console.log("destroying process")
+        $this.ptyProcess.kill();
+      } catch (err) {
+        try {
+          $this.ptyProcess.kill('SIGKILL');
+          console.log("destroying process")
+        } catch (e) {
+          // couldn't kill the process
+          $this.logger.error(`Error ${e}`)
+        }
+      }
+    })
+    ipcMain.on("terminal-restart", async (event, data) => {
+      try {
+        console.log("destroying process")
+        await $this.ptyProcess.kill()
+        startProcess() 
+      } catch (err) {
+        try {
+          await $this.ptyProcess.kill('SIGKILL')
+          startProcess()
+          console.log("destroying process intial failed, trying again")
+        } catch (e) {
+          // couldn't kill the process
+          $this.logger.error(`Error ${e}`)
+          startProcess()
+        }
+      }
+    }) 
+    ipcMain.on("terminal-into", (event, data) => {
+      $this.ptyProcess.write(data);
+    })
+
+    
+    
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ipcMain.on("changePort", (event, arg) => { // When receive a message from the renderer (vue.js), change the port to connect to 
       event.reply('changePort', process.env.PORT_SERVER)

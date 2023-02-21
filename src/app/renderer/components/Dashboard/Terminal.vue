@@ -1,4 +1,4 @@
-<template><div  style=" height: 100%; " class="mx-2 my-2 console" id="terminal"></div></template>
+<template><div  style=" height: 100%; " class="mx-2 my-2 console" id="terminal"><v-btn @click="clear">Clear</v-btn></div></template>
 
 <script>
 import "xterm/css/xterm.css";
@@ -89,7 +89,8 @@ export default {
   data() {
     return {
       term: null,
-      terminalSocket: null
+      terminalSocket: null,
+      term: null
     }
   },
   computed: {
@@ -130,76 +131,45 @@ export default {
 
   mounted() { // Code heavily influenced by https://github.com/nojaja/ElectronTerminal/
     console.log('-------');
-    this.$electron.ipcRenderer.on('terminal-incData', (evt) => {
-      console.log(evt)
-    })
-
+   
     const $this=this
-    let terminalContainer = document.getElementById('terminal')
-    let term = this.term = new Terminal({
-      cursorBlink: true,
-      cols: this.terminal.cols,
-      rows: this.terminal.rows,
-      fontSize: 18,
-      cursorStyle: 'bar',  
-      bellStyle: 'sound',
-      theme: this.theme,
-      ...this.option,
-    }) 
-    const fitAddon = new FitAddon();
-    this.term.loadAddon(fitAddon);
-    this.term.open(terminalContainer);
-     
+    let terminalContainer = this.terminalContainer = document.getElementById('terminal')
+    this.init()
 
-    this.term.loadAddon(new WebLinksAddon());
-    this.term._initialized = true
-    process.env.terminal = this.term
-    fitAddon.fit(); 
-
-    this.term.prompt = () => {
-      this.term.write('\r\n')
-    } 
-    
-    
-
-    this.term.writeln('Welcome to xterm.js');
-    this.term.writeln('This is a local terminal emulation, without a real terminal in the back-end.');
-    this.term.writeln('Hit Enter to Begin');
-    this.term.prompt()
-    $this.$electron.ipcRenderer.send('terminal-into', '\r\n');
+    // // this.term.write('\r\n'); 
     this.$electron.ipcRenderer.on('terminal-incData', (event, data) => {
       $this.term.write(data);
     })
+    // this.$electron.ipcRenderer.on('terminal-clear', (event, data) => {
+    //   $this.clear()
+    // }) 
+   
+    // this.term.onKey((key) => {
+    //   let ev = key.domEvent
+    //   console.log(key,"<<<<", $this.curr_line)
+    //   if (ev.keyCode == 13) {
+    //     $this.$electron.ipcRenderer.send('terminal-run', { command: $this.curr_line, 'key': key.key });
+    //     // $this.term.write(key.key)
+    //     $this.curr_line = ''
+    //     // term.prompt();
+    //   } else if (ev.keyCode === 8) {    
+    //     // Do not delete the prompt
+    //      if (term._core.buffer.x > 0) {
+    //       $this.curr_line = curr_line.slice(0, -1);
+    //       $this.term.write('\b \b');
+    //       // $this.$electron.ipcRenderer.send('terminal-into', '\b \b');
+    //     }
+    //     return false;
+    //   } else {
+    //     $this.term.write(key.key);
+    //     $this.curr_line += key.key;
+    //     console.log($this.curr_line, key.key)
+    //     // $this.$electron.ipcRenderer.send('terminal-into', `${key.key}`);
+    //     return
+    //   }
+    // });
 
-    // //キー入力 
-    this.term.onKey((key) => {
-      let ev = key.domEvent
-      
-      if (ev.keyCode == 13) {
-        $this.$electron.ipcRenderer.send('terminal-into', key.key);
-      } else if (ev.keyCode === 8) {        
-        // Do not delete the prompt
-        if (term._core.buffer.x > 0) {
-          // term.write('\b \b');
-          $this.$electron.ipcRenderer.send('terminal-into', '\b \b');
-        }
-        return false;
-      } else {
-        // term.write(key.key);
-        $this.$electron.ipcRenderer.send('terminal-into', `${key.key}`);
-        return
-      }
 
-
-    });
-
-
-
-    //受信
-    // ipcRenderer.on('terminal', (event, arg) => {
-    //   console.log(event, arg,"ipcrender");
-    //   $this.term.write(arg);
-    // })
 
 
 
@@ -211,6 +181,54 @@ export default {
     // this.term.destroy()
   },
   methods: {
+    async init() {
+      const $this = this
+      if (this.term) {
+        try {
+          await this.term.dispose()
+        } catch (err) {
+          console.error(err)
+        }
+      }
+      let term = this.term = new Terminal({
+        cursorBlink: true,
+        cols: this.terminal.cols,
+        rows: this.terminal.rows,
+        fontSize: 18,
+        cursorStyle: 'bar',
+        bellStyle: 'sound',
+        theme: this.theme,
+        ...this.option,
+      })
+      const fitAddon = new FitAddon();
+      this.term.loadAddon(fitAddon);
+      this.term.open(this.terminalContainer);
+
+
+      this.term.loadAddon(new WebLinksAddon());
+      this.term._initialized = true
+      process.env.terminal = this.term
+      fitAddon.fit();
+      // this.term.prompt = () => { 
+      //   $this.term.write('\r\n')
+      // }
+      
+      this.term.writeln('Welcome to xterm.js');
+      this.term.writeln('This is a local terminal emulation, without a real terminal in the back-end.');
+      this.term.writeln('Hit Enter to Begin');
+      // this.term.prompt()
+      this.curr_line = ''
+      this.$electron.ipcRenderer.send('terminal-into', '\r\n');
+      this.term.onData((data) => {
+        console.log("data", data)
+        $this.$electron.ipcRenderer.send('terminal-into', data);
+      });
+    },
+    async clear() {
+      this.$electron.ipcRenderer.send('terminal-restart');
+      await this.term.reset()
+      this.init()
+    },
     setContent(value, ln = true) {
       if (value.indexOf('\n') !== -1) {
         value.split('\n').forEach(
@@ -229,9 +247,9 @@ export default {
       this.setContent(log.text, log.type === 'stdout')
     },
 
-    clear() {
-      this.$_terminal.clear()
-    },
+    // clear() {
+    //   this.$_terminal.clear()
+    // },
 
     scrollToBottom() {
       this.$_terminal.scrollToBottom()
