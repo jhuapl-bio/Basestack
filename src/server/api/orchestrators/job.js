@@ -312,7 +312,7 @@ export  class Job {
                 resolve()  
             }).catch((err)=>{  
                 reject(err)  
-            })
+            }) 
         })
     } 
     setParams(params){

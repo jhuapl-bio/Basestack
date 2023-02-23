@@ -64,7 +64,7 @@
           label: "Samplename"
         outputDir:
           label: "Output Directory"
-          element: "dir" 
+          element: "dir"
           output: false
           openSelf: True
           hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
