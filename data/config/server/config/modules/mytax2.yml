@@ -1,4 +1,4 @@
-- version: 1.9
+- version: 2
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -33,7 +33,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.2.4
+          version: v2.2.5
           type: docker
           format: docker
         - target: "bitnami/git"
@@ -158,6 +158,7 @@
                 "EXP-NBD104",
                 "EXP-NBD114",
                 "EXP-NBD196",
+                "CUSTOM-FLU",
                 "EXP-PBC001",
                 "EXP-PBC096",
                 "OND-SQK-LP0096M",
@@ -195,8 +196,7 @@
                 "VSK-PTC001",
                 "VSK-VMK001",
                 "VSK-VMK002",
-                "VSK-VMK003",
-                "CUSTOM-FLU"
+                "VSK-VMK003"
               ]
             format: 
               custom: False
@@ -234,7 +234,7 @@
         guppy_version:
           label: Guppy Version
           class: wb-100 p-3 mb-1
-          hint: If you dont want to use v5.1.15 of Guppy built-into the software
+          hint: If you dont want to use version 6.4.6 of Guppy built-into the software
           element: dir
           name: Custom Guppy Version
           source: null
@@ -254,9 +254,9 @@
           element: file
           source: null
           bind: self
-          target: "/opt/custom_config.cfg"
+          target: "/opt/custom_config.toml"
           append:
-            command: " cp /opt/custom_config.cfg /opt/ont-guppy-cpu/data/barcoding/; sed -i \"0,/arrangements_files/s/$/ custom_config.cfg/\" /opt/ont-guppy-cpu/data/barcoding/configuration.cfg ;  "
+            command: " cp /opt/custom_config.toml /opt/ont-guppy/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ;  "
             position: "start" 
             placement: 2
             services: 
@@ -269,7 +269,7 @@
           bind: self
           target: "/opt/custom_fasta.fasta"
           append:
-            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy-cpu/data/barcoding/barcodes_masked.fasta;  "
+            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy/data/barcoding/barcodes_masked.fasta;  "
             position: "start"
             placement: 2
             services: 
@@ -300,7 +300,7 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.2.4
+          image: jhuaplbio/basestack_mytax2:v2.2.5
           workingdir: /
           orchestrated: false
           init: false
@@ -311,7 +311,7 @@
           conda activate mytax2; 
           cd /opt;
           if [[ $cpuMode != 'true' ]]; then 
-            ln -sf /opt/ont-guppy/bin/guppy_barcoder /usr/local/bin/guppy_barcoder; 
+            echo 'using gpu'; mv /opt/ont-guppy /opt/ont-guppy-cpu && ln -sf /opt/ont-guppy-gpu /opt/ont-guppy ;
           fi; 
           npm run server"]
         

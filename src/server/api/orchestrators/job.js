@@ -509,13 +509,13 @@ export  class Job {
             }
         }) 
         let response = await Promise.allSettled(promises)
-        return 
-    }
-    async loopServices(autocheck){      
-        const $this  = this 
-        let cancelled_or_skip = false
-        let end = false  
-        try{ 
+        return   
+    }     
+    async loopServices(autocheck){       
+        const $this  = this         
+        let cancelled_or_skip = false 
+        let end = false   
+        try{   
             for (let i = 0; !end && i < $this.services.length; i++){
                 let service = $this.services[i]
                 try{  
@@ -524,11 +524,12 @@ export  class Job {
                     let procedures = $this.procedure
                     if (this.deployment == 'native'){
                         console.log("is native, skipping")
-                    } else {
+                    } else { 
                         try{
                             let index = procedures.dependencies.findIndex((f)=>{
-                                return f.fulltarget == service.config.image
+                                return f.target == service.config.image
                             })
+                            console.log(procedures.dependencies.status)
                             if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
                                 if (!autocheck){
                                     store.logger.info("Image doesnt exists %s", service.config.image, index)
@@ -541,7 +542,6 @@ export  class Job {
                             store.logger.error(`${Err} error in checking image presence`)
                         }
                     } 
-                    console.log("doen checkthenstart")
                     skip = await service.check_then_start({ variables: $this.variables, autocheck: autocheck }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)

@@ -120,7 +120,7 @@
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", " 
+          command: ["bash","-c", "
               medaka_consensus -f -i $input -d $ref -o $(dirname $output)
             "]
    
