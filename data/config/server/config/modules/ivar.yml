@@ -1,7 +1,7 @@
 - name: ivar
   title: "IVAR"
   icon: "eye-dropper"
-  version: 1.01
+  version: 1.02
   basestack_released: 2.0
   module: True
   url: https://github.com/andersen-lab/ivar
@@ -184,7 +184,7 @@
                 command: " -g ${gff} "
                 placement: 2
                 services: 
-                  - 0
+                  - 1
               bind: "directory"
         
       services:
