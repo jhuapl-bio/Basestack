@@ -309,27 +309,24 @@ export  class Job {
                 } 
             } 
             Promise.allSettled(promises).then((respo)=>{
-                resolve()  
-            }).catch((err)=>{  
-                reject(err)  
+                resolve()   
+            }).catch((err)=>{     
+                reject(err)   
             }) 
-        })
+        })  
     } 
     setParams(params){
         if (params.images){
             params.images.forEach((service)=>{ 
                 this.services[service.service].override.image = service.image 
-            })
-        }
+            }) 
+        } 
         
         this.services.forEach((service)=>{ 
             service.config.dry = params.dry
         })
-        this.mergeInputs(params, 'mergedConfig'  )
+        this.mergeInputs(params, 'mergedConfig')
         return   
- 
- 
-
     } 
     updateCommand(service, command){ 
         const $this = this   

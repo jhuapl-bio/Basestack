@@ -354,7 +354,7 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "mytax2",
+      selectedCatalogName: "ivar",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},

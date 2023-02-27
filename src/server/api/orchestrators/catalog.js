@@ -6,7 +6,7 @@ export class Catalog {
     constructor(config){  
         this.icon = (config.icon ? config.icon : 'cog'),
         this.title = config.title      
-        this.name = config.name  
+        this.name = config.name   
         this.tags = []
         this.modules = []    
         this.interval = {
