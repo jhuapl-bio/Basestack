@@ -78,7 +78,7 @@ export default {
         rows: 1000
       },
       navigation: {
-        shown: true,
+        shown: false,
         width: 550,
         borderSize: 3
       },

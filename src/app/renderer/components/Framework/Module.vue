@@ -272,26 +272,23 @@
           
         </v-card>
       </v-navigation-drawer>
-    <v-col sm="4" class="shrink" v-if="anyOutput">
-      <v-navigation-drawer
-            v-model="variablesDrawer"
-            left class="elevation-12" 
-            style="min-width: 100%; overflow-y:auto;"
-            rail
-            permanent  
-          >
-          <ListParams
-              :items="additionals"
-              v-if="additionals.length > 0"
-              :defaultHeaders="headers"
-              @updateValue="updateValue"
-              :key="updates"
-              @removeCustomVariable="removeCustomVariable"
-          >
-          </ListParams>
+    <!-- <v-col sm="3" class="shrink"> -->
+      <v-navigation-drawer ref="information_panel_drawerlist" v-model="variablesDrawer"
+           class="elevation-12" 
+          
+          permanent   :width="navigation.width" >
+        <ListParams
+            :items="additionals"
+            v-if="additionals.length > 0"
+            :defaultHeaders="headers"
+            @updateValue="updateValue"
+            :key="updates"
+            @removeCustomVariable="removeCustomVariable"
+        >
+        </ListParams>
       </v-navigation-drawer>
-    </v-col>
-    <v-col sm="4" class="" v-if="anyOutput">
+    <!-- </v-col> -->
+    <v-col sm="5" class="" v-if="anyOutput">
       <!-- <v-subheader class="overflow-x-visible mx-4 indigo lighten-5" v-if="selectedVersion.description">{{ selectedVersion.description }}</v-subheader> -->
       <v-stepper vertical v-model="el"  v-if="services" style="min-height: 20%"> 
           <v-stepper-header  
@@ -606,6 +603,52 @@ export default {
     }
   },
   methods: {
+    setBorderWidth() {
+      let i = this.$refs.information_panel_drawerlist.$el.querySelector(
+        ".v-navigation-drawer__border"
+      );
+      i.style.width = this.navigation.borderSize + "px";
+      i.style.cursor = "ew-resize";
+    },
+    setEvents() {
+      const minSize = this.navigation.borderSize;
+      const el = this.$refs.information_panel_drawerlist.$el;
+      const drawerBorder = el.querySelector(".v-navigation-drawer__border");
+      const vm = this;
+      const direction = el.classList.contains("v-navigation-drawer--right")
+        ? "right"
+        : "left";
+
+      function resize(e) {
+        document.body.style.cursor = "ew-resize";
+        let f = direction === "right"
+          ? document.body.scrollWidth - e.clientX
+          : e.clientX;
+        el.style.width = f + "px";
+      }
+
+      drawerBorder.addEventListener(
+        "mousedown",
+        function (e) {
+          if (e.offsetX < minSize) {
+            let m_pos = e.x;
+            el.style.transition = 'initial'; document.addEventListener("mousemove", resize, false);
+          }
+        },
+        false
+      );
+
+      document.addEventListener(
+        "mouseup",
+        function () {
+          el.style.transition = '';
+          vm.navigation.width = el.style.width;
+          document.body.style.cursor = "";
+          document.removeEventListener("mousemove", resize, false);
+        },
+        false
+      );
+    },
     setProcedure(event){
       this.procedure_selected_index = event
     },
@@ -1145,6 +1188,11 @@ export default {
   data(){
     return{
       drawer: true,
+      navigation: {
+        shown: true,
+        width: 550,
+        borderSize: 3
+      },
       dialog: false,
       gpu: false,
       autocheck: true, 
@@ -1284,6 +1332,9 @@ export default {
 
   },
   computed: {
+    direction() {
+      return this.navigation.shown === false ? "Open" : "Closed";
+    },
     os(){
       return process.env.platform_os
     },
@@ -1403,6 +1454,8 @@ export default {
   },
   mounted(){
     const $this = this;
+    this.setBorderWidth();
+    this.setEvents();
     if (this.interval){
         clearInterval(this.interval)
     }
