@@ -55,6 +55,20 @@
           type: docker
           format: docker
         - source:
+            url: https://raw.githubusercontent.com/jhuapl-bio/mytax/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz
+            type: file
+            remove: true
+            target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
+          type: download
+          format: file
+          optional: true
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
+          label: 2021 Marine Mitogenome database
+          target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
+          overwrite: true
+        - source:
             url: >-
               https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz
             type: file
@@ -191,12 +205,11 @@
               bind:
                 from: '%{variables.db.source}'
                 to: /opt/databases/flukraken2
-            - element: null
+            - element: dir
               name: Marine Mitogenome
-              target: 
-                /opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629
-              source: 
-                /opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629
+              bind: self
+              target:  /opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629
+              source:  "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
             - element: dir
               name: Custom DB
               source: null
