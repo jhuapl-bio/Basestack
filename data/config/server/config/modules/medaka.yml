@@ -1,7 +1,7 @@
 - name: medaka
   title: "Medaka"
   icon: "magic"
-  version: 1.1
+  version: 1.101
   schema_version: 1
   basestack_released: 2.0
   description: "A versatile pairwise aligner for genomic and spliced nucleotide sequences"
@@ -67,12 +67,16 @@
               target: "/opt/ref/combined.fastq"
               append: 
                 command: "
+                  mkdir -p /home/epi2melabs;
                   if [[ $compressed == 'true' ]]; then
-                    gzip --keep  -d /opt/ref/*fq.gz;
-                    gzip --keep  -d /opt/ref/*fastq.gz;
+                    cat /opt/ref/*fastq.gz > /home/epi2melabs/combined.fastq.gz;  
+                    cat /opt/ref/*fq.gz >> /home/epi2melabs/combined.fastq.gz;  
+                    sequence='/home/epi2melabs/combined.fastq.gz'; 
+                  else
+                    cat /opt/ref/*fastq > /home/epi2melabs/combined.fastq;  
+                    cat /opt/ref/*fq >> /home/epi2melabs/combined.fastq; 
+                    sequence='/home/epi2melabs/combined.fastq';
                   fi; 
-                  cat /opt/ref/*fastq > /opt/ref/combined.fastq;  
-                  cat /opt/ref/*fq >> /opt/ref/combined.fastq;  
                 "
                 position: "start"
                 placement: 2
@@ -92,18 +96,6 @@
                     type: "value"
                     value: ".*(fastq|fastq.gz|fq|fq.gz)$"
               target: "/opt/ref/<<basename(%{variables.input.source})>>"
-              append: 
-                command: "
-                  if [[ $compressed == 'true' ]]; then
-                    gzip --keep  -d $input;
-                    input=$(echo $input | sed -r 's/.gz//g'); 
-                    echo $input;
-                  fi; 
-                "
-                position: "start"
-                placement: 2
-                services: 
-                  - 0
               define:
                 output:  "<<directory(%{variables.input.target})>>/medaka/consensus.fasta"
         compressed:
@@ -121,6 +113,6 @@
           force_restart: false
           force_init: false
           command: ["bash","-c", "
-              medaka_consensus -f -i $input -d $ref -o $(dirname $output)
+              medaka_consensus -f -i $sequence -d $ref -o $(dirname $output) && exit 0
             "]
    
