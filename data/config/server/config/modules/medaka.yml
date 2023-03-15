@@ -1,7 +1,7 @@
 - name: medaka
   title: "Medaka"
   icon: "magic"
-  version: 1.101
+  version: 1.2
   schema_version: 1
   basestack_released: 2.0
   description: "A versatile pairwise aligner for genomic and spliced nucleotide sequences"
