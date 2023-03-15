@@ -121,7 +121,8 @@ class FileService {
   cancelProcedureDependency(params){
     return Api().post(`${baseEndpoint.get()}/procedure/build/cancel/dependency`, params)    
   }
-  fetchRemoteCatalog(target, name){ // Used
+  fetchRemoteCatalog(target, name) { // Used
+    console.log(target,name)
     return Api().get(`${baseEndpoint.get()}/remote/get/${target}/${name}`)
   }
   getInstallStatus(params){ // Used

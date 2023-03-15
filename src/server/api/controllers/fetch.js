@@ -17,6 +17,11 @@ const { getFiles, readFile,  writeFile, writeFolder } = require("./IO.js")
 const si = require('systeminformation');
 const { spawn } = require("child_process")
 const axios = require("axios")
+const https = require('https');
+const agent = new https.Agent({
+	rejectUnauthorized: false
+});
+
 
 const YAML = require("js-yaml") 
 const { parseConfigVariables } = require("../../../shared/definitions.js")
@@ -284,7 +289,7 @@ export async function getRemoteConfigurations(url){
 		let json = await clone(url, "/Users/Desktop/tmp")
 		logger.info("%s %o", "returned json: ", json.data)
 		return json
-	} catch(err){
+	} catch(err){ 
 		logger.error(`${err} error in fetching external url`)
 		throw err  
 	}    
@@ -297,16 +302,15 @@ export async function fetch_external_yamls(key){
 		
 		let base = 'data/config/server/config/modules'
 		let modules = [] 
-		let config = {}
+		let config = {
+			httpsAgent: agent
+		}
 		let promises = [] 
 		if (process.env.GH_TOKEN){
-			config = {
-				"defaults": {
+			config['defaults'] = {
 					"headers": {
 						"common": { "Authorization": `Bearer ${process.env.GH_TOKEN}`}
 					}
-				}
-			
 			}
 		}
 		let url = `https://api.github.com/repos/jhuapl-bio/Basestack/git/trees/main?recursive=1`
@@ -323,7 +327,7 @@ export async function fetch_external_yamls(key){
 			})
 			.forEach(async (entry,i)=>{ 
 					let ur=`https://raw.githubusercontent.com/jhuapl-bio/Basestack/main/${entry.path}`
-					promises.push(axios.get(ur))
+					promises.push(axios.get(ur, config))
 				
 			}) 
 		}
@@ -331,7 +335,7 @@ export async function fetch_external_yamls(key){
 		
 		
 		let mods = await Promise.allSettled(promises)
-		mods.filter((entry)=>{
+		mods.filter((entry) => {
 			return entry.status == 'fulfilled'
 			
 		}).map((entry)=>{
@@ -367,15 +371,18 @@ export async function fetch_external_dockers(key){
 				latest_digest: {},
 			}
 		} 
+		let config = {
+			httpsAgent:agent
+		}
 		const element = store.images[key]
 		store.images[key].fetching_available_images.errors = null
 		store.images[key].fetching_available_images.status = true
-		let json =  await axios.get(url)
+		let json =  await axios.get(url, config)
 
 		let latest = null; 
 		let full_tags = json.data
 		let full_names = []
-		let full_information = {}
+		let full_information = {} 
 		if (full_tags && Array.isArray(full_tags.results))
 		{
 			full_tags.results.forEach((f)=>{

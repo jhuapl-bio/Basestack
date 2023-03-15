@@ -45,22 +45,19 @@
           label: "TaxTriage Volume"
           type: "volume"
         - source:
-            url: ftp.ccb.jhu.edu
+            url: https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz
             type: file
-            user: anonymous
-            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
-            password: null
-            protocol: ftp
             remove: false
-            target: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+            target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           label: Minikraken2
+          size_estimate: "7 GB"
+          optional: true
           type: download
           format: dir
-          size_estimate: "7 GB"
           decompress:
             format: tgz
-            source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
-          target: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
+            source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
           overwrite: true
       tags: 
         - "Nextflow"

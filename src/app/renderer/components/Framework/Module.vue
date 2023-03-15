@@ -26,11 +26,9 @@
         Customize
       </v-btn>
       
-      
-      
       <v-autocomplete 
         v-model="selectedVersion"
-        :items="libraryVersions" 
+        :items="libraryVersions"  
         @change="updateStagedVersion"
         item-text="version"
         :item-value="['id']"
@@ -771,22 +769,22 @@ export default {
     },
     async fetchRemoteCatalog(name, ignore){
            
-        const $this = this
-        FileService.fetchRemoteCatalog('stagedModules', name).then((f)=>{
-          
-        })
-        .catch((err)=>{
-          if (!ignore){
-            this.$swal.fire({
-                position: 'center',
-                icon: 'error',
-                showConfirmButton:true,
-                title: err.response.data.message
-            })
-          }
-            
-            
-        }) 
+      const $this = this
+      try {
+        await FileService.fetchRemoteCatalog('stagedModules', name)
+        
+      } catch (err) {
+        if (!ignore) {
+          this.$swal.fire({
+            position: 'center',
+            icon: 'error',
+            showConfirmButton: true,
+            title: err.response.data.message
+          })
+        }
+      } finally {
+        $this.getLibrary()
+      }
     },
     async getLibrary(){
       try{
@@ -1131,7 +1129,7 @@ export default {
       dialog: false,
       gpu: false,
       autocheck: true, 
-      librarydialog: true,
+      librarydialog: false,
       dialogLog: false,
       customDrawer: false,
       totalSpaceUsed: "0 Bytes",
@@ -1382,7 +1380,7 @@ export default {
     },
     
   },
-  mounted(){
+  async mounted(){
     const $this = this;
     if (this.interval){
         clearInterval(this.interval)
@@ -1394,8 +1392,7 @@ export default {
     this.selectedProcedure = this.selected.procedures[0]
     $this.getJobStatus()
     $this.getInstallStatus(this.init)
-    this.fetchRemoteCatalog(this.selectedVersion.name, true)
-    $this.getLibrary()
+    await this.fetchRemoteCatalog(this.selectedVersion.name, true)
     
     $this.defineProcedure()
     this.interval = setInterval(()=>{

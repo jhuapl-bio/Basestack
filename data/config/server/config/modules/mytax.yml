@@ -5,7 +5,7 @@
   title: Mytax
   date_added: '2022-05-06T11:40:13.131Z'
   url: https://github.com/jhuapl-bio/mytax
-  description: A tool for the metagenomic classification using a single fastq file full of  reads as input
+  description: A kraken-based tool for the metagenomic classification using a single fastq file full of  reads as input
   member: mytax
   hint: Mytax Module 
   icon: chart-pie
@@ -54,6 +54,7 @@
           version: v1.1.3
           type: docker
           format: docker
+          size_estimate: "4 GB"
         - source:
             url: https://raw.githubusercontent.com/jhuapl-bio/mytax/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz
             type: file
@@ -62,6 +63,7 @@
           type: download
           format: file
           optional: true
+          size_estimate: "3 MB"
           decompress:
             format: tgz
             source: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
@@ -84,13 +86,25 @@
           label: 2021 Flukraken database
           target: "${writePath}/workflows/mytax/flukraken2"
           overwrite: true
+          size_estimate: "5 GB"
         - source:
-            url: ftp.ccb.jhu.edu
+            url: https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20201202.tar.gz
             type: file
-            user: anonymous
-            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
-            password: null
-            protocol: ftp
+            remove: false
+            target: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          label: Viral 2021
+          size_estimate: "466 MB"
+          optional: true
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          target: "${writePath}/workflows/mytax/k2_viral_20201202"
+          overwrite: true
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz
+            type: file
             remove: false
             target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           label: Minikraken2
@@ -104,18 +118,15 @@
           target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
           overwrite: true
         - source:
-            url: ftp.ccb.jhu.edu
+            url: https://genome-idx.s3.amazonaws.com/kraken/16S_Greengenes13.5_20200326.tgz
             type: file
-            user: anonymous
-            path: /pub/data/kraken2_dbs/16S_Greengenes13.5_20200326.tgz
-            password: null
-            protocol: ftp
             remove: false
             target: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
           label: 16S Greengenes
           optional: true
           type: download
           format: dir
+          size_estimate: "106 MB"
           decompress:
             format: tgz
             source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"

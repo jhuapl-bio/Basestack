@@ -289,7 +289,7 @@ export  class Job {
                     if ($this.runningConfig.removal_override.source){
                         if(type == 'file') {
                             promises.push(removeFile($this.runningConfig.removal_override.source))
-                        }
+                        } 
                         else{
                             promises.push(removeFile($this.runningConfig.removal_override.source, 'dir'))
                         }
@@ -297,13 +297,13 @@ export  class Job {
                     
                 } else {
                     for (let i  = 0;  i < $this.status.watches.length; i++){
-                        let watch = $this.status.watches[i]
+                        let watch = $this.status.watches[i] 
                         if (typeof watch.source == 'string'){
                             promises.push(removeFile(watch.source))
                         } else { 
                             watch.source.forEach((w)=>{
                                 promises.push(removeFile(w))
-                            })
+                            }) 
                         }  
                     }
                 } 
@@ -312,22 +312,22 @@ export  class Job {
                 resolve()   
             }).catch((err)=>{     
                 reject(err)   
-            }) 
-        })  
+            })  
+        })   
     } 
     setParams(params){
         if (params.images){
-            params.images.forEach((service)=>{ 
+            params.images.forEach((service)=>{  
                 this.services[service.service].override.image = service.image 
-            }) 
+            })  
         } 
         
-        this.services.forEach((service)=>{ 
+        this.services.forEach((service)=>{  
             service.config.dry = params.dry
         })
         this.mergeInputs(params, 'mergedConfig')
         return   
-    } 
+    }  
     updateCommand(service, command){ 
         const $this = this   
         if (command){

@@ -341,7 +341,7 @@ router.get("/library/get", (req,res,next)=>{ // build workflow according to name
 router.get("/modules/imported/all", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		
-		let data =  store.library.getSortedImported()
+		let data = store.library.getSortedImported()
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
 	} catch(err2){ 
 		logger.error("%s %s", "Error in loading /modules/imported/all module to library", err2)
@@ -890,11 +890,10 @@ router.post("/remote/set/modules", (req,res,next)=>{ // build workflow according
 //Used
 router.get("/remote/get/:target/:catalog", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
-		try { 
+		try {  
 			let library = store.library
-			let data = await library.getRemotes(req.params.target, req.params.catalog)
-			logger.info("%s get remotes ", req.params.target)
-			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
+			await library.getRemotes(req.params.target, req.params.catalog)
+			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: '' });
 		
 		} catch(err2){
 			logger.error( "Error  %o in getting config target remotely %s", err2, req.params.target)
@@ -932,6 +931,8 @@ router.get("/library/versions/get/:catalog", (req,res,next)=>{ // build workflow
 	(async function(){
 		try {
 			let library = store.library
+			library.getSortedImported(req.params.catalog)
+			logger.info("%s get remotes: %s ",  req.params.catalog)
 			let data = library.all[req.params.catalog].choices
 			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
 		

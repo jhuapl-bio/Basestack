@@ -2,10 +2,10 @@
 const path = require("path")  
 var  { store }  = require("../../config/store/index.js") 
   
-export class Catalog {  
+export class Catalog {   
     constructor(config){  
         this.icon = (config.icon ? config.icon : 'cog'),
-        this.title = config.title      
+        this.title = config.title       
         this.name = config.name   
         this.tags = []
         this.modules = []    

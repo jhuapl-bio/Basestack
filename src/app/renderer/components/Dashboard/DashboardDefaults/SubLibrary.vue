@@ -131,14 +131,12 @@
                     </template>
                     {{ ( item.status.error ? item.status.error : 'No Errors' ) }}
                 </v-tooltip> 
-                <v-tooltip v-else-if="item.status.exists && item.size_estimate" bottom>
-                    <template v-slot:activator="{ on }">
-                        <v-icon class=""  v-on="on" :color="(item.size_estimate != item.status.size || !item.status.exists ? 'orange lighten-1' : 'green ' )" 
-                            large> {{ (item.size_estimate == item.status.size  ? '$check' : '$times-circle'  )}}
-                        </v-icon> 
-                    </template>
-                    Incomplete Download {{ item.status.size ? item.status.size : 'Empty' }} / Estimated: {{ item.size_estimate }}
-                </v-tooltip>
+                <div v-else-if="item.status.exists && item.size_estimate && item.status.size != item.size_estimate">
+                    <v-icon class=""  :color="(item.size_estimate != item.status.size || !item.status.exists ? 'orange lighten-1' : 'green ')" 
+                        large>{{ (item.size_estimate == item.status.size ? '$check' : '$times-circle') }}
+                    </v-icon> 
+                    Incomplete Download / Estimated: {{ item.size_estimate }}
+                </div>
                 <v-tooltip v-else bottom>
                     <template v-slot:activator="{ on }">
                     

@@ -1092,11 +1092,10 @@ export class Service {
                     options.Env = [...options.Env, ...$this.env ]  
                     options.HostConfig.Binds = [...options.HostConfig.Binds, ...$this.binds ]
                     options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
+                    options.Tty = true
                     let seen = {}
                     mounts.forEach((m)=>{
                         if (!seen[m.Target]){ 
-                            // m.Target = `"${m.Target}"`
-                            // m.Source = `"${m.Source}"`
                             options.HostConfig.Mounts.push(m)
                             seen[m.Target] = m.Source
                         }

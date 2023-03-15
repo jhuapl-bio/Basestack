@@ -99,24 +99,50 @@
           target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
           overwrite: true
         - source:
-            url: ftp.ccb.jhu.edu
+            url: https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz
             type: file
-            user: anonymous
-            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
-            password: null
-            protocol: ftp
             remove: false
             target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           label: Minikraken2
+          size_estimate: "7 GB"
+          optional: true
           type: download
           format: dir
-          optional: true
-          size_estimate: "7 GB"
           decompress:
             format: tgz
             source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
-          overwrite: false
+          overwrite: true
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20201202.tar.gz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          label: Viral 2021
+          size_estimate: "466 MB"
+          optional: true
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          target: "${writePath}/workflows/mytax/k2_viral_20201202"
+          overwrite: true
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/16S_Greengenes13.5_20200326.tgz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          label: 16S Greengenes
+          optional: true
+          type: download
+          format: dir
+          size_estimate: "106 MB"
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          target: "${writePath}/workflows/mytax/16S_Greengenes_k2db"
+          overwrite: true
       variables:
         manifest:
           label: "Input Samplesheet contents"
