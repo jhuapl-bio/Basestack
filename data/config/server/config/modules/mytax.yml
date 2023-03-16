@@ -66,6 +66,7 @@
           size_estimate: "3 MB"
           decompress:
             format: tgz
+            target: "${writePath}/workflows/mytax/"
             source: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
           label: 2021 Marine Mitogenome database
           target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
@@ -76,7 +77,6 @@
             type: file
             remove: true
             target: "${writePath}/workflows/mytax/flukraken2.tar.gz"
-              
           type: download
           format: file
           optional: true
@@ -99,6 +99,7 @@
           format: dir
           decompress:
             format: tgz
+            target: "${writePath}/workflows/mytax/k2_viral_20201202"
             source: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
           target: "${writePath}/workflows/mytax/k2_viral_20201202"
           overwrite: true

@@ -36,7 +36,7 @@ class FileService {
   saveRemoteModule(params){  //Used
     return Api().post(`${baseEndpoint.get()}/remote/save/modules`, params)    
   }
-  
+   
   getModule(param){ //Used
     return Api().get(`${baseEndpoint.get()}/catalog/get/${param.catalog}`)    
   }
@@ -67,7 +67,8 @@ class FileService {
   getJobStatus(params){ // Used
     return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.procedure}`)    
   }
-  startJob(params){ // Used
+  startJob(params) { // Used
+    console.log("job start", params)
     return Api().post(`${baseEndpoint.get()}/job/start`, params)    
   }
   cancelJob(params){ // Used

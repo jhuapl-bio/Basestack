@@ -1094,7 +1094,7 @@ export class Service {
                     options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
                     options.Tty = true
                     let seen = {}
-                    mounts.forEach((m)=>{
+                    mounts.forEach((m)=>{ 
                         if (!seen[m.Target]){ 
                             options.HostConfig.Mounts.push(m)
                             seen[m.Target] = m.Source

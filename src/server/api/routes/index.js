@@ -951,9 +951,9 @@ router.post("/procedure/build", (req,res,next)=>{ // build workflow according to
 		try {
 			let module = store.library.catalog[req.body.catalog]
 			let procedure = module.procedures[req.body.procedure]
-			let response = await procedure.build( req.body.skip, req.body.dependency)
-			logger.info(`Success in beginning to building of procedure dependencies for: ${req.body.catalog}: ${req.body.procedure}`)
-			res.status(200).json({status: 200, message: "Completed module build", data: response });
+			let response =  procedure.build( req.body.skip, req.body.dependency)
+			logger.info(`Beginning to building of procedure dependencies for: ${req.body.catalog}: ${req.body.procedure}`)
+			res.status(200).json({ status: 200, message: "Started build of module", data: response });
 		} catch(err2){
 			logger.error("%s %s", "Error in loading images2", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
@@ -990,9 +990,9 @@ router.post("/procedure/build/dependency", (req,res,next)=>{ // build workflow a
 		try {
 			let module = store.library.catalog[req.body.catalog]
 			let procedure = module.procedures[req.body.procedure]
-			let response = await procedure.build( req.body.skip, req.body.dependency) 
-			logger.info(`Success in beginning to building of procedure dependencies for: ${req.body.catalog}:  ${req.body.procedure}`)
-			res.status(200).json({status: 200, message: "Completed module build", data: response });
+			let response = procedure.build( req.body.skip, req.body.dependency) 
+			logger.info(`Beginning to building of procedure dependencies for: ${req.body.catalog}:  ${req.body.procedure}`)
+			res.status(200).json({status: 200, message: "Started build", data: response });
 		} catch(err2){
 			logger.error("%s %s", "Error in loading images2", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
@@ -1190,7 +1190,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			let services = req.body.services    
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`)
 			if (found){          
-				store.logger.info("found job, cleaning it up")  
+				store.logger.info("found job, cleaning it up")   
 				found.cleanup()              
 				delete store.jobs.catalog[req.body.catalog][req.body.procedure]
 				store.logger.info("found job, cleaned up")     
@@ -1200,11 +1200,11 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
   			let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
-			skip = await job.start(req.body) 
-			store.logger.info("Completed or Exited Job!")
+			skip = job.start(req.body) 
+			store.logger.info("Initiated Job!")
  
 			if (!skip){
-				res.status(200).json({status: 200, message: `${procedure.name} job completed or cancelled ` , skip: skip });
+				res.status(200).json({status: 200, message: `${procedure.name} job started ` , skip: skip });
 			} else {
 				res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
 			}	    

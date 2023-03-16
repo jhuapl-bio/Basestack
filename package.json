@@ -1,6 +1,6 @@
 {
   "name": "Basestack",
-  "version": "2.4.5",
+  "version": "2.4.6",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
@@ -31,7 +31,7 @@
     "build:mac-dmg": "node .electron-vue/build.js && electron-builder --mac  dmg",
     "build:mac": "node .electron-vue/build.js && electron-builder --mac",
     "build:macOffline": "node .electron-vue/build.js && cross-env offline=true electron-builder --mac dmg",
-    "build:macOfflineSign": "node .electron-vue/build.js && cross-env electron-builder --mac dmg -p never",
+    "build:macOfflineSign": "node .electron-vue/build.js && cross-env offline=true electron-builder --mac dmg -p never",
     "build:win": "node .electron-vue/build.js && electron-builder --win; rm build/win-unpacked.zip; zip -r build/win-unpacked.zip build/win-unpacked",
     "build:winOffline": "node .electron-vue/build.js && electron-builder --win -p never",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",

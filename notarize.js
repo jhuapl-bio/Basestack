@@ -10,12 +10,17 @@ exports.default = async function notarizing(context) {
     const appName = context.packager.appInfo.productFilename;
     console.log("Signing", appName, appOutDir, electronPlatformName)
     // return;
+    if (process.env.offline) {
+      return 
+    } else {
       return await notarize({
-      appBundleId: 'com.yourcompany.yourAppId',
-      appPath: `${appOutDir}/${appName}.app`,
-      appleApiKey: process.env.API_KEY_ID,
-      appleApiIssuer: process.env.API_KEY_ISSUER_ID
-    });
+        appBundleId: 'com.yourcompany.yourAppId',
+        appPath: `${appOutDir}/${appName}.app`,
+        appleApiKey: process.env.API_KEY_ID,
+        appleApiIssuer: process.env.API_KEY_ISSUER_ID
+      });
+
+    }
   }
   
   

@@ -776,8 +776,8 @@ export class Procedure {
                                     checkExists(dependency_obj.target).then((exists)=>{
                                         if (!exists.exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
                                             dependency_obj.status.building = true
-                                            
-                                            decompress_file(dependency_obj.decompress.source, dependency_obj.target).then(()=>{
+                                            let decompresstarget = dependency_obj.decompress.target ? dependency_obj.decompress.target : path.dirname(dependency_obj.target)
+                                            decompress_file(dependency_obj.decompress.source, decompresstarget).then(()=>{
                                                 dependency_obj.status.building = false
                                             }).catch((err) =>{
                                                 store.logger.error("Error in decompressing file: %o %o", dependency_obj.source, err)
@@ -786,7 +786,7 @@ export class Procedure {
                                         } else {
                                             store.logger.info(`Skipping dependency decompression: ${dependency_obj.target} due to it existing`)
                                             dependency_obj.status.building = false
-                                            
+                                              
                                         }
                                     })
                                 } 
