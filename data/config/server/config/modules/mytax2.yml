@@ -72,7 +72,7 @@
           label: 2021 Flukraken database
           target: "${writePath}/workflows/mytax/flukraken2"
           overwrite: true
-          size_estimate: "5 GB"
+          size_estimate: "4 GB"
         - source:
             url: https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20201202.tar.gz
             type: file
