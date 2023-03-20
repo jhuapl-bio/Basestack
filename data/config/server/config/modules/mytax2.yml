@@ -1,4 +1,4 @@
-- version: 2
+- version: 2.01
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -205,9 +205,6 @@
             format: 
               custom: False
               options: ["file", "directory"]
-            compressed: 
-              custom: False
-              options: [True, False]
             pattern: 'barcode[0-9]+'
           tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
           update_on: 
@@ -223,12 +220,12 @@
             target: "${writePath}/workflows/mytax2/samplesheets/Samplesheet.target.csv"
             sep: ","
             type: "list"
-            header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
+            header: ['sample','path_1','path_2','format','demux','platform','database', 'kits', 'pattern']
           class: "wb-50  p-3 mb-1"
           source: []
           defaults:
             sample: "unknown"
-          header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
+          header: ['sample','path_1','path_2','format','demux','platform','database', 'kits', 'pattern']
           append_newline: true
         cpuMode: 
           label: "CPU Only Mode "
