@@ -345,13 +345,13 @@ export class Service {
         let source = selected_option.source 
         // let target = selected_option.target  
         let target = selected_option.target  
-        
+          
         return [source, target] 
-    } 
+    }  
     updatePorts(ports, options){ 
         const $this = this 
         options.HostConfig.PortBindings = {}
-        options.ExposedPorts = {}
+        options.ExposedPorts = {} 
         ports.forEach((port)=>{
             if (!Array.isArray(port)){
                 options = $this.port_bind(port, options)

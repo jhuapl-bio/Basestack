@@ -292,8 +292,8 @@
           label: Mytax2 Server Service
           column: 12
           output: false
-          target: 3000
-          source: 3000
+          target: 7689
+          source: 7689
           port: true
           portbind:
             from: '%{variables.serverport.source}'
