@@ -5,7 +5,7 @@ const os = require("os")
 /*
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
-   - #
+   - #  
    - # All Rights Reserved.  
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
@@ -347,7 +347,7 @@ export class Service {
         let target = selected_option.target  
           
         return [source, target] 
-    }  
+    }   
     updatePorts(ports, options){ 
         const $this = this 
         options.HostConfig.PortBindings = {}

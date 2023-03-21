@@ -442,7 +442,7 @@ export  class Job {
                 reject(err)
             } 
         }) 
-    }
+    }  
     async statusCheck(){
 		const $this = this; 
         let env = {}
@@ -526,7 +526,6 @@ export  class Job {
                             let index = procedures.dependencies.findIndex((f)=>{
                                 return f.target == service.config.image
                             })
-                            console.log(procedures.dependencies.status)
                             if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
                                 if (!autocheck){
                                     store.logger.info("Image doesnt exists %s", service.config.image, index)
@@ -551,7 +550,7 @@ export  class Job {
                     cancelled_or_skip = true
                     $this.status.error = err
                     $this.status.running = false
-                    throw err
+                    // throw err
                 }
             }
             store.logger.info("Job completed or skipped/exited")
@@ -626,9 +625,8 @@ export  class Job {
         }
         try{
             await this.loopServices(autocheck)
-            return 
         } catch (err){
-            store.logger.error(err)
+            store.logger.error( `${err} error in loopservices`)
             throw err
         }
         

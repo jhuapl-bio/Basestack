@@ -1200,14 +1200,20 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
   			let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
-			skip = job.start(req.body) 
-			store.logger.info("Initiated Job!")
+			try {
+				job.start(req.body) 	
+				store.logger.info("Initiated Job!")
+			} catch (err) {
+				skip = job.start(req.body) 
+				store.logger.error("Error in  Job!")
+			}
+			
  
-			if (!skip){
+			// if (!skip){
 				res.status(200).json({status: 200, message: `${procedure.name} job started ` , skip: skip });
-			} else {
-				res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
-			}	    
+			// } else {
+			// 	res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
+			// }	    
 			
 		} catch(err2){
 			logger.error("%s %s", "Error in starting job", err2)

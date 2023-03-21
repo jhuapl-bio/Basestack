@@ -9,6 +9,7 @@
 const fs = require("fs")
 const { convert_custom, checkFileExist,  checkFolderExists, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
+import { inspect } from "util"
 const { bytesToSize } = require("./configurations.js")
 const { create_module } = require("./init.js")
 const { store }  = require("../../config/store/index.js")
@@ -422,10 +423,8 @@ export async function check_container(container_name){
 				success:false
 			}
 			await container.inspect((err,inspection)=>{ 
-				try{
+				try {
 					if (err){ 
-						// logger.error(`${err}, error in container finalization of exit code: ${container_name}`)
-						// returnable.error  = err
 						returnable.running = false
 						returnable.success = false
 						returnable.complete= true
@@ -434,7 +433,7 @@ export async function check_container(container_name){
 						returnable.container = inspection.Config
 						returnable.running = false
 					} else if (inspection.State.Status == 'exited') {
-						returnable.exists = true
+						returnable.exists = true 
 						returnable.container = inspection.Config
 						if ( (inspection.State.ExitCode > 0 && inspection.State.ExitCode !== 127 ) || inspection.State.ExitCode == 1 ){
 							// logger.info(`${container_name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
@@ -452,7 +451,7 @@ export async function check_container(container_name){
 						returnable.exit_code = inspection.State.ExitCode
 					} else {
 						returnable.exists = true
-						returnable.running = true
+						returnable.running = inspection.State ? inspection.State.Running : true
 						returnable.complete = false
 						returnable.container = inspection.Config
 					} 

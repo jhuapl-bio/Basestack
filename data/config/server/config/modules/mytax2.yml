@@ -215,7 +215,7 @@
             source: "%{variables.csv.source}"
           bind:
               - from:  "%{variables.manifest.create.target}"
-                to: "/MYTAX/data/Samplesheet.csv"
+                to: "/usr/share/nginx/html/mytax/data/Samplesheet.csv"
           create:
             target: "${writePath}/workflows/mytax2/samplesheets/Samplesheet.target.csv"
             sep: ","

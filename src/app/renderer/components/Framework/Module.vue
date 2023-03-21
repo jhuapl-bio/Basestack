@@ -610,8 +610,9 @@ export default {
         url  = `http://localhost:${link.source}`
       }
       if (link.suburl){
-				  url = url + link.suburl
-			  }
+				url = `${url}${link.suburl}`
+			}
+      console.log(url, ".....")
       return url
     },
     openExternalURL(link){
@@ -1128,7 +1129,7 @@ export default {
       drawer: true,
       dialog: false,
       gpu: false,
-      autocheck: true, 
+      autocheck: false, 
       librarydialog: false,
       dialogLog: false,
       customDrawer: false,
