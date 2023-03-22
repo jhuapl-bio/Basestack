@@ -289,7 +289,7 @@ export  class Job {
                     if ($this.runningConfig.removal_override.source){
                         if(type == 'file') {
                             promises.push(removeFile($this.runningConfig.removal_override.source))
-                        }
+                        } 
                         else{
                             promises.push(removeFile($this.runningConfig.removal_override.source, 'dir'))
                         }
@@ -297,40 +297,37 @@ export  class Job {
                     
                 } else {
                     for (let i  = 0;  i < $this.status.watches.length; i++){
-                        let watch = $this.status.watches[i]
+                        let watch = $this.status.watches[i] 
                         if (typeof watch.source == 'string'){
                             promises.push(removeFile(watch.source))
                         } else { 
                             watch.source.forEach((w)=>{
                                 promises.push(removeFile(w))
-                            })
+                            }) 
                         }  
                     }
                 } 
             } 
             Promise.allSettled(promises).then((respo)=>{
-                resolve()  
-            }).catch((err)=>{  
-                reject(err)  
-            })
-        })
+                resolve()   
+            }).catch((err)=>{     
+                reject(err)   
+            })  
+        })   
     } 
     setParams(params){
         if (params.images){
-            params.images.forEach((service)=>{ 
+            params.images.forEach((service)=>{  
                 this.services[service.service].override.image = service.image 
-            })
-        }
+            })  
+        } 
         
-        this.services.forEach((service)=>{ 
+        this.services.forEach((service)=>{  
             service.config.dry = params.dry
         })
-        this.mergeInputs(params, 'mergedConfig'  )
+        this.mergeInputs(params, 'mergedConfig')
         return   
- 
- 
-
-    } 
+    }  
     updateCommand(service, command){ 
         const $this = this   
         if (command){
@@ -445,7 +442,7 @@ export  class Job {
                 reject(err)
             } 
         }) 
-    }
+    }  
     async statusCheck(){
 		const $this = this; 
         let env = {}
@@ -509,13 +506,13 @@ export  class Job {
             }
         }) 
         let response = await Promise.allSettled(promises)
-        return 
-    }
-    async loopServices(autocheck){      
-        const $this  = this 
-        let cancelled_or_skip = false
-        let end = false  
-        try{ 
+        return   
+    }     
+    async loopServices(autocheck){       
+        const $this  = this         
+        let cancelled_or_skip = false 
+        let end = false   
+        try{   
             for (let i = 0; !end && i < $this.services.length; i++){
                 let service = $this.services[i]
                 try{  
@@ -524,10 +521,10 @@ export  class Job {
                     let procedures = $this.procedure
                     if (this.deployment == 'native'){
                         console.log("is native, skipping")
-                    } else {
+                    } else { 
                         try{
                             let index = procedures.dependencies.findIndex((f)=>{
-                                return f.fulltarget == service.config.image
+                                return f.target == service.config.image
                             })
                             if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
                                 if (!autocheck){
@@ -541,7 +538,6 @@ export  class Job {
                             store.logger.error(`${Err} error in checking image presence`)
                         }
                     } 
-                    console.log("doen checkthenstart")
                     skip = await service.check_then_start({ variables: $this.variables, autocheck: autocheck }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
@@ -554,7 +550,7 @@ export  class Job {
                     cancelled_or_skip = true
                     $this.status.error = err
                     $this.status.running = false
-                    throw err
+                    // throw err
                 }
             }
             store.logger.info("Job completed or skipped/exited")
@@ -629,9 +625,8 @@ export  class Job {
         }
         try{
             await this.loopServices(autocheck)
-            return 
         } catch (err){
-            store.logger.error(err)
+            store.logger.error( `${err} error in loopservices`)
             throw err
         }
         

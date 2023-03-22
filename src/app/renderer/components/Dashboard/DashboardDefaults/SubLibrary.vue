@@ -10,19 +10,7 @@
   <v-card dense tile id="sublibrary" >
     <v-spacer></v-spacer>
     <v-toolbar flat  class="pb-10 mb-5">
-        <!-- <v-tooltip bottom  v-if="!selectedProcedure.local">
-            <template v-slot:activator="{ on }">
-                <v-btn large icon class="mr-3">
-                    <v-icon
-                        color="indigo" 
-                        
-                        @click="removeCatalog"
-                    >$trash-alt
-                    </v-icon>
-                </v-btn>
-            </template>
-            Unload or Remove the Module (Custom or Remote)
-        </v-tooltip> -->
+       
         <v-badge   class="mt-5" v-if="selectedProcedure.status" overlap large :color="(selectedProcedure.status  && selectedProcedure.status.fully_installed ? 'green' : 'orange darken-2')">
             <template v-slot:badge>
                 <v-tooltip bottom>
@@ -96,8 +84,9 @@
             style="max-width: 100%"
             :items="dependencies"
             :headers="fields"
-            :items-per-page="5"
+            :items-per-page="itemsPerPage"
             centered
+            :page="page"
             class="elevation-1 "			
             large dense
             v-if="dependencies && dependencies.length > 0"
@@ -131,14 +120,12 @@
                     </template>
                     {{ ( item.status.error ? item.status.error : 'No Errors' ) }}
                 </v-tooltip> 
-                <v-tooltip v-else-if="item.status.exists && item.size_estimate" bottom>
-                    <template v-slot:activator="{ on }">
-                        <v-icon class=""  v-on="on" :color="(item.size_estimate != item.status.size || !item.status.exists ? 'orange lighten-1' : 'green ' )" 
-                            large> {{ (item.size_estimate == item.status.size  ? '$check' : '$times-circle'  )}}
-                        </v-icon> 
-                    </template>
-                    Incomplete Download {{ item.status.size ? item.status.size : 'Empty' }} / Estimated: {{ item.size_estimate }}
-                </v-tooltip>
+                <div v-else-if="item.status.exists && item.size_estimate && item.status.size != item.size_estimate">
+                    <v-icon class=""  :color="(item.size_estimate != item.status.size || !item.status.exists ? 'orange lighten-1' : 'green ')" 
+                        large>{{ (item.size_estimate == item.status.size ? '$check' : '$times-circle') }}
+                    </v-icon> 
+                    Incomplete Download / Estimated: {{ item.size_estimate }}
+                </div>
                 <v-tooltip v-else bottom>
                     <template v-slot:activator="{ on }">
                     
@@ -256,10 +243,10 @@
                 
                     
             </template>
-            <template v-slot:[`item.skip`]="{ index }">
+            <template v-slot:[`item.skip`]="{ index, page }">
                 
                     <v-checkbox
-                        v-model="skips[index]"
+                        v-model="skips[(page - 1) *itemsPerPage+index]"
                         on-icon="$check-square"
                         class="align-center justify-center text-xs-center" 
                         off-icon="$square"
@@ -271,7 +258,7 @@
             <template v-slot:[`item.build`]="{ item, index }">
                 <v-icon  class="configure" large color="primary" 
                     style="" v-if="item.status.dependComplete"
-                    @click="buildModuleDependency(version.name, index)">$download
+                    @click="buildModuleDependency(version.name, (page-1) * itemsPerPage+index )">$download
                 </v-icon>
                 
                 <v-tooltip bottom v-else>
@@ -292,16 +279,16 @@
             <template v-slot:[`item.remove`]="{  index }">
                 <v-icon class="configure" large color="orange darken-1" 
                     style="" 
-                    @click="removeModuleDependency(version.name, index)">$trash-alt
+                    @click="removeModuleDependency(version.name,   (page - 1) *itemsPerPage  + index)">$trash-alt
                 </v-icon>
             </template>
             <template v-slot:[`item.size`]="{ item }">
                 {{item.status.size}}
             </template>
-            <template v-slot:[`item.cancel`]="{ item, index }">
+            <template v-slot:[`item.cancel`]="{ item, index}">
                 <v-icon class="configure" large color="light" 
                     style="" v-if="item.status.building"
-                    @click="cancelModuleDependency(version.name, index)">$times-circle
+                    @click="cancelModuleDependency(version.name,   (page - 1) * itemsPerPage + index)">$times-circle
                 </v-icon>
             </template>
         
@@ -358,9 +345,9 @@ export default {
             procedures: [],
             selectedModule: {},
             defaultProcedure:0,
-            
-            procedures: [],
             selected: {},
+            itemsPerPage: 8,
+            page: 1,
             skips: [],
             stored: {},
             fields: [
@@ -610,8 +597,8 @@ export default {
             .then((response)=>{
                 this.$swal({
                     title: `${$this.version.name}`,
-                    text: `Module Build Dependency Completed for ${names}`,
-                    icon: 'success',
+                    text: `Module Build  started for ${names}`,
+                    icon: 'info',
                     showConfirmButton: true,
                     allowOutsideClick: true
                 });
@@ -666,6 +653,7 @@ export default {
         async buildModuleDependency(name, index){
             let procedureIdx  = this.procedure
             const $this = this
+            console.log(index)
             let label = this.dependencies[index].label   ?   this.dependencies[index].label  : this.dependencies[index].target      
             let skip = this.skips[index]
             FileService.buildProcedureDependency({
@@ -677,8 +665,8 @@ export default {
             .then((response)=>{
                 this.$swal({
                     title: `${$this.version.name}`,
-                    text: `Build completed for dependency: ${label}`,
-                    icon: 'success',
+                    text: `Build started for dependency: ${label}`,
+                    icon: 'info',
                     showConfirmButton: true,
                     allowOutsideClick: true
                 });

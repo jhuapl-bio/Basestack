@@ -7,7 +7,6 @@
    - # **********************************************************************
   */
 var ncp = require("ncp").ncp
-const http = require("http")
 const https = require("https")
 ncp.limit = 16;
 import getSize from 'get-folder-size';
@@ -16,9 +15,10 @@ import  path  from "path"
 const mkdirp = require("mkdirp");
 const rimraf = require("rimraf");
 import parse  from 'csv-parser'
-import axios from "axios";
-import { dir } from "console";
-import { stream } from "winston";
+const axios = require("axios")
+const agent = new https.Agent({
+	rejectUnauthorized: false
+});
 const { bytesToSize } = require("./configurations.js")
 const { store }  = require("../../config/store/index.js")
 const  targz = require('targz');
@@ -29,7 +29,7 @@ const tar = require("tar")
 import glob from "glob"
 import { logger } from "./logger.js";
 const  gunzip = require('gunzip-file');
-const YAML = require("js-yaml")    
+import { promisify } from 'util';
 
 export function set(attribute, value, obj, type) {
     var depth_attributes = attribute.split('.');
@@ -275,7 +275,7 @@ export async function checkExists(location, globSet){
 						{location: location, size:0, exists: false}
 					)
 				}
-				if(exists){
+				else if(exists){ 
 					let size = 0 
 					if (exists.isDirectory()){
 						getSize(location, (err, size)=>{
@@ -370,223 +370,63 @@ function showDownloadingProgress(received, total) {
     // process.stdout.write((platform == 'win32') ? "\033[0G": "\r");
     // process.stdout.write(percentage + "% | " + received + " bytes downloaded out of " + total + " bytes.");
 }
-export async function downloadSource(url, target, params)  {
+export async function downloadSource(url, target, follow)  {
 	return new Promise((resolve, reject) => {
 		try{
 			const p = path.resolve(target)	
 			const dirpath = path.dirname(target) 
-			
-			var received_bytes = 0;
-			var total_bytes = 0;
-			let writer; 
-			// p = url.parse(url),           
-			let timeout = 1000; 
-			let seen = {
-				start: 0,  
-				end: .020
-			}
-			let request;
-			var timeout_wrapper = function( req ) {
-				return function() {
-					req.abort();
-					writer.destroy()
-					reject("File transfer timeout!"); 
-				};
-			};
-			var downloaded = 0
-			writeFolder(dirpath).then(()=>{ 
-				writer = fs.createWriteStream(p)
-				console.log("folder made if not existing, or continuing...") 
-				writer.status = 0
-				if (params && params.protocol == "git"){
-					store.logger.info("git protocol called to get file")
-					clone(url, dirpath, {}, (err, stream)=>{ 
-						console.log(err, stream)
-					})
-				}
-				else if (params && params.protocol == 'ftp'){
-					store.logger.info("ftp protocol called to get file")
-					var c = new Client();   
-					try{
-						
-						c.on('ready', function(err, stream) {
-							
-							if (err){
-								logger.error(err)
-								reject(err)
-							}
-							c.size(params.path, (err, len)=>{
-								if (err) { 
-									store.logger.error("Error in getting item: %s", params.path)
-									reject(err)
-								}
-								c.get(params.path, function(err, stream) {
-									stream.status = 0
-									if (err) { 
-										store.logger.error("Error in getting item: %s", params.path)
-
-										reject(err)
-									} else {
-										logger.info("Returning stream!!!!!!!!")
-										
-										resolve(writer)
-									}
-									stream.on('close', function() { 
-										logger.info("closed stream")
-										stream.end(); });
-									stream.on('end', function() { 
-										logger.info("ended stream")
-										stream.destroy(); });
-									stream.on("data", (buffer)=>{
-										var segmentLength = buffer.length;
-										downloaded += segmentLength; 
-										if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
-											let percent= (100 * downloaded/len ).toFixed(0)
-											store.logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
-											seen.start =  .02 + downloaded/len
-											seen.end =  seen.end + .02 
-											writer.status = percent
-											stream.status = percent
-										} 
-									}) 
-									stream.on('destroy', function () {
-										c.end()
-										writer.destroy() 
-										// resolve(null);
-									})
-									stream.on('end', function () {
-										c.end()
-										writer.destroy()
-										resolve(null);
-									})
-									stream.on('close', function () {
-										writer.status = 100			
-										writer.destroy()
-										c.end()
-										resolve(null);
-									})
-									stream.on('error', function (err) {
-										store.logger.error(`Got error on ftp get: %o`, err);
-										c.end() 
-										writer.destroy()
-										// reject(err.message);
-									});
-									writer.on("close", ()=>{
-										console.log("ending writing of stream...")
-										c.end()
-										c.destroy()
-									})
-									stream.pipe(writer)
-									resolve(writer)
-								});
-							})
-								
-						});
-						c.on('error',(err)=>{
-							logger.error(err)
-							reject(err)
-						});
-						c.on('close',(err)=>{
-							logger.info(`${err}, closed ftp protocol get`)
-							c.destroy()
-							resolve()
-						});
-						c.on('end',(err)=>{
-							logger.info(`${err}, ended ftp protocol get`)
-							c.destroy()
-							resolve()
-						});
-						c.on('destroy',(err)=>{
-							logger.info(`${err}, destroyed ftp protocol get`)
-							resolve()
-						});
-						c.connect({ 
-							host: params.url,
-							user: params.user,
-							password: params.password
-						})
-						 
-					} catch (err){
-						reject(err)
-					}
-				} else { 
-					store.logger.info("http(s) protocol called to get file %s", url)
+			writeFolder(dirpath).then(async () => { 
+				
+				const writer = fs.createWriteStream(p);
+				const { data, headers } = await axios.get(url, {
+					headers: {
+					},
+					responseType: 'stream',
+					httpsAgent: agent,
 					
-					let fnct = https
-					if (url.startsWith("http:")){
-						fnct  = http
-					}  
-					let request = fnct.get(url).on("response", (response)=>{
-						var len = parseInt(response.headers['content-length'], 10);
-						response.on("close", (err)=>{
-							store.logger.error("err %o", err)
-							try{
-								response.destroy()
-							} catch(Err){ 
-								store.logger.error(Err)
-							}
-						})
-						response.on('data', function(chunk) {
-							if(chunk){
-								downloaded += chunk.length;
-								if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
-									let percent= (100 * downloaded/len ).toFixed(0)
-									logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
-									 seen.start =  .02 + downloaded/len   
-									seen.end =  seen.end + .02  
-									writer.status = percent
-								} 
-							}
-
-							
-							// reset timeout 
-							clearTimeout( timeoutId );  
-							timeoutId = setTimeout( fn, timeout );  
-						}).on('destroy', function () { 
-							// clear timeout 
-							// clearTimeout( timeoutId ); 
-							store.logger.info("Destroy writer")	
-							// resolve(null);   
-						}).on('end', function () {
-							// clear timeout
-							// clearTimeout( timeoutId );
-							writer.status = 100		
-							// writer.destroy()
-							// resolve(writer)
-						}).on('error', function (err) {
-							// clear timeout 
-							store.logger.error(`Got error on http(s) get: %o`, err);
-							clearTimeout( timeoutId );
-							// writer.destroy()
-							reject(err.message);
-						});
-						response.pipe(writer)  
-						// generate timeout handler
-						var fn = timeout_wrapper( request );
-	
-						// set initial timeout
-						var timeoutId = setTimeout( fn, timeout ); 
-						writer.on("close", ()=>{
-							if (typeof request.end === "function") { 
-								request.end()  
-							} 
-						}).on("error", (err)=>{
-							store.logger.error("err %o Error in trying to download the file", err)
-							reject(err)
-						})
-						resolve(writer)
-					}) 
-					.on('error', (e) => {
-						store.logger.error(`Got error http(s) in download: ${e}`);
-						reject(e)
-						// writer.end()
-					});
+				})
+				const len = headers['content-length']
+				var downloaded = 0
+				let timeout = 1000; 
+				let seen = { 
+					start: 0,
+					end: .020
+				} 
+				const stream = data
+				stream.pipe(writer);  
+				
+				stream.on('end', function() {
+					logger.info("ended stream")
+					writer.destroy()
+					stream.destroy()
+				});
+				stream.on("data", (buffer)=>{
+					var segmentLength = buffer.length; 
+					downloaded += segmentLength;
+					if ( downloaded/len >= seen.start && downloaded/len <= seen.end){
+						let percent= (100 * downloaded/len ).toFixed(0)
+						store.logger.info("Downloading " + percent + "% " + downloaded + " bytes to " + target )
+						seen.start =  .02 + downloaded/len
+						seen.end =  seen.end + .02
+						writer.status = percent
+						stream.status = percent
+					}
+				})
+				writer.on("close", ()=>{
+					console.log("ending writing of stream...")
+					if (!follow) {
+						resolve()						
+					}
+				})
+				if (follow) {
+					resolve(writer)
 				}
-				// resolve(writer)
-			}).catch((err)=>{
-				store.logger.error("Error in downloading file: %o to: %o", url, target)
-				reject(err)
+				 
+			}).catch((error1) => {
+				store.logger.error(error1)
+				reject(error1)
 			})
+			
 		} catch (Err){
 			store.logger.error(`Got error: ${Err}`);
 			reject(Err)
@@ -686,17 +526,17 @@ export async function writeFile(filepath, content){
 	return new Promise((resolve, reject)=>{
 			const directory = path.dirname(filepath) ;
 			(async function(){
-				try{
+				try{ 
 					await fs.rmSync(filepath, { recursive: true, force: true });
 				} catch(err) {
-					store.logger.info(err)
-				} finally{
+					store.logger.info(err) 
+				} finally{ 
 					mkdirp(directory).then(response=>{
 						fs.writeFile(filepath, content,(errFile)=>{
 							if (errFile){
 								store.logger.error("Error in writing file... %o", errFile)
 								reject(errFile)   
-							}
+							} 
 							resolve("Success in writingfile")
 						})
 					}).catch((errmkdrir)=>{

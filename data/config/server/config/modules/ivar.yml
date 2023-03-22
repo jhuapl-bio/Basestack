@@ -1,7 +1,7 @@
 - name: ivar
   title: "IVAR"
   icon: "eye-dropper"
-  version: 1.0
+  version: 1.02
   basestack_released: 2.0
   module: True
   url: https://github.com/andersen-lab/ivar
@@ -32,7 +32,6 @@
             source: null
             target: "/opt/reference/<<basename(%{variables.reference.source})>>" 
             bind: "self"
-              
       bam:
         label: "Bam File"
         element: "file"
@@ -42,30 +41,7 @@
         target: "/opt/data/<<basename(%{variables.bam.source})>>"
         class: "wb-100  p-3 mb-1" 
         source: null
-      outputNameConsensusFile:
-        label: "Output Consensus FASTA"
-        element: "file"
-        output: True
-        openSelf: True
-        hint: "FASTA file containing your iVar Consensus"
-        bind_parent_dir: true
-        class: "wb-100  p-3 mb-1"
-        source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.consensus.ivar.fa"
-        target: "%{variables.bam.target}/<<basename,trim(%{variables.bam.source})>>.consensus.ivar.fa"
-        define:
-          outputNameConsensus: "<<basename,trim(%{variables.bam.source})>>.consensus.ivar"
-      output:
-        label: "Output TSV"
-        element: "file"
-        output: True
-        openSelf: True
-        hint: "TSV file containing variants called against Reference and optional GFF"
-        bind_parent_dir: true
-        class: "wb-100  p-3 mb-1"  
-        source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
-        target: "%{variables.bam.target}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
-        define:
-          outputName: "<<basename,trim(%{variables.bam.source})>>.ivar"
+      
     services:
       consensus:
         name: "consensus"    
@@ -111,6 +87,7 @@
           label: "GFF Coding regions for SARS-CoV-2"
           type: "download" 
           format: "dir"
+          optional: true
           decompress: 
             format: "gz"
             source: "${writePath}/workflows/ivar/GCF_009858895.2_ASM985889v3_genomic.gff.gz"
@@ -119,6 +96,7 @@
         - type: "download" 
           format: "file"
           label: "SARS-CoV-2 Reference FASTA - MN908947.3"
+          optional: true
           target: "${writePath}/workflows/ivar/reference.fasta"
           overwrite: true 
           source: 
@@ -154,12 +132,30 @@
           class: "wb-50 p-3 mb-1"
           source: 10 
           target: null
-        output: 
-          target: "%{shared.variables.output}"
-          shared: true
-        outputNameConsensusFile: 
-          target: "%{shared.variables.outputNameConsensusFile}"
-          shared: true
+        outputNameConsensusFile:
+          label: "Output Consensus FASTA"
+          element: "file"
+          output: True
+          openSelf: True
+          hint: "FASTA file containing your iVar Consensus"
+          bind_parent_dir: true
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.consensus.ivar.fa"
+          target: "%{variables.bam.target}/<<basename,trim(%{variables.bam.source})>>.consensus.ivar.fa"
+          define:
+            outputNameConsensus: "<<basename,trim(%{variables.bam.source})>>.consensus.ivar"
+        output:
+          label: "Output TSV"
+          element: "file"
+          output: True
+          openSelf: True
+          hint: "TSV file containing variants called against Reference and optional GFF"
+          bind_parent_dir: true
+          class: "wb-100  p-3 mb-1"  
+          source: "<<directory(%{variables.bam.source})>>/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+          target: "%{variables.bam.target}/<<basename,trim(%{variables.bam.source})>>.ivar.tsv"
+          define:
+            outputName: "<<basename,trim(%{variables.bam.source})>>.ivar"
         gff:
           label: "Reference GFF3"
           class: "wb-100 p-3 mb-1"
@@ -188,7 +184,7 @@
                 command: " -g ${gff} "
                 placement: 2
                 services: 
-                  - 0
+                  - 1
               bind: "directory"
         
       services:

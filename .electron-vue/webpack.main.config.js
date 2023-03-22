@@ -79,7 +79,6 @@ if (process.env.NODE_ENV !== 'production') {
 if (process.env.NODE_ENV === 'production') {
   // mainConfig.entry.main = [path.join(__dirname, '../src/server/index.server.js')].concat(mainConfig.entry.main)
   mainConfig.mode = 'production'
-  console.log("PRODUCTION")
   // mainConfig.devTool = 'source-map'
   mainConfig.plugins.push(
     new webpack.DefinePlugin({

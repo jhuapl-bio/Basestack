@@ -25,15 +25,10 @@
         - "cdc"
         - "consensus"
       dependencies: 
-        - target: "jhuaplbio/irma"
-          label: jhuaplbio/irma
-          version: v1.0.0
-          type: "docker-local"
-          build: 
-            path: ${configPath}/modules/irma/Dockerfile
-            file: Dockerfile
-          format: "dockerfile"
-      
+        - target: "staphb/irma"
+          version: "1.0.3"
+          type: "docker"      
+          format: "docker"
       variables:
         
         fastqs:
@@ -89,6 +84,7 @@
           label: "Target"
           options: 
             - FLU
+            - FLU-minion
             - EBOLA
             - CoV
             - FLU-utr
@@ -96,7 +92,7 @@
             - FLU-pgm
       services:
         - name: "consensus" 
-          image: "jhuaplbio/irma:v1.0.0"
+          image: "staphb/irma:1.0.3"
           orchestrated: false #orchestrated means it r
           init: false
           hideStatus: false

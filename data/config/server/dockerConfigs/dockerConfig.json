@@ -6,6 +6,10 @@
     "HostConfig": {
         "AutoRemove": true,
         "Privileged": true,
+        "RestartPolicy": {
+            "Name": "no",
+            "MaximumRetryCount": 0
+        },
         "Binds": [
             "basestack-docker:/var/lib/docker",
             "basestack-docker-certs-ca:/certs/ca",
@@ -26,6 +30,7 @@
             }
         }
     },
+    
     "Tty": true,
     "Image": "jhuaplbio/basestack_orchestrator",
     "Cmd": []

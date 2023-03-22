@@ -230,7 +230,7 @@ export class Procedure {
         return new Promise(function(resolve,reject){
             let dependencies = $this.dependencies
             dependencies.forEach((dependency)=>{
-                if (dependency.type == 'docker'){
+                if (dependency.type == 'docker' && process.env.NODE_ENV == 'production'){
                     fetch_external_dockers(dependency.target).then((response)=>{
                         if ( response){  
                             dependency.status.latest = response.latest_digest
@@ -559,7 +559,7 @@ export class Procedure {
                             store.logger.error(err)
                         }
                     } 
-                    downloadSource(dependency.source.url, dependency.source.target, dependency.source ).then((stream, error)=>{
+                    downloadSource(dependency.source.url, dependency.source.target,  true ).then((stream, error)=>{
                         // dependency.status.stream = spawnLog(stream, $this.logger)
                         dependency.streamObj = stream 
                         if (error){      
@@ -568,16 +568,16 @@ export class Procedure {
                         }       
                           
                         // $this.buildlog = spawnLog(stream, $this.logger)
-                        stream.on("close", ()=>{ 
+                        stream.on("close", ()=>{
                             store.logger.info("Completed download of %o", dependency.source)
                              
                             dependency.status.building = false
-                            dependency.status.error = null 
+                            dependency.status.error = null
                             dependency.status.downloading= false
                             resolve()
                         }).on("error", (err)=>{
                             store.logger.error(`Error in stream ${err}`)
-                            dependency.status.error = err 
+                            dependency.status.error = err
                             reject(err)
                         })
                     }).catch((err)=>{
@@ -680,7 +680,7 @@ export class Procedure {
                         dependency.status.building = false
                         promises.push(dependency.streamObj.destroy()) 
                     } else{
-                        try{
+                        try {
                             promises.push(dependency.streamObj.close())
                         } catch (err){
                             store.logger.error(`${err} error in closing stream for ${dependency.target}`)
@@ -766,8 +766,9 @@ export class Procedure {
 
                         }))
                     } else {
-                        promises.push($this.downloadSource(dependency_obj, overwrite_idx).then((response)=>{
+                        promises.push($this.downloadSource(dependency_obj, overwrite_idx, true).then((response)=>{
                             dependency_obj.status.downloading = false  
+
                             store.logger.info(`______Item download: ${dependency_obj.source.target}`)
                             checkExists(dependency_obj.source.target).then((exists)=>{
                                 if (dependency_obj.decompress && !dependency_obj.status.cancelled){ 
@@ -775,8 +776,8 @@ export class Procedure {
                                     checkExists(dependency_obj.target).then((exists)=>{
                                         if (!exists.exists || exists && overwrite_idx || exists && dependency_obj.decompress.overwrite_idx){
                                             dependency_obj.status.building = true
-                                            
-                                            decompress_file(dependency_obj.decompress.source, path.dirname(dependency_obj.target)).then(()=>{
+                                            let decompresstarget = dependency_obj.decompress.target ? dependency_obj.decompress.target : path.dirname(dependency_obj.target)
+                                            decompress_file(dependency_obj.decompress.source, decompresstarget).then(()=>{
                                                 dependency_obj.status.building = false
                                             }).catch((err) =>{
                                                 store.logger.error("Error in decompressing file: %o %o", dependency_obj.source, err)
@@ -785,7 +786,7 @@ export class Procedure {
                                         } else {
                                             store.logger.info(`Skipping dependency decompression: ${dependency_obj.target} due to it existing`)
                                             dependency_obj.status.building = false
-                                            
+                                              
                                         }
                                     })
                                 } 

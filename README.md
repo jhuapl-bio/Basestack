@@ -1,5 +1,7 @@
 # Basestack
 
+## Our Official Documentation has moved to https://basestackwebsite.readthedocs.io/en/latest
+
 ## 1 Running Basestack Developer Mode
 
 - Window 1: `npm run dev:server`
@@ -33,5 +35,4 @@ java -jar jsign-4.1.jar --keystore build/hardwareToken.cfg --storepass "your pas
 
 **note: target extensions will be based on your operating system (.dmg for OSX, .exe NSIS for Win, .AppImage for Linux)
 
-## Our Official Documentation has moved to https://basestackwebsite.readthedocs.io/en/latest
 

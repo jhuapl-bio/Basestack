@@ -1,4 +1,4 @@
-- version: 1.9
+- version: 2.01
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -33,7 +33,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.2.4
+          version: v2.2.5
           type: docker
           format: docker
         - target: "bitnami/git"
@@ -41,49 +41,6 @@
           type: "docker"
           optional: false
           format: "docker"
-        # - source:
-        #     url: https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy_5.1.15_linux64.tar.gz
-        #     type: file
-        #     remove: true
-        #     target: "${writePath}/workflows/mytax/guppy_gpu.tar.gz"
-        #   optional: true
-        #   type: download
-        #   format: file
-        #   decompress:
-        #     format: tgz
-        #     source: "${writePath}/workflows/mytax/guppy_gpu.tar.gz"
-        #   label: ONT GUPPY GPU v5.1.15
-        #   target: "${writePath}/workflows/mytax/ont-guppy"
-        #   overwrite: true
-        # - source:
-        #     url: https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy-cpu_5.1.15_linux64.tar.gz
-        #     type: file
-        #     remove: true
-        #     target: "${writePath}/workflows/mytax/guppy_cpu.tar.gz"
-        #   optional: true
-        #   type: download
-        #   format: file
-        #   decompress:
-        #     format: tgz
-        #     source: "${writePath}/workflows/mytax/guppy_cpu.tar.gz"
-        #   label: ONT GUPPY CPU Only v5.1.15
-        #   target: "${writePath}/workflows/mytax/ont-guppy-cpu"
-        #   overwrite: true
-        - source:
-            url: 
-              https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz
-            type: file
-            remove: true
-            target: "${writePath}/workflows/mytax/flukraken2.tar.gz"
-          optional: true
-          type: download
-          format: file
-          decompress:
-            format: tgz
-            source: "${writePath}/workflows/mytax/flukraken2.tar.gz"
-          label: 2021 Flukraken database
-          target: "${writePath}/workflows/mytax/flukraken2"
-          overwrite: true
         - source:
             url: https://raw.githubusercontent.com/jhuapl-bio/mytax/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz
             type: file
@@ -92,31 +49,76 @@
           type: download
           format: file
           optional: true
+          size_estimate: "3 MB"
           decompress:
             format: tgz
+            target: "${writePath}/workflows/mytax/"
             source: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
           label: 2021 Marine Mitogenome database
           target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
           overwrite: true
         - source:
-            url: ftp.ccb.jhu.edu
+            url: >-
+              https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz
             type: file
-            user: anonymous
-            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
-            password: null
-            protocol: ftp
+            remove: true
+            target: "${writePath}/workflows/mytax/flukraken2.tar.gz"
+          type: download
+          format: file
+          optional: true
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/flukraken2.tar.gz"
+          label: 2021 Flukraken database
+          target: "${writePath}/workflows/mytax/flukraken2"
+          overwrite: true
+          size_estimate: "5 GB"
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20201202.tar.gz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          label: Viral 2021
+          size_estimate: "466 MB"
+          optional: true
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            target: "${writePath}/workflows/mytax/k2_viral_20201202"
+            source: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          target: "${writePath}/workflows/mytax/k2_viral_20201202"
+          overwrite: true
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz
+            type: file
             remove: false
             target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           label: Minikraken2
+          size_estimate: "7 GB"
+          optional: true
           type: download
           format: dir
-          optional: true
-          size_estimate: "7 GB"
           decompress:
             format: tgz
             source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
-          overwrite: false
+          overwrite: true
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/16S_Greengenes13.5_20200326.tgz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          label: 16S Greengenes
+          optional: true
+          type: download
+          format: dir
+          size_estimate: "106 MB"
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          target: "${writePath}/workflows/mytax/16S_Greengenes_k2db"
+          overwrite: true
       variables:
         manifest:
           label: "Input Samplesheet contents"
@@ -143,8 +145,10 @@
               options: [
                 "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE",
                 "${writePath}/workflows/mytax/flukraken2",
-                "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
-              ]
+                "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629",
+                "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326",
+                "${writePath}/workflows/mytax/k2_viral_20201202"
+            ]  
             demux: 
               custom: False
               options: [True, False]
@@ -158,6 +162,7 @@
                 "EXP-NBD104",
                 "EXP-NBD114",
                 "EXP-NBD196",
+                "CUSTOM-FLU",
                 "EXP-PBC001",
                 "EXP-PBC096",
                 "OND-SQK-LP0096M",
@@ -195,15 +200,11 @@
                 "VSK-PTC001",
                 "VSK-VMK001",
                 "VSK-VMK002",
-                "VSK-VMK003",
-                "CUSTOM-FLU"
+                "VSK-VMK003"
               ]
             format: 
               custom: False
               options: ["file", "directory"]
-            compressed: 
-              custom: False
-              options: [True, False]
             pattern: 'barcode[0-9]+'
           tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
           update_on: 
@@ -214,17 +215,17 @@
             source: "%{variables.csv.source}"
           bind:
               - from:  "%{variables.manifest.create.target}"
-                to: "/MYTAX/data/Samplesheet.csv"
+                to: "/usr/share/nginx/html/mytax/data/Samplesheet.csv"
           create:
             target: "${writePath}/workflows/mytax2/samplesheets/Samplesheet.target.csv"
             sep: ","
             type: "list"
-            header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
+            header: ['sample','path_1','path_2','format','demux','platform','database', 'kits', 'pattern']
           class: "wb-50  p-3 mb-1"
           source: []
           defaults:
             sample: "unknown"
-          header: ['sample','path_1','path_2','format','demux','platform','database','compressed', 'kits', 'pattern']
+          header: ['sample','path_1','path_2','format','demux','platform','database', 'kits', 'pattern']
           append_newline: true
         cpuMode: 
           label: "CPU Only Mode "
@@ -234,7 +235,7 @@
         guppy_version:
           label: Guppy Version
           class: wb-100 p-3 mb-1
-          hint: If you dont want to use v5.1.15 of Guppy built-into the software
+          hint: If you dont want to use version 6.4.6 of Guppy built-into the software
           element: dir
           name: Custom Guppy Version
           source: null
@@ -254,9 +255,9 @@
           element: file
           source: null
           bind: self
-          target: "/opt/custom_config.cfg"
+          target: "/opt/custom_config.toml"
           append:
-            command: " cp /opt/custom_config.cfg /opt/ont-guppy-cpu/data/barcoding/; sed -i \"0,/arrangements_files/s/$/ custom_config.cfg/\" /opt/ont-guppy-cpu/data/barcoding/configuration.cfg ;  "
+            command: " cp /opt/custom_config.toml /opt/ont-guppy/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ;  "
             position: "start" 
             placement: 2
             services: 
@@ -269,7 +270,7 @@
           bind: self
           target: "/opt/custom_fasta.fasta"
           append:
-            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy-cpu/data/barcoding/barcodes_masked.fasta;  "
+            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy/data/barcoding/barcodes_masked.fasta;  "
             position: "start"
             placement: 2
             services: 
@@ -291,8 +292,8 @@
           label: Mytax2 Server Service
           column: 12
           output: false
-          target: 3000
-          source: 3000
+          target: 7689
+          source: 7689
           port: true
           portbind:
             from: '%{variables.serverport.source}'
@@ -300,7 +301,7 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.2.4
+          image: jhuaplbio/basestack_mytax2:v2.2.5
           workingdir: /
           orchestrated: false
           init: false
@@ -311,7 +312,7 @@
           conda activate mytax2; 
           cd /opt;
           if [[ $cpuMode != 'true' ]]; then 
-            ln -sf /opt/ont-guppy/bin/guppy_barcoder /usr/local/bin/guppy_barcoder; 
+            echo 'using gpu'; mv /opt/ont-guppy /opt/ont-guppy-cpu && ln -sf /opt/ont-guppy-gpu /opt/ont-guppy ;
           fi; 
           npm run server"]
         

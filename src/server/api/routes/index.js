@@ -341,7 +341,7 @@ router.get("/library/get", (req,res,next)=>{ // build workflow according to name
 router.get("/modules/imported/all", (req,res,next)=>{ // build workflow according to name and index
 	try {
 		
-		let data =  store.library.getSortedImported()
+		let data = store.library.getSortedImported()
 		res.status(200).json({status: 200, message: "retrieved module information", data: data });
 	} catch(err2){ 
 		logger.error("%s %s", "Error in loading /modules/imported/all module to library", err2)
@@ -890,11 +890,10 @@ router.post("/remote/set/modules", (req,res,next)=>{ // build workflow according
 //Used
 router.get("/remote/get/:target/:catalog", (req,res,next)=>{ // build workflow according to name and index
 	(async function(){
-		try { 
+		try {  
 			let library = store.library
-			let data = await library.getRemotes(req.params.target, req.params.catalog)
-			logger.info("%s get remotes ", req.params.target)
-			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
+			await library.getRemotes(req.params.target, req.params.catalog)
+			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: '' });
 		
 		} catch(err2){
 			logger.error( "Error  %o in getting config target remotely %s", err2, req.params.target)
@@ -932,6 +931,8 @@ router.get("/library/versions/get/:catalog", (req,res,next)=>{ // build workflow
 	(async function(){
 		try {
 			let library = store.library
+			library.getSortedImported(req.params.catalog)
+			logger.info("%s get remotes: %s ",  req.params.catalog)
 			let data = library.all[req.params.catalog].choices
 			res.status(200).json({status: 200, message: `${req.params.target}, received from remote site`, data: data });
 		
@@ -950,9 +951,9 @@ router.post("/procedure/build", (req,res,next)=>{ // build workflow according to
 		try {
 			let module = store.library.catalog[req.body.catalog]
 			let procedure = module.procedures[req.body.procedure]
-			let response = await procedure.build( req.body.skip, req.body.dependency)
-			logger.info(`Success in beginning to building of procedure dependencies for: ${req.body.catalog}: ${req.body.procedure}`)
-			res.status(200).json({status: 200, message: "Completed module build", data: response });
+			let response =  procedure.build( req.body.skip, req.body.dependency)
+			logger.info(`Beginning to building of procedure dependencies for: ${req.body.catalog}: ${req.body.procedure}`)
+			res.status(200).json({ status: 200, message: "Started build of module", data: response });
 		} catch(err2){
 			logger.error("%s %s", "Error in loading images2", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
@@ -989,9 +990,9 @@ router.post("/procedure/build/dependency", (req,res,next)=>{ // build workflow a
 		try {
 			let module = store.library.catalog[req.body.catalog]
 			let procedure = module.procedures[req.body.procedure]
-			let response = await procedure.build( req.body.skip, req.body.dependency) 
-			logger.info(`Success in beginning to building of procedure dependencies for: ${req.body.catalog}:  ${req.body.procedure}`)
-			res.status(200).json({status: 200, message: "Completed module build", data: response });
+			let response = procedure.build( req.body.skip, req.body.dependency) 
+			logger.info(`Beginning to building of procedure dependencies for: ${req.body.catalog}:  ${req.body.procedure}`)
+			res.status(200).json({status: 200, message: "Started build", data: response });
 		} catch(err2){
 			logger.error("%s %s", "Error in loading images2", err2)
 			res.status(419).send({status: 419, message: error_alert(err2)});
@@ -1189,7 +1190,7 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			let services = req.body.services    
 			let found = nestedProperty.get(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`)
 			if (found){          
-				store.logger.info("found job, cleaning it up")  
+				store.logger.info("found job, cleaning it up")   
 				found.cleanup()              
 				delete store.jobs.catalog[req.body.catalog][req.body.procedure]
 				store.logger.info("found job, cleaned up")     
@@ -1199,14 +1200,20 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
   			let job = await create_job(procedure.config, req.body, services, procedure)
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
-			skip = await job.start(req.body) 
-			store.logger.info("Completed or Exited Job!")
+			try {
+				job.start(req.body) 	
+				store.logger.info("Initiated Job!")
+			} catch (err) {
+				skip = job.start(req.body) 
+				store.logger.error("Error in  Job!")
+			}
+			
  
-			if (!skip){
-				res.status(200).json({status: 200, message: `${procedure.name} job completed or cancelled ` , skip: skip });
-			} else {
-				res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
-			}	    
+			// if (!skip){
+				res.status(200).json({status: 200, message: `${procedure.name} job started ` , skip: skip });
+			// } else {
+			// 	res.status(200).json({status: 200, message: "Job skipped or cancelled" + procedure.name, skip: skip });
+			// }	    
 			
 		} catch(err2){
 			logger.error("%s %s", "Error in starting job", err2)

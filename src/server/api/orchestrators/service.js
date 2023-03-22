@@ -5,7 +5,7 @@ const os = require("os")
 /*
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
-   - #
+   - #  
    - # All Rights Reserved.  
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
@@ -345,13 +345,13 @@ export class Service {
         let source = selected_option.source 
         // let target = selected_option.target  
         let target = selected_option.target  
-        
+          
         return [source, target] 
-    } 
+    }   
     updatePorts(ports, options){ 
         const $this = this 
         options.HostConfig.PortBindings = {}
-        options.ExposedPorts = {}
+        options.ExposedPorts = {} 
         ports.forEach((port)=>{
             if (!Array.isArray(port)){
                 options = $this.port_bind(port, options)
@@ -765,9 +765,9 @@ export class Service {
                         }
                     }
                 }
-            }
-            
-            return
+            } 
+             
+            return 
         }
     }
     async defineReads(){
@@ -1092,11 +1092,10 @@ export class Service {
                     options.Env = [...options.Env, ...$this.env ]  
                     options.HostConfig.Binds = [...options.HostConfig.Binds, ...$this.binds ]
                     options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
+                    options.Tty = true
                     let seen = {}
-                    mounts.forEach((m)=>{
+                    mounts.forEach((m)=>{ 
                         if (!seen[m.Target]){ 
-                            // m.Target = `"${m.Target}"`
-                            // m.Source = `"${m.Source}"`
                             options.HostConfig.Mounts.push(m)
                             seen[m.Target] = m.Source
                         }
@@ -1201,33 +1200,33 @@ export class Service {
                                             if (err.json && err.json.message){
                                                 $this.status.error = err.json.message
                                             } else {
-                                                $this.status.error = err
+                                                $this.status.error = err.message
                                             } 
                                             $this.status.running = false
                                             $this.status.complete = false
                                             reject(err)  
                                         }  
-                                        if (!wait || $this.config.continuous){
-                                            resolve( true )
-                                        } else {                                               
-                                            let ended = false
-                                            $this.jobInterval = setInterval(()=>{
-                                                if (ended){
-                                                    clearInterval($this.jobInterval)
-                                                }  
-                                                if ($this.status.complete){
-                                                    ended = true
-                                                    clearInterval($this.jobInterval)
-                                                    if ($this.status.error){
-                                                        resolve(true)
-                                                    } else {
-                                                        resolve(false)
-    
-                                                    }
-                                                }
-                                            },1000)
-                                            // }
-                                        } 
+                                        resolve()
+                                        // if (!wait || $this.config.continuous){
+                                        //     resolve( true )
+                                        // } else {                                               
+                                        //     let ended = false
+                                        //     $this.jobInterval = setInterval(()=>{
+                                        //         if (ended){
+                                        //             clearInterval($this.jobInterval)
+                                        //         }  
+                                        //         if ($this.status.complete){
+                                        //             ended = true
+                                        //             clearInterval($this.jobInterval)
+                                        //             if ($this.status.error){
+                                        //                 resolve(true)
+                                        //             } else {
+                                        //                 resolve(false)
+                                        //             }
+                                        //         }
+                                        //     },1000)
+                                        //     // }
+                                        // } 
                                         stream.on("close",()=>{ 
                                             store.logger.info("Stream Closed!")
                                             

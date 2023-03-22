@@ -88,7 +88,7 @@ export  class Library {
             return 1
         } else if (a.version > b.version){
             return -1
-        } else if (b.remote){
+        } else if (a.remote){
             return -1
         } else {
             return 1 
@@ -326,13 +326,14 @@ export  class Library {
          
         }  
     }
-    addRemote(config, name){
+    addRemote(config, name) {
         if (!this.all[name]){
             this.defineEntry(name)
         }
-        if (Array.isArray(config)){
+        if (Array.isArray(config)) {
+            
             let maxIdx = this.all[name].choices.length - 1
-            config.forEach((con)=>{
+            config.forEach((con) => {
                 let idx = this.all[name].choices.findIndex((f)=>{
                     return f.version == con.version && !f.local && !f.imported && f.remote
                 })
@@ -381,12 +382,13 @@ export  class Library {
         const $this = this;
         let modules = await fetch_external_yamls(catalog)
         if (modules && modules.length > 0){
-            modules.forEach((f)=>{
+            modules.forEach((f) => {
                 this.addRemote(f, f.name)    
             })
         } else {  
             store.logger.info("No modules found at remote location")
         }  
+        this.getSortedImported(catalog)
         return modules
          
          
@@ -403,10 +405,10 @@ export  class Library {
                         targets.push(parseConfigVariables(JSON.stringify(u), store.system))
                     } 
                 })
-            })
-        })
+            }) 
+        })  
         let promises = []
-        targets.forEach((target)=>{
+        targets.forEach((target)=>{ 
             promises.push(removeDep(target))
         })
         

@@ -26,11 +26,9 @@
         Customize
       </v-btn>
       
-      
-      
       <v-autocomplete 
         v-model="selectedVersion"
-        :items="libraryVersions" 
+        :items="libraryVersions"  
         @change="updateStagedVersion"
         item-text="version"
         :item-value="['id']"
@@ -663,8 +661,9 @@ export default {
         url  = `http://localhost:${link.source}`
       }
       if (link.suburl){
-				  url = url + link.suburl
-			  }
+				url = `${url}${link.suburl}`
+			}
+      console.log(url, ".....")
       return url
     },
     openExternalURL(link){
@@ -822,22 +821,22 @@ export default {
     },
     async fetchRemoteCatalog(name, ignore){
            
-        const $this = this
-        FileService.fetchRemoteCatalog('stagedModules', name).then((f)=>{
-          
-        })
-        .catch((err)=>{
-          if (!ignore){
-            this.$swal.fire({
-                position: 'center',
-                icon: 'error',
-                showConfirmButton:true,
-                title: err.response.data.message
-            })
-          }
-            
-            
-        }) 
+      const $this = this
+      try {
+        await FileService.fetchRemoteCatalog('stagedModules', name)
+        
+      } catch (err) {
+        if (!ignore) {
+          this.$swal.fire({
+            position: 'center',
+            icon: 'error',
+            showConfirmButton: true,
+            title: err.response.data.message
+          })
+        }
+      } finally {
+        $this.getLibrary()
+      }
     },
     async getLibrary(){
       try{
@@ -955,7 +954,6 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
-
       let services = Object.keys(this.services_to_use).filter((key, i)=>{
         return this.services_to_use[parseInt(key)] == 1
       })
@@ -1452,7 +1450,7 @@ export default {
     },
     
   },
-  mounted(){
+  async mounted(){
     const $this = this;
     this.setBorderWidth();
     this.setEvents();
@@ -1466,8 +1464,7 @@ export default {
     this.selectedProcedure = this.selected.procedures[0]
     $this.getJobStatus()
     $this.getInstallStatus(this.init)
-    this.fetchRemoteCatalog(this.selectedVersion.name, true)
-    $this.getLibrary()
+    await this.fetchRemoteCatalog(this.selectedVersion.name, true)
     
     $this.defineProcedure()
     this.interval = setInterval(()=>{

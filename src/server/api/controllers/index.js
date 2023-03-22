@@ -43,7 +43,9 @@ export async function init(moduleLocation){
 	// })
 	try{ 
 		store.logger.info("Getting modules from remote site")
-		await store.library.getRemotes(moduleLocation)
+		if (process.env.NODE_ENV == 'production') {
+			await store.library.getRemotes(moduleLocation)			
+		}
 	} catch(err){
 		store.logger.error("%o error in fetching remote modules initially", err)
 	} finally {
