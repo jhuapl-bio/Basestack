@@ -903,7 +903,6 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
-      console.log("start procedure")
       let services = Object.keys(this.services_to_use).filter((key, i)=>{
         return this.services_to_use[parseInt(key)] == 1
       })
@@ -1129,7 +1128,7 @@ export default {
       drawer: true,
       dialog: false,
       gpu: false,
-      autocheck: false, 
+      autocheck: true, 
       librarydialog: false,
       dialogLog: false,
       customDrawer: false,

@@ -1200,33 +1200,33 @@ export class Service {
                                             if (err.json && err.json.message){
                                                 $this.status.error = err.json.message
                                             } else {
-                                                $this.status.error = err
+                                                $this.status.error = err.message
                                             } 
                                             $this.status.running = false
                                             $this.status.complete = false
                                             reject(err)  
                                         }  
-                                        if (!wait || $this.config.continuous){
-                                            resolve( true )
-                                        } else {                                               
-                                            let ended = false
-                                            $this.jobInterval = setInterval(()=>{
-                                                if (ended){
-                                                    clearInterval($this.jobInterval)
-                                                }  
-                                                if ($this.status.complete){
-                                                    ended = true
-                                                    clearInterval($this.jobInterval)
-                                                    if ($this.status.error){
-                                                        resolve(true)
-                                                    } else {
-                                                        resolve(false)
-    
-                                                    }
-                                                }
-                                            },1000)
-                                            // }
-                                        } 
+                                        resolve()
+                                        // if (!wait || $this.config.continuous){
+                                        //     resolve( true )
+                                        // } else {                                               
+                                        //     let ended = false
+                                        //     $this.jobInterval = setInterval(()=>{
+                                        //         if (ended){
+                                        //             clearInterval($this.jobInterval)
+                                        //         }  
+                                        //         if ($this.status.complete){
+                                        //             ended = true
+                                        //             clearInterval($this.jobInterval)
+                                        //             if ($this.status.error){
+                                        //                 resolve(true)
+                                        //             } else {
+                                        //                 resolve(false)
+                                        //             }
+                                        //         }
+                                        //     },1000)
+                                        //     // }
+                                        // } 
                                         stream.on("close",()=>{ 
                                             store.logger.info("Stream Closed!")
                                             
