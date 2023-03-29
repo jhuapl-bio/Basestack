@@ -1,0 +1,116 @@
+- name: krona
+  title: "Krona"
+  icon: "book"
+  version: 1.0
+  schema_version: 1
+  basestack_released: 2.0
+  description: "Rendering of HTML files from Kraken2 reports"
+  module: True
+  tags: 
+    - "Local Krona plot"
+    - "Metagenomics"
+    - "Kraken2"
+  url: https://github.com/marbl/krona
+  tooltip: "Run Pairwise distance estimation on 2 genomes"
+  procedures: 
+    - name: krona #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Krona"
+      icon: "book"
+      module: True
+      init: false 
+      dependencies:
+        - target: "biocontainers/krona"
+          version: "v2.7.1_cv1"
+          type: "docker"
+          format: "docker"
+        - type: "download" 
+          format: "file"
+          optional: true
+          label: "NCBI Custom Flu taxonomy tab"
+          overwrite: true 
+          target: "${writePath}/workflows/krona/flu/taxonomy.tab"
+          source: 
+            url: "https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/taxonomy.tab"
+            type: "file"
+            remove: true
+            target: "${writePath}/workflows/krona/flu/taxonomy.tab"
+        - type: "download" 
+          format: "file"
+          label: "NCBI standard taxdump files"
+          target: "${writePath}/workflows/krona/ncbitaxdump/nodes.dmp"
+          overwrite: true 
+          optional: true
+          source: 
+            url: "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz"
+            type: "file"
+            remove: true
+            target: "${writePath}/workflows/krona/taxdump.tar.gz"
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/krona/taxdump.tar.gz"
+            target: "${writePath}/workflows/krona/ncbitaxdump"
+      tags: 
+        - "Visualization"
+        - "kraken2"
+        - "metagenomics"
+      variables:
+        outfile:
+          label: krona html file
+          element: file
+          class: wb-100  p-3 mb-1
+          source: "<<trim(%{variables.report.source})>>.html"
+          output: True
+          openSelf: True
+        report:
+          label: Kraken2 report file
+          element: file
+          class: wb-100  p-3 mb-1
+          source: null
+          bind: directory
+          target: "%{variables.report.source}"
+        taxdump:
+          label: "Taxonomy File"
+          option: 0
+          options:
+            - element: null
+              name: NCBI General
+              source: "${writePath}/workflows/krona/ncbitaxdump"
+              target: /opt/conda/opt/krona/taxonomy
+              bind: 
+                from: "${writePath}/workflows/krona/ncbitaxdump"
+                to: /opt/conda/opt/krona/taxonomy
+              warning: >-
+                General Taxonomy Tab File
+              append:
+                position: "start"
+                placement: 2
+                services:
+                  - 0
+                command: "ktUpdateTaxonomy.sh --only-build && "
+            - element: null
+              name: "NCBI Flu"
+              source: "${writePath}/workflows/krona/flu/taxonomy.tab"
+              bind: 
+                from: "${writePath}/workflows/krona/flu/taxonomy.tab"
+                to: /opt/conda/opt/krona/taxonomy/taxonomy.tab
+              warning: >-
+                NCBI Flu Taxonomy
+            - element: dir
+              name: "Custom"
+              source: null
+              bind: 
+                source: null
+                target: "/opt/conda/opt/krona/taxonomy"
+              warning: >-
+                Custom Taxonomy.tab file needs to be 3 columns, must be a directory
+      services:
+        - name: krona
+          label: "KRONA"
+          image: "biocontainers/krona:v2.7.1_cv1"
+          workingdir: "/opt/data"
+          orchestrated: false 
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", " ktImportTaxonomy -t 5 -m 3  -o ${outfile}  ${report} ;"] 
+    
