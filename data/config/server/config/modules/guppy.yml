@@ -1,0 +1,251 @@
+- name: guppy
+  title: "Guppy"
+  icon: "magic"
+  version: 1.0
+  schema_version: 1
+  basestack_released: 2.0
+  description: "Guppy suite for Oxford Nanopore Runs post-processing"
+  url: https://nanoporetech.com/how-it-works/basecalling
+  module: True
+  shared:
+    variables:
+      config: 
+        custom: true
+        label: "Basecaller Config"
+        element: "string"
+        option: 0
+        options: [
+          "dna_r9.4.1_450bps_fast.cfg",
+          "dna_r9.4.1_450bps_hac.cfg",
+          "dna_r10.3_450bps_fast.cfg",
+          "dna_r10.3_450bps_hac.cfg",
+          "dna_r10.3_450bps_hac_prom.cfg",
+          "dna_r10.3_450bps_sup.cfg",
+          "dna_r10.3_450bps_fast_mk1c.cfg",
+          "dna_r10.3_450bps_fast_prom.cfg",
+          "dna_r10.3_450bps_hac_mk1c.cfg",
+          "dna_r10.4.1_e8.2_260bps_fast.cfg",
+          "dna_r10.4.1_e8.2_260bps_fast_mk1c.cfg",
+          "dna_r10.4.1_e8.2_260bps_fast_prom.cfg",
+          "dna_r10.4.1_e8.2_260bps_hac.cfg",
+          "dna_r10.4.1_e8.2_260bps_hac_mk1c.cfg",
+          "dna_r10.4.1_e8.2_260bps_hac_prom.cfg",
+          "dna_r10.4.1_e8.2_260bps_modbases_5mc_cg_fast.cfg",
+          "dna_r10.4.1_e8.2_260bps_modbases_5mc_cg_fast_mk1c.cfg",
+          "dna_r10.4.1_e8.2_260bps_modbases_5mc_cg_fast_prom.cfg",
+          "dna_r10.4.1_e8.2_260bps_modbases_5mc_cg_hac.cfg",
+          "dna_r10.4.1_e8.2_260bps_modbases_5mc_cg_hac_prom.cfg",
+          "dna_r10.4.1_e8.2_260bps_modbases_5mc_cg_sup.cfg",
+          "dna_r10.4.1_e8.2_260bps_modbases_5mc_cg_sup_prom.cfg",
+          "dna_r10.4.1_e8.2_260bps_sup.cfg",
+          "dna_r10.4.1_e8.2_400bps_fast.cfg",
+          "dna_r10.4.1_e8.2_400bps_fast_mk1c.cfg",
+          "dna_r10.4.1_e8.2_400bps_fast_prom.cfg",
+          "dna_r10.4.1_e8.2_400bps_hac.cfg",
+          "dna_r10.4.1_e8.2_400bps_hac_mk1c.cfg",
+          "dna_r10.4.1_e8.2_400bps_hac_prom.cfg",
+          "dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_fast.cfg",
+          "dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_fast_mk1c.cfg",
+          "dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_fast_prom.cfg",
+          "dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_hac.cfg",
+          "dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_hac_mk1c.cfg",
+          "dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_hac_prom.cfg",
+          "dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_sup.cfg",
+          "dna_r10.4.1_e8.2_400bps_modbases_5mc_cg_sup_prom.cfg",
+          "dna_r10.4.1_e8.2_400bps_sup.cfg",
+          "dna_r10.4_e8.1_fast.cfg",
+          "dna_r10.4_e8.1_fast_mk1c.cfg",
+          "dna_r10.4_e8.1_fast_prom.cfg",
+          "dna_r10.4_e8.1_hac.cfg",
+          "dna_r10.4_e8.1_hac_mk1c.cfg",
+          "dna_r10.4_e8.1_hac_prom.cfg",
+          "dna_r10.4_e8.1_modbases_5hmc_5mc_cg_fast.cfg",
+          "dna_r10.4_e8.1_modbases_5hmc_5mc_cg_fast_mk1c.cfg",
+          "dna_r10.4_e8.1_modbases_5hmc_5mc_cg_fast_prom.cfg",
+          "dna_r10.4_e8.1_modbases_5hmc_5mc_cg_hac.cfg",
+          "dna_r10.4_e8.1_modbases_5hmc_5mc_cg_hac_mk1c.cfg",
+          "dna_r10.4_e8.1_modbases_5hmc_5mc_cg_hac_prom.cfg",
+          "dna_r10.4_e8.1_modbases_5hmc_5mc_cg_sup.cfg",
+          "dna_r10.4_e8.1_modbases_5hmc_5mc_cg_sup_prom.cfg",
+          "dna_r10.4_e8.1_modbases_5mc_cg_fast.cfg",
+          "dna_r10.4_e8.1_modbases_5mc_cg_fast_mk1c.cfg",
+          "dna_r10.4_e8.1_modbases_5mc_cg_fast_prom.cfg",
+          "dna_r10.4_e8.1_modbases_5mc_cg_hac.cfg",
+          "dna_r10.4_e8.1_modbases_5mc_cg_hac_mk1c.cfg",
+          "dna_r10.4_e8.1_modbases_5mc_cg_hac_prom.cfg",
+          "dna_r10.4_e8.1_modbases_5mc_cg_sup.cfg",
+          "dna_r10.4_e8.1_modbases_5mc_cg_sup_prom.cfg",
+          "dna_r10.4_e8.1_sketch.cfg",
+          "dna_r10.4_e8.1_sketch_mk1c.cfg",
+          "dna_r10.4_e8.1_sup.cfg",
+          "dna_r10_450bps_fast.cfg",
+          "dna_r10_450bps_fast_mk1c.cfg",
+          "dna_r10_450bps_hac.cfg",
+          "dna_r10_450bps_hac_mk1c.cfg",
+          "dna_r9.4.1_450bps_fast_mk1c.cfg",
+          "dna_r9.4.1_450bps_fast_prom.cfg",
+          "dna_r9.4.1_450bps_hac_mk1c.cfg",
+          "dna_r9.4.1_450bps_hac_prom.cfg",
+          "dna_r9.4.1_450bps_hac_prom_fw205.cfg",
+          "dna_r9.4.1_450bps_modbases_5hmc_5mc_cg_fast.cfg",
+          "dna_r9.4.1_450bps_modbases_5hmc_5mc_cg_fast_mk1c.cfg",
+          "dna_r9.4.1_450bps_modbases_5hmc_5mc_cg_fast_prom.cfg",
+          "dna_r9.4.1_450bps_modbases_5hmc_5mc_cg_hac.cfg",
+          "dna_r9.4.1_450bps_modbases_5hmc_5mc_cg_hac_mk1c.cfg",
+          "dna_r9.4.1_450bps_modbases_5hmc_5mc_cg_hac_prom.cfg",
+          "dna_r9.4.1_450bps_modbases_5hmc_5mc_cg_sup.cfg",
+          "dna_r9.4.1_450bps_modbases_5hmc_5mc_cg_sup_prom.cfg",
+          "dna_r9.4.1_450bps_modbases_5mc_cg_fast.cfg",
+          "dna_r9.4.1_450bps_modbases_5mc_cg_fast_mk1c.cfg",
+          "dna_r9.4.1_450bps_modbases_5mc_cg_fast_prom.cfg",
+          "dna_r9.4.1_450bps_modbases_5mc_cg_hac.cfg",
+          "dna_r9.4.1_450bps_modbases_5mc_cg_hac_mk1c.cfg",
+          "dna_r9.4.1_450bps_modbases_5mc_cg_hac_prom.cfg",
+          "dna_r9.4.1_450bps_modbases_5mc_cg_sup.cfg",
+          "dna_r9.4.1_450bps_modbases_5mc_cg_sup_prom.cfg",
+          "dna_r9.4.1_450bps_sketch.cfg",
+          "dna_r9.4.1_450bps_sketch_mk1c.cfg",
+          "dna_r9.4.1_450bps_sup.cfg",
+          "dna_r9.4.1_450bps_sup_plant.cfg",
+          "dna_r9.4.1_450bps_sup_prom.cfg",
+          "dna_r9.4.1_e8.1_fast.cfg",
+          "dna_r9.4.1_e8.1_fast_mk1c.cfg",
+          "dna_r9.4.1_e8.1_fast_prom.cfg",
+          "dna_r9.4.1_e8.1_hac.cfg",
+          "dna_r9.4.1_e8.1_hac_mk1c.cfg",
+          "dna_r9.4.1_e8.1_hac_prom.cfg",
+          "dna_r9.4.1_e8.1_modbases_5mc_cg_fast.cfg",
+          "dna_r9.4.1_e8.1_modbases_5mc_cg_fast_mk1c.cfg",
+          "dna_r9.4.1_e8.1_modbases_5mc_cg_fast_prom.cfg",
+          "dna_r9.4.1_e8.1_modbases_5mc_cg_hac.cfg",
+          "dna_r9.4.1_e8.1_modbases_5mc_cg_hac_mk1c.cfg",
+          "dna_r9.4.1_e8.1_modbases_5mc_cg_hac_prom.cfg",
+          "dna_r9.4.1_e8.1_modbases_5mc_cg_sup.cfg",
+          "dna_r9.4.1_e8.1_modbases_5mc_cg_sup_prom.cfg",
+          "dna_r9.4.1_e8.1_sketch.cfg",
+          "dna_r9.4.1_e8.1_sketch_mk1c.cfg",
+          "dna_r9.4.1_e8.1_sup.cfg",
+          "dna_r9.5_450bps.cfg",
+          "rna_r9.4.1_70bps_fast.cfg",
+          "rna_r9.4.1_70bps_fast_mk1c.cfg",
+          "rna_r9.4.1_70bps_fast_prom.cfg",
+          "rna_r9.4.1_70bps_hac.cfg",
+          "rna_r9.4.1_70bps_hac_mk1c.cfg",
+          "rna_r9.4.1_70bps_hac_prom.cfg"
+        ]
+  tags: 
+    - "basecalling"
+    - "demux"
+    - "sequencing"
+    - "genomics"
+  tooltip: "Run either guppy (cpu/gpu) basecalling or demultiplexing tool(s)"
+  procedures:
+    - name: guppy_basecaller_cpu #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Basecaller CPU"
+      icon: "magic"
+      init: false 
+      dependencies:
+        - target: "genomicpariscentre/guppy:6.4.6"
+          type: "docker"
+          optional: false
+          format: "docker"
+      tags: 
+        - "guppy"
+        - "basecalling"
+        - "long reads"
+        - "demultiplexing"
+      variables:
+        config:
+          shared: True
+          target: '%{shared.variables.config}'
+        savepath:
+          label: "Basecalled files"
+          type: files
+          pattern: ".fastq*"
+          output: true
+          bind: self
+          target: "<<directory(%{variables.input.source})>>/basecalled/pass"
+          source: "<<directory(%{variables.input.source})>>/basecalled/pass"
+          path:  "<<directory(%{variables.input.source})>>/basecalled/pass"
+        input:
+          label: "Input directory of fast5 files"
+          hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
+          element: "dir" 
+          bind: "self"
+          source: null
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(f5|fast5)$"
+          target: "/opt/inputfast5s/<<basename(%{variables.input.source})>>"
+      tooltip: "Run basecalling on fast5 files"
+      services:
+        - name: guppy_basecaller_cpu
+          label: "CPU basecaller"
+          image: "genomicpariscentre/guppy:6.4.6"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "guppy_basecaller -s ${savepath} -i ${input}  -c ${config} "]
+    - name: guppy_basecaller_gpu #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Basecaller GPU"
+      icon: "magic"
+      init: false 
+      dependencies:
+        - target: "genomicpariscentre/guppy-gpu:6.4.6"
+          type: "docker"
+          optional: true
+          format: "docker"
+      tags: 
+        - "guppy"
+        - "basecalling"
+        - "long reads"
+        - "demultiplexing"
+      variables:
+        config:
+          shared: True
+          target: '%{shared.variables.config}'
+        fastqs:
+          label: "Basecalled files"
+          output: True
+          openSelf: False
+          type: files
+          pattern: ".fastq*" 
+          target: "<<directory(%{variables.input.source})>>/basecalled/pass"
+          source: "<<directory(%{variables.input.source})>>/basecalled/pass"
+          path:  "<<directory(%{variables.input.source})>>/basecalled/pass"
+        savepath:
+          label: "Basecalled savepath"
+          type: dir
+          hidden: true
+          bind: self
+          target: "<<directory(%{variables.input.source})>>/basecalled"
+          source: "<<directory(%{variables.input.source})>>/basecalled"
+          path:  "<<directory(%{variables.input.source})>>/basecalled"
+        input:
+          label: "Input directory of fast5 files"
+          hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
+          element: "dir" 
+          bind: "self"
+          source: null
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(f5|fast5)$"
+          target: "/opt/inputfast5s/<<basename(%{variables.input.source})>>"
+      tooltip: "Run basecalling on fast5 files"
+      services:
+        - name: guppy_basecaller_gpu
+          label: "GPU basecaller"
+          image: "genomicpariscentre/guppy-gpu:6.4.6"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "guppy_basecaller -s ${savepath} -i ${input} -x cuda:0 -c ${config}"]
+    

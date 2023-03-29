@@ -113,23 +113,52 @@
           target: "${writePath}/workflows/mytax/16S_Greengenes_k2db"
           overwrite: true
       variables:
-        report:
-          label: Report From classification, in kraken2 output report style
-          element: file
-          output: true
-          openSelf: true
-          class: wb-100  p-3 mb-1
-          source: >-
-            <<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report
-          target: /opt/data/<<basename,trim(%{variables.file.source})>>.report
-        file:
-          label: "FASTQ File"
+        input:
+          label: "FASTQ File or Directory"
           hint: "Can be one of the paired end reads (Illumina) OR your aggregated FASTQ for Long Read Sequencing"
-          element: "file"
-          bind: "directory"
-          class: "wb-100  p-3 mb-1"
-          source: null
-          target: /opt/data/<<basename(%{variables.file.source})>>
+          options:
+            - name: "Single file"
+              element: "file"
+              bind: "directory"
+              class: "wb-100  p-3 mb-1"
+              sourceformat: "<<directory(%{variables.input.source})>>"
+              source: null
+              sourcetarget: /opt/data
+              target: /opt/data/<<basename(%{variables.input.source})>>
+              define:
+                file: /opt/data/<<basename(%{variables.input.source})>>
+            - name: "Directory of uncompressed fastq files (Nanopore)"
+              element: "dir"
+              bind: "self"
+              class: "wb-100  p-3 mb-1"
+              source: null
+              sourcetarget: /opt/data/<<basename(%{variables.input.source})>>
+              sourceformat: "%{variables.input.source}"
+              target: /opt/data/<<basename(%{variables.input.source})>>
+              append:
+                command: "mkdir -p /opt/combineddata; cat /opt/data/<<basename(%{variables.input.source})>>/*.fastq > /opt/combineddata/<<basename(%{variables.input.source})>>.fastq;  " 
+                placement: 2
+                position: "start"
+                services:
+                  - 0
+              define: 
+                file: /opt/combineddata/<<basename(%{variables.input.source})>>.fastq
+            - name: "Directory of compressed fastq files (Nanopore)"
+              element: "dir"
+              bind: "self"
+              class: "wb-100  p-3 mb-1"
+              source: null
+              sourcetarget: /opt/data/<<basename(%{variables.input.source})>>
+              sourceformat: "%{variables.input.source}"
+              append:
+                command:  mkdir -p /opt/combineddata; cat /opt/data/<<basename(%{variables.input.source})>>/*.fastq.gz > /opt/combineddata/<<basename(%{variables.input.source})>>.fastq.gz; 
+                placement: 2
+                position: "start"
+                services:
+                  - 0
+              define: 
+                file: /opt/combineddata/<<basename(%{variables.input.source})>>.fastq.gz
+
         file2:
           label: "FASTQ 2nd File"
           element: "file"
@@ -149,7 +178,7 @@
           label: Memory Load Database
           hint: >-
             Do or Don't load the database into memory. Useful if you are limited
-            in RAM
+            in RAM 
           option: 0
           options:
             - element: null
@@ -205,6 +234,14 @@
               source: null
               target: /opt/databases/<<basename(%{variables.db.source})>>
               bind: self
+        report:
+          label: Report From classification, in kraken2 output report style
+          element: file
+          output: true
+          openSelf: true
+          class: wb-100  p-3 mb-1
+          source: "%{variables.input.optionValue.sourceformat}/<<basename,trim(%{variables.input.source})>>.report"
+          target: "%{variables.input.sourcetarget}/<<basename,trim(%{variables.input.source})>>.report"
       services:
         - name: kraken2_report
           label: Kraken2 Report
