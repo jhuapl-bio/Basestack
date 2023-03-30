@@ -146,7 +146,7 @@
                 "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE",
                 "${writePath}/workflows/mytax/flukraken2",
                 "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629",
-                "${writePath}/workflows/mytax/16S_Greengenes_k2db",
+                "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326",
                 "${writePath}/workflows/mytax/k2_viral_20201202"
             ]  
             demux: 

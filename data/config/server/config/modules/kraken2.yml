@@ -110,7 +110,7 @@
           decompress:
             format: tgz
             source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
-          target: "${writePath}/workflows/mytax/16S_Greengenes_k2db"
+          target: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326"
           overwrite: true
       variables:
         input:

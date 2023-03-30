@@ -130,7 +130,7 @@
           decompress:
             format: tgz
             source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
-          target: "${writePath}/workflows/mytax/16S_Greengenes_k2db"
+          target: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326"
           overwrite: true
       variables:
         file:
@@ -204,11 +204,11 @@
                 to: /opt/databases/minikraken2
             - element: null
               name: 16_SGreengenes
-              source: "${writePath}/workflows/mytax/16S_Greengenes_k2db"
-              target: /opt/databases/16S_Greengenes_k2db
+              source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326"
+              target: /opt/databases/16S_Greengenes13.5_20200326
               bind:
                 from: '%{variables.db.source}'
-                to: /opt/databases/16S_Greengenes_k2db
+                to: /opt/databases/16S_Greengenes13.5_20200326
             - element: null
               name: Flukraken2-2021
               source: "${writePath}/workflows/mytax/flukraken2"
