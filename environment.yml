@@ -1,4 +1,4 @@
-name: basestack
+name: basestackDev
 channels:
   - conda-forge
   - eumetsat

@@ -638,7 +638,7 @@ export default {
       if (this.selectedCatalog && this.selectedCatalog.name && !this.importedLibrary[this.selectedCatalog.name]){
         this.selected = 'defaults'
         this.tab = 1
-      }
+      } 
       return 
     },
     async getAllLatest(){

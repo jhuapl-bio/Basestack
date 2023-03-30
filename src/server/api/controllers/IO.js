@@ -436,6 +436,7 @@ export async function downloadSource(url, target, follow)  {
 export async function decompress_file(file, outpath){
 	return new Promise((resolve, reject) => {
 		const ext = path.extname(file) 
+		console.log(ext,"<<<<<",file)
 		if (ext == '.tgz' || file.endsWith('tar.gz')){
 			store.logger.info("Decompress file .tgz: %s to: %s", file, outpath)
 			targz.decompress({ 

@@ -110,7 +110,7 @@ export  class Library {
                 
             }
             return base
-        } else {
+        } else { 
             let base = this.all[name].choices
             base = base.sort((a,b)=>{
                 $this.sorting(a,b)
@@ -160,7 +160,7 @@ export  class Library {
             config.forEach((con)=>{
                 
                 let idx = this.all[name].choices.findIndex((f)=>{
-                    return f.version == con.version
+                    return f.version == con.version && f.imported
                 })
                 
                 if (idx == -1){
@@ -388,7 +388,7 @@ export  class Library {
         } else {  
             store.logger.info("No modules found at remote location")
         }  
-        this.getSortedImported(catalog)
+        this.getSortedImported(catalog) 
         return modules
          
          

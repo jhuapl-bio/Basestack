@@ -11,7 +11,7 @@
     - "Metagenomics"
     - "Kraken2"
   url: https://github.com/marbl/krona
-  tooltip: "Run Pairwise distance estimation on 2 genomes"
+  tooltip: "Generate Krona Plot from Kraken Reports"
   procedures: 
     - name: krona #Top level is the left-hand selection of the menu and the major module to install 
       title: "Krona"
@@ -86,7 +86,7 @@
                 placement: 2
                 services:
                   - 0
-                command: "ktUpdateTaxonomy.sh --only-build && "
+                command: "ktUpdateTaxonomy.sh --only-build --preserve && "
             - element: null
               name: "NCBI Flu"
               source: "${writePath}/workflows/krona/flu/taxonomy.tab"

@@ -517,7 +517,7 @@ export class Service {
         let promises  = [] 
         if ($this.config.bind){ 
             if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
-                let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)   
+                let bnd = ($this.config.bind.from ? $this.config.bind.from : $this.config.bind)  
                     bnd.forEach((b)=>{
                         if (typeof b == 'object' && b.from){
                             promises.push(formatBind(
@@ -599,7 +599,7 @@ export class Service {
                             } 
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
-                            console.log("asdasddasd")
+                            console.log("asdasddasd", selected_option.bind)
                             if (Array.isArray(selected_option.bind)){
                                  selected_option.bind.forEach((bd)=>{
                                     bd.to = $this.removeQuotes(bd.to, bd.from)
@@ -609,7 +609,7 @@ export class Service {
                                         selected_option.element
 
                                     )) 
-                                 })
+                                 }) 
                             } else {
                                 selected_option.bind.to = $this.removeQuotes(selected_option.bind.to, selected_option.bind.from)
                                 promises.push(formatBind( 
@@ -641,13 +641,13 @@ export class Service {
                     
                       
                 }
-            }
+            } 
         }
         // this.binds.push(...binds)
         let promiseMounts = await Promise.allSettled(promises)
         store.logger.info("Done creating all mounts")
-        promiseMounts.forEach((f)=>{
-            if (f.status == 'fulfilled'){
+        promiseMounts.forEach((f)=>{      
+            if (f.status == 'fulfilled'  ){
                 if (f.value.Source && f.value.Target){
                     mounts.push(f.value)
                 }
@@ -1152,11 +1152,11 @@ export class Service {
                                     return new Promise((resolve, reject)=>{
                                         container.inspect((err, inspection)=>{
                                             try{
-                                                if (err){
+                                                if (err){ 
                                                     logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
                                                     $this.status.error  = err
-                                                } else if (!inspection){
-                                                    $this.status.complete= true
+                                                } else if (!inspection){  
+                                                    $this.status.complete= true 
                                                     $this.status.running = false
                                                 } else if (inspection.State.exited) {
                                                     logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
@@ -1206,27 +1206,27 @@ export class Service {
                                             $this.status.complete = false
                                             reject(err)  
                                         }  
-                                        resolve()
-                                        // if (!wait || $this.config.continuous){
-                                        //     resolve( true )
-                                        // } else {                                               
-                                        //     let ended = false
-                                        //     $this.jobInterval = setInterval(()=>{
-                                        //         if (ended){
-                                        //             clearInterval($this.jobInterval)
-                                        //         }  
-                                        //         if ($this.status.complete){
-                                        //             ended = true
-                                        //             clearInterval($this.jobInterval)
-                                        //             if ($this.status.error){
-                                        //                 resolve(true)
-                                        //             } else {
-                                        //                 resolve(false)
-                                        //             }
-                                        //         }
-                                        //     },1000)
-                                        //     // }
-                                        // } 
+                                        // resolve()
+                                        if (!wait || $this.config.continuous){
+                                            resolve( true )
+                                        } else {                                               
+                                            let ended = false
+                                            $this.jobInterval = setInterval(()=>{
+                                                if (ended){
+                                                    clearInterval($this.jobInterval)
+                                                }    
+                                                if ($this.status.complete){
+                                                    ended = true 
+                                                    clearInterval($this.jobInterval)
+                                                    if ($this.status.error){
+                                                        resolve(true)
+                                                    } else {
+                                                        resolve(false)
+                                                    }
+                                                }
+                                            },1000)
+                                            // }
+                                        } 
                                         stream.on("close",()=>{ 
                                             store.logger.info("Stream Closed!")
                                             

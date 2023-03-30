@@ -64,9 +64,9 @@ export async function define_procedure(name, procedure){
 			resolve(procedure_obj)
 		}).catch((err)=>{
 			reject(err)
-		})
+		}) 
 	})   
-}
+} 
 export async function import_configurations(){
 	try{ 
 		let data = await readFile(store.system.configurationFile)
