@@ -257,7 +257,7 @@
           bind: self
           target: "/opt/custom_config.toml"
           append:
-            command: " cp /opt/custom_config.toml /opt/ont-guppy/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ;  "
+            command: " cp /opt/custom_config.toml /opt/ont-guppy/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ; cp /opt/custom_config.toml /opt/ont-guppy-gpu/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ;   "
             position: "start" 
             placement: 2
             services: 
@@ -270,7 +270,7 @@
           bind: self
           target: "/opt/custom_fasta.fasta"
           append:
-            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy/data/barcoding/barcodes_masked.fasta;  "
+            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy/data/barcoding/barcodes_masked.fasta; cat /opt/custom_fasta.fasta >> /opt/ont-guppy-gpu/data/barcoding/barcodes_masked.fasta;  "
             position: "start"
             placement: 2
             services: 
