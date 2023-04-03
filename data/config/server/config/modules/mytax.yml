@@ -255,7 +255,7 @@
           init: false
           force_restart: false
           force_init: false
-          command: [bash, "-c", ' python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes} -names /taxdump/names.dmp -additionals "common name" -additionals "synonym" /  && bash krakenreport2json.sh -i ${report}.fullstring -o ${report}.json ' ]
+          command: [bash, "-c", ' python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes} -names /taxdump/names.dmp -additionals "genbank common name" /  && bash krakenreport2json.sh -i ${report}.fullstring -o ${report}.json ' ]
     - name: mytax_visualization
       title: Kraken2 Mytax Visualization
       icon: chart-pie
