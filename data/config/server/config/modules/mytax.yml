@@ -55,7 +55,7 @@
           type: docker
           format: docker
         - source:
-            url: https://raw.githubusercontent.com/jhuapl-bio/mytax/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz
+            url: https://github.com/jhuapl-bio/mytax/blob/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz?raw=true
             type: file
             remove: true
             target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
