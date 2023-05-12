@@ -1,0 +1,311 @@
+- name: artic_consensus_jhuapl
+  title: "JHUAPL - Artic Consensus"
+  icon: "mdi-dna"
+  version: 1.0
+  schema_version: 1
+  basestack_released: 2.0
+  description: "This repository is a Dockerized pipeline for creating consensus viral genomes from Oxford Nanopore data. This pipeline leverages the ARTIC Network bioinformatics pipeline and couples many annotation and reporting tools, resulting in an automatically generated PDF report. The pipeline is built to be deployed in the Basestack platform (https://github.com/jhuapl-bio/Basestack) so that anyone, regardless of bioinformatics expertise, can run it and make use of its automated consensus genomes and reports."
+  url: https://github.com/jhuapl-bio/basestack_consensus
+  module: True
+  tags:  
+    - "consensus"
+    - "coronavirus"
+    - "sequencing"  
+  tooltip: "Generate SARS-nCoV-2 Consensus(es) and Report File"
+  procedures:
+    - name: artic_consensus_jhuapl
+      title: "Artic Consensus - JHUAPL"
+      icon: "mdi-dna"
+      init: false
+      tooltip: "Create a nCov consensus report"
+      force_restart: true
+      config: null
+      removal_override: 
+        source: "%{variables.dir.source}/artic-pipeline"
+        type: "dir"
+      tags: 
+        - "consensus"
+        - "coronavirus"
+        - "sequencing"  
+      variables:
+        name:
+          label: "Run Name"
+          element: "string"
+          class: "wb-50  p-3 mb-1"
+          source: "Test"
+        dir:
+          label: "Input Long-Reads Full Run Directory"
+          hint: "Directory that contains your fastq_pass, fast5_pass, and sequencing summary.txt file. Output directory from a Oxford Nanopore run"
+          element: "dir"
+          optional: false
+          bind_parent_dir: false
+          source: null
+          target: "/opt/data"
+          bind: "self"
+          class: "wb-50  p-3 mb-1"
+        fast5:
+          label: "Fast5 Pass Folder"
+          hint: "Required for nanopolish mode (consensus portion). Contains your FAST5 files. Folder must be named fast5_pass"
+          element: "exists"
+          source:  null
+          update_on: 
+            depends:
+              - dir
+            action: "exists"
+            source: "%{variables.dir.source}/fast5_pass"
+        summary:
+          label: "Sequencing Summary File"
+          warning: "Must be in the root (same level) of the run directory"
+          hint: "File that contains metadata for all of your sequences in the run such as timestamp of creation. Must be in root level of your run directory. This is oftentimes generated during basecalling so be sure to check that folder if missing"
+          element: "exists"
+          source:  null
+          validations:
+            - type: "files"
+              error: "Must have a sequencing_summary.txt file in the root directory (directly in your run directory)"
+              target: 
+                type: "value"
+                minimum: 1
+                path: "%{variables.dir.source}"
+                value: ".*(sequencing_summary.*.txt)$"
+          update_on: 
+            depends:
+              - dir
+            action: "exists"
+            source: "%{variables.dir.source}"
+        fastq_pass:
+          label: "Input Long-Reads FASTQ Directory"
+          hint: "Folder that contains 1 or more fastq files in UNCOMPRESSED format"
+          class: "wb-50  p-3 mb-1"
+          warning: "Ensure that all fastq files you want to analyze are decompressed"
+          validations:
+            - type: "files"
+              error: "Must have 1 or more .fastq files"
+              target: 
+                type: "value"
+                minimum: 1
+                path: "%{variables.dir.source}"
+                value: ".*(fastq|fq)$"
+          options:
+            - element: "exists"
+              hidden: false
+              name: "fastq_pass"
+              update_on: 
+                depends:
+                  - dir
+                action: "exists"
+                source: "%{variables.dir.source}/fastq_pass"
+              target: "/opt/data/fastq_pass"
+              source: null
+            - element: "dir"
+              name: "Custom Fastq Pass Directory"
+              source: null
+              target: "/opt/data/fastq_pass"
+              bind: "self"
+        primers:
+          label: "Primer Configuration"
+          element: null
+          hint: "List of primers to choose from"
+          column: 4
+          option: 0
+          link: run_config
+          warning: "Must be ARTIC format in the pipeline's current state"
+          class: "wb-50 p-3 mb-1"
+          target: "${variables.primers.source"
+          options:
+            - "nCoV-2019/V3"
+            - "nCoV-2019/V4"
+            - "nCoV-2019/V2"
+            - "nCoV-2019/V1"
+            # - "IAV-H3/V1"
+            # - "IAV-H1/V1"
+            # - "midnight_primers/V1"
+            # - element: "dir"
+            #   hidden: false
+            #   name: "Custom Primer"
+            #   source: null
+            #   bind: 
+            #     from: "%{variables.primers.source}"
+            #     to: "/opt/basestack_consensus/primer_schemes/<<basename(%{variables.primers.source})>>" 
+        basecalling:
+          label: "Basecalling Configuration"
+          element: null
+          hint: "Which basecalling configuration you used to create your fastq_pass folder"
+          link: run_config
+          class: "wb-50 p-3 mb-1"
+          target: "${variables.basecalling.source"
+          column: 4
+          options:
+            - "dna_r9.4.1_450bps_hac.cfg"
+            - "dna_r9.4.1_450bps_fast.cfg"
+            - "dna_r10.3_450bps_hac.cfg"
+            - "dna_r10.3_450bps_fast.cfg"
+            - "dna_r10.3_450bps_fast_prom.cfg"
+            - "dna_r10.3_450bps_hac_prom.cfg"
+            - "dna_r10_450bps_fast.cfg"
+            - "dna_r10_450bps_hac.cfg"
+            - "dna_r9.4.1_450bps_fast_prom.cfg"
+            - "dna_r9.4.1_450bps_hac_prom.cfg"
+            - "dna_r9.4.1_450bps_hac_prom_fw205.cfg"
+            - "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac.cfg"
+            - "dna_r9.4.1_450bps_modbases_dam-dcm-cpg_hac_prom.cfg"
+            - "dna_r9.5_450bps_1d2_raw.cfg"
+            - "dna_r9.5_450bps.cfg"
+            - "rna_r9.4.1_70bps_fast.cfg"
+            - "rna_r9.4.1_70bps_fast_prom.cfg"
+            - "rna_r9.4.1_70bps_hac.cfg"
+            - "rna_r9.4.1_70bps_hac_prom.cfg"
+        barcoding:
+          label: "Barcode Configuration"
+          element: null
+          hint: "Which barcoding configuration you used. If no demux took place, select any"
+          link: run_config
+          column: 4
+          class: "wb-50 p-3 mb-1"
+          target: "${variables.barcoding.source"
+          options:
+            - "barcode_arrs_nb96.cfg"
+            - "barcode_arrs_16s.cfg"
+            - "barcode_arrs_dual_nb24_pcr96.cfg"
+            - "barcode_arrs_lwb.cfg"
+            - "barcode_arrs_nb12.cfg"
+            - "barcode_arrs_nb24.cfg"
+            - "barcode_arrs_pcr12.cfg"
+            - "barcode_arrs_pcr96.cfg"
+            - "barcode_arrs_rab.cfg"
+            - "barcode_arrs_rbk096.cfg"
+            - "barcode_arrs_rbk4.cfg"
+            - "barcode_arrs_rbk.cfg"
+            - "barcode_arrs_rlb.cfg"
+            - "barcode_arrs_vmk2.cfg"
+            - "barcode_arrs_vmk.cfg"
+            - "configuration.cfg"
+            - "configuration_dual.cfg"
+        manifest:
+          label: "Input Manifest"
+          element: "list"
+          hint: "Mapping of your Barcodes to Sample IDs. You must have an NTC listed even if you haven't used one. You can list a NTC as NB00 to get it to run if you don't have one"
+          columns: 2
+          column: 12
+          sep: "tab"
+          bind_parent_dir: true
+          tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
+          update_on: 
+            depends:
+              - dir
+            action: "read"
+            sep: '\t'
+            source: "%{variables.dir.source}/manifest.txt"
+            header: false
+          create:
+            target: "%{variables.dir.source}/manifest.txt"
+            sep: "tab"
+            type: "list"
+            header: false
+          validations:
+            - type: "contains"
+              error: "Must have 1 NTC in the id slot. Select NB00 and NTC for barcode and id, respectively, if not using a NTC"
+              target: 
+                type: "column"
+                location: 'id'
+                value: "NTC"
+          class: "wb-50  p-3 mb-1"
+          source: []
+          header: [ 'barcode', 'id']
+          append_newline: true
+        run_config:
+          label: "Run Config File"
+          element: "file"
+          hidden: true
+          sep: "tab"
+          optional: true
+          bind_parent_dir: false
+          tooltip: "Long format config for primer, barcoding, basecalling"
+          create:
+            target: "%{variables.dir.source}/run_config.txt"
+            sep: "tab"
+            type: "list"
+          class: "wb-50  p-3 mb-1"
+          source: []
+          framework: [
+            [
+              "primers", "%{variables.primers.source}"
+            ],
+            [
+              "basecalling", "%{variables.basecalling.source}"
+            ],
+            [
+              "barcoding", "%{variables.barcoding.source}"
+            ],
+            [
+              ""
+            ]
+          ]
+        demuxes:
+          watch: True
+          label: "Demux"
+          output: True
+          hint: "Folder containing demulitplexed files from long-read run"
+          element: file
+          source: "%{variables.dir.source}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
+          path:  "%{variables.dir.source}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
+          target: "%{variables.dir.target}/artic-pipeline/1-barcode-demux/1-barcode-demux.complete"
+        length-filter:
+          watch: True
+          output: True
+          label: "Length Filter"
+          hint: "Folder containing all filtered length files (Step 2)"
+          type: files
+          pattern: ".complete"
+          path: "%{variables.dir.source}/artic-pipeline/2-length-filter"
+          # total:  
+          #   target: "<<length(%{variables.manifest.source})>>" 
+          source: "%{variables.dir.source}/artic-pipeline/2-length-filter"
+          target: "%{variables.dir.target}/artic-pipeline/2-length-filter"
+        normalizations:
+          watch: True
+          output: True
+          label: "Normalization"
+          hint: "Files are normalized by depth"
+          type: files
+          path: "%{variables.dir.source}/artic-pipeline/3-normalization"
+          pattern: ".complete"
+          # total: 
+          #   target: "<<length(%{variables.manifest.source})>>" 
+          source: "%{variables.dir.source}/artic-pipeline/3-normalization"
+          target: "%{variables.dir.target}/artic-pipeline/3-normalization"
+        consensuses:
+          watch: True
+          output: True
+          type: files
+          label: "Consensus"
+          hint: "Consensus file(s) folder in .complete or .partial (incomplete) FASTA format"
+          # total: 
+          #   target: "<<length(%{variables.manifest.source})>>" 
+          pattern: ".complete"
+          path: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"
+          source: "%{variables.dir.source}/artic-pipeline/4-draft-consensus"
+          target: "%{variables.dir.target}/artic-pipeline/4-draft-consensus"
+        report:
+          watch: True
+          output: True
+          openSelf: True
+          label: "Report"
+          hint: "Report PDF containing information about your consensus generation output and the overall run"
+          element: file
+          source: "%{variables.dir.source}/artic-pipeline/report.pdf"
+          target: "%{variables.dir.target}/artic-pipeline/report.pdf"
+      services: 
+        - name: artic_consensus_jhuapl
+          label: "Report"
+          image: "jhuaplbio/basestack_consensus"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false 
+          force_init: false
+          command: ["bash","-c", "echo Starting consensus pipeline...   && artic-module1-barcode-demux.sh  -i ${dir}"]
+      dependencies:
+        - target: "jhuaplbio/basestack_consensus"
+          label: "jhuaplbio/basestack_consensus"
+          type: "docker"
+          format: "docker"

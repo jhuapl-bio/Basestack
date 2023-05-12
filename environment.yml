@@ -6,8 +6,9 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - nodejs==15.3.0
+  - nodejs==18.15.0
   - pip
   - make
+  - yarn
   - git
   - curl

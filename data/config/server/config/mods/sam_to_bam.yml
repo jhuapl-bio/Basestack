@@ -1,0 +1,83 @@
+- name: samtools
+  title: "Samtools"
+  icon: "mdi-binoculars"
+  schema_version: 1
+  version: 1.0
+  basestack_released: 2.0
+  module: True
+  tags: 
+    - "SAM"
+    - "alignment"
+    - "BAM"
+  tooltip: "Download the samtools suite"
+  procedures: 
+    - name: sam2bam #Top level is the left-hand selection of the menu and the major module to install 
+      title: "SAM2BAM"
+      icon: "mdi-na"
+      module: True
+      init: false 
+      dependencies:
+        - target: "staphb/samtools"
+          label: "staphb/samtools"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "SAM"
+        - "alignment"
+        - "BAM"
+      tooltip: "Generate a BAM file from SAM file"
+      variables:
+        sam:
+          label: "SAM File"
+          element: "file"
+          bind: "directory"
+          hint: "Alignment SAM file to be converted to BAM"
+          target: "/opt/data/<<basename(%{variables.sam.source})>>"
+          class: "wb-100  p-3 mb-1"
+          source: null
+        only:
+          label: "Filter only alignments present"
+          element: "checkbox"
+          source: false
+          define: 
+            only: " -F4 "
+        bam:
+          label: "BAM File"
+          element: "file"
+          hint: "Compressed BAM file from SAM format"
+          bind_parent_dir: true
+          output: True
+          bind: "directory"
+          class: "wb-100  p-3 mb-1"
+          source: "<<trim(%{variables.sam.source})>>.bam"
+          target: "<<trim(%{variables.sam.target})>>.bam"
+        bai:
+          label: "BAI File"
+          hint: "BAI index file generated from an alignment and sorted"
+          watch: True
+          output: True
+          element: "file"
+          source: "<<trim(%{variables.bam.source})>>.bai"
+          target: "<<trim(%{variables.bam.target})>>.bai"
+      services:
+        - name: samtools_view_sam_to_bam
+          label: "Samtools BAM from SAM"
+          image: "staphb/samtools"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "samtools view -S ${only} -b ${sam} | samtools sort > ${bam}"]
+        - name: samtools_index
+          label: "Samtools Index"
+          image: "staphb/samtools"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "samtools index ${bam}"]
+            
+        
+          

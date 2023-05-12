@@ -1,0 +1,294 @@
+- name: nfcore_taxtriage
+  title: "TaxTriage"
+  icon: "mdi-virus"
+  version: 1.3
+  basestack_released: 2.0
+  module: True
+  url: https://github.com/jhuapl-bio/taxtriage
+  # description: "nf-core/viralrecon is a bioinformatics analysis pipeline used to perform assembly and intra-host/low-frequency variant calling for viral samples."
+  tags: 
+    - "Nextflow"
+    - "metagenomics"
+    - "Nanopore"
+    - "Illumina" 
+  shared:
+    services:
+      orchestrator:
+        label: "Docker Orchestrator"
+        name: "orchestrator"
+        image: "jhuaplbio/basestack_orchestrator:v1.0.0"
+        workingdir: "/opt/data"
+        orchestrated: false #orchestrated means it r
+        init: false
+        orchestrator: true
+        force_restart: false
+        continuous: true
+        force_init: false
+        command: []
+  procedures: 
+    - name: nfcore_taxtriage #Top level is the left-hand selection of the menu and the major module to install 
+      title: "TaxTriage Pipeline"
+      icon: "mdi-virus"
+      module: True
+      full_orientation: true
+      init: false 
+      dependencies:
+        - target: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          label: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          type: "docker"
+          format: "docker"
+        - target: "bitnami/git"
+          label: "bitnami/git"
+          type: "docker"
+          format: "docker"
+        - target: "basestack-docker-taxtriage"
+          label: "TaxTriage Volume"
+          type: "volume"
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          label: Minikraken2
+          size_estimate: "7 GB"
+          optional: true
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+          overwrite: true
+      tags: 
+        - "Nextflow"
+        - "metagenomics"
+        - "nanopore"
+        - "illumina"
+      variables:
+        manifest:
+          label: "Input Samplesheet contents"
+          element: "list"
+          hint: "Samplesheet contents"
+          columns: 2
+          column: 12
+          define:
+            csv: 
+              path: true
+              target: "%{variables.manifest.bind.to}"
+          sep: ","
+          define_columns: 
+            fastq_1: 
+              element: 'file'
+            fastq_2: 
+              element: file
+            from: 
+              element: dir
+            sequencing_summary: 
+              element: file
+            platform: 
+              custom: False
+              options: ['ILLUMINA', 'OXFORD']
+            barcode: 
+              custom: False
+              options: [True, False]
+            trim: 
+              custom: False
+              options: [True, False]
+            single_end: 
+              custom: False
+              options: [True, False]
+          bind:  
+            from: "${writePath}/workflows/taxtriage/samplesheets/Samplesheet.target.csv"
+            to: "${writePath}/workflows/taxtriage/samplesheets/Samplesheet.target.csv"
+          create:
+            target: "${writePath}/workflows/taxtriage/samplesheets/Samplesheet.target.csv"
+            sep: ","
+            type: "list"
+            header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
+          class: "wb-50  p-3 mb-1"
+          source: []
+          header: ['single_end','fastq_1','fastq_2', 'sample', 'from', 'platform', 'sequencing_summary', 'barcode', 'trim']
+          append_newline: false
+        outdir:
+          label: "Output Directory"
+          element: "directory"
+          output: false
+          hint: "Directory to place your analysis results into"
+          source: null
+          name: "Output Folder"
+          bind: "self"
+        maxCPUs:
+          label: "Maximum CPUs"
+          element: "number"
+          source: 3
+          optional: true
+          target: "%{variables.maxCPUs.source}"
+          append:
+            command: " --max_cpus \"${maxCPUs}\" "
+            placement: 2
+            position: "end"
+            services: 
+              - 1
+        sleepTime:
+          label: "Lag Time (s) between Pipeline start and Docker starting"
+          source: 2
+          element: number
+        maxMemory:
+          label: "Maximum Memory (GB)"
+          element: "number"
+          source: 12
+          optional: true
+          target: "%{variables.maxMemory.source}"
+          append:
+            command: " --max_memory \"${maxMemory}\"GB "
+            placement: 2
+            position: "end"
+            services: 
+              - 1
+        db:
+          label: Classifier database
+          class: wb-100 p-3 mb-1
+          option: 0
+          options:
+            - element: null
+              name: Minikraken2
+              source: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
+              target: /opt/databases/minikraken2
+              warning: >-
+                Requires roughly 7.5 GB of free RAM to load. If limited in RAM
+                available, try to change Memory Mapping below to classify on the
+                local filesystem. If your input file is large, however, this can
+                take a long time
+              bind:
+                from: '%{variables.db.source}'
+                to: /opt/databases/minikraken2
+            - element: dir
+              name: Custom DB
+              source: null
+              target: /opt/databases/<<basename(%{variables.db.source})>>
+              bind: self
+        skip_assembly:
+          label: "Skip De Novo Assembly"
+          element: "checkbox"
+          source: true
+          hint: "Skip De Novo Assembly"
+          define: 
+            skip_assembly: "--skip_assembly"
+        low_memory:
+          label: "Low Memory Mode"
+          element: "checkbox"
+          source: true
+          hint: "Don't load kraken2 database into memory, read directly. Slower but less memory intensive"
+          define: 
+            low_memory: "--low_memory"
+        skip_plots:
+          label: "Skip QC Plotting"
+          element: "checkbox"
+          source: true
+          hint: "Skip QC plotting"
+          define: 
+            skip_plots: "--skip_plots"
+        resume:
+          label: "Resume Nextflow"
+          element: "checkbox"
+          source: true
+          hint: "pick up where you left off, useful if piplines are lenghty or you're debugging issues with a failed midrun submission"
+          define: 
+            resume: "-resume"
+        assembly_option: 
+          label: "Assembly File Option"
+          option: 0
+          options:
+            - element: null
+              name: "NCBI Refseq Assembly Txt File"
+              source:  "/root/.nextflow/assets/jhuapl-bio/taxtriage/examples/assembly_summary_refseq.txt"
+              define: 
+                assembly: "--assembly /root/.nextflow/assets/jhuapl-bio/taxtriage/examples/assembly_summary_refseq.txt"
+            - element: null
+              name: "Pull Assembly File Automatically"
+              source: null
+              target: null
+              define: 
+                assembly: ""
+            - element: "file"
+              source: null
+              name: "Custom Assembly Txt file"
+              hint: "Must be in the same format as the ncbi assembly refseq file"
+              target: "/opt/assembly_option/<<basename(%{variables.assembly_option.source})>>"
+              bind: 
+                from: "%{variables.assembly_option.source}"
+                to: "/opt/assembly_option/<<basename(%{variables.assembly_option.target})>>"
+              define: 
+                assembly: "--assembly /opt/assembly_option/<<basename(%{variables.assembly_option.target})>>"
+        filter_db:
+          label: "Filter Database"
+          element: "dir"
+          source: null
+          optional: true
+          hint: "Database to extract reads out of"
+          target: "/opt/database_filter"
+          bind: "self"
+          define:
+            filter: " --filter %{variables.filter_db.target} "
+        remove_taxids:
+          label: "Taxids to remove"
+          element: "string"
+          source: "9606"
+          target: null
+          hint: "Specific Taxids to remove from the kraken2 outputs"
+          define:
+            taxids_to_remove: "--remove_taxids \"%{variables.remove_taxids.source}\""
+        mark_branch:
+          label: "Branch of repo to use"
+          element: "string"
+          source: "main"
+          target: "%{variables.mark_branch.source}"
+        latest:
+          label: "Pull latest branch automatically"
+          element: "checkbox"
+          source: false
+          target: null
+          warning: "fails if no internet is available. Uncheck if without internet"
+          hint: "Warning: Fails if no internet is available. Uncheck if without internet"
+          define:
+            marklatest: " -latest "
+        profile:
+          label: "Profile"
+          options:
+            - "docker"
+            - "singularity"
+            - "conda"
+        report:
+          label: "Report"
+          element: file
+          openSelf: true
+          output: True
+          source: "%{variables.outdir.source}/multiqc/multiqc_report.html"
+          path: "%{variables.outdir.source}/multiqc/multiqc_report.html"
+          name: "Report"
+          target: "%{variables.outdir.target}/multiqc/multiqc_report.html"
+      services:
+        - name: taxtriage
+          orchestrator: true
+          force_restart: false
+          continuous: true
+          force_init: false
+          bind: 
+            - from: "${writePath}/workflows/taxtriage/workingdir"
+              to: "${writePath}/workflows/taxtriage/workingdir"
+          label: "TaxTriage Pipeline"
+          image: "jhuaplbio/basestack_orchestrator:v1.0.0"
+          workingdir:  "/wokringdir"
+          warning: "This process requires internet in its current state"
+          command: [
+            "bash", "-c", "parallel --ungroup ::: dockerd-entrypoint.sh  'sleep ${sleepTime}; 
+             nextflow run 'https://github.com/jhuapl-bio/taxtriage'
+              --input ${csv}
+              --db ${db}  -r ${mark_branch} ${marklatest}
+              --outdir ${outdir} --trim ${low_memory}
+              --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
+              -profile ${profile} ${skip_plots} ${skip_assembly} ${taxids_to_remove}
+              ${assembly} --demux 
+              ${resume} ${filter}; chmod -R 777 /opt/output; chmod +x /opt/output/**/*html; pkill -9 .   '  "
+          ]
+    

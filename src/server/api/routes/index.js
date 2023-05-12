@@ -1201,10 +1201,10 @@ router.post("/job/start", (req,res,next)=>{ //this method needs to be reworked f
 			store.logger.info("job created")   
 			nestedProperty.set(store, `jobs.catalog.${req.body.catalog}.${req.body.procedure}`, job)
 			try {
-				job.start(req.body) 	
+				await job.start(req.body) 	
 				store.logger.info("Initiated Job!")
 			} catch (err) {
-				skip = job.start(req.body) 
+				skip = await job.start(req.body) 
 				store.logger.error("Error in  Job!")
 			}
 			

@@ -1,4 +1,5 @@
 C:
+*.log
 Samplesheet*
 taxtriage_output
 client

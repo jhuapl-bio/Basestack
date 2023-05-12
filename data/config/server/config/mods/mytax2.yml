@@ -1,0 +1,318 @@
+- version: 2.01
+  basestack_released: 2.2.4
+  supported: 2.2.4
+  schema_version: 1
+  title: Mytax Dashboard v2
+  date_added: '2022-07-19T11:40:13.131Z'
+  url: https://github.com/jhuapl-bio/mytax
+  description: Real time reporting dashboard for kraken2 classifications
+  member: mytax2
+  hint: Mytax2 Module 
+  icon: mdi-chart-pie
+  name: mytax2
+  tags:
+    - kraken2
+    - metagenomic
+    - dashboard
+    - metagenome
+  procedures:
+    - name: mytax2
+      title: Kraken2 Mytax2
+      icon: mdi-binoculars
+      init: false
+      full_orientation: true
+      tooltip: >-
+        Run dashboard
+      force_restart: true
+      config: null
+      tags:
+        - kraken2
+        - taxonomy
+        - kmer
+        - metagenomic
+        - metagenome
+      dependencies:
+        - target: jhuaplbio/basestack_mytax2
+          version: v2.2.5
+          type: docker
+          format: docker
+        - target: "bitnami/git"
+          label: "bitnami/git"
+          type: "docker"
+          optional: false
+          format: "docker"
+        - source:
+            url: https://raw.githubusercontent.com/jhuapl-bio/mytax/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz
+            type: file
+            remove: true
+            target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
+          type: download
+          format: file
+          optional: true
+          size_estimate: "3 MB"
+          decompress:
+            format: tgz
+            target: "${writePath}/workflows/mytax/"
+            source: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
+          label: 2021 Marine Mitogenome database
+          target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
+          overwrite: true
+        - source:
+            url: >-
+              https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz
+            type: file
+            remove: true
+            target: "${writePath}/workflows/mytax/flukraken2.tar.gz"
+          type: download
+          format: file
+          optional: true
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/flukraken2.tar.gz"
+          label: 2021 Flukraken database
+          target: "${writePath}/workflows/mytax/flukraken2"
+          overwrite: true
+          size_estimate: "5 GB"
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20201202.tar.gz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          label: Viral 2021
+          size_estimate: "466 MB"
+          optional: true
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            target: "${writePath}/workflows/mytax/k2_viral_20201202"
+            source: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          target: "${writePath}/workflows/mytax/k2_viral_20201202"
+          overwrite: true
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          label: Minikraken2
+          size_estimate: "7 GB"
+          optional: true
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+          overwrite: true
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/16S_Greengenes13.5_20200326.tgz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          label: 16S Greengenes
+          optional: true
+          type: download
+          format: dir
+          size_estimate: "106 MB"
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          target: "${writePath}/workflows/mytax/16S_Greengenes_k2db"
+          overwrite: true
+      variables:
+        manifest:
+          label: "Input Samplesheet contents"
+          element: "list"
+          hint: "Samplesheet contents"
+          columns: 2
+          column: 12
+          sep: ","
+          define:
+            csv: 
+              path: true
+              target: "%{variables.manifest.bind.to}"
+          define_columns: 
+            path_1: 
+              element: ['file', 'directory']
+              binddir: true
+            path_2: 
+              element: file
+              binddir: true
+            database: 
+              custom: True
+              element: dir
+              optionPath: true
+              options: [
+                "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE",
+                "${writePath}/workflows/mytax/flukraken2",
+                "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629",
+                "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326",
+                "${writePath}/workflows/mytax/k2_viral_20201202"
+            ]  
+            demux: 
+              custom: False
+              options: [True, False]
+            platform: 
+              custom: False
+              options: ['illumina', 'oxford']
+            kits: 
+              custom: true
+              options: [
+                "EXP-NBD103",
+                "EXP-NBD104",
+                "EXP-NBD114",
+                "EXP-NBD196",
+                "CUSTOM-FLU",
+                "EXP-PBC001",
+                "EXP-PBC096",
+                "OND-SQK-LP0096M",
+                "OND-SQK-LP0096MA",
+                "OND-SQK-LP0096S",
+                "OND-SQK-LP0768L",
+                "OND-SQK-RP0096M",
+                "OND-SQK-RP0096MA",
+                "OND-SQK-RP0384L",
+                "SQK-16S024",
+                "SQK-LWB001",
+                "SQK-MLK110-96-XL",
+                "SQK-MLK111-96-XL",
+                "SQK-NBD110-24",
+                "SQK-NBD110-96",
+                "SQK-NBD111-24",
+                "SQK-NBD111-96",
+                "SQK-NBD112-24",
+                "SQK-NBD112-96",
+                "SQK-PBK004",
+                "SQK-PCB109",
+                "SQK-PCB110",
+                "SQK-PCB111-24",
+                "SQK-RAB201",
+                "SQK-RAB204",
+                "SQK-RBK001",
+                "SQK-RBK004",
+                "SQK-RBK110-96",
+                "SQK-RBK111-24",
+                "SQK-RBK111-96",
+                "SQK-RBK112-24",
+                "SQK-RBK112-96",
+                "SQK-RLB001",
+                "SQK-RPB004",
+                "VSK-PTC001",
+                "VSK-VMK001",
+                "VSK-VMK002",
+                "VSK-VMK003"
+              ]
+            format: 
+              custom: False
+              options: ["file", "directory"]
+            pattern: 'barcode[0-9]+'
+          tooltip: "Tab Separated Mapping of ID of Sample to Barcode, 2 columns total"
+          update_on: 
+            depends:
+              - csv
+            action: "read"
+            header: true 
+            source: "%{variables.csv.source}"
+          bind:
+              - from:  "%{variables.manifest.create.target}"
+                to: "/usr/share/nginx/html/mytax/data/Samplesheet.csv"
+          create:
+            target: "${writePath}/workflows/mytax2/samplesheets/Samplesheet.target.csv"
+            sep: ","
+            type: "list"
+            header: ['sample','path_1','path_2','format','demux','platform','database', 'kits', 'pattern']
+          class: "wb-50  p-3 mb-1"
+          source: []
+          defaults:
+            sample: "unknown"
+          header: ['sample','path_1','path_2','format','demux','platform','database', 'kits', 'pattern']
+          append_newline: true
+        cpuMode: 
+          label: "CPU Only Mode "
+          hint: Required for anyone not using GPU
+          source: true
+          element: checkbox
+        guppy_version:
+          label: Guppy Version
+          class: wb-100 p-3 mb-1
+          hint: If you dont want to use version 6.4.6 of Guppy built-into the software
+          element: dir
+          name: Custom Guppy Version
+          source: null
+          target: /opt/ont-guppy
+          bind: self
+        custom_naming:
+          optional: true
+          label: Custom TSV File for extra names
+          hint: "a 2 column TSV mapping ncbi taxid's to any number of names to append to the plots"
+          element: file
+          source: null
+          bind: self
+          target: "/opt/server/data/names.tsv"
+        custom_configuration:
+          optional: true
+          label: Custom Barcode Cfg file
+          element: file
+          source: null
+          bind: self
+          target: "/opt/custom_config.toml"
+          append:
+            command: " cp /opt/custom_config.toml /opt/ont-guppy/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ;  "
+            position: "start" 
+            placement: 2
+            services: 
+              - 0
+        custom_barcode_fasta:
+          optional: true
+          label: Custom FASTA barcode
+          element: file
+          source: null
+          bind: self
+          target: "/opt/custom_fasta.fasta"
+          append:
+            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy/data/barcoding/barcodes_masked.fasta;  "
+            position: "start"
+            placement: 2
+            services: 
+              - 0
+        port:
+          element: render
+          label: Mytax2 Dashboard Service
+          column: 12
+          output: false
+          target: 80 
+          source: 8098
+          main: true
+          port: true
+          portbind:
+            from: '%{variables.port.source}'
+            to: '%{variables.port.target}'
+        serverport:
+          element: render
+          label: Mytax2 Server Service
+          column: 12
+          output: false
+          target: 7689
+          source: 7689
+          port: true
+          portbind:
+            from: '%{variables.serverport.source}'
+            to: '%{variables.serverport.target}'
+      services:
+        - name: mytax_kraken2_report2
+          label: Kraken2 Report2
+          image: jhuaplbio/basestack_mytax2:v2.2.5
+          workingdir: /
+          orchestrated: false
+          init: false
+          force_restart: false
+          force_init: false
+          command: ['bash', '-c', "nginx;/etc/init.d/nginx status; 
+          source /opt/conda/etc/profile.d/conda.sh; 
+          conda activate mytax2; 
+          cd /opt;
+          if [[ $cpuMode != 'true' ]]; then 
+            echo 'using gpu'; mv /opt/ont-guppy /opt/ont-guppy-cpu && ln -sf /opt/ont-guppy-gpu /opt/ont-guppy ;
+          fi; 
+          npm run server"]
+        

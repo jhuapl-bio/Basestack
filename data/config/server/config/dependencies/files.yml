@@ -1,0 +1,14 @@
+files:
+  - label: "flukraken2"
+    os: "any"
+    key: "${writePath}/dependencies/files/flukraken2.tar.gz"
+    icon: "mdi-virus-outline"
+    color: "primary"
+    choices:
+      - from: "https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz"
+        to: "${writePath}/dependencies/files/flukraken2.tar.gz"
+        target: "${writePath}/dependencies/files/flukraken2"
+        platform: "any"
+        format: "directory"
+        decompress: "${writePath}/dependencies/files/flukraken2"
+        type_install: "get"

@@ -1,0 +1,40 @@
+- version: 1.5
+  basestack_released: 2
+  supported: 2.1.1
+  schema_version: 1
+  title: Kraken2
+  date_added: '2022-05-06T11:40:13.131Z'
+  url: https://ccb.jhu.edu/software/kraken2/
+  description: A kmer-based tool for the metagenomic classification using a single fastq file full of reads as input
+  icon: mdi-chart-pie
+  name: kraken2
+  tags:
+    - kraken2
+    - metagenomic
+    - metagenome
+  choices: 
+    - requirements: 
+      - key: "conda"
+        type: "executions"
+      variables:
+        - key: "input"
+          element: 
+            - "file"
+          pattern: 
+            - '*.fastq'
+            - '*.fastq.gz'
+            - '*.fq'
+            - "*.fa"
+            - "*.fasta"
+            - "*.fq.gz" 
+        - key: "out"
+          element: 
+            - "file"
+          target: "${input.basename().trim()}.out${input.trim()}" 
+      command: "
+        conda activate base &&  
+        kraken2  --output ${out}
+        --report ${report}
+        ${input}
+      "    
+

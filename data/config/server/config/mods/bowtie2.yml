@@ -1,0 +1,152 @@
+- name: bowtie2
+  title: "Bowtie2"
+  icon: "mdi-magic-staff"
+  version: 1.0
+  schema_version: 1
+  basestack_released: 2.0
+  description: "A versatile pairwise aligner for genomic and spliced nucleotide sequences"
+  url: https://github.com/lh3/minimap2
+  module: True
+  tags: 
+    - "bowtie2"
+    - "alignment"
+    - "genomics"
+  tooltip: "Run Bowtie2 Alignment on Fastq files that are short reads"
+  procedures:
+    - name: bowtie2Index #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Bowtie2 Index reference"
+      icon: "mdi-magic-staff"
+      module: True
+      init: false 
+      dependencies:
+        - target: "staphb/bowtie2"
+          type: "docker"
+          format: "docker"
+        - target: "staphb/samtools"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "bowtie2"
+        - "alignment"
+        - "short reads"
+        - "genomics"
+      variables:
+        outputFilename:
+          label: "Out Bowtie Indices"
+          type: files
+          pattern: ".bt*"
+          output: true
+          source: "<<directory(%{variables.ref.source})>>"
+          path:  "<<directory(%{variables.ref.source})>>"
+        ref:
+          label: "Reference to align against"
+          hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
+          element: "file" 
+          bind: 
+            from: "<<directory(%{variables.ref.source})>>"
+            to: "/opt/ref"
+          source: null
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(fasta|fa|fna)$"
+          target: "/opt/ref/<<basename(%{variables.ref.source})>>"
+      tooltip: "Run a Paired end set of fastq files using Minimap2 Alignment against reference FASTA files"
+      services:
+        - name: bowtie2
+          label: "Bowtie2 Alignment Short Reads"
+          image: "staphb/bowtie2"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "
+            cd $(dirname $ref); bowtie2-build  -f ${ref} bowtie2;
+            "]
+    - name: bowtie2PairedEnd #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Bowtie2 Paired End"
+      icon: "mdi-magic-staff"
+      module: True
+      init: false 
+      dependencies:
+        - target: "staphb/bowtie2"
+          type: "docker"
+          format: "docker"
+        - target: "staphb/samtools"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "bowtie2"
+        - "alignment"
+        - "short reads"
+        - "genomics"
+      variables:
+        files:
+          label: "FASTA/Q File Paired-end files"
+          element: "files"
+          bind_parent_dir: true
+          bind: "directory"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "/opt/data/<<basename(%{variables.files.source})>>"
+          define:
+            read1: "%{variables.files.target[0]}"
+            read2: "%{variables.files.target[1]}"
+        outputFilename:
+          label: "Out Filename"
+          element: "file"
+          hidden: true
+          bind_parent_dir: true
+          bind: 
+            from: "<<directory(%{variables.files.source[0]})>>"
+            to: /opt/output
+          class: "wb-100  p-3 mb-1"
+          source: "%{variables.files.source[0]}"
+          target: "/opt/output/<<basename(%{variables.files.source[0]})>>"
+        output:
+          label: "Output SAM File"
+          element: "file"
+          output: true
+          openSelf: True
+          hint: "Name of your SAM"
+          class: "wb-100  p-3 mb-1" 
+          source: "<<trim,trim(%{variables.outputFilename.source})>>.sam"
+          target: "/opt/output/<<basename,trim,trim(%{variables.outputFilename.source})>>.sam"
+        ref:
+          label: "Reference to align against"
+          class: "wb-100 p-3 mb-1"
+          hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
+          element: "file" 
+          bind_parent_dir: true
+          bind: 
+            from: "<<directory(%{variables.ref.source})>>"
+            to: "/opt/ref"
+          source: null
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(fasta|fa|fna)$"
+          target: "/opt/ref/<<basename(%{variables.ref.source})>>"
+      tooltip: "Run a Paired end set of fastq files using Minimap2 Alignment against reference FASTA files"
+      services:
+        - name: bowtie2
+          label: "Bowtie2 Alignment Short Reads"
+          image: "staphb/bowtie2"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "
+            cd $(dirname $ref); 
+            bowtie2 -x $(dirname ref)/bowtie2
+              -1  $read1
+              -2  $read2
+              -S $output
+            "]
+    
+       
+      

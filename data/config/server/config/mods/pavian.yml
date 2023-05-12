@@ -1,0 +1,62 @@
+- name: "pavian"
+  title: "Pavian"
+  icon: "mdi-tree"
+  basestack_released: 2.0
+  schema_version: 1
+  version: 1.0
+  description: "🌈 Interactive analysis of metagenomics data"
+  module: True
+  url: https://github.com/fbreitwieser/pavian
+  tags: 
+    - "sankey"
+    - "visualization"
+    - "metagenome"
+    - "pavian"
+  tooltip: "Run Pavian Report Viewer from Kraken Classification Output"
+  procedures: 
+    - name: "pavian_default"
+      title: "Pavian"
+      icon: "mdi-tree"
+      component: "Pavian"
+      module: True
+      tags: 
+        - "sankey"
+        - "visualization"
+        - "metagenome"
+        - "pavian"
+      init: false 
+      variables:
+        port:
+          label: "Served Port"
+          column: 12
+          element: "render"
+          port: true
+          output: false
+          main: true
+          source: 8087
+          target: 80
+          portbind:
+            from: "%{variables.port.source}"
+            to: "%{variables.port.target}"
+      tooltip: "View Kraken-style Classification Reports"
+      dependencies:
+        - target: "florianbw/pavian"
+          label: "florianbw/pavian"
+          type: "docker"
+          format: "docker"
+      services: 
+        - name: "pavian"
+          image: "florianbw/pavian"
+          continuous: true
+          orchestrated: false #orchestrated means it r
+          init: true
+          command: [ 'bash', '-c', 'Rscript -e  "host <- \"0.0.0.0\"; pavian::runApp(port=${port},host=host,maxUploadSize=900*1024^2)" ' ]
+          hideStatus: true
+          label: "Pavian Default"
+          force_restart: true
+          # ports:  
+          #   - 8087:80
+          
+        
+        
+          

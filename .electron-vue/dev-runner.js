@@ -47,7 +47,7 @@ process.env.PORT_SERVER = serverBasePort
 process.env.rendererBasePort = rendererBasePort
 function startRenderer (devClient) {
   return new Promise((resolve, reject) => {
-    console.log("starting renderer dev-runner", process.env.SERVER_PORT)
+    console.log("starting renderer dev-runner", process.env.PORT_SERVER)
     rendererConfig.entry.renderer = [path.join(__dirname, 'dev-client')].concat(rendererConfig.entry.renderer)
     rendererConfig.mode = 'development'
     const compiler = webpack(rendererConfig)
@@ -60,7 +60,7 @@ function startRenderer (devClient) {
       logStats('Renderer', stats)
     })
     let tries = 10;
-    let ports_tried = [];
+    let ports_tried = []; 
     let opened_server = false;
     let port = rendererBasePort
     const server = new WebpackDevServer(
@@ -96,9 +96,9 @@ function startRenderer (devClient) {
             }
           })
         },
-        watchOptions: {
-          ignored: '**/.*' 
-        },
+        // watchOptions: {
+        //   ignored: '**/.*' 
+        // },
         proxy: { 
           '/api': {
             target: `http://localhost:${ process.env.PORT_SERVER }`, 
@@ -133,28 +133,6 @@ function startRenderer (devClient) {
 
   })
 }
-// function startServer (devClient){
-//   return new Promise((resolve, reject) => {
-//     console.log("Starting server  dev-runner")
-//     // serverConfig.entry.server = path.join(__dirname, '../src/modules/index.server.js')
-//     serverConfig.mode = 'development'
-//     const compiler = webpack(serverConfig)
-    
-    
-//     compiler.hooks.done.tap('done', stats => {
-//       logStats('Server', stats)
-//       console.log("done....................")
-//     })
-
-//     compiler.watch({}, (err, stats) => {
-//       logStats('Server', stats)
-//       if (err){
-//         console.error(err, "error in server compiler")
-//       }
-//       resolve()      
-//     })
-//   })
-// }
 
 function startMain (devClient) {
   return new Promise((resolve, reject) => {

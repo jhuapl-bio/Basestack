@@ -1,0 +1,90 @@
+executions:  
+  - label: Conda
+    key: "conda"
+    os: ["darwin", "win32", "linux", "wsl2"]
+    icon: "mdi-snake"
+    color: "primary"
+    description: Set up conda environments
+    info: conda
+    choices:
+      - platform: darwin
+        arch: "x64"
+        format: "command"
+        type_install: "command"
+        from: 'wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O ~/miniconda.sh; bash ~/miniconda.sh -b -p $HOME/miniconda'
+  - label: Docker
+    key: "docker"
+    os: ["darwin", "win32", "linux", "wsl2"]
+    icon: "mdi-docker"
+    color: "primary"
+    description: Used to run Docker containers, enabling a containerized approach to generating pipeline outputs with an ease of install
+    info: Requires root level permissions (Mac, Linux, Windows) or non-root (Linux Rootless Docker only, installation separate) 
+    choices:
+      - platform: darwin
+        arch: "arm64"
+        format: "command"
+        type_install: "fetch"
+        from: https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-arm64
+      - platform: "darwin"
+        arch: "x64"
+        format: "command"
+        type_install: "fetch"  #This will download directly through Electron dl rather than curl
+        from: https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-amd64  
+      - platform: "linux"
+        arch: "amd64"
+        format: "command"
+        type_install: "command"
+        from: "curl -sSL https://get.docker.com/ | sh"
+      - platform: "wsl2"
+        arch: "amd64"
+        format: "command"
+        type_install: "command"
+        from: "curl -sSL https://get.docker.com/ | sh"
+      - platform: "linux"
+        arch: "arm64"
+        format: "command"
+        type_install: "command" # This will bring up a console
+        from: "curl -sSL https://get.docker.com/ | sh"
+      - platform: "win32"
+        arch: "amd64"
+        format: "command"
+        type_install: "command" # This will bring up a console
+        from: "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe"
+  - label: Nextflow
+    key: "nextflow"
+    os: ["darwin", "wsl2", "linux"]  
+    icon: "mdi-pipe" 
+    color: "primary"  
+    description: Used to run Singularity instances, enabling a non-rootful containerized approach to generating pipeline outputs with an ease of install. Alternative to Docker
+    info: Only available on WSL2 (windows), Mac OSX, or most (not all) Linux Distros
+    choices: 
+      - platform: darwin
+        arch: "arm64"
+        format: "command"
+        type_install: "command"
+        from: "curl -s https://get.nextflow.io | bash"
+      - platform: "darwin"
+        arch: "x64"
+        format: "command"
+        type_install: "command"
+        from: "sleep 1; curl -s https://get.nextflow.io | bash"
+      - platform: "linux"
+        arch: "amd64"
+        format: "command"
+        type_install: "command"
+        from: "curl -s https://get.nextflow.io | bash"
+      - platform: "linux"
+        arch: "arm64"
+        format: "command"
+        type_install: "command" # This will bring up a console
+        from: "curl -s https://get.nextflow.io | bash"
+  - label: "Test Sleeping"
+    os: "any"
+    key: "sleep"
+    icon: "mdi-sleep"
+    color: "primary"
+    choices:
+      - from: "sleep 3; echo 'done sleeping'"
+        platform: "any"
+        format: "command"
+        type_install: "command"

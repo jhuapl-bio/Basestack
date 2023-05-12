@@ -22,7 +22,6 @@ const agent = new https.Agent({
 const { bytesToSize } = require("./configurations.js")
 const { store }  = require("../../config/store/index.js")
 const  targz = require('targz');
-var Client = require('ftp');
 const extract = require('extract-zip')
 const clone = require('git-clone');
 const tar = require("tar")

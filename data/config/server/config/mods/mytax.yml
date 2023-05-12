@@ -1,0 +1,302 @@
+- version: 1.5
+  basestack_released: 2
+  supported: 2.1.1
+  schema_version: 1
+  title: Mytax
+  date_added: '2022-05-06T11:40:13.131Z'
+  url: https://github.com/jhuapl-bio/mytax
+  description: A kraken-based tool for the metagenomic classification using a single fastq file full of  reads as input
+  member: mytax
+  hint: Mytax Module 
+  icon: mdi-chart-pie
+  name: mytax
+  tags:
+    - kraken2
+    - metagenomic
+    - metagenome
+  shared:
+    variables:
+      json:
+        element: file
+        output: true
+        label: JSON Visualization File
+        hint: .json file, to be uploaded to the Mytax Visualization Service
+        source: >-
+          <<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report.json
+        target: /opt/data/<<basename,trim(%{variables.file.source})>>.report.json
+      report:
+        label: Report From classification, in kraken-style
+        element: file
+        output: true
+        openSelf: true
+        class: wb-100  p-3 mb-1
+        source: >-
+          <<directory(%{variables.file.source})>>/<<basename,trim(%{variables.file.source})>>.report
+        target: /opt/data/<<basename,trim(%{variables.file.source})>>.report
+  procedures:
+    - name: mytax_kraken2_report
+      title: Kraken2 Mytax2
+      icon: mdi-binoculars
+      init: false
+      tooltip: >-
+        Run Kraken 2 classification and receive report file(s) then JSONS(s) for
+        visualization
+      force_restart: true
+      config: null
+      tags:
+        - kraken2
+        - taxonomy
+        - kmer
+        - metagenomic
+        - metagenome
+      dependencies:
+        - target: jhuaplbio/basestack_mytax
+          version: v1.1.3
+          type: docker
+          format: docker
+          size_estimate: "5 GB"
+        - source:
+            url: https://raw.githubusercontent.com/jhuapl-bio/mytax/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz
+            type: file
+            remove: true
+            target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
+          type: download
+          format: file
+          optional: true
+          size_estimate: "3 MB"
+          decompress:
+            format: tgz
+            target: "${writePath}/workflows/mytax/"
+            source: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
+          label: 2021 Marine Mitogenome database
+          target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
+          overwrite: true
+        - source:
+            url: >-
+              https://media.githubusercontent.com/media/jhuapl-bio/mytax/master/databases/flukraken2.tar.gz
+            type: file
+            remove: true
+            target: "${writePath}/workflows/mytax/flukraken2.tar.gz"
+          type: download
+          format: file
+          optional: true
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/flukraken2.tar.gz"
+          label: 2021 Flukraken database
+          target: "${writePath}/workflows/mytax/flukraken2"
+          overwrite: true
+          size_estimate: "4 GB"
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20201202.tar.gz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          label: Viral 2021
+          size_estimate: "466 MB"
+          optional: true
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            target: "${writePath}/workflows/mytax/k2_viral_20201202"
+            source: "${writePath}/workflows/mytax/k2_viral_20201202.tar.gz"
+          target: "${writePath}/workflows/mytax/k2_viral_20201202"
+          overwrite: true
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          label: Minikraken2
+          size_estimate: "7 GB"
+          optional: true
+          type: download
+          format: dir
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+          overwrite: true
+        - source:
+            url: https://genome-idx.s3.amazonaws.com/kraken/16S_Greengenes13.5_20200326.tgz
+            type: file
+            remove: false
+            target: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          label: 16S Greengenes
+          optional: true
+          type: download
+          format: dir
+          size_estimate: "106 MB"
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326.tgz"
+          target: "${writePath}/workflows/mytax/16S_Greengenes_k2db"
+          overwrite: true
+      variables:
+        file:
+          label: FASTA/Q File(s)
+          element: file
+          optional: false
+          bind_parent_dir: true
+          bind: directory
+          name: "Fastq files"
+          class: wb-100  p-3 mb-1
+          source: null
+          target: /opt/data/<<basename(%{variables.file.source})>>
+           
+        memory_mapping:
+          label: Memory Load Database
+          hint: >-
+            Do or Don't load the database into memory. Useful if you are limited
+            in RAM
+          option: 0
+          options:
+            - element: null
+              name: Pre-load
+              source: null
+              warning: >-
+                This process is fast but requires 8 GB of RAM to operate the
+                pipeline
+            - element: null
+              name: Use Local Filesystem
+              source: null
+              warning: >-
+                This process is slower than pre-load. Use ONLY if you don't have 8
+                GB of RAM to spare
+              append:
+                command: ' --memory-mapping'
+                placement: 2
+                services:
+                  - 0
+        nodes:
+          label: Nodes.dmp file, gathered from ncbi taxonomy
+          option: 0
+          options:
+            - element: null
+              name: default
+              target: /taxdump/nodes.dmp
+            - element: null
+              name: Flu 2021
+              target: /opt/databases/flukraken2/taxonomy/nodes.dmp
+              source: /opt/databases/flukraken2/taxonomy/nodes.dmp
+            - name: file
+              label: Report From classification, in kraken-style
+              element: file
+              bind: directory
+              source: null
+              target: "/opt/databases/flukraken2/taxonomy/<<basename(%{variables.nodes.source})>>"
+        db:
+          label: Classifier database
+          class: wb-100 p-3 mb-1
+          option: 0
+          options:
+            - element: null
+              name: Minikraken2
+              source: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
+              target: /opt/databases/minikraken2
+              warning: >-
+                Requires roughly 7.5 GB of free RAM to load. If limited in RAM
+                available, try to change Memory Mapping below to classify on the
+                local filesystem. If your input file is large, however, this can
+                take a long time
+              bind:
+                from: '%{variables.db.source}'
+                to: /opt/databases/minikraken2
+            - element: null
+              name: 16_SGreengenes
+              source: "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326"
+              target: /opt/databases/16S_Greengenes13.5_20200326
+              bind:
+                from: '%{variables.db.source}'
+                to: /opt/databases/16S_Greengenes13.5_20200326
+            - element: null
+              name: Flukraken2-2021
+              source: "${writePath}/workflows/mytax/flukraken2"
+              target: /opt/databases/flukraken2
+              bind:
+                from: '%{variables.db.source}'
+                to: /opt/databases/flukraken2
+            - element: dir
+              name: Marine Mitogenome
+              bind: self
+              target:  /opt/databases/ONRMitoGenome/marine_mammal_mitochondrion-refseq-20210629
+              source:  "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629"
+            - element: dir
+              name: Custom DB
+              source: null
+              target: /opt/databases/<<basename(%{variables.db.source})>>
+              bind: self
+        report:
+          target: '%{shared.variables.report}'
+          shared: true
+          output: true
+        json:
+          target: '%{shared.variables.json}'
+          shared: true
+      services:
+        - name: mytax_kraken2_report
+          label: Kraken2 Report
+          image: jhuaplbio/basestack_mytax:v1.1.3
+          workingdir: /opt/test-data
+          orchestrated: false
+          init: false
+          force_restart: false
+          force_init: false
+          command: ['export KRAKEN2_DEFAULT_DB=%{variables.db.optionValue.target}; kraken2  --output %{shared.variables.report.target}.out  --report %{shared.variables.report.target} %{variables.file.target}  ']
+          # command: [ "bash", '-c', "\" export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report}  ${file} \""]
+        - name: mytax_create_json
+          label: Create Report JSON
+          depends:
+            - type: module
+              id: mytax 
+          image: jhuaplbio/basestack_mytax:v1.1.3
+          workingdir: /opt/test-data
+          orchestrated: false
+          init: false
+          force_restart: false
+          force_init: false
+          command: ['python3  /opt/software/mytax/generate_hierarchy.py -o ${report}.fullstring  --report ${report}  -taxdump ${nodes} && bash krakenreport2json.sh -i ${report}.fullstring -o ${report}.json ' ]
+    - name: mytax_visualization
+      title: Kraken2 Mytax Visualization
+      icon: mdi-chart-pie
+      init: false
+      tags:
+        - kraken2
+        - metagenomic
+        - sunburst
+      tooltip: View Sunburt from JSON report of Kraken/Centrifuge run
+      force_restart: false
+      config: null
+      variables:
+        port:
+          element: render
+          label: Mytax Sunburst Service
+          column: 12
+          output: false
+          target: 8086
+          source: 8086
+          port: true
+          portbind:
+            from: '%{variables.port.source}'
+            to: '%{variables.port.target}'
+      dependencies:
+        - target: jhuaplbio/basestack_mytax
+          version: v1.1.3
+          type: docker
+          format: docker
+      services:
+        - name: mytax_visualization
+          init: true
+          hideStatus: true
+          continuous: true
+          label: Visualization
+          force_restart: false
+          config: null
+          image: jhuaplbio/basestack_mytax:v1.1.3
+          workingdir: /opt/software/mytax/sunburst
+          post-run-tab: render
+          ports:
+            - 8086
+          command: [ "bash", "-c", "echo 'Running Mytax Visualization' && python3 -m http.server ${port}"]
+  
