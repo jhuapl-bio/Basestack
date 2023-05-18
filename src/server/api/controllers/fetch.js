@@ -9,7 +9,7 @@
 const fs = require("fs")
 const { convert_custom, checkFileExist,  checkFolderExists, validateAnnotation, validateHistory, validateProtocol, validatePrimerVersions }  = require("./validate.js")
 import  path  from "path"
-import { inspect } from "util"
+import { inspect } from "util" 
 const { bytesToSize } = require("./configurations.js")
 const { create_module } = require("./init.js")
 const { store }  = require("../../config/store/index.js")

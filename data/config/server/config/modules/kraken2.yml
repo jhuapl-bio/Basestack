@@ -1,4 +1,4 @@
-- version: 1.0
+- version: 1.01
   basestack_released: 2.2.6
   supported: 2.2.6
   schema_version: 1
@@ -27,6 +27,7 @@
         - kraken2
         - taxonomy
         - kmer
+        - readRemoval
         - metagenomic
         - metagenome
       dependencies:
@@ -66,6 +67,21 @@
           target: "${writePath}/workflows/mytax/flukraken2"
           overwrite: true
           size_estimate: "4 GB"
+        - source:
+            url: >-
+              https://ndownloader.figshare.com/files/25627058
+            type: file
+            remove: true
+            target: "${writePath}/workflows/mytax/humankraken2.tar.gz"
+          type: download
+          format: file
+          optional: true
+          decompress:
+            format: tgz
+            source: "${writePath}/workflows/mytax/humankraken2.tar.gz"
+          label: Human Reads Kraken2 Database
+          target: "${writePath}/workflows/mytax/kraken2-human-db"
+          overwrite: true
         - source:
             url: https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20201202.tar.gz
             type: file
@@ -158,7 +174,6 @@
                   - 0
               define: 
                 file: /opt/combineddata/<<basename(%{variables.input.source})>>.fastq.gz
-
         file2:
           label: "FASTQ 2nd File"
           element: "file"
@@ -224,6 +239,13 @@
               bind:
                 from: '%{variables.db.source}'
                 to: /opt/databases/flukraken2
+            - element: null
+              name: Human Reads
+              source: "${writePath}/workflows/mytax/kraken2-human-db"
+              target: /opt/databases/kraken2-human-db
+              bind:
+                from: '%{variables.db.source}'
+                to: /opt/databases/kraken2-human-db
             - element: dir
               name: Marine Mitogenome
               bind: self
@@ -234,6 +256,20 @@
               source: null
               target: /opt/databases/<<basename(%{variables.db.source})>>
               bind: self
+        extractClassifiedReads:
+          label: "Convert all classified reads to a fastq file"
+          element: "checkbox"
+          source: false
+          hint: "useful for pulling all host reads"
+          define: 
+            classified_out: "--classified-out /opt/data/<<basename,trim(%{variables.input.source})>>.classified.fastq"
+        extractUnclassifiedReads:
+          label: "Convert all un-classified reads to a fastq file"
+          element: "checkbox"
+          hint: "useful for host reads database"
+          source: false
+          define: 
+            unclassified_out: "--unclassified-out /opt/data/<<basename,trim(%{variables.input.source})>>.unclassified.fastq"
         report:
           label: Report From classification, in kraken2 output report style
           element: file
@@ -251,4 +287,4 @@
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report} ${memory_mapping} ${paired} "${file}" "${file2}" ']
+          command: ['bash', '-c', ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report} ${memory_mapping} ${classified_out} ${unclassified_out} ${paired} "${file}" "${file2}" ']
