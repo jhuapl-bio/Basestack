@@ -20,6 +20,8 @@ const gunzip = require('gunzip-file');
 const { parseConfigVariables } = require("./definitions")
  
 
+
+
 export const formatBuffer = function (data) {
     return data.toString().replace(/\u?([\0\1])(\w{1})?/g, '')
 } 

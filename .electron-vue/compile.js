@@ -2,7 +2,6 @@ const ChildProcess = require('child_process');
 const Chalk = require('chalk');
 
 function compile(directory) {
-    console.log(">>>>>", directory,"<<<<<")
     return new Promise((resolve, reject) => {
         const tscProcess = ChildProcess.exec('tsc', {
             cwd: directory,

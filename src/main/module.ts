@@ -32,6 +32,7 @@ export class Module {
                         if (yamldata) {
                             yamldata.map((value) => {
                                 traverse_object(value)
+                                store.modules.push(value)
                             })
                             
                         }

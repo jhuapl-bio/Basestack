@@ -4,15 +4,22 @@ import { define_configuration, importDependencies } from './definitions';
 import { Process } from './process';
 var { store } = require("./store.js");
 
+// import  Lexer  from './lexer'
 
+// let lexer = new Lexer().lexer
+// const stringtext = "yes"
+// let continuation = true 
+// lexer.reset("${variable}.basename().trim(2) while testing(2)")
+// while (continuation){
+//     continuation = lexer.next()
+//     if (continuation)    {
+//         console.log(continuation)
+//     }
+// }
 
-
-
- 
 app.whenReady().then(() => {
     const client = new Client(app)
     client.createWindow()
-     
     /////// Set IPC Functions
     ipcMain.handle('log', async (event, message) => {
         client.logger.info(message)

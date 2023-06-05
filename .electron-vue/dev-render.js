@@ -6,6 +6,8 @@ const Path = require('path');
 const Chalk = require('chalk');
 const Chokidar = require('chokidar');
 const Electron = require('electron');
+const compileNeatley = require('./neatleycompile.js');
+
 const compileTs = require('./compile.js');
 const FileSystem = require('fs');
 const { EOL } = require('os');
@@ -14,6 +16,22 @@ let viteServer = null;
 let electronProcess = null;
 let electronProcessLocker = false;
 let rendererPort = 0;
+
+
+async function watchGrammar(){
+  let paths_to_watch = [Path.join(__dirname, "..", "src", "grammar")]
+  Chokidar.watch(paths_to_watch, {
+  }).on('change', async (path) => { 
+    try{
+      await compileNeatley(Path.join(__dirname, "..", "src", "grammar", "grammar.ne"), Path.join(__dirname, "..", "src", "main", "grammar", "grammar.js"));
+      console.log(Chalk.blueBright(`[neatley grammar] `) + `Change in ${path}. reloading... 🚀`);
+    } catch (err){ 
+
+      console.log(Chalk.redBright(`[neatley grammar] `) + `error in neatley compiling 🚀`);
+
+    }
+  }); 
+}
 
 async function startRenderer() {
   viteServer = await Vite.createServer({
@@ -28,6 +46,7 @@ async function startElectron() {
   if (electronProcess) { // single instance lock
     return;
   }
+  
 
   try {
     let today = new Date()
@@ -107,17 +126,22 @@ async function start() {
   console.log(`${Chalk.greenBright('=======================================')}`);
   console.log(`${Chalk.greenBright('Starting Electron + Vite Dev Server...')}`);
   console.log(`${Chalk.greenBright('=======================================')}`);
+  await compileNeatley(Path.join(__dirname, "..", "src", "grammar", "grammar.ne"), Path.join(__dirname, "..", "src", "main", "grammar", "grammar.js"))
 
   const devServer = await startRenderer();
   rendererPort = devServer.config.server.port;
   copyStaticFiles();
   startElectron();
+  try{
+    watchGrammar()
+  } catch (err){ 
+    console.log(Chalk.redBright('Could not compile neatley grammar typescript error(s).'));
+  }
 
   const paths_to_watch = [Path.join(__dirname, '..', 'src', 'main'), Path.join(__dirname,  '..', 'data', 'config', 'server', 'config')];
   Chokidar.watch(paths_to_watch, {
-  }).on('change', (path) => { 
-    console.log(Chalk.blueBright(`[electron] `) + `Change in ${path}. reloading... 🚀`);
-    console.log(paths_to_watch,path,"<<<")
+    // ignored: Path.join(__dirname, '..', 'src', 'main', 'grammar', "*")
+  }).on('change', (path) => {  
     if (path.startsWith(Path.join('static', '/'))) {
       copy(path);
     }
@@ -126,4 +150,9 @@ async function start() {
   }); 
 }
 
-start();
+
+try{
+  start()
+} catch (err){
+  console.log(Chalk.redBright('Could not start electron typescript error(s).'));
+}

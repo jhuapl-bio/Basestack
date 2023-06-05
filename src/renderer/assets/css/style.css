@@ -91,12 +91,8 @@ body {
 }
 
 
-.tabButton:hover, .collapseButton:hover, .selectedTabButton{
-  /* background-color: #2b57b9 !important; */
-  /* fill: #2b57b9 !important; */
-  /* color: #fff !important; */
-}
-.defaultButton:hover, .warnButton:hover, .sideButton:hover, {
+
+.defaultButton:hover, .warnButton:hover, .sideButton:hover {
   color: #2b57b9 !important;
   background: #fff !important;
   fill: #fff !important;

@@ -1,0 +1,36 @@
+name: John Doe
+age: 30
+height: 72
+greeting: Hello, ${person.age}!
+person:
+  name: Jane Dough
+  age: 30
+  height: 70
+sumResult: "${person.age + 2}"
+sumConcat: "${person.age}.out"
+lengthChoices: "${length(choices)}"
+lengthName: "${length(person.name)}"
+trimmed: "${trim(filePath)}"
+pow: ${pow(age,2)}
+divide: ${divide(age,2)}
+sum: ${sum(age,2)}
+multiply: ${sum(age,2)}
+subtraction: ${subtraction(age,2)}
+lastarr: "${choices[0]}"
+firstLetter: "${firstLetter(person.name)}"
+firstLetterBase: ${capitalize(firstLetter(name))}
+result: ${multiply(age, height)}
+filePath: /path/to/myFile.txt
+basename: ${basename(filePath)}
+dirname: ${dirname(filePath)}
+Type: yes.${firstLetter(name)}
+choicesChoice:
+  name: ${choices[1].name}
+  age: ${choices[1].age}
+choices:
+  - name: John
+    age: 30
+  - name: Jane
+    age: 25
+  - name: Bob
+    age: 35
