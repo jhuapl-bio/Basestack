@@ -1,7 +1,7 @@
 - name: bowtie2
   title: "Bowtie2"
   icon: "magic"
-  version: 1.0
+  version: 1.1
   schema_version: 1
   basestack_released: 2.0
   description: "A versatile pairwise aligner for genomic and spliced nucleotide sequences"
@@ -52,6 +52,8 @@
                 type: "value"
                 value: ".*(fasta|fa|fna)$"
           target: "/opt/ref/<<basename(%{variables.ref.source})>>"
+          define: 
+            outformat: "<<basename,trim(%{variables.ref.source})>>"
       tooltip: "Run a Paired end set of fastq files using Minimap2 Alignment against reference FASTA files"
       services:
         - name: bowtie2
@@ -63,7 +65,7 @@
           force_restart: false
           force_init: false
           command: ["bash","-c", "
-            cd $(dirname $ref); bowtie2-build  -f ${ref} bowtie2;
+            cd $(dirname $ref); bowtie2-build  -f ${ref} $outformat;
             "]
     - name: bowtie2PairedEnd #Top level is the left-hand selection of the menu and the major module to install 
       title: "Bowtie2 Paired End"
@@ -83,37 +85,39 @@
         - "short reads"
         - "genomics"
       variables:
-        files:
-          label: "FASTA/Q File Paired-end files"
-          element: "files"
+        file1:
+          label: "FASTA/Q File Paired-end file 1"
+          element: "file"
           bind_parent_dir: true
           bind: "directory"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "/opt/data/<<basename(%{variables.files.source})>>"
-          define:
-            read1: "%{variables.files.target[0]}"
-            read2: "%{variables.files.target[1]}"
+          target: "/opt/data/<<basename(%{variables.file1.source})>>"
+        file2:
+          label: "FASTA/Q File Paired-end file 2"
+          element: "file"
+          bind_parent_dir: true
+          bind: "directory"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "/opt/data/<<basename(%{variables.file2.source})>>"
+        output:
+          label: "Output file"
+          element: "file"
+          hidden: False
+          output: True
+          class: "wb-100  p-3 mb-1"
+          source: "<<directory(%{variables.file1.source})>>/<<basename,trim,trim(%{variables.file1.target})>>.sam"
         outputFilename:
           label: "Out Filename"
           element: "file"
           hidden: true
           bind_parent_dir: true
           bind: 
-            from: "<<directory(%{variables.files.source[0]})>>"
+            from: "<<directory(%{variables.file1.source})>>"
             to: /opt/output
           class: "wb-100  p-3 mb-1"
-          source: "%{variables.files.source[0]}"
-          target: "/opt/output/<<basename(%{variables.files.source[0]})>>"
-        output:
-          label: "Output SAM File"
-          element: "file"
-          output: true
-          openSelf: True
-          hint: "Name of your SAM"
-          class: "wb-100  p-3 mb-1" 
-          source: "<<trim,trim(%{variables.outputFilename.source})>>.sam"
-          target: "/opt/output/<<basename,trim,trim(%{variables.outputFilename.source})>>.sam"
+          target: "/opt/output/<<basename,trim,trim(%{variables.file1.target})>>.sam"
         ref:
           label: "Reference to align against"
           class: "wb-100 p-3 mb-1"
@@ -130,6 +134,8 @@
                 type: "value"
                 value: ".*(fasta|fa|fna)$"
           target: "/opt/ref/<<basename(%{variables.ref.source})>>"
+          define:
+            refname: "<<basename,trim(%{variables.ref.target})>>"
       tooltip: "Run a Paired end set of fastq files using Minimap2 Alignment against reference FASTA files"
       services:
         - name: bowtie2
@@ -140,12 +146,11 @@
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "
-            cd $(dirname $ref); 
-            bowtie2 -x $(dirname ref)/bowtie2
-              -1  $read1
-              -2  $read2
-              -S $output
+          command: ["bash","-c", "cd $(dirname $ref); bowtie2 
+              -x  /opt/ref/$refname
+              -1  $file1
+              -2  $file2
+              -S $outputFilename
             "]
     
        

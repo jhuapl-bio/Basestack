@@ -19,15 +19,29 @@
       module: True
       init: false 
       dependencies:
-        - target: "ontresearch/medaka:latest"
+        - target: "jhuaplbio/medaka:latest"
           type: "docker"
-          format: "docker"
+          format: "docker" 
       tags: 
         - "medaka"
         - "consensus"
         - "oxford nanopore"
         - "genomics"
       variables:
+        model:
+          label: "Medaka Model Configuration"
+          element: null
+          hint: "Medaka models to choose from"
+          option: 0
+          class: "wb-50 p-3 mb-1"
+          options:
+            - "r941_min_high_g360"
+            - "r941_min_fast_g303"
+            - "r103_fast_g507"
+            - "r103_hac_g507"
+            - element: string
+              name: manual
+              source: null
         ref:
           label: "Reference file to align and make consensuses from"
           hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
@@ -106,13 +120,13 @@
       services:
         - name: medaka_consensus
           label: "Medaka Consensus"
-          image: "ontresearch/medaka:latest"
+          image: "jhuaplbio/medaka:latest"
           workingdir: "/opt/data"
           orchestrated: false #orchestrated means it r
           init: false
           force_restart: false
           force_init: false
           command: ["bash","-c", "
-              medaka_consensus -f -i $sequence -d $ref -o $(dirname $output) && exit 0
+              medaka_consensus -f -i $sequence -d $ref -o $(dirname $output) -m $model && exit 0
             "]
    
