@@ -1,5 +1,8 @@
 <template>
   <div  style=" height: 100%; " class="mx-2 my-2 console" id="terminal">
+    <v-alert type="info">
+      <span class="font-weight-bold">Integrated Terminal</span>
+    </v-alert>
     <v-btn @click="clear">Clear</v-btn>
     <v-btn @click="restartTerminal">Refresh</v-btn>
     </div>

@@ -3,6 +3,7 @@ const YAML = require("js-yaml")
 var { store } = require("./store.js");
 import { Process } from './process'
 import { parseConfigVariables, traverse_object } from "./definitions";
+import { ipcMain } from 'electron'
 
 export class Module {
     processes: Process[]
@@ -11,9 +12,27 @@ export class Module {
     interval: ReturnType<typeof setInterval> | undefined;
     constructor() {
         
-        this.processes = []
+        this.processes = [] 
         this.mainWindow = null 
-         
+        ipcMain.handle('runModule', async (event: any, params: Object) => {
+            try {
+                let processid = await this.runModule(event, params)
+                return processid
+            } catch (err) {
+                console.error(err,"<<<<<< in install dep")
+            }
+        })
+    }
+    
+
+
+    //add a runModule that first calls the run command to parse the run string from integration.ts, 
+    // then, if the run command is a module, it will call the module's run function
+    // make it an async function as well with await
+    async runModule(event: any, params: Object) {
+        let proc = new Process(params) 
+        proc.addtoqueue()
+        return proc['status']['id']
     }
     async importModules() {
         const $this = this
@@ -46,7 +65,6 @@ export class Module {
         })
     }
     start(params: Object) {
-        console.log(params)
         // let proc = new Process(params)
         // proc.addtoqueue()        
     }

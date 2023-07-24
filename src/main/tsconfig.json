@@ -1,21 +1,35 @@
+// {
+//     "compilerOptions": {
+//         "target": "ES2015",
+//         "module": "commonjs",
+//         "strict": true,
+//         "esModuleInterop": true,
+//         "skipLibCheck": true,
+//         "forceConsistentCasingInFileNames": true,
+//         "outDir": "../../build/main",
+//         "allowJs": true,
+//         "noImplicitAny": false,
+//     },
+//     "exclude": [
+//         "static"
+//     ],
+//     "include": [
+//         "**/*.ts",  
+//         "**/*.js",  
+//         "../controllers/sudo-askpass.osascript.js"    
+//     ]
+// }
 {
     "compilerOptions": {
-        "target": "ES2015",
-        "module": "commonjs",
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "outDir": "../../build/main",
-        "allowJs": true,
-        "noImplicitAny": false,
+      "target": "ES2015",
+      "module": "commonjs",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "outDir": "../../build/main",
+      "allowJs": true,
+      "noImplicitAny": false,
     },
-    "exclude": [
-        "static"
-    ],
-    "include": [
-        "**/*.ts",  
-        "**/*.js",  
-        "../controllers/sudo-askpass.osascript.js"    
-    ]
-}
+    "exclude": ["static"]
+  }

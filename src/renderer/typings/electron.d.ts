@@ -1,4 +1,4 @@
-import { CallbackResponse, Event } from "electron";
+import {  Event } from "electron";
 
 /**
  * Should match main/preload.ts for typescript support in renderer
@@ -6,9 +6,15 @@ import { CallbackResponse, Event } from "electron";
 export default interface ElectronApi {
 [x: string]: any;
     sendMessage: (message: string) => void 
+    getFile: (filepath: string) => void, 
+    getVariable: (f: object) => void,
+    requestDepStatusReturn: (dep: any) => void,
     requestEnv: (message: string) => void,
     requestLogs: () => void,
-    requestLibraryNames: () => any , 
+    requestLibraryNames: () => any,
+    getDependenciesStatus: (dep: any) => any,
+    requestCheckFileExists: (pathfile: string) => any,
+    sendExistsFile: (exists: any) => void,
     requestProcesses: () => any, 
     createProcess: (params: Object) => any, 
     restartProcess: (id: string) => any, 

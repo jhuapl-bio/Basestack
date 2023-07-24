@@ -8,12 +8,12 @@
   -->
 <template>
   <div >
-      <v-navigation-drawer id="information_panel_drawer" ref="information_panel_drawer" permanent :border="true" app floating location="right"  :width="navigation.width"  v-model="navigation.shown">
-        
-          
+    
+      <v-navigation-drawer  id="information_panel_drawer" ref="information_panel_drawer" permanent :border="true" app floating location="right"  :width="navigation.width"  v-model="navigation.shown">
           <v-toolbar color="primary">
             <v-toolbar-title class="headline text-uppercase">
               <span>t a</span><span class="font-weight-light"> b s </span>
+              {{ tab }}
             </v-toolbar-title>
             <template v-slot:extension>
               <v-tabs v-model="tab">
@@ -27,10 +27,38 @@
                 <v-tab>
                   Processes
                 </v-tab>
+                <v-tab>
+                  History
+                </v-tab>
                 </v-tabs>
             </template>
           </v-toolbar>
-          <v-window v-model="tab">
+          <!-- Make title bold and standout. If description and info are not null, make a large noneditable field that has information, use an css styling for easier viewing -->
+          <!-- Wrap it in a vuetify alert box -->
+          <v-alert type="info"
+          >
+            <span class="font-weight-bold">Page Info</span>
+          </v-alert>
+          
+          <div v-if="moduleSelected" class="mx-auto overflow-y-auto" style="max-height: 90%; overflow-y: scroll;">
+                  <v-textarea v-if="moduleSelected.description"
+                      v-model="moduleSelected.description"
+                      label="Description"
+                      readonly
+                      rows="3"
+                      auto-grow
+                      outlined
+                  ></v-textarea>
+                  <v-textarea v-if="moduleSelected.info"
+                      v-model="moduleSelected.info"
+                      label="Info"
+                      readonly
+                      rows="3"
+                      auto-grow
+                      outlined
+                  ></v-textarea>
+          </div>
+          <v-window class="information-panel" v-model="tab">
             <v-window-item  >
             <Terminal
                 ref="terminal"
@@ -53,9 +81,13 @@
             <v-window-item  >
               <Processes :env="env"></Processes>
             </v-window-item>
+            <v-window-item  >
+              <History  ></History>
+            </v-window-item>
           </v-window>
           
       </v-navigation-drawer>
+      
   </div>
 </template>
 
@@ -63,19 +95,24 @@
 
 
 
-import { defineComponent } from 'vue';
+import { defineComponent, watch, onMounted} from 'vue';
 import Terminal from '../Terminal.vue'
 import Processes from '../Processes.vue'
 import LogDashboard from "./LogDashboard.vue"
+import History from './History.vue'
 
 interface State {
   navigation: Object
-  terminal: Object
+  terminal: Object 
   tab: number
 }
 export default defineComponent({
   name: 'InformationPanel',
   props: {
+    moduleSelected: {
+      type: Object,
+      required: true
+    },
     logs: {
       type: Array,
       required: true
@@ -85,12 +122,14 @@ export default defineComponent({
   components: {
     Terminal,
     Processes,
+    History,
     LogDashboard
   },
   watch: {
     navigationPanel(val) {
       this.navigation.shown = val
-    }
+    },
+     
   },
   data: State => { // ADD
     return {
@@ -100,7 +139,7 @@ export default defineComponent({
         cols: 1000,
         rows: 1000
       },
-      tab: 2,
+      tab: 3  ,
       navigation: {
         shown: true,
         width: 550,
@@ -171,9 +210,14 @@ export default defineComponent({
   mounted() {
     // this.setBorderWidth();
     // this.setEvents();
+    window.electronAPI.getSideTab((event: any, data: any) => {
+      this.tab = data
+    })
   }
 });
 </script>
 <style>
-
+.information-panel{
+  height: 80vh;
+}
 </style>

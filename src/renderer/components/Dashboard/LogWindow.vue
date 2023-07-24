@@ -16,7 +16,7 @@
         small
     >mdi-link
     </v-icon>
-    Open Log Folder
+    Open Log Folder 
     </v-btn>
     <div class="logWindow" >
         <div v-if="logs" class="logDiv" style="max-height: 70vh; border: none; overflow-y:auto; ">
@@ -87,10 +87,11 @@ export default defineComponent({
 	
 	},
   mounted() {
-    console.log("listen for log") 
+    console.log("listen for lo!g") 
     window.electronAPI.requestLogs()
     this.logs = []
     window.electronAPI.getLog((event: any, log: string | string[]) => {
+      console.log(event, log)
       this.logs.unshift(...log)
       this.logs = this.logs.slice(0, 200)
     });

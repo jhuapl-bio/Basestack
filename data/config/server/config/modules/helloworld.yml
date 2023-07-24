@@ -1,0 +1,66 @@
+# make a yaml file example file using the kraken2.yml file as a reference, but just do a basic Native echo hello world
+# must have name and dependencies and command of echo hello world
+# This is it in the minimap2 file
+- title: HelloWorld
+  date_added: '2023-11-07T11:40:13.131Z'
+  url: "None"
+  description: Basic echo hello world to test things
+  icon: mdi-earth
+  name: helloworld
+  defaultchoice: 1
+  tags:
+    - test
+    - echo
+    - world
+  variables:
+    - key: "inputFile"
+      element: "file"
+      label: "Input File"
+      info: "Sequencing fastq (can be compressed) or fasta file required as input for kraken2 to function"
+      pattern: 
+        - '.*.fastq'
+        - '.*.fastq.gz'
+        - '.*.fq'
+        - '.*.fa'
+        - '.*.fasta'
+        - '.*.fq.gz'  
+    - key: "out" 
+      element: "static-file" 
+      pattern: ".*.out"
+      output: True
+      label: "Test out interpolation"
+      target: "$HOME/test/test.txt" 
+    - key: "input" 
+      element: "string"
+      pattern: [
+        ".*Hello.*"
+      ]
+      label: "Input string"
+      info: "Basic text to test as echo"
+      target: "Hello World"
+      required: True
+  choices: 
+    - key: "Conda"
+      label: "Conda"  
+      exec: "conda"
+      env: "kraken2"
+      command: "
+        echo  \"%$input%\" 
+      "    
+    - key: "Native"
+      label: "Native"
+      exec: "native"
+      command: "
+        echo   \"%$input%\"   > %directory($out)/test.txt%
+      "    
+    - key: "Docker"
+      label: "Docker"
+      exec: "docker"
+      env: "alpine"
+      requirements: 
+        - key: "alpine"
+          type: 'images'
+      pre-execute: ['sh', '-c']
+      command: "
+        \"echo   Docker %$input%   2>&1 | tee %$out% \" 
+      "    

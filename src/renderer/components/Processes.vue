@@ -3,7 +3,9 @@
         class="mx-auto"
     >
         <template v-slot:title>
-            Processes
+            <v-alert variant="tonal" color="yellow-darken-4" >
+                <span class="font-weight-bold">Processes</span>
+            </v-alert>
         </template>
         <template v-slot:append>
             <v-btn variant="tonal" color="orange-darken-5"  @click="removeProcesses()">
@@ -37,10 +39,9 @@
                   </template>
         
             </v-autocomplete>
-            
             <v-card v-for="entry in processes.filter((f)=>{
-                return select  ? select == f['id'] : true
-            })"
+                return  select && select.length != 0   ? select == f['id'] : true
+            }).reverse()"
                 class="mx-auto"
             >
                 <v-toolbar
@@ -90,12 +91,12 @@
                     </div>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn text color="teal-accent-4"
+                    <v-btn  color="teal-accent-4"
                         @click="dialog=true; logsSelected = entry['logs']"
                     >
                         Logs
                     </v-btn>
-                    <v-btn text color="blue-accent-4"
+                    <v-btn  color="blue-accent-4"
                     @click="dialogMore = true; moreInfo = entry"
                     >
                             
@@ -213,7 +214,6 @@ export default defineComponent({
         
         window.electronAPI.processStatus((event: any, process: Object) => {
             let findindex = this.processes.findIndex(x => x.id == process['id'])
-            console.log(process,"<<<<<")
             if (findindex == -1) {
                 this.processes.push(process)
             } else {

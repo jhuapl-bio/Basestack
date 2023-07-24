@@ -1,15 +1,19 @@
 var { store } = require("./store.js");
 import path from "path"
+// import run from integration.ts file 
+import { run } from './integration'
 
+import axios from 'axios'
 const { BrowserWindow } = require('electron')
 const { download } = require('electron-dl') 
 import { spawn } from 'child_process'
-import { installDockerImage } from './docker'
+import { installDockerImage, formatBindMounts } from './docker'
 import { writeFolder, checkExists, formatBuffer, decompress_file } from './configurations';
 import * as crypto from "crypto";
 const fs = require("fs")
-const axios = require("axios")
+// import axios, * as others from 'axios';
 import https from 'https'
+import { bytesToSize } from "./functions";
 const agent = new https.Agent({
     rejectUnauthorized: false
 });
@@ -17,6 +21,7 @@ export class Process {
     logger: any 
     process: any 
     params: any
+    outputs: any
     id: String
     label: String
     public logs() {
@@ -30,6 +35,7 @@ export class Process {
         running: Boolean,
         code: Number,
         error: [],
+        output: [],
         logs: [],
         progress: null,
         command: String
@@ -63,7 +69,6 @@ export class Process {
     async stop() {
         if (this.status['running']) {
             if (this.params.type_install == 'get') {
-                console.log("type is get")
                 this.stream.destroy()                
             } else {
                 this.stream.kill()
@@ -74,6 +79,29 @@ export class Process {
         this.sendStatus()
         store.queue.add(() => this.start())
     }
+    // Make a function that watches all outputs, if a change occurs, then send status after running fs.stat on it if it is a file or directory or static-file or static-directory or list-files or list-directory
+    async watchOutputs(outputs: any) {
+        let $this = this
+        outputs.map((output: any) => {
+            if ([ 'static-file', 'static-directory', 'list-files', 'list-directory', 'file', 'directory'].includes(output['element'] ) ){
+                fs.watch(output['value'], { recursive: true }, (eventType, filename) => {
+                    if (filename) {
+                        
+                        fs.stat(output['value'], (err, stats) => {
+                            if (err) {
+                                store.logger.error(err)
+                            } else { 
+                                let msg = `${eventType} in: ${output['value']}; ${bytesToSize(stats.size)} now`
+                                output.size = bytesToSize(stats.size)
+                                store.client.mainWindow.webContents.send('outputStatus', output)
+                                $this.status['logs'].unshift(msg)
+                            }
+                        })
+                    }
+                })
+            }
+        })
+    }
     async start() {
         let findindex = store.processes.findIndex(x => x == this.id)
         if (findindex > -1) {
@@ -81,27 +109,103 @@ export class Process {
         } else {
             store.processes.push(this)
         }
-        
-        
-        if (this.params.type_install == 'command') {
-            await this.runCommand(this.params.from)
-        } else if (this.params.type_install == 'download' || this.params.type_install == 'fetch'){
-            await this.downloadUrl(this.params.from, store.mainWindow)
-        } else if (this.params.type_install == 'get' ) {
-            await this.getUrl(this.params.from, this.params.to, store.mainWindow)
-        } else if (this.params.type_install == 'pull') {
-            await this.runPull(this.params) 
+        if (this.params.type == 'module'){
+            let comm = run(this.params.command)
+            if (!this.params.arguments){
+                this.params.arguments = []
+            } 
+            if (!this.params.img && this.params.exec == 'docker'){
+                this.params.img = "ubuntu:latest"
+            } 
+            
+            store.client.logger.info(`________________________________________________`)
+            // iterate through this.params.params, check static-file, static-directory, list-files, list-directory, file, directory, mkdrip the directory if doesnt exist. If list-files, make sure to move through the list/array of things as well 
+            // if the file or directory doesnt exist, create it
+            // if the file or directory does exist, check if it is a static file or directory, if so, do nothing, if not, delete it and create it
+            Object.values(this.params.params).map((p:any)=>{
+                if (p['type'] == 'static-file' || p['type'] == 'static-directory'){
+                    // if static-file, check if it exists, if not, create the directory of the filepath
+                    if (p['type'] == 'static-file'){
+                        if (!fs.existsSync(path.dirname(p['value']))){
+                            fs.mkdirSync(path.dirname(p['value']))
+                        } 
+                    }
+                    else {
+                        if (!fs.existsSync(p['value'])){
+                            fs.mkdirSync(p['value'])
+                        }
+                    }
+                } else if (p['type'] == 'list-files' || p['type'] == 'list-directory'){
+                    p['value'].map((v:any)=>{
+                        if (p['type'] == 'list-files'){
+                            if (!fs.existsSync(path.dirname(v))){
+                                fs.mkdirSync(path.dirname(v))
+                            }
+                        } else {
+                            if (!fs.existsSync(v)){
+                                fs.mkdirSync(v)
+                            }
+                        }
+                    })
+                } else if (p['type'] == 'file' || p['type'] == 'directory'){
+                    if (p['type'] == 'file'){
+                        if (!fs.existsSync(path.dirname(p['value']))){
+                            fs.mkdirSync(path.dirname(p['value']))
+                        }
+                    } else {
+                        if (!fs.existsSync(p['value'])){
+                            fs.mkdirSync(p['value'])
+                        }
+                    }
+                }
+            })
+            // run this.watchOutputs provig the params.outputs
+            // if the process is a module, then run the command with the arguments
+            this.watchOutputs(this.params.outputs)
+
+            let command: any[]
+            if(this.params.exec == 'conda'){
+                // //check if "conda run is being used"
+                command = ['conda', 'run', '-n', this.params.env, this.params.command]
+            } else if(this.params.exec == 'docker'){
+                let formattedParams = formatBindMounts(Object.values(this.params.params))
+                command = ['docker', 'container', 'run', '-t', '--rm', 
+                    ...this.params.arguments, 
+                    // formattedParams.map((v:string)=> ` --mount ${v}`).join(" "), 
+                    formattedParams.map((v:string)=> ` -v ${v}`).join(" "), 
+                    this.params.env,  
+                    this.params['pre-execute'] ? this.params['pre-execute'].join(" ") : '',
+                    this.params.command, 
+                ]
+            } else if(this.params.exec == 'singularity'){
+                command = ['singularity', 'exec', this.params.sif,  ...this.params.arguments, this.params.command]
+            } else { // the process is native, no conda, docker, or singularity needed
+                command = [this.params.command]
+            }
+            await this.runCommand(command.join(" "))
+            
         } else {
-            await this.runCommand(this.params)
-        } 
+            
+            if (this.params.type_install == 'command') { 
+                await this.runCommand(this.params.from)
+            } else if (this.params.type_install == 'download' || this.params.type_install == 'fetch'){
+                await this.downloadUrl(this.params.from, store.mainWindow)
+            } else if (this.params.type_install == 'get' ) {
+                await this.getUrl(this.params.from, this.params.to, store.mainWindow)
+            } else if (this.params.type_install == 'pull') {
+                await this.runPull(this.params) 
+            } else {
+                await this.runCommand(this.params)
+            } 
+        }
+        
     }
     
-    async getUrl(from: string, to: string, mainWindow: any) {
-        this.status['command'] = `fetching target: ${from} to ${to}`
-
-        this.stream = await this.downloadSource(from, to, true, mainWindow)
+    async getUrl(from: any, to: any, mainWindow: any) {
+         this.status['command'] = `fetching target: ${from} to ${to}`
+         this.stream = await this.downloadSource(from, to, true, mainWindow)
         await this.spawnLogWriter()
-        return 
+        return  
     }
     getIcon() {
         if (this.params['type'] == 'images') {
@@ -125,60 +229,68 @@ export class Process {
                 const p = path.resolve(target)
                 const dirpath = path.dirname(target)
                 writeFolder(dirpath).then(async () => {
-                    const writer = fs.createWriteStream(p);
-                    const { data, headers } = await axios.get(url, {
-                        headers: {
-                        },
-                        responseType: 'stream',
-                        httpsAgent: agent,
+                    try{
+                        axios({ 
+                            url:  url, 
+                            responseType: 'stream',
+                            method: 'get',
+                        }).then(function (response) {
+                            const data = response.data;
+                            const headers = response.headers;
+                            const writer = fs.createWriteStream(p);
+                            
+                            // get me an example axios request
+                            
+                            const len = headers['content-length']
+                            var downloaded = 0
+                            let timeout = 1000;
+                            let seen = {
+                                start: 0, 
+                                end: .020
+                            }
+                            const stream = data
+                            stream.pipe(writer);
 
-                    })
-                    const len = headers['content-length']
-                    var downloaded = 0
-                    let timeout = 1000;
-                    let seen = {
-                        start: 0,
-                        end: .020
+                            stream.on('end', function () {
+                                store.logger.info("ended stream")
+                                $this.status['running'] = false
+                                writer.destroy()
+                                stream.destroy()
+                            });
+                            stream.on("data", (buffer) => {
+                                var segmentLength = buffer.length;
+                                
+                                downloaded += segmentLength;
+                                if (downloaded / len >= seen.start && downloaded / len <= seen.end) {
+                                    let percent = (100 * downloaded / len).toFixed(0)
+                                    let msg = ("Downloading " + percent + "% " + downloaded + " bytes to " + target)
+                                    seen.start = .02 + downloaded / len
+                                    seen.end = seen.end + .02
+                                    writer.status = percent
+                                    stream.status = percent
+                                    $this.status['logs'].unshift(msg)
+                                    store.logger.info(msg)
+
+                                    $this.sendStatus()
+                                }
+                            })
+                            writer.on("close", () => {
+                                let msg = ("Download completed: 100% to " + target)
+                                store.logger.info(msg)
+                                $this.status['logs'].unshift(msg)
+                                writer.status = 100
+                                $this.sendStatus()
+                                if (!follow) {
+                                    resolve()
+                                }
+                            })
+                            if (follow) {
+                                resolve(stream)
+                            }
+                          });
+                    } catch (err){
+                        store.logger.error(`${err}`)
                     }
-                    const stream = data
-                    stream.pipe(writer);
-
-                    stream.on('end', function () {
-                        store.logger.info("ended stream")
-                        $this.status['running'] = false
-                        writer.destroy()
-                        stream.destroy()
-                    });
-                    stream.on("data", (buffer) => {
-                        var segmentLength = buffer.length;
-                        downloaded += segmentLength;
-                        if (downloaded / len >= seen.start && downloaded / len <= seen.end) {
-                            let percent = (100 * downloaded / len).toFixed(0)
-                            let msg = ("Downloading " + percent + "% " + downloaded + " bytes to " + target)
-                            seen.start = .02 + downloaded / len
-                            seen.end = seen.end + .02
-                            writer.status = percent
-                            stream.status = percent
-                            $this.status['logs'].unshift(msg)
-                            store.logger.info(msg)
-
-                            $this.sendStatus()
-                        }
-                    })
-                    writer.on("close", () => {
-                        let msg = ("Download completed: 100% to " + target)
-                        store.logger.info(msg)
-                        $this.status['logs'].unshift(msg)
-                        writer.status = 100
-                        $this.sendStatus()
-                        if (!follow) {
-                            resolve()
-                        }
-                    })
-                    if (follow) {
-                        resolve(stream)
-                    }
-
                 }).catch((error1) => {
                     store.logger.error(error1)
                     reject(error1)
@@ -198,9 +310,8 @@ export class Process {
             this.status['error'] = []
             this.status['logs'] = []
             this.status['running'] = true
-
             this.sendStatus()
-            this.stream.on('close', async (code: Number) => {
+            this.stream.on('close', async (code: number) => {
                 this.status['code'] = code
                 this.status['running'] = false
                 if ($this.params.decompress) {
@@ -257,7 +368,7 @@ export class Process {
                 this.sendStatus()
                 store.logger.error(msg)
             });
-        
+         
             this.stream.on('close', (code: Number) => {
                 this.status['code'] = code
                 this.status['running'] = false
@@ -269,7 +380,14 @@ export class Process {
     }
     async runPull(params: Object) {
         try {
+            if (!params['from']) {
+                store.logger.error(`No image to pull`)
+                this.status['error'] = [`No image to pull`]
+                this.status['logs'].unshift(`No image to pull`)
+                return
+            }
             this.status['command'] = `docker pull ${params['from']}`
+            store.logger.info(`docker pull ${params['from']}`)
             this.status['logs'].unshift(this.status['command'])
             this.stream = await installDockerImage(params['from'])
 
@@ -313,7 +431,7 @@ export class Process {
         })
     }
 
-    runCommand = async (command: string) => {
+    runCommand = async (command: string | string[] | number[] ) => {
         this.status['command'] = command
         this.status['logs'].unshift(command)
         await this.spawnLog()

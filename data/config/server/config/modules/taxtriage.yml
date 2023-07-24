@@ -1,0 +1,39 @@
+# make a yaml file example file using the kraken2.yml file as a reference, but just do a basic Native echo hello world
+# must have name and dependencies and command of echo hello world
+# This is it in the minimap2 file
+- title: TaxTriage
+  date_added: '2023-11-07T11:40:13.131Z'
+  url: "None"
+  description: Unknown Patogen Identification Report Generator
+  icon: mdi-virus
+  name: taxtriage
+  defaultchoice: 0
+  tags:
+    - pathogen
+    - detection
+    - metagenomics
+    - report
+  variables:
+    - key: "samplesheet"
+      element: "file"
+      label: "Input Samplesheet"
+      info: "Samplesheet example"
+      pattern: '.*.csv'
+    - key: "outputreport" 
+      element: "static-file"
+      pattern: [
+        ".*multiqc-report.*html"
+      ]
+      Output: true
+      label: "Report output"
+      info: "Interactive HTML Report"
+      target: "%directory($samplesheet)%/taxtriage_output/multiqc/multiqc-report.html"
+      required: False
+  choices: 
+    - key: "Native"
+      label: "Native"
+      exec: "native" 
+      command: "
+        echo   \"%$samplesheet%\"   
+      "    
+    

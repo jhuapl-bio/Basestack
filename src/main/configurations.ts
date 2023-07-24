@@ -4,7 +4,6 @@ const fs = require("fs")
 var { store } = require("./store.js");
 import path from "path"
 import { mkdirp } from 'mkdirp'
-const axios = require("axios")
 import https from 'https'
 const agent = new https.Agent({
     rejectUnauthorized: false
@@ -31,6 +30,7 @@ export async function decompress_file(file, outpath) {
         const ext = path.extname(file)
         if (ext == '.tgz' || file.endsWith('tar.gz')) {
             store.logger.info("Decompress file .tgz: %s to: %s", file, outpath)
+            console.log(file, outpath )
             targz.decompress({
                 src: file,
                 dest: outpath
@@ -173,12 +173,7 @@ export async function writeFolder(directory) {
     })
 }
 
-export function bytesToSize(bytes: number) {
-    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes == 0) return 0;
-    var i: number= Math.floor(Math.log(bytes) / Math.log(1024));
-    return parseFloat(Math.round(bytes / Math.pow(1024, i)) + ' ' + sizes[i])
-}
+
 
 
 export const getFiles = async (filepath: string): Promise<string[]> => {
@@ -244,33 +239,28 @@ export async function getFolders(filepath) {
 
     })
 }
-export async function import_cfgs(module: string, type: string) {
+export async function import_cfgs(module: string | string [], type: string) {
     try {
         let promises_files: any[] = [];
         let promises_folders  : any[] = [];
         let files_marked: any[] = [];
-        // if (module.format == 'single') {
-        //     promises_files.push(readFile(module.path, false))
-        //     files_marked.push(module.path)
-        // } else if (module.format == 'files') {
+        if (Array.isArray(module)){
+            module.forEach((mod: string)=>{
+                promises_folders.push(getFiles(mod))
+            })
+        } else {
             promises_folders.push(getFiles(module))
-        // } else {
-        // promises_folders.push(getFolders(module))
-        // }
+        }
+        
         if (promises_folders.length > 0) {
             let results = await Promise.allSettled(promises_folders)
             results.forEach((result: any, i) => {
+                console.log(result,i)
                 let inner_file_read = []
                 result.value.forEach((filepath: string) => {
-                    try {
-                    //     if (module.format == 'dir') {
-                    //         promises_files.push(readFile(path.join(dir.path, module.filename), false))
-                    //         files_marked.push(path.join(dir.path, module.filename))
-                    //     } else {
+                    try {                  
                         promises_files.push(readFile(filepath, false))
- 
                         files_marked.push((filepath))
-                    //     }
                     } catch (err) {
                         console.error(err)
                     }
@@ -283,7 +273,6 @@ export async function import_cfgs(module: string, type: string) {
             if (result.status == 'fulfilled') {
                 let config: any;
                 try {
-
                     config = parseConfigVariables(result.value, store.system)
                     if (files_marked[i]) {
                         config.path = files_marked[i]

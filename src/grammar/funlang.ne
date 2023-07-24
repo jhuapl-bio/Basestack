@@ -1,6 +1,5 @@
 @{%
-    const moo = require("moo"); 
-    const {lexer} = require("../lexer.js");
+const lexer = require("../lexer");
 
 function tokenStart(token) {
     return {

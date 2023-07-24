@@ -1,0 +1,87 @@
+- title: Minimap2
+  date_added: '2023-11-07T11:40:13.131Z'
+  url: https://github.com/lh3/minimap2
+  description: A tool for aligning long reads to reference genomes
+  icon: mdi-pencil
+  name: minimap2
+  tags:
+    - minimap2
+    - alignment
+    - reference
+  variables:
+    - key: "input"
+      element: "file"
+      required: True
+      label: "Input File"
+      info: "Sequencing fastq (can be compressed) or fasta file required as input for minimap2 to function"
+      pattern: 
+        - '.*.fastq'
+        - '.*.fastq.gz'
+        - '.*.fq'
+        - '.*.fa'
+        - '.*.fasta'
+        - '.*.fq.gz'  
+    - key: "out" 
+      element: "static"
+      pattern: ".*.bam"
+      output: True
+      label: "Out file (.bam format)"
+      info: "Out file format from minimap2 alignment"
+      target: "%trim($input)%.bam" 
+    - key: "preset"
+      element: "list"
+      output: False
+      preventCustom: False
+      label: "Preset options"
+      info: "What data type are you aligning?"
+      target: [
+        "map-ont",
+        "map-pb",
+        "asm5",
+        "asm10",
+        "asm20",
+        "ava-ont",
+        "ava-pb",
+        "ava-ont-cns",
+        "ava-pb-cns",
+        "ava-ont-cns-fly",
+        "ava-pb-cns-fly",
+        "splice",
+        "sr",
+      ]
+      # make a new entry like the others that is a number type and is for the threads, key is threads
+    - key: "threads" 
+      element: "number"
+      output: False
+      step: 1
+      required: True
+      min: 1
+      label: "Number of threads"
+      info: "Number of threads to use for alignment"
+      target: 1
+    - key: "reference" 
+      element: "file"
+      output: False
+      
+      label: "Reference Genome/FASTA"
+      patern: [
+        "*.fna",
+        "*.fasta",
+        "*faa"
+      ]
+      info: "Reference FASTa file to align against"
+      target: null
+      required: True
+  choices: 
+    - key: "Native"
+      label: "Native"
+      exec: "native"
+      env: "base"
+      requirements: 
+        - key: "minimap2"
+        # example minimap2 commdn
+        # 
+      command: "
+        minimap2 -ax %$preset% -t %$threads% %$reference% %$input% >  %$out%
+      "    
+

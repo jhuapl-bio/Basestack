@@ -99,45 +99,41 @@ export class Library {
         let module_paths = store.system.localModulesPath
         let promises: any[] = []
         promises.push(import_cfgs(module_paths, ''))
-  
+        promises.push(import_cfgs(store.system.customModulesPath, ''))
         let results_default = await Promise.allSettled(promises)
         results_default.forEach((result, index) => {
             if (result.status == 'fulfilled') {   
                 result.value.forEach((config) => {
-                    config.map((d) => {
-                        let version = (d.version ? d.version : 0)
-                        if (d.version == "local") {
-                            d.version = 0
+                    if (Array.isArray(config)) {
+                        config.map((d) => {
+                            let version = (d.version ? d.version : 0)
+                            if (d.version == "local") {
+                                d.version = 0
+                            }
+                            d.version = version
+                            try {
+                                this.addLocal(d, d.name)
+                            } catch (err) {
+                                store.logger.error(err)
+                            } 
+                        })
+                    } else {
+                        let version = (config.version ? config.version : 0)
+                        if (config.version == "local") {
+                            config.version = 0
                         }
-                        d.version = version
+                        config.version = version
                         try {
-                            this.addLocal(d, d.name)
+                            this.addLocal(config, config.name)
                         } catch (err) {
                             store.logger.error(err)
                         }
-                    })
-
+                    }
 
                 })
             }
         })
-        // promises = []
-        // promises.push(import_cfgs(module_paths.importPath[0], ''))
-        // results_default = await Promise.allSettled(promises)
-        // results_default.forEach((result, index) => {
-        //     if (result.status == 'fulfilled') {
-        //         result.value.forEach((config) => {
-        //             let localIdx = -1
-        //             if (this.locals[config.name]) {
-        //                 localIdx = this.locals[config.name].findIndex((f) => {
-        //                     return f.version == config.version
-        //                 })
-        //             }
-        //             this.addImported(config, config.name, true)
-
-        //         })
-        //     }
-        // })
+       
         return
     }
     addImported(config: { removable: boolean, imported: boolean, idx: number, local: boolean, version: string  }, name, removable) {

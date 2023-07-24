@@ -1,8 +1,9 @@
 - version: 1.5
   basestack_released: 2
-  supported: 2.1.1
+  supported: 2.1.1 
   schema_version: 1
   title: Kraken2
+  defaultchoice: 1
   date_added: '2022-05-06T11:40:13.131Z'
   url: https://ccb.jhu.edu/software/kraken2/
   description: A kmer-based tool for the metagenomic classification using a single fastq file full of reads as input
@@ -12,29 +13,63 @@
     - kraken2
     - metagenomic
     - metagenome
+  variables:
+    - key: "inputfile"
+      element: "file"
+      label: "Input File"
+      info: "Sequencing fastq (can be compressed) or fasta file required as input for kraken2 to function"
+      pattern: 
+        - '.*.fastq'
+        - '.*.fastq.gz'
+        - '.*.fq'
+        - '.*.fa'
+        - '.*.fasta'
+        - '.*.fq.gz'  
+    - key: "out" 
+      element: "static-file"
+      pattern: ".*.kraken.out"
+      output: True
+      label: "Out file (.out format)"
+      info: "Out file format from kraken2 classifications. Used for downstream steps"
+      target: "%trim($inputfile)%.kraken.out"   
+    - key: "report" 
+      element: "static-file"
+      pattern: ".*.kraken.report"
+      output: True
+      label: "Report file (.kraken.report format)"
+      info: "Report style file format from kraken2 classifications. Contans top-down description of all taxids in hierarchical format, separated by tabs at each rank level"
+      target: "%trim($inputfile)%.kraken.report"
+    - key: "db" 
+      element: "list-directory"
+      output: False
+      label: "Kraken2 database"
+      info: "Kraken2 database, must contain k2d file(s)"
+      choices: [
+        "${dependencies}/files/flukraken2",
+        "${dependencies}/files/minikraken_8GB_202003"
+      ]
+    
   choices: 
-    - requirements: 
-      - key: "conda"
-        type: "executions"
-      variables:
-        - key: "input"
-          element: 
-            - "file"
-          pattern: 
-            - '*.fastq'
-            - '*.fastq.gz'
-            - '*.fq'
-            - "*.fa"
-            - "*.fasta"
-            - "*.fq.gz" 
-        - key: "out"
-          element: 
-            - "file"
-          target: "${input.basename().trim()}.out${input.trim()}" 
+    - key: "Conda"
+      label: "Conda"
+      exec: "native"
+      env: "base"
+      requirements: 
+        - key: "kraken2"
+          type: 'images'
       command: "
-        conda activate base &&  
-        kraken2  --output ${out}
-        --report ${report}
-        ${input}
-      "    
+        kraken2 %$inputfile% --db %$db%   --out %$out% --report %$report%  %$inputfile%
+      "  
+    - key: "Docker"
+      label: "Docker"
+      exec: "docker" 
+      env: "staphb/kraken2"
+      requirements: 
+        - key: "staphb/kraken2"
+          type: 'images'
+        - key: "flukraken2"
+          type: 'files'
+      command: "
+        kraken2 %$inputfile% --db %$db%  --out %$out% --report %$report%  %$inputfile% 
+      "      
 

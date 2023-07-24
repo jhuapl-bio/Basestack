@@ -1,0 +1,4 @@
+b: 1
+d: "yes"
+c: { b: "no"}
+f: { b: "%uppercase(hello)"}

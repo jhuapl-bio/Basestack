@@ -64,59 +64,12 @@
                     
                     <v-card-text class="ml-0 pl-0 pt-0 mt-0 mb-0 pb-0">
                         <v-list dense lines="three" class="ml-0 pl-0 pt-0 pb-0">
-                            <v-list-item  class="ml-0 pl-0 pt-0 pb-0"
-                                v-for="( choice, choiceIdx) in dependency['choices']"
+                            <Dep v-for="( choice, choiceIdx) in dependency['choices']"
                                 :key="`${choiceIdx}-choices-${choice['target']}`"
-                                >
-                                <template v-slot:subtitle>
-                                    {{  getInstallSubtitle(choice['type_install']) }} 
-                                    <span v-if="choice['status']['info'] && choice['status']['info']['size'] > 0" class="text--secondary">
-                                        <v-spacer></v-spacer>
-                                        {{ formatBytes(choice['status']['info']['size'], 2) }}
-                                    </span >
-                                </template>
-                                
-
-                                <template v-slot:title>
-                                        {{ getInstalltitle(choice['format']) }}
-                                </template>
-                                <template v-slot:append>
-                                    <v-tooltip v-if="choice['format'] == 'file' || choice['format'] == 'directory' || choice['format'] == 'singularity'">
-                                        <template v-slot:activator="{ props }"> 
-                                            <v-icon @click="openPath(choice['target'], choice['format'])" color="blue" class="mr-2" v-bind="props">mdi-folder
-                                            </v-icon>
-                                        </template> 
-                                        Open Path: {{ choice['target'] }}
-                                    </v-tooltip>
-                                    <v-btn icon size="small" dense
-                                        @click="installDependency(index, choiceIdx, key)"
-                                        variant="tonal" color="blue"
-                                    >
-                                        <v-icon  :icon="'mdi-download'"></v-icon>
-                                    </v-btn>
-                                    
-                                </template>
-                                <template v-slot:prepend>
-                                    <v-btn
-                                        color="grey-lighten-1"
-                                        icon="mdi-information" @click="dialogInfo=true; infoSelected = choice"
-                                        variant="text"
-                                    ></v-btn>
-                                    <v-progress-circular :indeterminate=" true " v-if=" getProcessChoice(key, index, choiceIdx) " model-value="10"></v-progress-circular>
-                                    <v-tooltip v-else>
-                                        <template v-slot:activator=" { props } ">
-                                            <v-icon  class="ml-2" v-bind=" props " :color=" choice['status']['exists'] ? 'green' : 'yellow-darken-2' " :icon=" choice['status']['exists'] ? 'mdi-check-all' : 'mdi-cancel' " :key=" `${choice['status']}` ">
-                                            </v-icon>
-                                        </template> 
-                                        <span v-if="choice['format'] == 'command'">{{ choice['status']['exists'] ? 'Binary Exists in your environment' : 'Binary does not exist in your environment' }}</span>
-                                        <span v-else-if="choice['format'] == 'docker'">{{ choice['status']['exists'] ? 'Exists in your environment' : 'Does not exist, check Docker is running as well' }}</span>
-                                        <span v-else>{{ choice['status']['exists'] ? 'Exists' : 'Does not exist' }}</span>
-                                    </v-tooltip>
-                                    
-                                    </template>
-                                <v-divider ></v-divider>
-                              
-                            </v-list-item>
+                                :kt="key"
+                                :choiceIdx="choiceIdx"
+                                :index="index"
+                            ></Dep>
                         </v-list>
                        
                     </v-card-text>
@@ -124,26 +77,14 @@
             </v-list-item>
         </v-list>
        
-        <v-dialog
-            v-model=" dialogInfo "
-            width="auto" 
-        >
-            <v-card  style="overflow:auto; ">
-                <pre>{{ infoSelected }}</pre>
-                <v-card-actions>
-                    <v-btn color="primary"  @click=" dialogInfo = false; infoSelected = null ">Close</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
+        
     </div>
 </template>
 
 <script lang="ts" >
-import { dialog } from 'electron';
-import { parseArgs } from 'util';
 import { defineComponent, reactive } from 'vue';
 import path from 'path'
-
+import Dep from './Dep.vue'
 
 interface State {
     deps: any
@@ -159,6 +100,7 @@ interface State {
 export default defineComponent({
     name: 'Dependencies',
     components: {
+        Dep,
     },
     computed: {
         
@@ -191,9 +133,7 @@ export default defineComponent({
         window.electronAPI.getDependencies((event: any, deps: any) => {
             this.deps = deps
         });
-        window.electronAPI.getDependency((event: any, params: any) => {
-            // this.deps[params['type']][params['index']] = params['dep']
-        });
+       
         window.electronAPI.processStatus((event: any, process: Object) => {
             let findindex = this.processes.findIndex(x => x.id == process['id'])
             if (findindex == -1)
@@ -221,14 +161,15 @@ export default defineComponent({
             })
         });
 
-        window.electronAPI.dependencyStatus((event: any, params: any) => {
-            let findindex = this.processes.findIndex(x => x.id == params['id'])
-            if (findindex == -1) {
-                this.deps[params['status']['type']][params['index']]['processes'] = [params['id']]
-            } else {
-                this.deps[params['status']['type']][params['index']]['processes'].push(params['id'])
-            }
-        });
+        // window.electronAPI.dependencyStatus((event: any, params: any) => {
+        //     console.log(params)
+        //     let findindex = this.processes.findIndex(x => x.id == params['id'])
+        //     if (findindex == -1) {
+        //         this.deps[params['status']['type']][params['index']]['processes'] = [params['id']]
+        //     } else {
+        //         this.deps[params['status']['type']][params['index']]['processes'].push(params['id'])
+        //     }
+        // });
         window.electronAPI.requestDependencies()
     },
     emits: {
@@ -236,7 +177,6 @@ export default defineComponent({
     methods: {
         openPath(link: string, type: string | null) {
             try {
-                console.log(link, type)
                 type == 'directory' ? window.electronAPI.openDir(link) : window.electronAPI.openDir(link)
             } catch (err) {
                 console.log(err)
@@ -281,7 +221,7 @@ export default defineComponent({
         getProcessChoice(type: string, index: number, choice: number) {
             let processidx = this.processes.findIndex(x=> x['running'] && x['choice'] == choice && x['index'] == index && x['type'] == type)
             return processidx > -1
-        },
+        }, 
         formatBytes(bytes: number, decimals: number) { //https://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
             if (!+ bytes) return '0 Bytes'
             const k = 1024

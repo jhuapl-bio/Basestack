@@ -8,14 +8,16 @@ import { join } from 'path';
 import { Dependency } from './dependency';
 import { Library } from './library';
 import { Logger } from "./logger"
+import { History } from './history';
 import { Module } from "./module"
+import fs from "fs"
 import path from "path"
 var { store } = require("./store.js");
 const { Updater } = require("./updater") // Updater class 
-const { ClientMenu, openTerminal } = require("./menu") // Menu class (top of the app bar)
+// const { ClientMenu, openTerminal } = require("./menu") // Menu class (top of the app bar)
 const { download } = require('electron-dl'); // For download electron package binaries and libs
 var sudo = require('sudo-prompt');
-const pty = require('node-pty')
+// const pty = require('node-pty')
 import { Process } from './process'
 import { Queue } from './queue'
 
@@ -24,6 +26,7 @@ export class Client {
     app: any // Create a class for the Electron main client
     mainWindow: any
     logger: Logger
+    history: History
     modules: Module
     config: any 
     nodeptyshell: any
@@ -40,6 +43,7 @@ export class Client {
     system: any
     constructor(app) {
         this.app = app
+        this.history = new History()
         this.processes = []
         const isMac = process.platform === 'darwin'
         const isWin = process.platform === "win32"
@@ -69,20 +73,20 @@ export class Client {
         return new Queue()
     }
     startProcess() {
-        var shell = process.platform === "win32" ? "powershell.exe" : "bash";
-        this.ptyProcess = pty.spawn(shell, [], {
-            name: 'xterm-color',
-            cols: 80,
-            rows: 24,
-            cwd: process.env.HOME,
-            env: process.env
-        });
-        this.ptyProcess.on("data", (data) => {
-            this.mainWindow.webContents.send("terminalInc", data);
-        });
-        this.ptyProcess.on("exit", (data) => {
-            this.logger.info("<<<<exiting the node pty process")
-        });
+        // var shell = process.platform === "win32" ? "powershell.exe" : "bash";
+        // this.ptyProcess = pty.spawn(shell, [], {
+        //     name: 'xterm-color',
+        //     cols: 80,
+        //     rows: 24,
+        //     cwd: process.env.HOME,
+        //     env: process.env
+        // });
+        // this.ptyProcess.on("data", (data) => {
+        //     this.mainWindow.webContents.send("terminalInc", data);
+        // });
+        // this.ptyProcess.on("exit", (data) => {
+        //     this.logger.info("<<<<exiting the node pty process")
+        // });
     }
     createShell() {
         const $this = this
@@ -139,10 +143,10 @@ export class Client {
         }) 
     }
     createMenu() {  // Make a menu object and the store (holds saved variables and configs)
-        let menu = new ClientMenu(this.logger, this.mainWindow, dialog, this.app, this.system, this.updater)
-        menu.store = this.store
-        let m = menu.makeMenu()
-        this.menu = menu 
+        // let menu = new ClientMenu(this.logger, this.mainWindow, dialog, this.app, this.system, this.updater)
+        // menu.store = this.store
+        // let m = menu.makeMenu()
+        // this.menu = menu 
     }
     createUpdater() {  // Create the updater class
         this.updater = new Updater(this.logger, this.mainWindow, dialog)
@@ -175,6 +179,16 @@ export class Client {
         } else{
             store.logger.error(`${id} process not found, skipping...`)
         }
+    }
+    //add a function to send to the renderer process the logs while also logging with this.logger.info
+    async log(message: string) {
+        this.logger.info(message)
+        // this.mainWindow.webContents.send("log", message)
+    }
+    async loadFile(file: string) {  
+        this.logger.info(`Loading file ${file}`)
+        let data = fs.readFileSync(file, 'utf8')
+        return data
     }
     async createProcess(params: Object) {
         this.logger.info(`${params} starting process`)

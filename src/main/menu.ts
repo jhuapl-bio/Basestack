@@ -76,8 +76,8 @@ class ClientMenu {
                         label: 'Refresh Server (current Port)',
                         click() {
                             if (process.env.NODE_ENV == 'production') {
-                                const create_server = require("../server/index.server.js").create_server
-                                create_server(process.env.PORT_SERVER);
+                                // const create_server = require("../server/index.server.js").create_server
+                                // create_server(process.env.PORT_SERVER);
                             }
                         }
                     },

@@ -26,7 +26,11 @@ export class Logger {
     this.logger = this.loggerBase(errorFile, logFile)
   }  
   info(message:string) {
-    this.logs.slice(-400).unshift(message)
+    // get the 400 latest indices and then add the new message to the front of the array
+    // this.logs.slice(-400).unshift(message)
+    
+    this.logs.push(message)
+    this.logs = this.logs.slice(-400)
     this.logger.info(message)
     store.mainWindow.send('getLog', [message])
   }

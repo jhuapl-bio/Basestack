@@ -4,6 +4,8 @@ const fs  = require("fs")
 const YAML = require("js-yaml")
 import nestedProperty from "nested-property"
 
+//import path
+import path from "path"
 // const Ajv = require("ajv")
 // const ajv = new Ajv() // options can be passed, e.g. {allErrors: true}
 
@@ -19,14 +21,13 @@ export function parseConfigVariables(data: string, config: any){
 	data = data.replace(/\$\{configPath\}/g, config.configPath) // constant, non editable packaged files location
 	data = data.replace(/\$\{uploadPath\}/g, config.uploadPath) // where files can be uploaded and shared across teh system
 	data = data.replace(/\$\{resourcePath\}/g, config.resourcePath) // non editable path, like config path but higher up
+	data = data.replace(/\$\{dependencies\}/g, path.join(config.writePath, "dependencies")) // non editable path, like config path but higher up
+	data = data.replace(/\$HOME/g, config.homedir) // HOME directory of machien
 	data= YAML.load(data)   // load info as yaml string into object
 	return data   
 } 
 
-var validateSchema = function(configTesting, schema){ // deprecated, in development
-  console.log("validating schema")
 
-}
 export var importDependencies  = async function(config){
   try {
     const doc = YAML.load(fs.readFileSync(config.dependenciesPath, 'utf8'));

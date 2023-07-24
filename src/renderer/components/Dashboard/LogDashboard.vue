@@ -7,9 +7,9 @@
   - # **********************************************************************
   -->
 <template>
-	<v-card  class="mx-5" style="margin-top: 5%; margin-right: 5%;">
-		<LogWindow  :env="env"></LogWindow>
-	</v-card>
+	<!-- <v-card  class="mx-5" style="margin-top: 5%; margin-right: 5%;"> -->
+	<LogWindow  :env="env"></LogWindow> 
+	<!-- </v-card> -->
 </template>
 
 <script lang="ts" >
@@ -20,7 +20,7 @@ import LogWindow from './LogWindow.vue'
  
 import { defineComponent } from 'vue';
 
-export default defineComponent({
+export default defineComponent({ 
 	name: 'LogDashboard',
 	components:{
 		LogWindow,

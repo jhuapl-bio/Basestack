@@ -37,7 +37,7 @@ export class Dependency {
         this.interval = setInterval(async () => {
             if (!this.checkingExists) { 
                 this.checkingExists = true 
-                let results: void = await this.checkDependencyExists() 
+                await this.checkDependencyExists() 
                 this.mainWindow.webContents.send('getDependencies', this.dependencies)
                 this.checkingExists = false
             }
@@ -61,6 +61,9 @@ export class Dependency {
 
         }
     }
+    getProcesses() {    
+        return this.processes
+    }
     async installDependency(params: Object  ) {
         let platform = process.platform
         let index = this.dependencies[params['type']][params['index']].os == 'any' ? 0 : this.dependencies[params['type']][params['index']].os.findIndex(x=>x == platform)
@@ -69,8 +72,10 @@ export class Dependency {
                 params[key] = this.dependencies[params['type']][params['index']].choices[params['choice']][key]
             }
             params['label'] = this.dependencies[params['type']][params['index']]['label']
+            if (!params['from']){
+                params['from'] = params['target']
+            }
             let proc = new Process(params)
-            // proc.start()
             proc.addtoqueue()
             this.processes[params['choice']] = proc
             this.dependencies[params['type']][params['index']].processes.push(proc.id)
@@ -98,7 +103,8 @@ export class Dependency {
                             return
 
                         })
-                    } else if (type == 'images') {
+                    } 
+                    else if (type == 'images') {
                         let results: Object = {
                             installed: String,
                             size: Number
@@ -112,8 +118,13 @@ export class Dependency {
                                 $this.dependencies[type][i].choices[ix].status.exists = false
                                 store.logger.error(`${err.message} error in checking if a singularity dep. exists in your environment`)
                             }
-                        } else {
-                            results = await checkImageExists(choice['target'])
+                        }
+                         else {
+                            try{
+                                results = await checkImageExists(choice['target'])
+                            } catch (err){ 
+                                store.logger.error(err)
+                            }
                             try {
                                 $this.dependencies[type][i].choices[ix].status.info = results
                                 $this.dependencies[type][i].choices[ix].status.exists = results['installed'] ? true : false
@@ -122,7 +133,8 @@ export class Dependency {
                                 store.logger.error(`${err.message} error in checking if an image exists in your environment`)
                             }
                         }
-                    } else if (type == 'files') {
+                    } 
+                    else if (type == 'files') {
                         let results: Object = {
                             installed: String,
                             size: Number
@@ -156,8 +168,6 @@ export class Dependency {
                 })
             })
         })
-
-
         return 
     }
     async importDependencies() {
@@ -178,9 +188,7 @@ export class Dependency {
                             if (yamldata) {
                                 for (let key of Object.keys(yamldata)) {
                                     yamldata[key].map((value) => {
-                                        let pushable = 0
                                         if (value.choices) {
-                                            // if (value.label == 'Nextflow') {
                                             const choicesd = value.choices.reduce(function (a, x, i) {
                                                 let pushable = (  x.arch == 'any' || !x.arch || (Array.isArray(x.arch) ?
                                                     (x.arch.findIndex(y => y == process.arch)) :
@@ -215,7 +223,6 @@ export class Dependency {
                                                 value.processes = []
                                                 $this.dependencies[key].push(value)
                                             }
-                                        // }
                                         }
                                     })
                                 }

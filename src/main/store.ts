@@ -38,12 +38,14 @@ if(process.getgid){
 var store = {   
 	system: {
 		appVersion: null,
+		homedir: process.env.HOME,
 		writePath: writePath,
 		resourcePath: resourcePath, 
 		configFile:  path.resolve(path.join(resourcePath,  "config","app", "meta.yaml")),
 		configPath:  path.resolve(path.join(resourcePath,  "config", 'app')),
 		localModulesPath: [path.resolve(path.join(resourcePath, "config", 'server', 'config', 'modules'))],
 		savedModulesPath: path.resolve(path.join(writePath, "data", 'imports', 'modules')),
+		customModulesPath: path.resolve(path.join(writePath, "data", 'custom', 'modules')),
 		dependencies: [path.resolve(path.join(resourcePath, "config", 'server', 'config', 'dependencies')) ],
 		logPath: path.join(writePath, "logs"),
 		dependenciesPath: path.resolve(path.join(resourcePath,  "config", "dependencies.yaml")),
@@ -53,10 +55,11 @@ var store = {
 			info: path.resolve(path.join(writePath, "logs", "basestack.log")),
 		},	
 		processes: [],
+		history: [],
 		gid: gid,
 		modules: [],
 		uid: uid,
-		OS: OS	
+		OS: OS	 
 	},
 	
 	partition: "=".repeat(50),
