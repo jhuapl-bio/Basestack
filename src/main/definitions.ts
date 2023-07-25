@@ -25,9 +25,9 @@ export function parseConfigVariables(data: string, config: any){
 	data = data.replace(/\$\{uploadPath\}/g, config.uploadPath) // where files can be uploaded and shared across teh system
 	data = data.replace(/\$\{resourcePath\}/g, config.resourcePath) // non editable path, like config path but higher up
 	data = data.replace(/\$\{dependencies\}/g, path.join(config.writePath, "dependencies")) // non editable path, like config path but higher up
-	// data = data.replace(/\$HOME/g, config.homedir.replaceAll("\\", "\/")) // HOME directory of machien
+	data = data.replace(/\$HOME/g, config.homedir ) // HOME directory of machien
 	data= YAML.load(data)   // load info as yaml string into object
-	return data   
+	return data    
 } 
 
 

@@ -166,7 +166,7 @@ export class Process {
             let command: any[]
             if(this.params.exec == 'conda'){
                 // //check if "conda run is being used"
-                command = ['conda', 'run', '-n', this.params.env, this.params.command]
+                command = ['conda', 'run', '-n', this.params.env, comm]
             } else if(this.params.exec == 'docker'){
                 let formattedParams = formatBindMounts(Object.values(this.params.params))
                 command = ['docker', 'container', 'run', '-t', '--rm', 
@@ -175,12 +175,13 @@ export class Process {
                     formattedParams.map((v:string)=> ` -v ${v}`).join(" "), 
                     this.params.env,  
                     this.params['pre-execute'] ? this.params['pre-execute'].join(" ") : '',
-                    this.params.command, 
+                    comm, 
                 ]
             } else if(this.params.exec == 'singularity'){
-                command = ['singularity', 'exec', this.params.sif,  ...this.params.arguments, this.params.command]
+                command = ['singularity', 'exec', this.params.sif, ...this.params.arguments, comm]
             } else { // the process is native, no conda, docker, or singularity needed
-                command = [this.params.command]
+                console.log("process is native", comm)
+                command = [comm]
             }
             await this.runCommand(command.join(" "))
             

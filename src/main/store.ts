@@ -38,7 +38,7 @@ if(process.getgid){
 var store = {   
 	system: {
 		appVersion: null,
-		homedir: process.env.HOME ? process.env.HOME.replace(/\\/g, '/'): '',
+		homedir: process.env.HOME ? process.env.HOME.replace(/\\/g, '/') : '',
 		writePath: writePath,
 		resourcePath: resourcePath, 
 		configFile: path.resolve(path.join(resourcePath, "config", "app", "meta.yaml")).replace(/\\/g, '/'),

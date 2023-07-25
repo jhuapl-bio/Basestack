@@ -406,15 +406,16 @@ export default {
             })
             // check if all vlaidation states are okay, if not then return swal alert message 
             let validation = Object.values(validationStates).filter((f: any) => f !== true)
-            if (validation.length > 0){
-                Swal.fire({
-                    title: "Invalid Variables",
-                    text: "Please check the variables and try again.",
-                    icon: "warning",
-                    confirmButtonText: "Okay"
-                });
-                return;
-            } else {
+            console.log(validation)
+            // if (validation.length > 0){
+            //     Swal.fire({
+            //         title: "Invalid Variables",
+            //         text: "Please check the variables and try again.",
+            //         icon: "warning",
+            //         confirmButtonText: "Okay"
+            //     });
+            //     return;
+            // } else {
                 let processid = await window.electronAPI.runModule({  
                     key: props.module.name,
                     command: commandr,
@@ -427,7 +428,7 @@ export default {
                 });
                 window.electronAPI.setSideTab(2)
                 recordhistory(null, "run", null);
-            }
+            // }
 
                 
 

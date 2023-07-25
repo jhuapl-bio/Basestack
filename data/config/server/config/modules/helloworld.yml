@@ -45,13 +45,13 @@
       exec: "conda"
       env: "kraken2"
       command: "
-        echo  \"%$input%\" 
+        conda info; echo  \"%$input%\" 
       "    
     - key: "Native"
       label: "Native"
       exec: "native"
       command: "
-        echo   \"%$input%\"   > %directory($out)/test.txt%
+        conda info; echo   \"%$input%\"   > %directory($out)/test.txt%
       "    
     - key: "Docker"
       label: "Docker"
