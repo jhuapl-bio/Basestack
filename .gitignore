@@ -1,4 +1,5 @@
 C:
+.yarn*
 *.log
 Samplesheet*
 taxtriage_output

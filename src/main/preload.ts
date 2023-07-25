@@ -83,7 +83,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
     requestEnv: () => {
         ipcRenderer.invoke('fetchEnv')
-    },  
+    },   
     loadFile: (params: object, type: string | null)=>{
         ipcRenderer.invoke('loadFile', params, type)
     }, 

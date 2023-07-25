@@ -88,6 +88,7 @@ import { watch } from 'original-fs';
             }
             //add variable to using window.electron and module reads it
             const addVariable = (obj: object) => {
+                console.log(obj,"____")
                 window.electronAPI.addVariable(obj)
             }
             
@@ -106,8 +107,8 @@ import { watch } from 'original-fs';
                 addVariable(values)
             });
             window.electronAPI.addedVariableRequestReturn(async (event: any, varname: string | null) =>{
-                // dialog.value=true
-                // setFieldValue('key', varname)
+                dialog.value=true
+                setFieldValue('key', varname)
                 
             })
                 

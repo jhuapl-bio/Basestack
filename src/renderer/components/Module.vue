@@ -117,7 +117,7 @@
        <v-switch v-model="editMode" label="Edit Mode" />
       <p>Command:</p>
       <v-textarea  v-if="!editMode" v-model="command" label="Command" />
-      <v-textarea  v-else v-model="selectedChoice.command" @input="updateBaseCommand" label="Base Command" /> 
+      <v-textarea  v-else v-model="selectedChoice.command"  @input="updateBaseCommand" label="Base Command" /> 
     </div>  
 </div>
   </template>
@@ -219,7 +219,7 @@ export default {
         const selectedVariables = ref([])
         const selectedChoice = shallowRef(null);
         const moduleVariables = reactive({});
-        const editMode = ref(false);
+        const editMode = ref(true);
         const outputVariables = ref([])
         const selectedChoiceIndex = ref(null)
       
@@ -227,6 +227,7 @@ export default {
             let commandRef = resolveShorthand(selectedChoice.value, {
                 ...moduleVariables
             });
+            checkNewVariables()
             command.value = commandRef.command;
         };
         const updateBaseCommand = () => {
@@ -285,7 +286,6 @@ export default {
             if (props.module.variables){
                 props.module.variables.forEach((variable: any) => {
                     if (variable.output){
-                        console.log(moduleVariables[variable.key])
                         variables.push({
                             ...variable,
                             value: moduleVariables[variable.key]
@@ -295,27 +295,31 @@ export default {
                 outputVariables.value = variables
             }
         };
-        //watch if the module changes via moduleIdx, if it does, then reset the selectedChoice
-        watch(() => selectedChoice , (newValue, oldValue) => {
-            let index = props.module.choices.findIndex((choice) => choice ===  newValue.value)
-            selectedChoiceIndex.value = index
-            setOutputVariables()
-            
+        const checkNewVariables = ()=>{
             if (selectedChoice.value.command) {
                 // Match patterns like '%$...' or '$...' followed by whitespace or '%'
-                const newMatches = newValue.value.command.match(/(\$[\w]+)[%|\s]/g);
+                const newMatches = selectedChoice.value.command.match(/(\$[\w]+)[%|\s]/g);
                 // Remove '$' character from matched items
                 const newMatchedItems = newMatches ? newMatches.map(match => match.slice(1, -1)) : [];
-
                 // Compare the old matched items with the new ones
                 if (JSON.stringify(newMatchedItems.sort()) !== JSON.stringify(oldMatchedItems.value.sort())) {
                     // Execute your logic for when the matched items change
                     newMatchedItems.forEach(newVariable => {
-                        if (!oldMatchedItems.value.includes(newVariable)) {
-                            window.electronAPI.addedVariableRequest(newVariable)
-                            moduleVariables[newVariable] = null;
-                            // recordhistory(newVariable, "variable");
+                        // get the index variable of selectedChoices.variables
+                        let idx = selectedVariables.value.findIndex((variable: any) => variable.key == newVariable  )
+                        console.log(newVariable, idx)
+                        // if idx > -1 then it exists and ignore, otherwise add it to the selectedVariables with window.electronAPI.addedVariableRequest(newVariable)
+                        if (idx == -1 ){
+                            if (!oldMatchedItems.value.includes(newVariable) && idx == -1) {
+                                console.log(newVariable,"new var added")
+                                window.electronAPI.addedVariableRequest(newVariable)
+                                // moduleVariables[newVariable] = null;
+                                // recordhistory(newVariable, "variable");
+                            }
                         }
+                        
+
+                      
                     });
                     
                     oldMatchedItems.value.forEach(oldVariable => {
@@ -329,6 +333,14 @@ export default {
                     oldMatchedItems.value = newMatchedItems;
                 }
             }
+        }
+        //watch if the module changes via moduleIdx, if it does, then reset the selectedChoice
+        watch(() => selectedChoice , (newValue, oldValue) => {
+            let index = props.module.choices.findIndex((choice) => choice ===  newValue.value)
+            selectedChoiceIndex.value = index
+            setOutputVariables()
+            console.log("changed,")
+            checkNewVariables()
             updateSelectedChoiceIndex()
         }, {deep: true});
 
@@ -336,7 +348,6 @@ export default {
         
         watch(() => props.module, () => {
             selectedChoice.value = null;
-            console.log("new props modules", props.module.variables)
             originalChoice.value = null; 
             command.value = "";
             // delete all of the keys in moduleVariables
@@ -349,15 +360,16 @@ export default {
         const refresh = () => {
             // console.log(props.module.choices)
             if (Object.keys(props.module).length >0  && props.module.choices.length > 0) {
-                selectedChoice.value = props.module.choices[props.module.defaultchoice ? props.module.defaultchoice : 0];
+                selectedChoice.value = _.cloneDeep(props.module.choices[props.module.defaultchoice ? props.module.defaultchoice : 0])
                 originalChoice.value = _.cloneDeep(selectedChoice.value);
                 selectedVariables.value = _.cloneDeep(props.module.variables)
                 command.value = selectedChoice.value.command
                 if (selectedVariables.value){
-                    for (let [key, variable] of Object.entries(selectedVariables.value)){
-                        moduleVariables[key] = Array.isArray(variable) ? variable[0] : variable;
-                        validationStates[key] = null;
-                    }
+                    selectedVariables.value.map((variable: any) => {
+                        moduleVariables[variable.key] = Array.isArray(variable.target) ? variable.target[0] : variable.target;
+                        validationStates[variable.key] = null;
+                        changeVariable(variable.key, moduleVariables[variable.key], true);
+                    })
                 }
                 updateCommand();
             }
@@ -392,20 +404,37 @@ export default {
                     }
                 }
             })
-            let processid = await window.electronAPI.runModule({  
-                key: props.module.name,
-                command: commandr,
-                params: vars,
-                outputs: toRaw(outputVariables.value),
-                'pre-execute' : toRaw(selectedChoice.value['pre-execute']),
-                env: selectedChoice.value.env,
-                exec: selectedChoice.value.exec,
-                type: "module"
-            });
-            window.electronAPI.setSideTab(2)
-            recordhistory(null, "run", null);
+            // check if all vlaidation states are okay, if not then return swal alert message 
+            let validation = Object.values(validationStates).filter((f: any) => f !== true)
+            if (validation.length > 0){
+                Swal.fire({
+                    title: "Invalid Variables",
+                    text: "Please check the variables and try again.",
+                    icon: "warning",
+                    confirmButtonText: "Okay"
+                });
+                return;
+            } else {
+                let processid = await window.electronAPI.runModule({  
+                    key: props.module.name,
+                    command: commandr,
+                    params: vars,
+                    outputs: toRaw(outputVariables.value),
+                    'pre-execute' : toRaw(selectedChoice.value['pre-execute']),
+                    env: selectedChoice.value.env,
+                    exec: selectedChoice.value.exec,
+                    type: "module"
+                });
+                window.electronAPI.setSideTab(2)
+                recordhistory(null, "run", null);
+            }
+
+                
+
+                
         };
         window.electronAPI.addedVariable((event, varr)=>{
+            console.log(selectedVariables.value)
             let indx = selectedVariables.value.findIndex((variable: any) => variable.key == varr.key)
             varr.custom = true
             if (indx == -1) {
@@ -414,6 +443,7 @@ export default {
             else {
                 selectedVariables.value[indx] = varr
             }
+            console.log(selectedVariables,"<<<<<<")
             // changeVariable(varr.key, varr.value, false);
         })
         const deleteVariable = (key: string) => {
@@ -536,8 +566,8 @@ export default {
             return `Invalid input type. The input does not match the pattern: ${pattern}`;
         };
         const validateText = (key: string) => {
-            const variable = props.module.variables.find((v: any) => v.key === key);
-            if (!variable.output) {
+            const variable = selectedVariables.value.find((v: any) => v.key === key);
+            if (variable && !variable.output) {
                 if (variable.pattern) {
                     validationStates[key] =   validateInput(variable.pattern, moduleVariables[key])  
                 }
@@ -653,12 +683,11 @@ export default {
             refresh();
             // window.electronAPI.addedVariableRequest()
         });
-        const items = ref(['Item 1', 'Item 2', 'Item 3']);
         const selectedItem = ref(null);
         return {
             choices: props.module.choices,
             selectedChoice,
-            items, selectedItem,
+            selectedItem,
             updateBaseCommand,
             selectedVariables,
             components,

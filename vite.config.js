@@ -10,7 +10,7 @@ const config = defineConfig({
     root: Path.join(__dirname, 'src', 'renderer'),
     publicDir: 'public',
     server: {
-        port: 5023,
+        port: 8080,
     },
     open: false,
     build: {
@@ -18,6 +18,6 @@ const config = defineConfig({
         emptyOutDir: true,
     },
     plugins: [vuePlugin()],
-}); 
+});
 
 module.exports = config;

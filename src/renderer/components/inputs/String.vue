@@ -12,7 +12,7 @@
   </template>
   
   <script lang="ts">
-  import {  shallowRef,  onMounted, watch } from "vue";
+  import {  shallowRef, ref,  onMounted, watch } from "vue";
   
   export default {
     name: "String",
@@ -37,8 +37,8 @@
       
     },
     setup(props, { emit }) {
-        const value = shallowRef(props.variable);
-        const defaultValue = shallowRef(props.default)
+        const value = ref(props.variable);
+        const defaultValue = ref(props.default)
        
         
         watch(() => props.variable,  (newVal, oldVal)=>{
@@ -46,7 +46,7 @@
          }, {deep:true})
          watch(() => props.default,  (newVal, oldVal)=>{
             defaultValue.value = newVal
-         })
+         }, {deep:true})
          watch(() => value.value,  (newVal, oldVal)=>{
             if (value.value != props.variable){
                 emit("update", newVal);

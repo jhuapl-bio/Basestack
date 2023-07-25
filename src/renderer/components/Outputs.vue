@@ -40,7 +40,7 @@ import {  shallowRef, defineComponent, watch } from "vue";
   export default defineComponent({
     props: {
       variables: {
-        type: Array,
+        type: Array, 
         default: () => [],
       },
     },
@@ -75,7 +75,6 @@ import {  shallowRef, defineComponent, watch } from "vue";
                     filepath['error'] = true
                     filepath['errorText'] = 'File does not exist'
                   } else {
-                    console.log("doesnt exist")
                     filepath['error'] = false
                     filepath['errorText'] = ''
                     filepath['size'] = exists.size
@@ -84,7 +83,7 @@ import {  shallowRef, defineComponent, watch } from "vue";
               } catch (err) {
                 filepath['error'] = true
                 filepath['errorText'] =  'File does not exist'
-                filepath['size'] =0 
+                filepath['size'] = 0 
               } 
 
             })
