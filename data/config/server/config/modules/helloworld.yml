@@ -1,7 +1,7 @@
 # make a yaml file example file using the kraken2.yml file as a reference, but just do a basic Native echo hello world
 # must have name and dependencies and command of echo hello world
 # This is it in the minimap2 file
-- title: HelloWorld
+- title: HelloWorld 
   date_added: '2023-11-07T11:40:13.131Z'
   url: "None"
   description: Basic echo hello world to test things

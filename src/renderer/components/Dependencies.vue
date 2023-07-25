@@ -60,7 +60,7 @@
                                 <span>{{ dependency['status']['exists'] ? 'One or more option exists in your environemnt' : 'No option exists in your environment' }}</span>
                             </v-tooltip>
                         </template>
-                    </v-toolbar>
+                    </v-toolbar> 
                     
                     <v-card-text class="ml-0 pl-0 pt-0 mt-0 mb-0 pb-0">
                         <v-list dense lines="three" class="ml-0 pl-0 pt-0 pb-0">
@@ -68,7 +68,9 @@
                                 :key="`${choiceIdx}-choices-${choice['target']}`"
                                 :kt="key"
                                 :choiceIdx="choiceIdx"
-                                :index="index"
+                                :index="index" 
+                                v-bind:choice="choice"
+ 
                             ></Dep>
                         </v-list>
                        

@@ -3,7 +3,7 @@
 // each action (variable updates, install dependencies, etc) should be recorded in the history file
 // on app load (client.ts), the history file should be read and displayed in the history tab of the app
 // all history handling should be done in the this file
-// this is a class that is created on app start in main.ts
+// this is a class that is created on app start in main.ts 
 // record all history into a list of objects AND a json file
 // history is a json file that is stored in the log directory
 const fs = require("fs");

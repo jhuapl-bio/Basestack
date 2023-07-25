@@ -88,3 +88,16 @@ executions:
         platform: "any"
         format: "command"
         type_install: "command"
+  - label: WSL2
+    key: "wsl"
+    os: [ "win32"]
+    icon: "mdi-windows"
+    color: "primary"
+    description: Set up WSL2
+    info: Windows Subsystem for Linux 2
+    choices:
+      - platform: win32
+        arch: "x64"
+        format: "command"
+        type_install: "command"
+        from: 'wsl --install -d Ubuntu-20.04'

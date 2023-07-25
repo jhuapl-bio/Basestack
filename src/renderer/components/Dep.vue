@@ -1,6 +1,6 @@
 <template>
-     <v-list-item  class="ml-0 pl-0 pt-0 pb-0" >
-        <template v-slot:subtitle>
+    <v-list-item  class="ml-0 pl-0 pt-0 pb-0" >
+       <template v-slot:subtitle>
             {{  getInstallSubtitle(choice['type_install']) }} 
             <span v-if="status['info'] && status['info']['size'] > 0" class="text--secondary">
                 <v-spacer></v-spacer>
@@ -8,10 +8,10 @@
             </span >
         </template>
         
-
         <template v-slot:title>
                 {{ getInstalltitle(choice['format']) }}
         </template>
+         
         <template v-slot:append>
             <v-tooltip v-if="choice['format'] == 'file' || choice['format'] == 'directory' || choice['format'] == 'singularity'">
                 <template v-slot:activator="{ props }"> 
@@ -43,9 +43,9 @@
                 <span v-if="choice['format'] == 'command'">{{ status['exists'] ? 'Binary Exists in your environment' : 'Binary does not exist in your environment' }}</span>
                 <span v-else-if="choice['format'] == 'docker'">{{ status['exists'] ? 'Exists in your environment' : 'Does not exist, check Docker is running as well' }}</span>
                 <span v-else>{{ status['exists'] ? 'Exists' : 'Does not exist' }}</span>
-            </v-tooltip>
+            </v-tooltip> 
             
-            </template>
+            </template> 
         <v-divider ></v-divider>  
     </v-list-item>
     <v-dialog
@@ -58,7 +58,7 @@
                 <v-btn color="primary"  @click=" dialogInfo = false; infoSelected = null ">Close</v-btn>
             </v-card-actions>
         </v-card>
-    </v-dialog>
+    </v-dialog> 
 </template>
    
    <script lang="ts">
@@ -68,8 +68,8 @@
      name: "Dep", 
      props: {
         choice: { 
-         type: Object,
-         default: null,
+         type: [Object, Array, Number],
+         default: () => { return {} }
        },
        kt: {
             type: String,

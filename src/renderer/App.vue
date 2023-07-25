@@ -40,7 +40,7 @@
             <v-list-item
               :prepend-icon="`mdi-home`"
               :title="'Installations'"
-              @click="installationSelected = true; moduleSelected = null"
+              @click="installationSelected = true; moduleSelected = {}"
             >	
             </v-list-item>
           </v-list>
@@ -69,7 +69,7 @@
       <v-main >
   			<v-container fluid >
           <Dependencies v-if="installationSelected" :env="env"></Dependencies>
-          <Module v-if="moduleSelected" 
+          <Module v-else-if="moduleSelected &&   Object.keys(moduleSelected).length > 0" 
               :module="moduleSelected" 
               :moduleIdx="moduleIdx"
               >
@@ -172,7 +172,7 @@ export default defineComponent({
     //Set default name if you want
 
     const name = ref('helloworld')
-    let installationSelected = ref(false)
+    let installationSelected = ref(true)
 
 
     onMounted(() => {
