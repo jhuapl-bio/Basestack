@@ -1,5 +1,5 @@
 <template>
-    <v-list>
+    <v-list> 
       <v-toolbar-title>Output{{ outputVariables.length > 1 ? '(s)' : '' }}</v-toolbar-title>
       <v-list-item v-for="(variable, index) in outputVariables" :key="index">
         <template v-slot:title>

@@ -111,9 +111,10 @@ export class Process {
             store.processes.push(this)
         }
         if (this.params.type == 'module') {
-            if (!this.params.wsl) {
+            if (this.params.wsl) {
                 this.params.platform = 'wsl2'
             }
+            console.log(this.params,"<<<")
             let comm = run(this.params.command, this.params.platform)
             if (!this.params.arguments){
                 this.params.arguments = []

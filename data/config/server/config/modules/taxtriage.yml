@@ -103,14 +103,11 @@
       target: 10
     - key: "outputreport" 
       element: "static-file"
-      pattern: [
-        ".*multiqc-report.*html"
-      ]
-      Output: true
+      pattern: ".*.html"
+      output: True
       label: "Report output"
       info: "Interactive HTML Report"
-      target: "%directory($samplesheet)%/taxtriage_output/multiqc/multiqc-report.html"
-      required: False
+      target: "%directory($samplesheet)%/tmp/multiqc/multiqc_report.html"
   choices: 
     - key: "Native"
       label: "Native"

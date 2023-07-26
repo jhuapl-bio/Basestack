@@ -340,6 +340,7 @@ export default {
             let variables = []
             selectedVariables.value = _.cloneDeep(props.module.variables)
             if (props.module.variables){
+                console.log(props.module.variables)
                 props.module.variables.forEach((variable: any) => {
                     if (variable.output){
                         variables.push({
@@ -570,15 +571,15 @@ export default {
             }
             
             // // Interpolation
-            // selectedVariables.value.filter((f: object) => {
-            //     return f["key"] !== variableKey;
-            // }).forEach((variable, indx) => {
-            //     // add this change to the history, send it to main process to be saved
-            //     let interpolatedValue = resolveShorthand(variable, {
-            //         ...moduleVariables
-            //     });
-            //     moduleVariables[variable.key] = interpolatedValue.target;
-            // });
+            selectedVariables.value.filter((f: object) => {
+                return f["key"] !== variableKey && f['output'];
+            }).forEach((variable, indx) => {
+                // add this change to the history, send it to main process to be saved
+                let interpolatedValue = resolveShorthand(variable, {
+                    ...moduleVariables
+                });
+                moduleVariables[variable.key] = interpolatedValue.target;
+            });
             setOutputVariables()
             
             
