@@ -20,21 +20,25 @@
      name: "Static",
      emits: ["update"],
      props: {
-       variable: {
-         type: String,
-         default: "",
-       },
-       default: {
-         type: String, 
-         default: ""
-       },
-       editMode: {
-         type: Boolean, 
-         default: false
-       },
-       choices: {
+      variable: {
+        type: String,
+        default: "",
+      },
+      default: {
+        type: String, 
+        default: ""
+      },
+      editMode: {
+        type: Boolean, 
+        default: false
+      },
+      choices: {
         type: Array, 
         required: false
+      },
+      data: {
+        type: Object,
+        default: () => { return {} }
       },
        
      },
@@ -42,8 +46,6 @@
          const value = shallowRef(props.variable);
          const defaultValue = shallowRef(props.default)         
          onMounted(() => {
-             console.log("Component is mounted");
-             console.log(props.default,",,")
          });
          watch(() => props.variable,  (newVal, oldVal)=>{
             value.value = newVal

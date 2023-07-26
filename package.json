@@ -171,7 +171,7 @@
     "targz": "^1.0.1",
     "vee-validate": "^4.10.6",
     "vue": "^3.2.47",
-    "vuetify": "^3.1.11",
+    "vuetify": "^3.3.9",
     "winston": "^3.8.2",
     "xterm": "^5.1.0",
     "xterm-addon-fit": "^0.7.0",

@@ -8,8 +8,7 @@ import https from 'https'
 const agent = new https.Agent({
     rejectUnauthorized: false
 });
-const { glob } = require('glob')
-
+const { spawn } = require("child_process")
 const targz = require('targz');
 const rimraf = require("rimraf");
 import getSize  from 'get-folder-size'
@@ -30,7 +29,6 @@ export async function decompress_file(file, outpath) {
         const ext = path.extname(file)
         if (ext == '.tgz' || file.endsWith('tar.gz')) {
             store.logger.info("Decompress file .tgz: %s to: %s", file, outpath)
-            console.log(file, outpath )
             targz.decompress({
                 src: file,
                 dest: outpath
@@ -131,42 +129,11 @@ export async function checkExists(location, globSet) {
     })
 }
 
-// export async function removeFile(filepath, type, silentExists) {
-//     return new Promise((resolve, reject) => {
-//         fs.exists(filepath, function (exists) {
-//             if (exists) {
-//                 if (!type) {
-//                     type = "file"
-//                 }
-//                 if (type == "file") {
-//                     fs.unlink(filepath, (err) => {
-//                         if (err) {
-//                             reject(err)
-//                         }
-//                         resolve("Removed file: " + filepath)
-//                     })
-//                 } else {
-//                     rimraf(path.join(filepath), (err) => {
-//                         if (err) {
-//                             store.logger.error("%s %o", "error in folderpath", err)
-//                             reject(err)
-//                         }
-//                         resolve("Removed folder: " + filepath)
-//                     })
-//                 }
-//             } else {
-//                 silentExists ? resolve("File doesn't exist, silent exit") : reject(`Path Doesnt exist ${filepath}`)
-//             }
-//         })
-
-//     })
-// }
 export async function writeFolder(directory) {
     return new Promise<void>((resolve, reject) => {
         mkdirp(directory).then((response) => {
             resolve()
         }).catch((errmkdrir) => {
-            console.log(directory)
             store.logger.error(errmkdrir);
             reject(errmkdrir)
         })
@@ -201,6 +168,29 @@ export const  readFile = async (filepath: string, split: boolean): Promise<strin
         });
     })
 }  
+export async function checkWslExists(command) {
+    return new Promise((resolve, reject) => {
+        let process = spawn('wsl', ['which', command]);
+
+        process.stdout.on('data', (data) => {
+            // console.log(`The '${command}' command exists in WSL. Its path is:\n ${data}`);
+        });
+
+        process.stderr.on('data', (data) => {
+            // console.log(`The '${command}' command does not exist in WSL.`);
+        });
+
+        process.on('close', (code) => {
+            if (code === 0) {
+                // console.log(`Command check exited with success.`);
+                resolve(true)
+            } else {
+                // console.log(`Command check exited with failure.`);
+                resolve(false)
+            }
+        });
+    })
+}
 export async function itemType(filepath: string) {
     return new Promise((resolve, reject) => {
         fs.lstat(filepath, (err, stats) => {
@@ -215,7 +205,50 @@ export async function itemType(filepath: string) {
     })
 }
 
+export function parsePath(value: string | string[], type : string, wsl: boolean | null) {
+    // if the os is windows, make sure to replace /mnt/c, /mnt/d, etc with c:, d:, etc
+    if (wsl) {
+        // check if a list, then map otherwise just replce on the string
+        if (Array.isArray(value)) {
+            value = value.map((d) => {
+                if (d) {                    
+                    return path.resolve(d.replace(/\/mnt\/([a-z])/g, (match, p1) => `${p1.toUpperCase()}:`))
+                } else {
+                    return d
+                }
+            })
+        } else {
+            if (value) {
+                value = path.resolve(value.replace(/\/mnt\/([a-z])/g, (match, p1) => `${p1.toUpperCase()}:`))                
+            }
+        }
+    }
+    // Next, check if file or static-file, if so, then return the dirnmae
+    if (type == 'file' || type == 'static-file') {
+        if (Array.isArray(value)) {
+            return value.map((d) => {
+                return path.dirname(d)
+            })
+        }
+        else {
+            return path.dirname(value)                
+        }
 
+    } 
+    // else if the type is list-files then return the dirname of mapped array
+    else if (type == 'list-files') {
+        if (Array.isArray(value)) {
+            return value.map((d) => {
+                return path.dirname(d)
+            })
+        } else {
+            return path.dirname(value)
+        }
+    }
+    else {
+        return value
+    }
+}
 export async function getFolders(filepath) {
     return new Promise((resolve, reject) => {
         fs.readdir(filepath, (err, items) => {
@@ -225,7 +258,6 @@ export async function getFolders(filepath) {
             } else {
                 let folder_checks: any[] = [];
                 for (let i = 0; i < items.length; i++) {
-                    let element = items[i]
                     folder_checks.push(itemType(path.join(filepath, items[i])))
                 }
                 Promise.all(folder_checks).then((response) => {
@@ -255,7 +287,6 @@ export async function import_cfgs(module: string | string [], type: string) {
         if (promises_folders.length > 0) {
             let results = await Promise.allSettled(promises_folders)
             results.forEach((result: any, i) => {
-                console.log(result,i)
                 let inner_file_read = []
                 result.value.forEach((filepath: string) => {
                     try {                  

@@ -20,12 +20,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     exists: async (filePath: string) => { 
         try{
             let stats: any = await fs.statSync(filePath)
-            console.log(stats)
             // convert the stats object size  to kb, mb, or gb
             stats['size'] = bytesToSize(stats['size'])
             return stats
         } catch (err){
-            console.log(err)
             store.logger.error(err)
             return false
         }
@@ -58,16 +56,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     addVariable: (value: string) => {
         ipcRenderer.invoke('addVariable', value)
     },
+    requestFileData: async (filepath: string) => {
+        let data = await ipcRenderer.invoke('getFile', filepath)
+        return data
+    },
     requestCheckFileExists: (filepath: string)=>{
         ipcRenderer.invoke('checkFileExists', filepath) 
     }, 
     updateCurrentModule: (params: object)=>{
         ipcRenderer.invoke('updateCurrentModule', params)
     },
-    selectFile: ()=>{
-        ipcRenderer.invoke('selectFile').then((response) => {
-            return response
-        })
+    selectFile:  async ()=>{
+        let file = ipcRenderer.invoke('selectFile')
+        return file 
     }, 
     requestLibraryNames: (event, library:any)=>{
         ipcRenderer.invoke('getLibrary').then((libraryResponse) => {
@@ -81,8 +82,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     requestHistory: async ()=>{ 
         ipcRenderer.invoke('getHistory')
     },
-    requestEnv: () => {
-        ipcRenderer.invoke('fetchEnv')
+    requestEnv: async () => {
+        console.log("reeqst")
+        let data = await ipcRenderer.invoke('fetchEnv')
+        return data
     },   
     loadFile: (params: object, type: string | null)=>{
         ipcRenderer.invoke('loadFile', params, type)
@@ -148,6 +151,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getDependencies: (callback) => ipcRenderer.on('getDependencies', callback),
     getDependency: (callback) => ipcRenderer.on('getDependency', callback),
     getProcesses: (callback) => ipcRenderer.on('getProcesses', callback),
+    dockerDownloadStatus(callback) { ipcRenderer.on('dockerDownloadStatus', callback) },
     processLogs: (callback) => ipcRenderer.on('processLogs', callback),
     removedProcess: (callback) => ipcRenderer.on('removedProcess', callback),
     processStatus: (callback) => ipcRenderer.on('processStatus', callback),

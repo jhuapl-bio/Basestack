@@ -46,13 +46,33 @@ executions:
         type_install: "command" # This will bring up a console
         from: "curl -sSL https://get.docker.com/ | sh"
       - platform: "win32"
-        arch: "amd64"
+        arch: "x64"
         format: "command"
-        type_install: "command" # This will bring up a console
+        type_install: "fetch" # This will bring up a console
         from: "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe"
+  - label: Singularity
+    key: "singularity"
+    os: ["win32", "linux", "wsl2"]
+    icon: "mdi-file-cog-outline"
+    color: "primary"
+    description: Use to run singularity sifs
+    info: Requires root level permissions (Linux) or sudo within WSL2 (Windows)
+    choices:
+      - platform: "linux"
+        arch: "x64"
+        format: "command"
+        elevation: true
+        type_install: "command"  #This will download directly through Electron dl rather than curl
+        from: "bash ${supplementals}//singularity-install.sh"
+      - platform: "wsl2"
+        arch: "x64"
+        elevation: true
+        format: "command"
+        type_install: "command"  #This will download directly through Electron dl rather than curl
+        from: "bash ${supplementals}//singularity-install.sh"
   - label: Nextflow
     key: "nextflow"
-    os: ["darwin", "wsl2", "linux"]  
+    os: ["darwin", "wsl2", "linux"]   
     icon: "mdi-pipe" 
     color: "primary"  
     description: Used to run Singularity instances, enabling a non-rootful containerized approach to generating pipeline outputs with an ease of install. Alternative to Docker
@@ -70,7 +90,7 @@ executions:
         from: "sleep 1; curl -s https://get.nextflow.io | bash"
       - platform: "linux"
         arch: "amd64"
-        format: "command"
+        format: "command" 
         type_install: "command"
         from: "curl -s https://get.nextflow.io | bash"
       - platform: "linux"
@@ -78,20 +98,31 @@ executions:
         format: "command"
         type_install: "command" # This will bring up a console
         from: "curl -s https://get.nextflow.io | bash"
+      - platform: "wsl2"
+        format: "command"
+        arch: "x64" 
+        elevation: true
+        type_install: "command" # This will bring up a console
+        from: "cd; pwd; sudo apt-get -y update; sudo apt-get install -y openjdk-11-jdk; curl -s https://get.nextflow.io | bash ; chmod +xr nextflow; sudo cp nextflow /usr/bin/nextflow; "
   - label: "Test Sleeping"
-    os: "any"
+    os: ["darwin", "win32", "linux", "wsl2", "win32"]
     key: "sleep"
     icon: "mdi-sleep"
     color: "primary"
     choices:
       - from: "sleep 3; echo 'done sleeping'"
-        platform: "any"
+        platform: ["darwin", "linux", "wsl2"]
         format: "command"
         type_install: "command"
+      - from: "echo 'done sleeping'"
+        platform: ["win32"]
+        format: "command"
+        type_install: "command"
+
   - label: WSL2
     key: "wsl"
     os: [ "win32"]
-    icon: "mdi-windows"
+    icon: "mdi-monitor"
     color: "primary"
     description: Set up WSL2
     info: Windows Subsystem for Linux 2

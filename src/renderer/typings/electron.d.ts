@@ -9,7 +9,6 @@ export default interface ElectronApi {
     getFile: (filepath: string) => void, 
     getVariable: (f: object) => void,
     requestDepStatusReturn: (dep: any) => void,
-    requestEnv: (message: string) => void,
     requestLogs: () => void,
     requestLibraryNames: () => any,
     getDependenciesStatus: (dep: any) => any,

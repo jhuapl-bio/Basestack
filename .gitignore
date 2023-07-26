@@ -1,5 +1,6 @@
 yarn.lock
 C:
+.nextflow*
 .yarn*
 *.log
 Samplesheet*
@@ -28,6 +29,7 @@ src/renderer/assets/tutorial/
 !build/notarize.js
 data/dockstore
 data/logs/*
+go*.tar.gz
 data/logs
 data/test-data/*
 cromwell-input
@@ -41,4 +43,8 @@ src/system/server/dist
 client/*
 *.zip
 cromwell*
+yarn.lock
+package-lock.json
 !data/config
+tmp/*
+work/*

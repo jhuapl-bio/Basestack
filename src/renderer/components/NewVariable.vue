@@ -25,7 +25,7 @@
     <v-tooltip  
         top
     >
-        <template #activator="{ on, attrs, props }">
+        <template #activator="{   props }">
             <!-- Set the icon to the right side -->
 
             <v-icon   style="float:right" color="red-lighten-1" v-bind="props"  class="" @click="dialog = true">mdi-plus</v-icon>
@@ -36,11 +36,10 @@
   
 
 <script lang="ts">
-    import { useForm, useField } from 'vee-validate';
+    import { useForm } from 'vee-validate';
     import * as yup from 'yup';
 
     import { onMounted, ref, watch as W } from 'vue';
-import { watch } from 'original-fs';
 
     export default {
         

@@ -1,13 +1,12 @@
 <template>
     <v-list-item  class="ml-0 pl-0 pt-0 pb-0" >
        <template v-slot:subtitle>
-            {{  getInstallSubtitle(choice['type_install']) }} 
+            {{  getInstallSubtitle(choice['type_install']) }} {{ choice['type_install'] == "command" ? `Platforms: ${choice['platform']}` : '' }}
             <span v-if="status['info'] && status['info']['size'] > 0" class="text--secondary">
                 <v-spacer></v-spacer>
                 {{ formatBytes(status['info']['size'], 2) }}
             </span >
         </template>
-        
         <template v-slot:title>
                 {{ getInstalltitle(choice['format']) }}
         </template>

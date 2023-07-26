@@ -6,9 +6,9 @@ import { run } from './integration'
 import axios from 'axios'
 const { BrowserWindow } = require('electron')
 const { download } = require('electron-dl') 
-import { spawn } from 'child_process'
+import { spawn, exec } from 'child_process'
 import { installDockerImage, formatBindMounts } from './docker'
-import { writeFolder, checkExists, formatBuffer, decompress_file } from './configurations';
+import { writeFolder, checkExists, formatBuffer, decompress_file, parsePath } from './configurations';
 import * as crypto from "crypto";
 const fs = require("fs")
 // import axios, * as others from 'axios';
@@ -102,6 +102,7 @@ export class Process {
             }
         })
     }
+
     async start() {
         let findindex = store.processes.findIndex(x => x == this.id)
         if (findindex > -1) {
@@ -109,8 +110,11 @@ export class Process {
         } else {
             store.processes.push(this)
         }
-        if (this.params.type == 'module'){
-            let comm = run(this.params.command)
+        if (this.params.type == 'module') {
+            if (!this.params.wsl) {
+                this.params.platform = 'wsl2'
+            }
+            let comm = run(this.params.command, this.params.platform)
             if (!this.params.arguments){
                 this.params.arguments = []
             } 
@@ -122,48 +126,38 @@ export class Process {
             // iterate through this.params.params, check static-file, static-directory, list-files, list-directory, file, directory, mkdrip the directory if doesnt exist. If list-files, make sure to move through the list/array of things as well 
             // if the file or directory doesnt exist, create it
             // if the file or directory does exist, check if it is a static file or directory, if so, do nothing, if not, delete it and create it
-            Object.values(this.params.params).map((p:any)=>{
-                if (p['type'] == 'static-file' || p['type'] == 'static-directory'){
-                    // if static-file, check if it exists, if not, create the directory of the filepath
-                    if (p['type'] == 'static-file'){
-                        if (!fs.existsSync(path.dirname(p['value']))){
-                            fs.mkdirSync(path.dirname(p['value']))
-                        } 
-                    }
-                    else {
-                        if (!fs.existsSync(p['value'])){
-                            fs.mkdirSync(p['value'])
-                        }
-                    }
-                } else if (p['type'] == 'list-files' || p['type'] == 'list-directory'){
-                    p['value'].map((v:any)=>{
-                        if (p['type'] == 'list-files'){
-                            if (!fs.existsSync(path.dirname(v))){
-                                fs.mkdirSync(path.dirname(v))
-                            }
+            Object.values(this.params.params).map((p: any) => {
+                if (p['type'] == 'static-file' || p['type'] == 'static-directory' || p['type'] == 'list-files' || p['type'] == 'list-directory' || p['type'] == 'file' || p['type'] == 'directory') {
+                    let parseValue = parsePath(p['value'], p['type'], this.params.wsl) 
+                    try {
+                        if (Array.isArray(parseValue)) {
+                            parseValue.map((v: any) => {
+                                // if type is list directories, v only otherwise 
+                                if (!fs.existsSync((v))) {
+                                    fs.mkdirSync((v))
+                                }
+                            })
                         } else {
-                            if (!fs.existsSync(v)){
-                                fs.mkdirSync(v)
+                            if (!fs.existsSync((parseValue))) {
+                                fs.mkdirSync((parseValue))
                             }
                         }
-                    })
-                } else if (p['type'] == 'file' || p['type'] == 'directory'){
-                    if (p['type'] == 'file'){
-                        if (!fs.existsSync(path.dirname(p['value']))){
-                            fs.mkdirSync(path.dirname(p['value']))
-                        }
-                    } else {
-                        if (!fs.existsSync(p['value'])){
-                            fs.mkdirSync(p['value'])
-                        }
+                    } catch (Err) {
+                        store.logger.error(`Got error: ${Err}`);
                     }
                 }
+           
             })
             // run this.watchOutputs provig the params.outputs
             // if the process is a module, then run the command with the arguments
+            let parsedOutputs = this.params.outputs.map((output: any) => {  
+                let parsed = parsePath(output['value'], output['element'], this.params.wsl)
+                output['value'] = parsed
+            })
             this.watchOutputs(this.params.outputs)
-
+            console.log(this.params.outputs)
             let command: any[]
+            
             if(this.params.exec == 'conda'){
                 // //check if "conda run is being used"
                 command = ['conda', 'run', '-n', this.params.env, comm]
@@ -186,9 +180,14 @@ export class Process {
             await this.runCommand(command.join(" "))
             
         } else {
+            // Tjis are is for install modules
             
             if (this.params.type_install == 'command') { 
-                await this.runCommand(this.params.from)
+                if (!this.params.wsl) {
+                    this.params.platform = 'wsl2'
+                }
+                let comm = run(this.params.from, this.params.platform)
+                await this.runCommand(comm)
             } else if (this.params.type_install == 'download' || this.params.type_install == 'fetch'){
                 await this.downloadUrl(this.params.from, store.mainWindow)
             } else if (this.params.type_install == 'get' ) {
@@ -341,12 +340,21 @@ export class Process {
         })
 
     }
-    async spawnLog() {
-        const $this = this
+    followStream() {
+        
+    }
+    async spawnLog() { 
+        const $this = this 
         return new Promise<void>((resolve, reject) => {
             const $this = this
             let command = $this.status['command'] 
-            this.stream = spawn(command, { shell: true });
+            if (this.params.elevation) {
+                let cmd = `start cmd /k  ${command}  `
+                this.stream = spawn(cmd, { shell: true })
+               
+            } else {
+                this.stream = spawn(command, { shell: true });
+            }
             this.status['code'] = -1
             this.status['id'] = this.id
             this.status['error'] = []
@@ -357,8 +365,6 @@ export class Process {
                 let msg = `stdout: ${data}`
                 msg = formatBuffer(msg)
                 $this.status['logs'].unshift(msg)
-                
-            
                 store.logger.info(msg)
             });
             this.stream.stderr.on('data', (data) => {
@@ -418,24 +424,30 @@ export class Process {
         });
         this.stream = downloading
         //Send to the renderer the download status starting
-        mainWindow.webContents.send("dockerDownloadStatus", {
+        store.client.mainWindow.webContents.send("dockerDownloadStatus", {
             "type": "info",
             "message": `Downloading file now.. check toolbar for status. Please open the file when complete`
         })
         downloading.then((event) => { // At the end of the above download, send to renderer that it is done and should be executed manually 
             let filepath = event.getSavePath()
-            mainWindow.webContents.send("dockerDownloadStatus", {
+            store.client.mainWindow.webContents.send("dockerDownloadStatus", {
                 "type": "success",
                 "info": `Downloaded success to: ${filepath}. `,
-                message: "Please open the .dmg (double-click) file to extract and complete installation"
+                message: "Please open the executable (double-click) file to extract and complete installation"
             })
         })
     }
 
     runCommand = async (command: string | string[] | number[] ) => {
+        // return
         this.status['command'] = command
         this.status['logs'].unshift(command)
-        await this.spawnLog()
+        if (this.params.elevation) {
+            await this.spawnLog()
+        } else {
+            await this.spawnLog()
+
+        }
         return
     }
 

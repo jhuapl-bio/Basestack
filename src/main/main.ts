@@ -103,6 +103,15 @@ app.whenReady().then(() => {
             }
         }
     })
+    ipcMain.handle('getFile', async (event: any, filePath: string) => {
+        try {
+            let data = await fs.readFileSync(filePath, 'utf8')
+            return data
+        } catch (err: any) {
+            client.logger.error(err)
+            return null
+        }
+    })
     ipcMain.handle('fetchDependencies', async (event, message) => {
         client.mainWindow.webContents.send('getDependencies', client.dependencies.dependencies)
     }) 
@@ -110,8 +119,6 @@ app.whenReady().then(() => {
         const { filePaths } = await dialog.showOpenDialog({
             properties: ['openFile']
         })
-        console.log('selectfile')
-        client.mainWindow.webContents.send('getFile', filePaths ? filePaths[0] : null )
         return filePaths ? filePaths[0] : null
         
     }) 
@@ -178,6 +185,7 @@ app.whenReady().then(() => {
         console.log("event!")
         client.mainWindow.webContents.send('addedVariableRequestReturn', varname)
     })
+    
     ipcMain.handle('saveFile', async (event: any, data: any, type: string | null, locationDefault: string | null) => {
         // call electron savedialogsync to save file with data
         let { filePath }: any | null = await dialog.showSaveDialog({
@@ -203,14 +211,22 @@ app.whenReady().then(() => {
         }
     })
     
+    
     ipcMain.handle('fetchEnv', async (event, message) => {
-        client.mainWindow.webContents.send('watchEnv', {
+        // client.mainWindow.webContents.send('watchEnv', {
+        //     version: process.env.version,
+        //     port: 5023,
+        //     os: client.os,
+        //     logDir: store.system.logPath,
+        //     releaseNotes: client.updater.releaseNotes
+        // })
+        return {
             version: process.env.version,
             port: 5023,
             os: client.os,
             logDir: store.system.logPath,
             releaseNotes: client.updater.releaseNotes
-        })
+        }
     })
     ipcMain.handle('open-url', (event, url) => {
         client.logger.info(`opening url: ${url}`)
@@ -220,7 +236,7 @@ app.whenReady().then(() => {
     //run is imported from integration.ts file
     ipcMain.handle('run', async (event, command) => {
         client.logger.info(`running command: ${command}`)
-        let parsed_command = run(command)
+        let parsed_command = run(command, process.platform)
         console.log("parsed command", parsed_command)
     })
     ipcMain.handle('openpath', (event, url) => {
@@ -245,7 +261,7 @@ app.whenReady().then(() => {
         })
     })
     ipcMain.handle('getLibrary', () => {
-        client.logger.info(`${Object.keys(client.library.all)}, requesting a list of all available modules in the library`)
+        client.logger.info(` requesting a list of all available modules in the library`)
         sendLibrary()
     }) 
     // ///////////////

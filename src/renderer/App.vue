@@ -70,7 +70,7 @@
   			<v-container fluid >
           <Dependencies v-if="installationSelected" :env="env"></Dependencies>
           <Module v-else-if="moduleSelected &&   Object.keys(moduleSelected).length > 0" 
-              :module="moduleSelected" 
+              :module="moduleSelected" :env="env"
               :moduleIdx="moduleIdx"
               >
           </Module>
@@ -122,6 +122,7 @@ import InformationPanel from './components/Dashboard/InformationPanel.vue'
 import Dependencies from './components/Dependencies.vue'
 import Module from './components/Module.vue'
 import yaml from 'js-yaml'
+import Swal from 'sweetalert2'
 
 
 export default defineComponent({
@@ -136,30 +137,30 @@ export default defineComponent({
       return window.electronAPI.version
     }
   },
-  setup(props) {
+  setup(_props) {
     // window.electronAPI.logger(`Adding`) 
     //listen on the getlog, console log the log from the main process
-    window.electronAPI.customModule((event:any, params: {type: string, module:string, value: Object})=>{
+    window.electronAPI.customModule((_event:any, params: {type: string, module:string, value: Object})=>{
       moduleSelected.value = params.value
       selectedCatalog.value = params.value
       // selectedCatalog.value.custom = true
     })
-    window.electronAPI.success((event:any, message:string)=>{
+    window.electronAPI.success((_event:any, message:string)=>{
       snackbarMessage.message = message
       snackbarMessage.type == 'success'
       snackbar.value = true
     })
-    window.electronAPI.error((event:any, message:string)=>{
+    window.electronAPI.error((_event:any, message:string)=>{
       snackbarMessage.message = message 
       snackbarMessage.type == 'error'
       snackbar.value = true
-    })
+    }) 
     const snackbarMessage = reactive({
       type: 'success',
       message: ''
     })
     const logs = ref([])
-    const env = reactive({})
+    const env = ref({})
     const fileInputRef = ref(null)
     let snackbar = ref(null)
     const mini = ref(false)
@@ -171,17 +172,28 @@ export default defineComponent({
     const moduleSelected = ref({})
     //Set default name if you want
 
-    const name = ref('helloworld')
+    const name = ref('taxtriage')
     let installationSelected = ref(true)
 
+    const fetch_environment = async () => {
+      let envt = await window.electronAPI.requestEnv() 
+      env.value = envt  
+    }
+    window.electronAPI.dockerDownloadStatus((evt, message)=>{
+      Swal.fire({
+        position: 'center',
+        icon: (message.type ? message.type : 'info'),
+        showConfirmButton:true,
+        title:  message.message,
+        text:  message.info
+      })
 
+    })
     onMounted(() => {
       
-      window.electronAPI.libraryNames((event: any, library: any[]) => { 
+      window.electronAPI.libraryNames((_event: any, library: any[]) => { 
         libraryNames.value = library
-        console.log(moduleSelected.value)
         if ( library.length > 0 && !moduleSelected.value['name']  ) {
-          console.log("new Library names", library)
           if (name){ 
             let indx = library.findIndex((entry: any) => entry.name === name.value)
             moduleIdx.value = indx > -1 ? indx : 0
@@ -192,12 +204,10 @@ export default defineComponent({
           // installationSelected.value = false
         }
       }); 
-      // fetch_environment() 
+      
       // fetch history
       window.electronAPI.requestLibraryNames()
-      window.electronAPI.watchEnv((event: any, env: any[]) => {
-        env = env
-      }); 
+      fetch_environment()
 
       window.electronAPI.requestLibraryNames()
     }); 

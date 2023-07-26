@@ -1,10 +1,10 @@
-import { checkExists, getFiles, readFile } from "./configurations";
+import { checkExists, getFiles, readFile, checkWslExists } from "./configurations";
 const YAML = require("js-yaml") 
-var commandExists = require('command-exists');
+var commandExists = require('command-exists').sync
 var { store } = require("./store.js");
 import { ipcMain } from 'electron'
 import { Process } from './process'
-import { checkImageExists } from "./docker";
+import { checkImageExists, getImages } from "./docker";
 import { checSingularityInstanceExists } from "./singularity";
 
 import { parseConfigVariables } from "./definitions";
@@ -29,6 +29,7 @@ export class Dependency {
         this.checkingExists = false
         ipcMain.handle('installDependency', async (event: any, dep: Object) => {
             try {
+
                 this.installDependency(dep)
             } catch (err) {
                 console.error(err,"<<<<<< in install dep")
@@ -66,7 +67,8 @@ export class Dependency {
     }
     async installDependency(params: Object  ) {
         let platform = process.platform
-        let index = this.dependencies[params['type']][params['index']].os == 'any' ? 0 : this.dependencies[params['type']][params['index']].os.findIndex(x=>x == platform)
+        let index = this.dependencies[params['type']][params['index']].os == 'any' ? 0
+            : this.dependencies[params['type']][params['index']].os.findIndex(x => x == platform || (platform == 'win32' && (x== 'wsl2' || x=='wsl')))
         if (index > -1) {
             for (let key of Object.keys(this.dependencies[params['type']][params['index']].choices[params['choice']])) {
                 params[key] = this.dependencies[params['type']][params['index']].choices[params['choice']][key]
@@ -82,7 +84,7 @@ export class Dependency {
             this.sendDepUpdate(params['type'], params['index'], params['choice'] )
             
             
-        }
+        } 
         
         return 
     }
@@ -92,7 +94,8 @@ export class Dependency {
             this.dependencies[type].map(async (item: any, i: number) => {
                 item.choices.map(async (choice: Object, ix: number) => {
                     if (type == 'executions') {
-                        await commandExists(item.key, async function (err, commandExists) {
+                        if (item.key  == 'docker') {
+                            let commandExists = await getImages()
                             if (commandExists) {
                                 $this.dependencies[type][i].choices[ix].status.command = item.keys
                                 $this.dependencies[type][i].choices[ix].status.exists = commandExists
@@ -100,9 +103,30 @@ export class Dependency {
                                 $this.dependencies[type][i].choices[ix].status.command = item.key
                                 $this.dependencies[type][i].choices[ix].status.exists = false
                             }
+                        } else if (choice['platform'] == 'wsl2' || choice['platform'] == 'wsl') {
+                            let exists = await checkWslExists(item.key)
+                            if (exists) {
+                                $this.dependencies[type][i].choices[ix].status.command = item.keys
+                                $this.dependencies[type][i].choices[ix].status.exists = exists
+                            } else {
+                                $this.dependencies[type][i].choices[ix].status.command = item.key
+                                $this.dependencies[type][i].choices[ix].status.exists = false
+                            }
                             return
-
-                        })
+                        }
+                        
+                        else {
+                            let exists = await commandExists(item.key)
+                            if (exists) {
+                                $this.dependencies[type][i].choices[ix].status.command = item.keys
+                                $this.dependencies[type][i].choices[ix].status.exists = exists
+                            } else {
+                                $this.dependencies[type][i].choices[ix].status.command = item.key
+                                $this.dependencies[type][i].choices[ix].status.exists = false
+                            }
+                            return
+                        }
+                        
                     } 
                     else if (type == 'images') {
                         let results: Object = {
@@ -123,7 +147,7 @@ export class Dependency {
                             try{
                                 results = await checkImageExists(choice['target'])
                             } catch (err){ 
-                                store.logger.error(err)
+                                // store.logger.error(err)
                             }
                             try {
                                 $this.dependencies[type][i].choices[ix].status.info = results
@@ -190,17 +214,18 @@ export class Dependency {
                                     yamldata[key].map((value) => {
                                         if (value.choices) {
                                             const choicesd = value.choices.reduce(function (a, x, i) {
-                                                let pushable = (  x.arch == 'any' || !x.arch || (Array.isArray(x.arch) ?
-                                                    (x.arch.findIndex(y => y == process.arch)) :
-                                                    (x.arch === process.arch))
-                                                    &&
-                                                    (Array.isArray(x.platform) ?
-                                                        (x.platform.findIndex(y => y == process.platform)) :
-                                                        (x.platform === process.platform && x.arch == process.arch)) ||
+                                                let pushablearch = (  x.arch == 'any' || !x.arch || (Array.isArray(x.arch) ?
+                                                    (!x.arch || x.arch == 'any' ? true : x.arch.findIndex(y => y == process.arch)) :
+                                                    (x.arch === process.arch)))
+                                                let pushableplatform = (Array.isArray(x.platform) ?
+                                                        (x.platform.findIndex(y => y == process.platform || (process.platform == 'win32' && (y== 'wsl2' || y=='wsl')))) :
+                                                        ( ( x.platform === process.platform) || (x.platform =='wsl2' && process.platform == 'win32') )) ||
                                                     x.platform == 'any' 
-                                                )
+                                                
+                                                let pushable = (pushablearch && pushableplatform)
+                                                console.log(key, value.key, process.platform, process.arch, x.platform, pushablearch, pushableplatform)
 
-                                                if (pushable) {
+                                                if (pushable) { 
                                                     a.push(i);
                                                 }
                                                         

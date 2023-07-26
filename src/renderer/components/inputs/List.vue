@@ -31,6 +31,10 @@
          type: String, 
          default: ""
        },
+       data: {
+         type: Object,
+         default: () => { return {} }
+       },
        editMode: {
          type: Boolean, 
          default: false

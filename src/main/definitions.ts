@@ -12,20 +12,20 @@ import path from "path"
 
 export function parseConfigVariables(data: string, config: any){ 
   if (process.platform == 'win32') { // If this is a windows machine, you need to remove the double \\ in paths!
-    
     config.writePath = config.writePath.replace(/\\/g, "/")
     config.resourcePath = config.resourcePath.replace(/\\/g, "/")
     config.configPath = config.configPath.replace(/\\/g, "/")
     // config.uploadPath = config.uploadPath.replace(/\\/g, "/")
   }
-  console.log(data)
   // replace the ${} store systems to the current system's setup
 	data = data.replace(/\$\{writePath\}/g, config.writePath) // where custom user data is like databases, output files, etc
 	data = data.replace(/\$\{configPath\}/g, config.configPath) // constant, non editable packaged files location
 	data = data.replace(/\$\{uploadPath\}/g, config.uploadPath) // where files can be uploaded and shared across teh system
-	data = data.replace(/\$\{resourcePath\}/g, config.resourcePath) // non editable path, like config path but higher up
-	data = data.replace(/\$\{dependencies\}/g, path.join(config.writePath, "dependencies")) // non editable path, like config path but higher up
-	data = data.replace(/\$HOME/g, config.homedir ) // HOME directory of machien
+  data = data.replace(/\$\{resourcePath\}/g, config.resourcePath) // non editable path, like config path but higher up
+  data = data.replace(/\$\{supplementals\}/g, config.supplementals) // non editable path, like config path but higher up
+	data = data.replace(/\$\{dependencies\}/g, path.join(config.resourcePath, "dependencies").replace(/\\/g, "/")) // non editable path, like config path but higher up
+  data = data.replace(/\$\{dependenciesWritePath\}/g, config.dependenciesWritePath) // non editable path, like config path but higher up
+	data = data.replace(/\$HOME/g, config.homedir ) // HOME directory of machine
 	data= YAML.load(data)   // load info as yaml string into object
 	return data    
 } 
@@ -36,7 +36,6 @@ export var importDependencies  = async function(config){
     const doc = YAML.load(fs.readFileSync(config.dependenciesPath, 'utf8'));
     return doc
   } catch (e) {
-    console.log(e);
     return null
   }
 }

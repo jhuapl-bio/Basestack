@@ -13,7 +13,7 @@ if (!process.env.PWD) {
 let writePath;
 let resourcePath;
 let dataPath;
-if (process.env.NODE_ENV != "development"){
+if (process.env.NODE_ENV != "development"){ 
 	dataPath = path.join(process.env.APPDATA, "Basestack", "data").replace(/\\/g, '/')
 	writePath = path.join(dataPath, 'userdata').replace(/\\/g, '/')
 	resourcePath = path.join(process.env.resourcesPath, 'data').replace(/\\/g, '/')
@@ -44,15 +44,17 @@ var store = {
 		configFile: path.resolve(path.join(resourcePath, "config", "app", "meta.yaml")).replace(/\\/g, '/'),
 		configPath: path.resolve(path.join(resourcePath, "config", 'app')).replace(/\\/g, '/'),
 		localModulesPath: [path.resolve(path.join(resourcePath, "config", 'server', 'config', 'modules')).replace(/\\/g, '/')],
+		supplementals: [path.resolve(path.join(resourcePath, "config", 'server', 'config', 'supplementals')).replace(/\\/g, '/')],
 		savedModulesPath: path.resolve(path.join(writePath, "data", 'imports', 'modules')).replace(/\\/g, '/'),
 		customModulesPath: path.resolve(path.join(writePath, "data", 'custom', 'modules')).replace(/\\/g, '/'),
-		dependencies: [path.resolve(path.join(resourcePath, "config", 'server', 'config', 'dependencies')).replace(/\\/g, '/') ],
-		logPath: path.join(writePath, "logs").replace(/\\/g, '/'),
+		dependencies: [path.resolve(path.join(resourcePath, "config", 'server', 'config', 'dependencies')).replace(/\\/g, '/')],
+		dependenciesWritePath: [path.resolve(path.join(writePath, "dependencies")).replace(/\\/g, '/')],
+		logPath: path.join(writePath, "logs") ,
 		dependenciesPath: path.resolve(path.join(resourcePath, "config", "dependencies.yaml")).replace(/\\/g, '/'),
 		logs: {
-			docker: path.resolve(path.join(writePath, "logs", "docker.log")).replace(/\\/g, '/'),
-			error: path.resolve(path.join(writePath, "logs", "basestackError.log")).replace(/\\/g, '/'),
-			info: path.resolve(path.join(writePath, "logs", "basestack.log")).replace(/\\/g, '/'),
+			docker: path.resolve(path.join(writePath, "logs", "docker.log")) ,
+			error: path.resolve(path.join(writePath, "logs", "basestackError.log")) ,
+			info: path.resolve(path.join(writePath, "logs", "basestack.log")) ,
 		},	
 		processes: [],
 		history: [],

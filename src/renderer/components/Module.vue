@@ -14,6 +14,7 @@
         item-title="label"
         :return-object="true"
     /> 
+    <v-switch v-if="$props.env && $props.env.os == 'win32'" v-model="enableWsl" :label="enableWsl ? 'Run via WSL2' : 'Windows Native Command'" />
     <Requirements 
         :choiceIdx="selectedChoiceIndex" 
         v-if="selectedChoice && selectedChoice.requirements" 
@@ -39,7 +40,7 @@
         <v-tooltip
             top
         >
-            <template #activator="{ on, attrs, props }">
+            <template #activator="{   props }">
                 <v-btn icon @click="exportYAML" class="mx-4" color="primary"   v-bind="props"  > 
                     <v-icon>mdi-file-export-outline</v-icon>
                 </v-btn>
@@ -53,7 +54,7 @@
             <v-tooltip
                 top
             >
-                <template #activator="{ on, attrs, props }">
+                <template #activator="{   props }">
                     <v-btn  icon @click="run" class="mx-4"  v-bind="props"  color="purple-lighten-2" >
                         <v-icon >mdi-play-circle-outline</v-icon>
                     </v-btn>
@@ -77,7 +78,7 @@
                     v-if="variable.custom" 
                     location="top"
                 >  
-                    <template #activator="{ on, attrs, props }">
+                    <template #activator="{ props }">
                         <v-icon class="clear-badge  lighten-4" color="gray" @click="deleteVariable(variable.key)"    v-bind="props"  size="x-small">mdi-minus</v-icon>
                      </template>
                     <span>Delete Variable</span>
@@ -85,6 +86,7 @@
                 <span>{{variable.label ? variable.label : variable.key}}</span>
                 <component  
                     :is="components[variable.element]" 
+                    :data="variable.data"
                     :variable="moduleVariables[variable.key]"
                     :default="selectedVariables[idx].target"
                     :editMode="editMode"
@@ -97,7 +99,7 @@
                     v-if="variable.info" 
                     location="top"
                 >
-                    <template #activator="{ on, attrs, props }">
+                    <template #activator="{  props }">
                         <v-icon class="info-badge" color="info"     v-bind="props"  small>mdi-information-box</v-icon>
                      </template>
                     <span>{{  variable.info }}</span>
@@ -176,6 +178,7 @@ import File from './inputs/File.vue';
 import List from './inputs/List.vue'
 import Outputs from './Outputs.vue';
 import Requirements from './Requirements.vue'
+import Spreadsheet from './inputs/Spreadsheet.vue';
 export default {
     props: {
         module: {
@@ -185,24 +188,31 @@ export default {
         moduleIdx: {
             type: Number,
             required: true
+        },
+        env: {
+            type: [Object, null],
+            default: null
         }
     },
     components: {
-        NewVariable,
+        NewVariable: markRaw(NewVariable),
         String: markRaw(String),
         File: markRaw(File), 
         List: markRaw(List),
         Static: markRaw(Static),
-        Outputs,
-        Requirements
+        Spreadsheet: markRaw(Spreadsheet),
+        Outputs: markRaw(Outputs),
+        Requirements: markRaw(Requirements),
     },
     setup(props) {
         const originalChoice = ref(null);
         let command = ref(null);
+        let enableWsl = ref(false)
         const components = reactive({
             "file": File, 
             "string": String,
             // "number": Number,
+            "spreadsheet": Spreadsheet,
             "list": List,
             "list-directory": List,
             "list-file": List,
@@ -219,7 +229,7 @@ export default {
         const selectedVariables = ref([])
         const selectedChoice = shallowRef(null);
         const moduleVariables = reactive({});
-        const editMode = ref(true);
+        const editMode = ref(false);
         const outputVariables = ref([])
         const selectedChoiceIndex = ref(null)
       
@@ -262,7 +272,53 @@ export default {
                 (choice) => choice ===  selectedChoice.value
             );
         }
+        
         let oldMatchedItems = ref([]); // initialize oldMatchedItems
+        watch(() => enableWsl, (newValue, oldValue) => {
+            // if enablewsl is true, then iterate through all files, directories, etc and convert C:, F:, E:, etc to /mnt/c, /mnt/f, /mnt/e, etc, the drive must be lowercase in /mnt/c from C:, and convert \ to /
+            if (newValue.value){
+                Object.keys(moduleVariables).forEach((key) => {
+                    if (moduleVariables[key]) {
+                        try {
+                            moduleVariables[key] = moduleVariables[key].replace(/\\/g, "/")
+                            moduleVariables[key] = moduleVariables[key].replace(/([A-Z]):/g, (match, p1) => `/mnt/${p1.toLowerCase()}`)
+                        } catch (err) {
+                            console.log(err)
+                        }
+                    }
+                })
+                updateCommand()
+                let idxwsl = { key: "wsl", type: "executions" }
+                let idx = selectedChoice.value.requirements ? selectedChoice.value.requirements.findIndex((f: any) => f.key == idxwsl.key) : -1
+                if (idx == -1) {
+                    selectedChoice.value.requirements = [idxwsl]
+                } else {
+                    selectedChoice.value.requirements[idx] = idxwsl
+                }
+            } else {
+                Object.keys(moduleVariables).forEach((key) => {
+                    if (moduleVariables[key]) {
+                        try {
+                            moduleVariables[key] = moduleVariables[key].replace(/\\/g, "/")
+                            moduleVariables[key] = moduleVariables[key].replace(/\/mnt\/([a-z])/g, (match, p1) => `${p1.toUpperCase()}:`)
+                        } catch (err) {
+                            console.log(err)
+                        }
+                        
+                    }
+                })
+                updateCommand()
+                let idx = selectedChoice.value.requirements ? selectedChoice.value.requirements.findIndex((f: any) => f.key == 'wsl') : -1
+                if (idx > -1) {
+                    selectedChoice.value.requirements.splice(idx, 1)                  
+                }
+                
+            }
+            
+            
+        }, {deep:true})
+
+
         watch (() => editMode, (newValue, oldValue )=>{
             // validate all of the variables, iterate through them, check if file or not 
             if (!editMode.value){
@@ -307,7 +363,6 @@ export default {
                     newMatchedItems.forEach(newVariable => {
                         // get the index variable of selectedChoices.variables
                         let idx = selectedVariables.value.findIndex((variable: any) => variable.key == newVariable  )
-                        console.log(newVariable, idx)
                         // if idx > -1 then it exists and ignore, otherwise add it to the selectedVariables with window.electronAPI.addedVariableRequest(newVariable)
                         if (idx == -1 ){
                             if (!oldMatchedItems.value.includes(newVariable) && idx == -1) {
@@ -338,8 +393,8 @@ export default {
         watch(() => selectedChoice , (newValue, oldValue) => {
             let index = props.module.choices.findIndex((choice) => choice ===  newValue.value)
             selectedChoiceIndex.value = index
+            
             setOutputVariables()
-            console.log("changed,")
             checkNewVariables()
             updateSelectedChoiceIndex()
         }, {deep: true});
@@ -358,11 +413,11 @@ export default {
         }, {deep: true});
         // make a reset feature that onmounted used and any time the module changes that resets things to the first choice from selectedChoice options 
         const refresh = () => {
-            // console.log(props.module.choices)
             if (Object.keys(props.module).length >0  && props.module.choices.length > 0) {
                 selectedChoice.value = _.cloneDeep(props.module.choices[props.module.defaultchoice ? props.module.defaultchoice : 0])
                 originalChoice.value = _.cloneDeep(selectedChoice.value);
                 selectedVariables.value = _.cloneDeep(props.module.variables)
+                
                 command.value = selectedChoice.value.command
                 if (selectedVariables.value){
                     selectedVariables.value.map((variable: any) => {
@@ -406,7 +461,6 @@ export default {
             })
             // check if all vlaidation states are okay, if not then return swal alert message 
             let validation = Object.values(validationStates).filter((f: any) => f !== true)
-            console.log(validation)
             // if (validation.length > 0){
             //     Swal.fire({
             //         title: "Invalid Variables",
@@ -423,6 +477,7 @@ export default {
                     outputs: toRaw(outputVariables.value),
                     'pre-execute' : toRaw(selectedChoice.value['pre-execute']),
                     env: selectedChoice.value.env,
+                    wsl: enableWsl.value,
                     exec: selectedChoice.value.exec,
                     type: "module"
                 });
@@ -435,7 +490,6 @@ export default {
                 
         };
         window.electronAPI.addedVariable((event, varr)=>{
-            console.log(selectedVariables.value)
             let indx = selectedVariables.value.findIndex((variable: any) => variable.key == varr.key)
             varr.custom = true
             if (indx == -1) {
@@ -444,7 +498,6 @@ export default {
             else {
                 selectedVariables.value[indx] = varr
             }
-            console.log(selectedVariables,"<<<<<<")
             // changeVariable(varr.key, varr.value, false);
         })
         const deleteVariable = (key: string) => {
@@ -517,15 +570,15 @@ export default {
             }
             
             // // Interpolation
-            selectedVariables.value.filter((f: object) => {
-                return f["key"] !== variableKey;
-            }).forEach((variable, indx) => {
-                // add this change to the history, send it to main process to be saved
-                let interpolatedValue = resolveShorthand(variable, {
-                    ...moduleVariables
-                });
-                moduleVariables[variable.key] = interpolatedValue.target;
-            });
+            // selectedVariables.value.filter((f: object) => {
+            //     return f["key"] !== variableKey;
+            // }).forEach((variable, indx) => {
+            //     // add this change to the history, send it to main process to be saved
+            //     let interpolatedValue = resolveShorthand(variable, {
+            //         ...moduleVariables
+            //     });
+            //     moduleVariables[variable.key] = interpolatedValue.target;
+            // });
             setOutputVariables()
             
             
@@ -689,6 +742,7 @@ export default {
             choices: props.module.choices,
             selectedChoice,
             selectedItem,
+            enableWsl,
             updateBaseCommand,
             selectedVariables,
             components,

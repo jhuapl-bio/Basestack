@@ -1,6 +1,7 @@
 <template>
    <v-list dense outlined>
       <v-list-item v-for="(dependency, index) in dependencies" :key="index">
+        <v-list-item-title>{{ dependency.key }}</v-list-item-title>
         <Dep
             :choice="dependency.choices[dependency.choiceidx]"
             :kt="dependency.type"
@@ -37,7 +38,6 @@
         
         
         ws(props.requirements, (newVal: any) => {
-                
                 window.electronAPI.requestDependenciesInfo(toRaw(newVal))
         }, {deep:true})
 
@@ -47,7 +47,6 @@
             
         onMounted(async () => {
             window.electronAPI.requestDependenciesInfo(toRaw(props.requirements))
-            console.log(props.requirements)
             window.electronAPI.getDependenciesStatus((event: any, data: any) => {
                 // check if the dependency is in list of dependneices with key as index, if not push else update
                 let found = false

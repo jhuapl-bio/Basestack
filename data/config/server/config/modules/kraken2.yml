@@ -2,7 +2,7 @@
   basestack_released: 2
   supported: 2.1.1 
   schema_version: 1   
-  title: TaxTriage
+  title: Kraken2
   defaultchoice: 1
   date_added: '2022-05-06T11:40:13.131Z'
   url: https://ccb.jhu.edu/software/kraken2/

@@ -22,22 +22,26 @@
    export default {
      name: "String",
      props: {
-       variable: {
-         type: String,
-         default: "",
-       },
-       default: {
-         type: String, 
-         default: ""
-       },
-       editMode: {
-         type: Boolean, 
-         default: false
-       },
-       choices: {
-        type: Array, 
-        required: false
+      data: {
+        type: Object,
+        default: () => { return {} }
       },
+      variable: {
+        type: String,
+        default: "",
+      },
+      default: {
+        type: String, 
+        default: ""
+      },
+      editMode: {
+        type: Boolean, 
+        default: false
+      },
+      choices: {
+      type: Array, 
+      required: false
+    },
        
      },
      setup(props, { emit }) {
@@ -63,28 +67,20 @@
              }
           }) 
           const openFileDialog = async () => {
-            console.log("openfiledialog")
-            console.log(window)
-            window['electronAPI'].selectFile();
-            window['electronAPI'].sendFile((event: any, filePath: any) => {
-                // Set the file path
-                if (filePath) {
-                    // handleFileSelection(key, filePath);
-                    emit("update", filePath);
+            let filePath = await window['electronAPI'].selectFile();
+            if (filePath) {
+              // handleFileSelection(key, filePath);
+              emit("update", filePath);
 
-                }
-            });
+            }
+       
         };
         const clearInput = (key: string) => {
             props.editMode  ? defaultValue.value = '' : value.value = ''
-            // changeVariable(key, null, false);
         };
         const onDrop = ( event: DragEvent) => {
             const filePath = event.dataTransfer?.files[0]['path'];
-            console.log(filePath)
-            // if (filePath) {
-            //     handleFileSelection(key, filePath);
-            // }
+            emit("update", filePath)
         };
          
          onMounted(() => {

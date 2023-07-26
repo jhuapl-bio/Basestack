@@ -25,19 +25,22 @@ export function formatBindMounts(paths: object[]) {
 
 export function getImages() {
     let results = []
-    const ls = spawn(`docker image inspect `, { shell: true });
+    return new Promise<any>((resolve, reject) => {
+        const ls = spawn(`docker images `, { shell: true });
 
-    ls.stdout.on('data', (data) => {
-        console.log(`stdout: ${data}`);
-    });
+        ls.stdout.on('data', (data) => {
+            // console.log(`stdout: ${data}`);
+        });
 
-    ls.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
-    });
+        ls.stderr.on('data', (data) => {
+            // console.error(`stderr: ${data}`);
+        });
 
-    ls.on('close', (code) => {
-        console.log(`child process exited with code ${code}`);
-    });
+        ls.on('close', (code) => {
+            // console.log(`child process exited with code ${code}`);
+            resolve(code == 0 ? true : false)
+        });
+    })
 }
 export async function installDockerImage(image: string) {
     return new Promise<Object>((resolve, reject) => {
@@ -58,7 +61,7 @@ export async function checkImageExists(image: string) {
         });
 
         ls.stderr.on('data', (data) => {
-            console.error(`stderr: ${data}`);
+            // console.error(`stderr: ${data}`);
         });
 
         ls.on('close', (code) => { 

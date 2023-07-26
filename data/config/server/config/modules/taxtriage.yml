@@ -15,10 +15,92 @@
     - report
   variables:
     - key: "samplesheet"
-      element: "file"
+      element: "spreadsheet"
       label: "Input Samplesheet"
       info: "Samplesheet example"
       pattern: '.*.csv'
+      data:
+        - key: sample
+          label: "Sample"
+          info: "Sample name"
+          type: "string"
+        - key: fastq_1
+          label: "Fastq1"
+          info: "Fastq1 file"
+          type: "file"
+          pattern: '.*.fastq'
+        - key: fastq_2
+          label: "Fastq2"
+          info: "Fastq2 file"
+          type: "file"
+          optional: True
+          pattern: '.*.fastq'
+        - key: barcode
+          label: "Barcode"
+          info: "Barcode"
+          type: "boolean"
+          optional: True
+        - key: platform
+          label: "Platform"
+          choices: ['ILLUMINA', 'OXFORD']
+          info: "Platform"
+          type: "string" 
+          optional: True
+        - key: single_end
+          label: "Single End"
+          info: "Single End"
+          type: "boolean"
+          optional: True
+        - key: trim
+          label: "Trim"
+          info: "Trim"
+          type: "boolean"
+          optional: True
+        - key: sequencing_summary
+          label: "Sequencing Summary"
+          info: "Sequencing Summary"
+          type: "file"
+          optional: True
+          pattern: '.*sequencing.*summary.*.txt'
+        - key: from
+          label: "From"
+          info: "From"
+          type: "directory"
+          optional: True
+    - key: "profile" 
+      element: "string"
+      label: "Singularity or Docker"
+      info: "Which containerized approach do you want?"
+      target: "singularity"
+      choices: [
+        "singularity",
+        "docker"
+      ]
+    - key: "revision" 
+      element: "string"
+      label: "Default is main (bleeding edge). Or choose stable for most up to date stable version"
+      info: "Branch/version you want to use"
+      target: "main"
+    - key: "db" 
+      element: "list-directory"
+      output: False
+      label: "Kraken2 database"
+      info: "Kraken2 database, must contain k2d file(s)"
+      choices: [
+        "${dependenciesWritePath}/files/flukraken2",
+        "${dependenciesWritePath}/files/minikraken_8GB_202003"
+      ]
+      target: null
+    - key: "cpu_count" 
+      element: "number"
+      label: "Maximum CPU"
+      info: Max cpu to use"
+      target: 3
+    - key: "max_memory" 
+      element: "number"
+      label: "Maximum RAM"
+      info: Max RAM, heavily dependent on the database in question"
+      target: 10
     - key: "outputreport" 
       element: "static-file"
       pattern: [
@@ -32,8 +114,16 @@
   choices: 
     - key: "Native"
       label: "Native"
-      exec: "native" 
-      command: "
-        echo   \"%$samplesheet%\"   
-      "    
+      exec: "native"
+      requirements:
+        - key: "nextflow"
+          type: "executions"
+        - key: "flukraken2"
+          type: "files"
+      env: "base"
+      command: " cd   ; nextflow run https://github.com/jhuapl-bio/taxtriage -r %$revision%
+        --input  \"%$samplesheet%\" 
+        --db \"%$db%\"  --skip_assembly 
+        --outdir %directory($samplesheet)%/tmp --max_memory %$max_memory%GB --max_cpus %$cpu_count%  --skip_plots 
+        -profile %$profile%  -resume --demux --remove_taxids \"9606 9606\"  "    
     
