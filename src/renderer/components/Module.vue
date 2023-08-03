@@ -87,6 +87,7 @@
                 <component  
                     :is="components[variable.element]" 
                     :data="variable.data"
+                    :params="variable"
                     :variable="moduleVariables[variable.key]"
                     :default="selectedVariables[idx].target"
                     :editMode="editMode"
@@ -171,12 +172,13 @@ import { ref, shallowRef, toRaw, onMounted, watch, markRaw, reactive, computed }
 import _ from 'lodash';
 import resolveShorthand  from '../controllers/interpolate'
 import NewVariable from './NewVariable.vue';
-import * as yaml from 'js-yaml';
 import String from './inputs/String.vue';
 import Static from './inputs/Static.vue'
 import File from './inputs/File.vue';
 import List from './inputs/List.vue'
 import Outputs from './Outputs.vue';
+import Num from './inputs/Num.vue'
+import Checkbox from './inputs/Checkbox.vue';
 import Requirements from './Requirements.vue'
 import Spreadsheet from './inputs/Spreadsheet.vue';
 export default {
@@ -202,6 +204,8 @@ export default {
         Static: markRaw(Static),
         Spreadsheet: markRaw(Spreadsheet),
         Outputs: markRaw(Outputs),
+        Num: markRaw(Num),
+        Checkbox: markRaw(Checkbox),
         Requirements: markRaw(Requirements),
     },
     setup(props) {
@@ -211,7 +215,7 @@ export default {
         const components = reactive({
             "file": File, 
             "string": String,
-            // "number": Number,
+            "number": Num,
             "spreadsheet": Spreadsheet,
             "list": List,
             "list-directory": List,
@@ -219,7 +223,7 @@ export default {
             "static": Static,
             "static-file": Static,
             "static-directory": Static,
-            // "checkbox": Checkbox, 
+            "checkbox": Checkbox, 
             // "files": Files,
             // "dir": Dir,
         })
@@ -337,10 +341,9 @@ export default {
             }
         }, {deep: true})
         const setOutputVariables = () => {
-            let variables = []
+            let variables = [] 
             selectedVariables.value = _.cloneDeep(props.module.variables)
             if (props.module.variables){
-                console.log(props.module.variables)
                 props.module.variables.forEach((variable: any) => {
                     if (variable.output){
                         variables.push({
@@ -367,8 +370,7 @@ export default {
                         // if idx > -1 then it exists and ignore, otherwise add it to the selectedVariables with window.electronAPI.addedVariableRequest(newVariable)
                         if (idx == -1 ){
                             if (!oldMatchedItems.value.includes(newVariable) && idx == -1) {
-                                console.log(newVariable,"new var added")
-                                window.electronAPI.addedVariableRequest(newVariable)
+                                 window.electronAPI.addedVariableRequest(newVariable)
                                 // moduleVariables[newVariable] = null;
                                 // recordhistory(newVariable, "variable");
                             }
@@ -550,6 +552,7 @@ export default {
             if (!ignoreHistory) {
                 recordhistory(variableKey, "variable", newValue);
             }
+            console.log(variableKey, newValue, ignoreHistory)
             if (editMode.value){
                 selectedVariables.value[variableIndex].target = newValue;
                 varr.target = newValue

@@ -62,6 +62,11 @@ export default {
       type: Object,
       default: () => { return {} }
     },
+    params: {
+      type: Object,
+      required: true,
+      default: () => { return {} }
+    },
     default: {
       type: String, 
       default: ''

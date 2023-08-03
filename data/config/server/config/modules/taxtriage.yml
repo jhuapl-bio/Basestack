@@ -68,10 +68,10 @@
           type: "directory"
           optional: True
     - key: "profile" 
-      element: "string"
+      element: "list"
       label: "Singularity or Docker"
       info: "Which containerized approach do you want?"
-      target: "singularity"
+      target: "docker"
       choices: [
         "singularity",
         "docker"
@@ -96,6 +96,14 @@
       label: "Maximum CPU"
       info: Max cpu to use"
       target: 3
+      step: 0.2
+    # - key: "low_memory" 
+    #   element: "checkbox"
+    #   label: "Low Memory Mode"
+    #   info: Dont load the database into memory
+    #   target: null
+    #   if: "--low_memory"
+    #   default: true
     - key: "max_memory" 
       element: "number"
       label: "Maximum RAM"
@@ -120,7 +128,7 @@
       env: "base"
       command: " cd   ; nextflow run https://github.com/jhuapl-bio/taxtriage -r %$revision%
         --input  \"%$samplesheet%\" 
-        --db \"%$db%\"  --skip_assembly 
+        --db \"%$db%\"  --skip_assembly  
         --outdir %directory($samplesheet)%/tmp --max_memory %$max_memory%GB --max_cpus %$cpu_count%  --skip_plots 
         -profile %$profile%  -resume --demux --remove_taxids \"9606 9606\"  "    
     

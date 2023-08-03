@@ -40,7 +40,11 @@
         type: Object,
         default: () => { return {} }
       },
-       
+      params: {
+        type: Object,
+        required: true,
+        default: () => { return {} }
+      },
      },
      setup(props, { emit }) {
          const value = shallowRef(props.variable);

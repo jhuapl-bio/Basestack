@@ -30,6 +30,11 @@
         type: String, 
         default: ""
       },
+      params: {
+        type: Object,
+        required: true,
+        default: () => { return {} }
+      },
       editMode: {
         type: Boolean, 
         default: false

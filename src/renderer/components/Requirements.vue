@@ -35,11 +35,11 @@
         },
         setup(props, { emit }) {
         const dependencies = ref([]);
-        
-        
-        ws(props.requirements, (newVal: any) => {
-                window.electronAPI.requestDependenciesInfo(toRaw(newVal))
-        }, {deep:true})
+
+        window.electronAPI.requestDependenciesInfo(toRaw(props.requirements))
+        // ws(props.requirements, (newVal: any) => {
+        //     window.electronAPI.requestDependenciesInfo(toRaw(newVal))
+        // }, {deep:true})
 
         window.electronAPI.sendRequirementInfo((event: any, data: any) => {
             dependencies.value = data

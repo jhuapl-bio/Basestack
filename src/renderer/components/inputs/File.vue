@@ -22,6 +22,11 @@
    export default {
      name: "String",
      props: {
+      params: {
+        type: Object,
+        required: true,
+        default: () => { return {} }
+      },
       data: {
         type: Object,
         default: () => { return {} }

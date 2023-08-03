@@ -38,7 +38,12 @@
        editMode: {
          type: Boolean, 
          default: false
-       }
+       },
+       params: {
+          type: Object,
+          required: true,
+          default: () => { return {} }
+        },
        
      },
      setup(props, { emit }) {
