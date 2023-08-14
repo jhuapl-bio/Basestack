@@ -7,9 +7,10 @@
   - # **********************************************************************
   -->
 <template>
+    {{ containerHeight }}
     <div
         class="mx-auto"
-        style="height: 80vh; overflow-y: auto;"
+        :style="{ height: containerHeight, 'overflow-y': 'auto'}"
     >
         <v-toolbar>
             <v-toolbar-title class="text-h6">
@@ -120,6 +121,11 @@ export default defineComponent({
         }
     },
     props: {
+        containerHeight: {
+            type: [String, Number],
+            required: false,
+            default: '200px'
+        },
         env: {
             type: Object, 
             required: true

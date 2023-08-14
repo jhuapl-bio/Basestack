@@ -1,5 +1,5 @@
 <template>
-  <div  style=" height: 100%; " class="mx-2 my-2 console" id="terminal">
+  <div  :style="{'height': panelHeight} " class="mx-2 my-2 console" id="terminal">
     <v-alert type="info">
       <span class="font-weight-bold">Integrated Terminal</span>
     </v-alert>
@@ -62,6 +62,10 @@ export default defineComponent({
     terminal: {
       type: Object,
       default: {}
+    },
+    panelHeight: {
+      type: [String, Number],
+      default: 500
     },
     cols: {
       type: Number,

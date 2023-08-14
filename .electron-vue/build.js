@@ -14,10 +14,12 @@ function buildRenderer() {
 
 function buildMain() {
     const mainPath = Path.join(__dirname, '..', 'src', 'main');
-    return compileTs(mainPath);
+    const toDir = Path.join(__dirname, '..', 'dist', 'electron', 'main');
+    console.log(Chalk.blueBright('.......'))
+    return compileTs(mainPath, toDir);
 }
 
-FileSystem.rmSync(Path.join(__dirname, '..', 'build'), {
+FileSystem.rmSync(Path.join(__dirname, '..', 'dist', 'electron'), {
     recursive: true,
     force: true,
 })

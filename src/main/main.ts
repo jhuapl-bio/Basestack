@@ -1,15 +1,51 @@
 import { app, dialog, BrowserWindow, ipcMain, IpcRenderer, session, shell, ipcRenderer } from 'electron';
-import { Client } from './client'
-import { define_configuration, importDependencies } from './definitions';
-import { Process } from './process';
-var { store } = require("./store.js");
 import fs from "fs"
 import {join} from 'path';
 
 import YAML from "yaml"
 import path from "path"
-import { run } from './integration'
+const {autoUpdater} = require("electron-updater");
+
 app.whenReady().then(() => {            
+    if (!process.env.APPDATA){ 
+        process.env.APPDATA = app.getPath('userData')
+        process.env.outfff = "DDDD"
+    }
+    console.log("___________________________________", process.env.APPDATA)
+    //Set path where all non-editable files/folders are located
+    process.env.resourcesPath = process.resourcesPath
+
+    const run = require("./integration")
+    const define_configuration = require('./definitions').define_configuration
+    const importDependencies = require('./definitions').importDependencies
+    const Process = require('./process').Process
+    const { Client } = require("./client")
+
+    // If in prod move, setup the auto updater to set the current version of basestack to render
+    let releaseNotes;
+    if (process.env.NODE_ENV !== 'development') {
+        global.__static = path.join(__dirname, '/static').replace(/\\/g, '\\\\')
+        process.env.version_basestack = autoUpdater.currentVersion
+        releaseNotes = {
+            releaseNotes: "None Available",
+            version: "Not Available",
+            releaseDate: "NA"
+        };
+        } else {
+        // If in dev mode, skip versioning steps
+        process.env.version_basestack = "Development"
+        releaseNotes = {
+            releaseNotes: "None Available",
+            version: "Development",
+            releaseDate: "NA"
+        };
+    }
+    console.log(process.resourcesPath, ";;;;;;")
+    
+
+
+
+    var { store } = require("./store.js");
 
     const client = new Client(app) 
     store.client = client
@@ -245,7 +281,7 @@ app.whenReady().then(() => {
     })
     ipcMain.handle('requestProcesses', (event, url) => {
         client.logger.info(`fetching processes ran or currently running`)
-        let processes = store.processes.map((process: Process) => {
+        let processes = store.processes.map((process: any) => {
             return process.status
         })
         client.mainWindow.webContents.send('getProcesses', processes)
@@ -348,7 +384,7 @@ function createWindow () {
       mainWindow.loadURL(`http://localhost:${rendererPort}`);
     }
     else {
-      mainWindow.loadFile(join(app.getAppPath(), 'renderer', 'index.html'));
+      mainWindow.loadFile(join(app.getAppPath(), 'dist', 'electron', 'renderer', 'index.html'));
     }
   }
 

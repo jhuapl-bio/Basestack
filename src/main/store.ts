@@ -23,6 +23,8 @@ else {
 	writePath = path.join(dataPath, 'userdata').replace(/\\/g, '/');
 	resourcePath = dataPath
 } 
+console.log("__++++++++++", resourcePath)
+
 
  
  

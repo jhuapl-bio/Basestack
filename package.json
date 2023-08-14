@@ -8,14 +8,16 @@
   "author": "Brian Merritt <Brian.Merritt@jhuapl.edu>",
   "description": ": Basestack is a framework for the deployment of open-source bioinformatics tools for geneomics analyses on laptops running one of the  major operating systems",
   "license": "GPLv3.0",
-  "main": "build/main/main.js",
+  "main": "./dist/electron/main/main.js",
   "scripts": {
     "help:builder": "electron-builder --linux AppImage --help",
     "build": "node .electron-vue/build.js",
     "build:linux": "node .electron-vue/build.js && electron-builder --linux AppImage",
     "build:linuxARM64": "node .electron-vue/build.js && electron-builder --arm64 --linux AppImage ",
+    "build:linuxX64": "node .electron-vue/build.js && electron-builder --x64 --linux AppImage ",
     "build:linuxAll": "node .electron-vue/build.js && electron-builder --arm64 --x64 --linux AppImage ",
     "buildOnly:linuxARM64": "electron-builder --arm64 --linux AppImage",
+    "buildOnly:linuxX64": "electron-builder --x64 --linux AppImage ",
     "buildOnly:linux": "electron-builder --linux AppImage",
     "buildOnly:linuxAll": "electron-builder --arm64 --x64 --linux  AppImage",
     "buildOnly:win": "electron-builder --win; rm build/win-unpacked.zip; rm build/win-unpacked.zip; zip -r build/win-unpacked.zip build/win-unpacked",
@@ -30,9 +32,9 @@
     "package:macOffline": "cross-env offline=true electron-builder --mac dmg",
     "build:mac-dmg": "node .electron-vue/build.js && electron-builder --mac  dmg",
     "build:mac": "node .electron-vue/build.js && electron-builder --mac",
-    "build:macOffline": "node .electron-vue/build.js && cross-env offline=true electron-builder --mac dmg",
+    "build:macOffline":  "node .electron-vue/build.js && electron-builder --mac ",
     "build:macOfflineSign": "node .electron-vue/build.js && cross-env offline=true electron-builder --mac dmg -p never",
-    "build:win": "node .electron-vue/build.js && electron-builder --win; rm build/win-unpacked.zip; zip -r build/win-unpacked.zip build/win-unpacked",
+    "build:win": "node .electron-vue/build.js && electron-builder --x64 --win; rm build/win-unpacked.zip; zip -r build/win-unpacked.zip build/win-unpacked",
     "build:winOffline": "node .electron-vue/build.js && electron-builder --win -p never",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
@@ -69,12 +71,11 @@
   "build": {
     "productName": "Basestack",
     "appId": "Basestack App",
-    "afterSign": "notarize.js",
     "directories": {
-      "output": "build"
+      "output": "build/"
     },
     "files": [
-      "build/**/*"
+      "dist/electron/"
     ],
     "extraResources": [
       {
@@ -148,7 +149,6 @@
     "cfonts": "^3.1.1",
     "command-exists": "^1.2.9",
     "electron-dl": "^3.5.0",
-    "electron-notarize": "^1.2.2",
     "electron-updater": "^5.3.0",
     "extract-zip": "^2.0.1",
     "get-folder-size": "2.0.1",
@@ -156,14 +156,9 @@
     "gunzip-file": "^0.1.1",
     "install": "^0.13.0",
     "jsonfile": "^6.1.0",
-    "mathjs": "^11.8.0",
     "mkdirp": "^3.0.0",
-    "moo": "^0.5.2",
-    "nearley": "^2.20.1",
     "nested-property": "^4.0.0",
     "node-gyp": "^9.3.1",
-    "nodemon": "^2.0.22",
-    "npm": "^9.7.2",
     "p-queue": "^6.6.2",
     "rimraf": "^5.0.0",
     "sudo-prompt": "^9.2.1",
@@ -173,19 +168,22 @@
     "vue": "^3.2.47",
     "vuetify": "^3.3.9",
     "winston": "^3.8.2",
-    "xterm": "^5.1.0",
+    "xterm": "^5.2.1",
     "xterm-addon-fit": "^0.7.0",
     "xterm-addon-web-links": "^0.8.0",
     "yaml": "^2.3.1",
     "yup": "^1.2.0"
   },
   "devDependencies": {
+    "@electron/notarize": "^2.1.0",
     "@vitejs/plugin-vue": "^4.0.0",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.3",
     "electron": "19.0.0",
     "electron-builder": "^24.2.1",
     "electron-rebuild": "^3.2.9",
+    "nodemon": "^2.0.22",
+    "npm": "^9.7.2",
     "sass": "^1.60.0",
     "typescript": "^4.8.4",
     "vite": "^4.1.1"

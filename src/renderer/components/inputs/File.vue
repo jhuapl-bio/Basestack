@@ -1,5 +1,4 @@
 <template>
-    <div class="input-wrapper">
         <div v-if="!editMode">
             <v-text-field :disabled="editMode"
                 v-model="value"
@@ -12,7 +11,6 @@
                 />
         </div>
       
-    </div>
     
    </template>
    

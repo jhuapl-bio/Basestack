@@ -8,7 +8,7 @@
   - # **********************************************************************
   -->
   <template>
-    <div class="parent-div">
+    <div   style=" overflow-y: scroll;">
         <!-- Render the history as the array of objects that they are in a vue-card using vuetify-->
         <!-- The history is an array of objects, so we need to iterate through the array and render each object as a vue-card-->
         <!-- set the max height as well, and make it y scrollable -->
@@ -16,13 +16,13 @@
             <span class="font-weight-bold">History</span>
         </v-alert>
         <v-card 
-            style="max-height: 90%; overflow-y: scroll;"
+            style=" overflow-y: scroll;" :height="panelHeight" 
             class="mx-auto overflow-y-auto"
             outlined>
             <!-- Render each item as a short v list, with timestamp in the bottom right in small text, and a icon button that is clickable. Also, display the type, value, variable  if it exists, from the params attribute of each object item -->
            
-            <v-timeline side="end">
-                <v-timeline-item
+            <v-timeline side="end" :height="`100%`"   >
+                <v-timeline-item 
                     @click="updateCurrentModule(item)" three-line v-for="item in history" :key="item" class="mx-auto"
                     :dot-color="item.params.type == 'variable' ? 'green' : 'purple-lighten-2'" 
                     fill-dot
@@ -47,22 +47,22 @@
     }
 </style>  
 <script lang="ts" >
-import { h } from 'vue';
+import { withCtx } from 'vue';
 import { onMounted, toRaw } from 'vue';
 
 // add imports here
-import { ref, reactive } from 'vue';
+import { ref,   watch } from 'vue';
 
   
   
 export default {
-    setup() {
+    setup(props ) {
         // add data here
-
+        
         // add a data for the history
         // make it reactive with ref
         const history = ref([]);
-
+        const panelHeight = ref(500);
         // do onmounted for starting out the history tab
         // do onmounted for starting out the history tab, start writing code
         onMounted(() => {
@@ -87,6 +87,11 @@ export default {
             });
             
         }
+        watch(() => {
+            return props['panelHeight'];
+        }, (newVal, oldVal) => {
+            panelHeight.value = newVal;
+        })
         const typeSet = (type: string)=>{
             if (type == 'variable'){
                  return `Variable Change`
@@ -105,6 +110,7 @@ export default {
             requestHistory,
             updateCurrentModule,
             history,
+            panelHeight, 
             typeSet
         }
     }

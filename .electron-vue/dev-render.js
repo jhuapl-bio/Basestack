@@ -30,7 +30,10 @@ async function startElectron() {
     }
 
     try {
-        await compileTs(Path.join(__dirname, '..', 'src', 'main'));
+        await compileTs(
+            Path.join(__dirname, '..', 'src', 'main'),
+            Path.join(__dirname, '..', 'dist', 'electron', 'main')        
+        );
     } catch {
         console.log(Chalk.redBright('Could not start Electron because of the above typescript error(s).'));
         electronProcessLocker = false;
@@ -38,7 +41,7 @@ async function startElectron() {
     }
 
     const args = [
-        Path.join(__dirname, '..', 'build', 'main', 'main.js'),
+        Path.join(__dirname, '..', 'dist', 'electron', 'main', 'main.js'),
         rendererPort,
     ];
     electronProcess = ChildProcess.spawn(Electron, args);

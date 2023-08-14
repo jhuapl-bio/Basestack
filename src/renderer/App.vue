@@ -7,7 +7,7 @@
   - # **********************************************************************
   -->
 <template>
-  <v-app id="app-v" class="px-0 py-0" 
+  <v-app id="app-v"  
   	>
   		<v-navigation-drawer
   				:value="drawer" 
@@ -54,8 +54,8 @@
           </v-img>
         </template>
       </v-navigation-drawer>
-      <InformationPanel   :env="env" :logs="logs" :moduleSelected="moduleSelected"></InformationPanel>
-      <v-app-bar app
+      
+      <!-- <v-app-bar app
           class="elevation-24"
         >
           <v-img src="/assets/1-icon.svg"
@@ -65,19 +65,19 @@
             contain  @click="open_external('https://basestackwebsite.readthedocs.io/en/latest/index.html')"
           >
           </v-img>
-      </v-app-bar>
-      <v-main >
-  			<v-container fluid >
+      </v-app-bar> -->
+      <v-main id="parentDiv"   ref="parentDiv" style="height: 100%;  overflow-y:hidden; display: flex; flex-direction: column; position: relative;" >
+  			<div   :style="{  'height': containerHeight }" >
           <Dependencies v-if="installationSelected" :env="env"></Dependencies>
           <Module v-else-if="moduleSelected &&   Object.keys(moduleSelected).length > 0" 
               :module="moduleSelected" :env="env"
-              :moduleIdx="moduleIdx"
+              :moduleIdx="moduleIdx"   @loadYaml="loadYaml($event)"
+              :containerHeight="containerHeight"
               >
           </Module>
-          <v-file-input type="file" ref="fileInputRef" @change="loadYaml" 
-            :accept="['.yaml', '.YAML', '.yml']" 
-            label="Insert Custom Module YAML"/>
-        </v-container>
+          
+          
+        </div>
         <v-snackbar
           v-model="snackbar" vertical :color=" snackbarMessage.type == 'error' ? 'orange-darken-2' : 'green-lighten-2'"
           :timeout="2000" absolute max-width="90vh"
@@ -93,21 +93,24 @@
             </v-btn>
           </template>
         </v-snackbar>
+          <div   @mousedown="dragStart"  @mouseup="dragEnd" id="informationpanel" ref="informationPanelDiv" :style="{height: panelHeight}" style="position: fixed;  bottom: 0; width: 100%;">
+            <div class="draggable-bar " ></div>
+            <InformationPanel  
+              :env="env" :panelHeight="panelHeight"
+              :logs="logs" 
+              :moduleSelected="moduleSelected"  >
+            </InformationPanel>
+          </div>
       </v-main>
       <v-footer
-  			 absolute inset app
-         class=""
+  			  inset app
+         class="my-footer  "
   			>
-  			<v-card
-  				width="100%"
-  				color="primary"
-  				class="lighten-1 text-center "
-  			>
-          <v-card-text class="white--text">
-            {{ version }} -- <strong>Basestack</strong> 
+  			 
+          <v-card-text class="text-center  my-card-text">
+            <strong>Basestack</strong> 
           </v-card-text> 
-        </v-card>
-      </v-footer>
+       </v-footer>
       <!-- make a sparkline for successsparkline, remove after 2 seconds  of it changing -->
       
         
@@ -117,7 +120,7 @@
 </template>
 
 <script lang="ts" >
-import { defineComponent, onMounted, ref, reactive, watch } from 'vue';
+import { defineComponent, ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import InformationPanel from './components/Dashboard/InformationPanel.vue'
 import Dependencies from './components/Dependencies.vue'
 import Module from './components/Module.vue'
@@ -132,12 +135,32 @@ export default defineComponent({
     Dependencies,
     Module
   },
-  computed: {
-    version() {
-      return window.electronAPI.version
-    }
-  },
   setup(_props) {
+    const moduleDiv = ref(null);
+    const startY = ref(0);
+    const startHeight = ref(0);
+    const dragging = ref(false);
+    const informationPanelDiv = ref(null);
+    const parentDiv = ref(null);
+    const panelHeight = ref(`300px`)
+    const dragStart = (e) => {
+      startY.value = e.clientY;
+      startHeight.value = informationPanelDiv.value.offsetHeight;
+      dragging.value = true;
+    };
+
+    const dragEnd = () => {
+      dragging.value = false;
+    };
+
+    const drag = (e) => {
+      if (!dragging.value) return;
+      let newHeight = startHeight.value + (startY.value - e.clientY);
+      if (newHeight < 40) newHeight = 40; // this.minHeight
+      panelHeight.value = `${newHeight}px`;
+    };
+
+    
     // window.electronAPI.logger(`Adding`) 
     //listen on the getlog, console log the log from the main process
     window.electronAPI.customModule((_event:any, params: {type: string, module:string, value: Object})=>{
@@ -161,7 +184,6 @@ export default defineComponent({
     })
     const logs = ref([])
     const env = ref({})
-    const fileInputRef = ref(null)
     let snackbar = ref(null)
     const mini = ref(false)
     const drawer = ref(false)
@@ -189,8 +211,24 @@ export default defineComponent({
       })
 
     })
+    const containerHeight = computed( () => {
+      let height = 800; 
+      if (parentDiv.value){
+        height = parentDiv.value['$el'].offsetHeight
+      }
+      const panelHeightNum = Number(panelHeight.value.replace('px', ''));
+      // get the height of v-main using javascript
+
+      const appHeightNum = height - 5 /* retrieve app height here, assuming it's in pixels */
+      const newHeight = appHeightNum - panelHeightNum 
+      return `${newHeight}px`;
+    })
+
     onMounted(() => {
-      
+      informationPanelDiv.value.addEventListener('mousedown', dragStart);
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('mouseup', dragEnd);
+
       window.electronAPI.libraryNames((_event: any, library: any[]) => { 
         libraryNames.value = library
         if ( library.length > 0 && !moduleSelected.value['name']  ) {
@@ -214,8 +252,8 @@ export default defineComponent({
     const open_external = (url: string) => {
       window.electronAPI.openurl(`${url}`)
     }
-    const loadYaml = () => {
-        const file = fileInputRef.value.files[0];
+    const loadYaml = (file) => {
+      console.log(file)
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -239,6 +277,13 @@ export default defineComponent({
     }
     return {
       loadYaml,
+      containerHeight, 
+      informationPanelDiv,
+      parentDiv,
+      dragStart,
+      panelHeight, 
+      dragEnd,
+      drag,
       moduleSelected,
       snackbar,
       isHovered,
@@ -247,7 +292,6 @@ export default defineComponent({
       moduleIdx,
       selectedCatalog,
       env,
-      fileInputRef,
       mini, 
       drawer,
       libraryNames,
@@ -263,16 +307,57 @@ export default defineComponent({
 </script>
 
 <style>
+#parentDiv {
+  height: 100%; 
+  display: flex; 
+  flex-direction: column; 
+  /* remove overflow: auto; */
+}
+.v-container {
+  height: calc(100vh - 400px - 60px); /* adjust this as needed */
+  overflow-y: auto;
+}
+
+#informationpanel {
+  background-color: #ccc; /* For visibility */
+  z-index: 1000; /* Any large number so it appears on top of other content */
+  overflow-y:hidden;
+  height: 400px; /* adjust this as needed */
+}
+.draggable-bar {
+  height: 5px;
+  background-color: gray;
+  cursor: ns-resize;
+}
+.drag-handle {
+  height: 20px;
+  background-color: #999;
+  min-height: 20px;
+  overflow-y:auto;
+ }
 
 
+.my-footer {
+  height: 20px;
+  font-size: 20px;
+  background-color: #3f51b5  !important;
+  fill: #3f51b5  !important;
+}
 
+.my-card {
+  height: 100%;
+}
+
+.my-card-text {
+  font-size: 0.9rem !important;  /* adjust as needed */
+  line-height: 0.1 !important; /* adjust as needed */
+  color: rgb(226, 216, 216);
+}
 #app { 
   border:0px;
   border-style: solid;
 }
-.mainPage{
-  margin:auto;
-}
+
 .hoverheader:hover{
   background-color: white;
   color: black !important;

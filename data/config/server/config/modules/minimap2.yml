@@ -9,7 +9,7 @@
     - alignment
     - reference
   variables:
-    - key: "input"
+    input:
       element: "file"
       required: True
       label: "Input File"
@@ -21,14 +21,14 @@
         - '.*.fa'
         - '.*.fasta'
         - '.*.fq.gz'  
-    - key: "out" 
+    out:
       element: "static"
       pattern: ".*.bam"
       output: True
       label: "Out file (.bam format)"
       info: "Out file format from minimap2 alignment"
       target: "%trim($input)%.bam" 
-    - key: "preset"
+    preset:
       element: "list"
       output: False
       preventCustom: False
@@ -50,7 +50,7 @@
         "sr",
       ]
       # make a new entry like the others that is a number type and is for the threads, key is threads
-    - key: "threads" 
+    threads:
       element: "number"
       output: False
       step: 1
@@ -59,7 +59,7 @@
       label: "Number of threads"
       info: "Number of threads to use for alignment"
       target: 1
-    - key: "reference" 
+    reference:
       element: "file"
       output: False
       

@@ -48,6 +48,7 @@ export class Process {
         this.logger = store.logger 
         this.label = params['target']
         this.status['label'] = params['label']
+        this.status['title'] = params['title']
         this.status['running'] = false
         this.status['command'] = ""
         this.status['code'] = -1
@@ -114,7 +115,6 @@ export class Process {
             if (this.params.wsl) {
                 this.params.platform = 'wsl2'
             }
-            console.log(this.params,"<<<")
             let comm = run(this.params.command, this.params.platform)
             if (!this.params.arguments){
                 this.params.arguments = []
@@ -156,7 +156,6 @@ export class Process {
                 output['value'] = parsed
             })
             this.watchOutputs(this.params.outputs)
-            console.log(this.params.outputs)
             let command: any[]
             
             if(this.params.exec == 'conda'){
@@ -175,9 +174,9 @@ export class Process {
             } else if(this.params.exec == 'singularity'){
                 command = ['singularity', 'exec', this.params.sif, ...this.params.arguments, comm]
             } else { // the process is native, no conda, docker, or singularity needed
-                console.log("process is native", comm)
                 command = [comm]
             }
+            console.log(command.join(" "))
             await this.runCommand(command.join(" "))
             
         } else {
@@ -365,16 +364,21 @@ export class Process {
             this.stream.stdout.on('data', (data) => {
                 let msg = `stdout: ${data}`
                 msg = formatBuffer(msg)
-                $this.status['logs'].unshift(msg)
-                store.logger.info(msg)
+                if (msg && msg.length > 0){
+                    $this.sendStatus()
+                    $this.status['logs'].unshift(msg)
+                    store.logger.info(`${msg}`)
+                }
             });
             this.stream.stderr.on('data', (data) => {
                 let msg = `stderr: ${data}`
                 msg = formatBuffer(msg)
-                $this.status['logs'].unshift(msg)
-                $this.status['error'].unshift(`${msg}`)
-                this.sendStatus()
-                store.logger.error(msg)
+                if (msg && msg.length > 0){
+                    $this.status['logs'].unshift(msg)
+                    $this.status['error'].unshift(`${msg}`)
+                    this.sendStatus()
+                    store.logger.error(`Cmd Error: ${msg}`)
+                }
             });
          
             this.stream.on('close', (code: Number) => {

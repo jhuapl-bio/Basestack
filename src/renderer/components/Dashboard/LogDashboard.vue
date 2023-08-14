@@ -8,7 +8,10 @@
   -->
 <template>
 	<!-- <v-card  class="mx-5" style="margin-top: 5%; margin-right: 5%;"> -->
-	<LogWindow  :env="env"></LogWindow> 
+	<div class="mx-auto" style="overflow-y: auto;" :max-height="panelHeight">
+		<!-- <LogWindow  :env="env"></LogWindow>  -->
+	</div>
+	
 	<!-- </v-card> -->
 </template>
 
@@ -39,7 +42,8 @@ export default defineComponent({
 		env: {
 			type: Object, 
 			required: true
-		}
+		},
+		panelHeight: Number
 	},
 	data: State => { // ADD
 		return{
@@ -55,6 +59,7 @@ export default defineComponent({
 	async mounted(){
 		const $this = this	
 		console.log("logs")
+		this.$emit("initialLoadCall")
 
 	},
 

@@ -1,0 +1,70 @@
+# make a yaml file example file using the kraken2.yml file as a reference, but just do a basic Native echo hello world
+# must have name and dependencies and command of echo hello world
+# This is it in the minimap2 file
+- title: NCBI Read Scrubber 
+  date_added: '2023-11-07T11:40:13.131Z'
+  url: "None"
+  description: Remove target organism (like human) from fastq files
+  icon: mdi-microscope
+  name: ncbi_scrubber
+  defaultchoice: 1
+  tags: 
+  - "ncbi"
+  - "scrubbing"
+  variables:
+    decompress :
+      element: "checkbox"
+      label: "Decompress file first"
+      info:  If the file is a gz file, decompress it
+      target: null
+      if: "gzip -d %$inputFile% > %trim($inputFile).fastq% && "
+      else: ""
+      default: false
+    interleaved :
+      element: "checkbox"
+      label: "File is interleaved paired-end"
+      info: Check this if the file contains both R1 and R2 reads for paired-end only
+      target: null
+      if: " -s "
+      else: ""
+      default: false
+    inputFile:
+      element: "file"
+      label: "Input File"
+      info: "Sequencing fastq (can be compressed) or fasta file required as input for kraken2 to function"
+      pattern: 
+        - '.*.fastq'
+        - '.*.fastq.gz'
+        - '.*.fq'
+        - '.*.fa'
+        - '.*.fasta'
+        - '.*.fq.gz'  
+    out:
+      element: "static-file" 
+      pattern: ".*.filtered.fastq.gz"
+      output: True
+      label: "Output file"
+      # target: "%trim($inputFile)%.filtered.fastq.gz"
+      target: "%$inputFile%.filtered.fastq.gz"
+  choices: 
+    - key: "Singularity"
+      label: "Singularity"
+      exec: "singularity"
+      env: "${writePath}/dependencies/images/singularity/sra-human-scrubber.sif"
+      requirements: 
+        - key: "ncbi_scrubber"
+          type: 'images'
+      command: "
+        bash -c \"%$decompress% /opt/scrubber/scripts/scrub.sh  -i %$inputFile% -o %$out%  %$interleaved% \"
+       "    
+    - key: "Docker"
+      label: "Docker"
+      exec: "docker"
+      env: "ncbi/sra-human-scrubber"
+      requirements: 
+        - key: "ncbi_scrubber"
+          type: 'images'
+      # pre-execute: ['bash', '-c'] 
+      command: "
+        bash -c \" %$decompress% /opt/scrubber/scripts/scrub.sh  -i %$inputFile% -o %$out%  %$interleaved% \"
+      "    

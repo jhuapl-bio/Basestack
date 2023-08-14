@@ -14,7 +14,7 @@
     - metagenomics
     - report
   variables:
-    - key: "samplesheet"
+    samplesheet:
       element: "spreadsheet"
       label: "Input Samplesheet"
       info: "Samplesheet example"
@@ -67,7 +67,7 @@
           info: "From"
           type: "directory"
           optional: True
-    - key: "profile" 
+    profile:
       element: "list"
       label: "Singularity or Docker"
       info: "Which containerized approach do you want?"
@@ -76,12 +76,12 @@
         "singularity",
         "docker"
       ]
-    - key: "revision" 
+    revision:
       element: "string"
-      label: "Default is main (bleeding edge). Or choose stable for most up to date stable version"
-      info: "Branch/version you want to use"
+      info: "Default is main (bleeding edge). Or choose stable for most up to date stable version"
+      label: "Branch/version"
       target: "main"
-    - key: "db" 
+    db:
       element: "list-directory"
       output: False
       label: "Kraken2 database"
@@ -91,25 +91,46 @@
         "${dependenciesWritePath}/files/minikraken_8GB_202003"
       ]
       target: null
-    - key: "cpu_count" 
+    cpu_count:
       element: "number"
       label: "Maximum CPU"
       info: Max cpu to use"
       target: 3
-      step: 0.2
-    # - key: "low_memory" 
-    #   element: "checkbox"
-    #   label: "Low Memory Mode"
-    #   info: Dont load the database into memory
-    #   target: null
-    #   if: "--low_memory"
-    #   default: true
-    - key: "max_memory" 
+      min: 1
+      required: true
+      step:  1
+    max_memory:
       element: "number"
       label: "Maximum RAM"
       info: Max RAM, heavily dependent on the database in question"
       target: 10
-    - key: "outputreport" 
+      step: 0.2
+      min: 1
+      default: 10
+    low_memory :
+      element: "checkbox"
+      label: "Low Memory Mode"
+      info: Dont load the database into memory
+      target: null
+      if: "--low_memory "
+      else: ""
+    resume :
+      element: "checkbox"
+      label: "Resume"
+      info: Dont load the database into memory
+      target: True
+      default: true
+      if: "-resume "
+      else: ""
+    latest :
+      element: "checkbox"
+      label: "Latest "
+      info: Pull the latest version
+      target: true 
+      default: true
+      if: " -latest "
+      else: ""
+    outputreport:
       element: "static-file"
       pattern: ".*.html"
       output: True
@@ -128,7 +149,7 @@
       env: "base"
       command: " cd   ; nextflow run https://github.com/jhuapl-bio/taxtriage -r %$revision%
         --input  \"%$samplesheet%\" 
-        --db \"%$db%\"  --skip_assembly  
+        --db \"%$db%\"  --skip_assembly  %$low_memory%
         --outdir %directory($samplesheet)%/tmp --max_memory %$max_memory%GB --max_cpus %$cpu_count%  --skip_plots 
-        -profile %$profile%  -resume --demux --remove_taxids \"9606 9606\"  "    
+        -profile %$profile%  %$resume%  %$latest%  --demux --remove_taxids \"9606 9606\"  "    
     

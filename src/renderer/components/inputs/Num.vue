@@ -3,6 +3,8 @@
        v-if="!$props.editMode"  
        v-model.number="value" 
        :step="(params.step ? params.step : 1)"
+       :min="(params.min ? params.min : 1)"
+       :max="(params.max ? params.max : 1)"
        type="number"
    >
    </v-text-field>
@@ -10,6 +12,8 @@
        v-else 
        v-model.number="defaultValue"
        :step="(params.step ? params.step : 1)"
+       :min="(params.min ? params.min : 1)"
+       :max="(params.max ? params.max : 1)"
        type="number"
    >
    </v-text-field>

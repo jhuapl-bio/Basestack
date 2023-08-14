@@ -1,9 +1,9 @@
 <template>
-    <v-switch
+    <v-switch 
       v-if="!$props.editMode"
       v-model="value"
     ></v-switch>
-    <v-switch
+    <v-switch 
       v-else
       v-model="defaultValue"
     ></v-switch>
@@ -11,13 +11,14 @@
   
   <script lang="ts">
   import { ref, watch, onMounted } from "vue";
-  
+  import { conditionalSets  } from '../../controllers/interpolate'
+
   export default {
     name: "Checkbox",
     emits: ["update"],
     props: {
       variable: {
-        type: Boolean,
+        type: [Boolean, String, Number],
         default: false,
       },
       default: {
@@ -50,31 +51,24 @@
       const value = ref(props.params.default);
       const defaultValue = ref(props.default);
   
-      watch(
-        () => props.variable,
-        (newVal) => {
-          value.value = newVal;
-        },
-        { deep: true }
-      );
-      watch(
-        () => props.default,
-        (newVal) => {
-          defaultValue.value = newVal;
-        },
-        { deep: true }
-      );
+      
+      // watch(
+      //   () => props.default,
+      //   (newVal) => {
+      //     defaultValue.value = newVal;
+      //   },
+      //   { deep: true }
+      // );
       watch(
         () => value.value,
         (newVal) => {
-            console.log("newVal", newVal, props.params)
-          if (newVal !== props.variable) {
-            if (newVal){
-                emit('update', props.params.if)
-            } else {
-                emit("update", props.params.ifnot ? props.params.ifnot : "");
-            }
-          }
+          emit("update",newVal);
+          // if (newVal){
+          //   emit("update", props.params.if);
+          // } else {
+          //   emit("update", props.params.else);
+
+          // }
         }
       );
       watch(

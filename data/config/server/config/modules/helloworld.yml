@@ -13,24 +13,13 @@
     - echo
     - world
   variables:
-    - key: "inputFile"
-      element: "file"
-      label: "Input File"
-      info: "Sequencing fastq (can be compressed) or fasta file required as input for kraken2 to function"
-      pattern: 
-        - '.*.fastq'
-        - '.*.fastq.gz'
-        - '.*.fq'
-        - '.*.fa'
-        - '.*.fasta'
-        - '.*.fq.gz'  
-    - key: "out" 
+    out:
       element: "static-file" 
       pattern: ".*.out"
       output: True
       label: "Test out interpolation"
       target: "$HOME/test/test.txt" 
-    - key: "input" 
+    input:
       element: "string"
       pattern: [
         ".*Hello.*"

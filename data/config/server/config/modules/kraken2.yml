@@ -14,7 +14,7 @@
     - metagenomic
     - metagenome
   variables:
-    - key: "inputfile"
+    inputfile:
       element: "file"
       label: "Input File"
       info: "Sequencing fastq (can be compressed) or fasta file required as input for kraken2 to function"
@@ -25,21 +25,21 @@
         - '.*.fa'
         - '.*.fasta'
         - '.*.fq.gz'  
-    - key: "out" 
+    out:
       element: "static-file"
       pattern: ".*.kraken.out"
       output: True
       label: "Out file (.out format)"
       info: "Out file format from kraken2 classifications. Used for downstream steps"
       target: "%trim($inputfile)%.kraken.out"   
-    - key: "report" 
+    report:
       element: "static-file"
       pattern: ".*.kraken.report"
       output: True
       label: "Report file (.kraken.report format)"
       info: "Report style file format from kraken2 classifications. Contans top-down description of all taxids in hierarchical format, separated by tabs at each rank level"
       target: "%trim($inputfile)%.kraken.report"
-    - key: "db" 
+    db:
       element: "list-directory"
       output: False
       label: "Kraken2 database"

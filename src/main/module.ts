@@ -30,6 +30,8 @@ export class Module {
     // then, if the run command is a module, it will call the module's run function
     // make it an async function as well with await
     async runModule(event: any, params: Object) {
+        console.log(params)
+        params['format'] = params['key']
         let proc = new Process(params) 
         proc.addtoqueue()
         return proc['status']['id']

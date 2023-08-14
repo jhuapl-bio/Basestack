@@ -2,12 +2,22 @@ import { contextBridge, ipcRenderer } from 'electron';
 import path from 'path'
 import fs from "fs"
 function trimAllExtensions(filePath) {
-    const extension = path.extname(filePath);
-    const trimmedPath = filePath.slice(0, -extension.length);
-    return trimmedPath;
+    // remove all extensions, from a path, including things like f.tar.gz f.gz or f.tar.gz.2.2.2.g all to become f
+    return filePath.replace(/(\.[^/.]+)+$/, '');
+
+}
+function trimSingleExtensions(filePath) {
+    // remove only the first extensions
+    return filePath.replace(/\.[^/.]+$/, '');
+
+
 }
 import { bytesToSize } from './functions';
 var { store } = require("./store.js");
+function basepath(filePath) {
+    // remove all extensions from a path
+    return filePath
+}
 
 contextBridge.exposeInMainWorld('electronAPI', { 
     // ////////////////////////////////Return the function directly for functions that are not allowed in renderer ////////////////////////////////////////////////////////////////
@@ -17,6 +27,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     uppercase: (message: string) => message.toUpperCase(), // Return the function directly for functions that are not allowed in renderer
     lowercase: (message: string) => message.toLocaleLowerCase(), // Return the function directly for functions that are not allowed in renderer
     trim: (filePath: string) =>trimAllExtensions(filePath), // Return the function directly for functions that are not allowed in renderer
+    trimSingle: (filePath: string) =>trimSingleExtensions(filePath), // Return the function directly for functions that are not allowed in renderer
     exists: async (filePath: string) => { 
         try{
             let stats: any = await fs.statSync(filePath)

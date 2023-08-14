@@ -1,10 +1,10 @@
 <template>
     <v-card
-        class="mx-auto"
+        class="mx-auto" style="overflow-y: auto;" :height="panelHeight"
     >
         <template v-slot:title>
-            <v-alert variant="tonal" color="yellow-darken-4" >
-                <span class="font-weight-bold">Processes</span>
+            <v-alert variant="tonal" color="grey-darken-4" >
+                <span class="font-weight-bold">Runs and Installations</span>
             </v-alert>
         </template>
         <template v-slot:append>
@@ -16,7 +16,7 @@
             </v-btn>
         </template>
 
-        <v-card-text>
+        <v-card-text style="height: 100%; overflow-y:auto">
             <v-autocomplete
                 v-model="select"
                 v-model:search="search"
@@ -73,7 +73,7 @@
                         ></v-icon>
                     </template>
                 </v-toolbar>
-                <v-card-text>
+                <v-card-text class="pt-0 mt-0">
                     <v-list-subheader>
                         {{ entry['installation'] ? 'Installation' : 'Module' }}
                     </v-list-subheader>
@@ -82,12 +82,15 @@
                         Type: {{ entry['type_install'] ? entry['type_install'] : '' }}
                     </v-list-subheader>
                     <div class="text--primary">
-                        <p v-if="entry['code'] > 0">
-                            {{ entry['error'].join(" ") }}
-                        </p>
-                        <p v-else-if="entry['logs'].length > 0">
-                            {{ entry['logs'][0] }}
-                        </p>
+                        <div v-if="entry['code'] > 0">
+
+                            <p v-if="entry['error'].length > 0">{{ entry['error'].join("\n") }}</p>
+                            <p v-else>Process exited with code {{ entry['code'] }} <br> {{ entry['logs'].slice(-1).join("") }}</p>
+                        </div>
+
+                         <div v-else-if="entry['logs'].length > 0" style="max-height: 200px; overflow: auto; border: 1px solid black;">
+                             <p v-for="( line, index ) in  entry['logs'].slice(-3) "  v-bind:key=" index " >{{ pretty(line) }}</p>
+                        </div>
                     </div>
                 </v-card-text>
                 <v-card-actions>
@@ -179,7 +182,8 @@ export default defineComponent({
         }
     },
     props: {
-        env: Object
+        env: Object,
+        panelHeight:   { type: [String, Number], default: 500 } 
     },
     computed: {
        

@@ -7,26 +7,28 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="logs" class="mt-3 mx-5" ref="logs" v-if="logs">
-    <v-btn
-        icon-and-text
-        color="secondary" small
-        @click="open(link)"
-    ><v-icon  class="mr-3"
-        small
-    >mdi-link
-    </v-icon>
-    Open Log Folder 
-    </v-btn>
-    <div class="logWindow" >
-        <div v-if="logs" class="logDiv" style="max-height: 70vh; border: none; overflow-y:auto; ">
-            <!-- <code v-for="(line, index) in logs"  v-bind:key="index" class="align-start">
-                {{ line }}
-            </code> -->
+  <div  class="mt-3 mx-5"  style="overflow-y: auto; "    ref="logs" v-if="logs">
+    
+    <div :height="panelHeight"   >
+      <v-btn
+          icon-and-text
+          color="secondary" small
+          @click="open(link)"
+      >
+        <v-icon  class="mr-3"
+            small
+        >mdi-link
+        </v-icon>
+        Open Log Folder 
+      </v-btn>
+        <div   v-if="logs"   style="  border: none; overflow-y:auto; ">
+            
             <pre v-for="(line, index) in logs"  v-bind:key="index" >{{ pretty(line) }}</pre>
         </div>
     </div> 
+    
   </div> 
+  
 </template>
 
 <script lang="ts" >
@@ -52,6 +54,11 @@ export default defineComponent({
     }
   },
   props: {
+    panelHeight: {
+      type: [Number, String], 
+      required: false,
+      default: 500
+    },
     env: {
       type: Object, 
       required: false
@@ -87,12 +94,10 @@ export default defineComponent({
 	
 	},
   mounted() {
-    console.log("listen for lo!g") 
     window.electronAPI.requestLogs()
     this.logs = []
     window.electronAPI.getLog((event: any, log: string | string[]) => {
-      console.log(event, log)
-      this.logs.unshift(...log)
+       this.logs.unshift(...log)
       this.logs = this.logs.slice(0, 200)
     });
   },

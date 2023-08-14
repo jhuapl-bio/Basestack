@@ -320,7 +320,7 @@ export class Client {
             mainWindow.loadURL(`http://localhost:${rendererPort}`);
         }
         else {
-            mainWindow.loadFile(join(app.getAppPath(), 'renderer', 'index.html'));
+            mainWindow.loadFile(join(app.getAppPath(), 'dist', 'electron', 'renderer', 'index.html'));
         }
         this.mainWindow = mainWindow
         this.store.mainWindow = mainWindow

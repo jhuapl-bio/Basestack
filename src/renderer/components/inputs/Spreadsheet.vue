@@ -12,7 +12,7 @@
             />
     </div>
     <!-- PRovide large header text that says Samplesheet entries -->
-    <v-list-item-title>Samplesheet Entries</v-list-item-title>
+    <!-- <v-list-item-title>Samplesheet Entries</v-list-item-title>
     <v-expansion-panels accordion>
         <v-expansion-panel v-for="(item, i) in tableData" :key="`${i}--expansion`">
           <v-expansion-panel-title>
@@ -20,16 +20,10 @@
           </v-expansion-panel-title>
           <v-expansion-panel-text>
             <div v-for="(value, key) in headers" >
-              <!-- Make each element value editable according to their type in the defined headers variabe -->
                 <v-list-item-title class="font-weight-bold">{{ value.label }}: {{ item[value.key] }}</v-list-item-title>
-                <!-- if value.type is string then make a vuetify text filed that edits tabledata enttry directly. if choices is present, then make it a dropdown rather than text field that can only be one of the options in choices array -->
                 <v-select v-if="value.type == 'string' && value.choices" v-model="item[value.key]" :items="value.choices" :label="value.label" />
                 <v-text-field v-else-if="value.type == 'string'" v-model="item[value.key]" :label="value.label" />
-                <!-- if the value.type is boolean than v-switch -->
                 <v-switch v-else-if="value.type == 'boolean'" v-model="item[value.key]" :label="value.label" />
-                <!-- If the value.type is directory then make it a field that lets you select directory only -->
-                <!-- <v-file-input v-else-if="value.type == 'directory'" v-model="item[value.key]" :label="value.label" /> -->
-                <!--  if the value.type is file, then make it a file the same way we have in file.vue with ondrop and filedialog and such -->
                 <v-text-field  
                   v-model="item[value.key]" v-else-if="value.type == 'file'"
                   @dragover.prevent
@@ -45,7 +39,7 @@
           </v-expansion-panel-text>
         </v-expansion-panel>
         <v-divider></v-divider>
-      </v-expansion-panels>
+      </v-expansion-panels> -->
   </div>
 </template>
 <script lang="ts">
