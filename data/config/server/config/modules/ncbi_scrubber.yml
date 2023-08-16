@@ -17,6 +17,7 @@
       label: "Decompress file first"
       info:  If the file is a gz file, decompress it
       target: null
+      value: null
       if: "gzip -d %$inputFile% > %trim($inputFile).fastq% && "
       else: ""
       default: false
@@ -25,12 +26,15 @@
       label: "File is interleaved paired-end"
       info: Check this if the file contains both R1 and R2 reads for paired-end only
       target: null
+      value: null
       if: " -s "
       else: ""
       default: false
     inputFile:
       element: "file"
       label: "Input File"
+      value: null
+      target: null
       info: "Sequencing fastq (can be compressed) or fasta file required as input for kraken2 to function"
       pattern: 
         - '.*.fastq'
@@ -46,6 +50,7 @@
       label: "Output file"
       # target: "%trim($inputFile)%.filtered.fastq.gz"
       target: "%$inputFile%.filtered.fastq.gz"
+      value: null
   choices: 
     - key: "Singularity"
       label: "Singularity"

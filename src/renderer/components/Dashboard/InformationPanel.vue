@@ -7,7 +7,6 @@
   - # **********************************************************************
   -->
 <template>
-    <v-card>
       <v-tabs
         v-model="tab"
         class="infopaneltabs"
@@ -24,8 +23,7 @@
           </v-tab>
       </v-tabs>
 
-      <v-card-text>
-        <v-window v-model="tab">
+      <v-window v-model="tab" style="background-color: transparent !important"  >
            <!-- <v-window-item  >
              <Terminal :panelHeight="panelHeight"
                 ref="terminal"
@@ -61,8 +59,6 @@
               </History>
             </v-window-item>
         </v-window>
-      </v-card-text>  
-    </v-card>
     <v-window  v-model="tab"> 
             
   </v-window>
@@ -169,7 +165,7 @@ export default defineComponent({
         cols: 1000,
         rows: 1000
       },
-      tab:  2 ,
+      tab:  2,
       navigation: {
         shown: true,
         height: 55,

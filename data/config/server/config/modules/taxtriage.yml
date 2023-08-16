@@ -122,6 +122,7 @@
       default: true
       if: "-resume "
       else: ""
+    
     latest :
       element: "checkbox"
       label: "Latest "
@@ -137,6 +138,12 @@
       label: "Report output"
       info: "Interactive HTML Report"
       target: "%directory($samplesheet)%/tmp/multiqc/multiqc_report.html"
+    workdir:
+      element: "dir"
+      pattern: ".*"
+      label: "Work Dir"
+      info: "Cache/Working Directory for Nextflow to run in"
+      target: "%directory($samplesheet)%/work/"
   choices: 
     - key: "Native"
       label: "Native"
@@ -147,9 +154,9 @@
         - key: "flukraken2"
           type: "files"
       env: "base"
-      command: " cd   ; nextflow run https://github.com/jhuapl-bio/taxtriage -r %$revision%
+      command: "nextflow run https://github.com/jhuapl-bio/taxtriage -r %$revision%
         --input  \"%$samplesheet%\" 
-        --db \"%$db%\"  --skip_assembly  %$low_memory%
+        --db \"%$db%\"  --skip_assembly  %$low_memory% -w %$workdir%
         --outdir %directory($samplesheet)%/tmp --max_memory %$max_memory%GB --max_cpus %$cpu_count%  --skip_plots 
         -profile %$profile%  %$resume%  %$latest%  --demux --remove_taxids \"9606 9606\"  "    
     

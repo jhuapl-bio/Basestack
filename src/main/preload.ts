@@ -77,6 +77,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     updateCurrentModule: (params: object)=>{
         ipcRenderer.invoke('updateCurrentModule', params)
     },
+    selectDir:  async ()=>{
+        let dir = ipcRenderer.invoke('selectDir')
+        return dir 
+    }, 
     selectFile:  async ()=>{
         let file = ipcRenderer.invoke('selectFile')
         return file 

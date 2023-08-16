@@ -1,4 +1,17 @@
 files:
+  - label: "minusb-Kraken2"
+    os: "any"
+    key: "flukraken2"
+    icon: "mdi-virus-outline"
+    color: "primary"
+    choices:
+      - from: "https://genome-idx.s3.amazonaws.com/kraken/k2_minusb_20230605.tar.gz"
+        to: "${writePath}/dependencies/files/k2_minusb_20230605.tar.gz"
+        target: "${writePath}/dependencies/files/k2_minusb_20230605"
+        platform: "any"
+        format: "directory"
+        decompress: "${writePath}/dependencies/files/k2_minusb_20230605"
+        type_install: "get"
   - label: "flukraken2"
     os: "any"
     key: "flukraken2"
@@ -12,3 +25,4 @@ files:
         format: "directory"
         decompress: "${writePath}/dependencies/files/"
         type_install: "get"
+        

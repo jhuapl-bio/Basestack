@@ -1,16 +1,16 @@
 <template>
   <v-text-field  
        v-if="!$props.editMode"  
-       v-model.number="value" 
+       v-model.number="value"  :dense="true"
        :step="(params.step ? params.step : 1)"
        :min="(params.min ? params.min : 1)"
        :max="(params.max ? params.max : 1)"
-       type="number"
+       type="number" height="10px"
    >
    </v-text-field>
    <v-text-field  
        v-else 
-       v-model.number="defaultValue"
+       v-model.number="defaultValue" :dense="true"
        :step="(params.step ? params.step : 1)"
        :min="(params.min ? params.min : 1)"
        :max="(params.max ? params.max : 1)"

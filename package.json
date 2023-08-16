@@ -71,6 +71,7 @@
   "build": {
     "productName": "Basestack",
     "appId": "Basestack App",
+    "afterSign": "notarize.js",
     "directories": {
       "output": "build/"
     },
@@ -89,6 +90,7 @@
     "dmg": {
       "icon": "build/icons/icon.icns",
       "sign": false,
+      
       "contents": [
         {
           "x": 410,

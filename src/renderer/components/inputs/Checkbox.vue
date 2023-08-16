@@ -1,7 +1,7 @@
 <template>
-    <v-switch 
+    <v-switch  class="mb-0 pb-0"
       v-if="!$props.editMode"
-      v-model="value"
+      v-model="value" :dense="true"
     ></v-switch>
     <v-switch 
       v-else
@@ -48,27 +48,13 @@
       },
     },
     setup(props, { emit }) {
-      const value = ref(props.params.default);
       const defaultValue = ref(props.default);
-  
+      const value = ref(props.params.default ? props.params.default : props.variable);
       
-      // watch(
-      //   () => props.default,
-      //   (newVal) => {
-      //     defaultValue.value = newVal;
-      //   },
-      //   { deep: true }
-      // );
       watch(
         () => value.value,
         (newVal) => {
           emit("update",newVal);
-          // if (newVal){
-          //   emit("update", props.params.if);
-          // } else {
-          //   emit("update", props.params.else);
-
-          // }
         }
       );
       watch(

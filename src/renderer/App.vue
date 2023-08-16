@@ -194,8 +194,8 @@ export default defineComponent({
     const moduleSelected = ref({})
     //Set default name if you want
 
-    const name = ref('taxtriage')
-    let installationSelected = ref(false)
+    const name = ref('ncbi_scrubber')
+    let installationSelected = ref(true)
 
     const fetch_environment = async () => {
       let envt = await window.electronAPI.requestEnv() 

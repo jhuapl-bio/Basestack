@@ -7,10 +7,9 @@
   - # **********************************************************************
   -->
 <template>
-    {{ containerHeight }}
     <div
         class="mx-auto"
-        :style="{ height: containerHeight, 'overflow-y': 'auto'}"
+        :style="{ height: '100%', 'overflow-y': 'auto'}"
     >
         <v-toolbar>
             <v-toolbar-title class="text-h6">

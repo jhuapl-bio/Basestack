@@ -1,6 +1,6 @@
 <template>
     <v-card
-        class="mx-auto" style="overflow-y: auto;" :height="panelHeight"
+        class="mx-auto" style="overflow-y: auto; width: 90%" :height="panelHeight"
     >
         <template v-slot:title>
             <v-alert variant="tonal" color="grey-darken-4" >
@@ -16,7 +16,7 @@
             </v-btn>
         </template>
 
-        <v-card-text style="height: 100%; overflow-y:auto">
+        <v-card-text style="  overflow-y:auto">
             <v-autocomplete
                 v-model="select"
                 v-model:search="search"
@@ -89,7 +89,7 @@
                         </div>
 
                          <div v-else-if="entry['logs'].length > 0" style="max-height: 200px; overflow: auto; border: 1px solid black;">
-                             <p v-for="( line, index ) in  entry['logs'].slice(-3) "  v-bind:key=" index " >{{ pretty(line) }}</p>
+                             <p v-for="( line, index ) in  formatLogs(entry['logs']) "  v-bind:key=" index " >{{ pretty(line) }}</p>
                         </div>
                     </div>
                 </v-card-text>
@@ -165,7 +165,7 @@ interface State {
     processesLogs: Object
     moreInfo: Object | null
 }
-import { defineComponent, reactive } from 'vue';
+import { defineComponent, reactive,  } from 'vue';
 
 export default defineComponent({
     name: 'Processes',
@@ -236,6 +236,9 @@ export default defineComponent({
             this.processes.map((process: any) => {
                 this.removeProcess(process['id'])
             })  
+        },
+        formatLogs(logs){
+            return logs.slice(3)
         },
         restartProcess(id: string) {
             window.electronAPI.restartProcess(id)

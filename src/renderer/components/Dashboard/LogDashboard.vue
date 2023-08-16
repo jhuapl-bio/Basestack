@@ -8,6 +8,7 @@
   -->
 <template>
 	<!-- <v-card  class="mx-5" style="margin-top: 5%; margin-right: 5%;"> -->
+		
 	<div class="mx-auto" style="overflow-y: auto;" :max-height="panelHeight">
 		<!-- <LogWindow  :env="env"></LogWindow>  -->
 	</div>

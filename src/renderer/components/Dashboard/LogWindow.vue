@@ -7,10 +7,10 @@
   - # **********************************************************************
   -->
 <template>
-  <div  class="mt-3 mx-5"  style="overflow-y: auto; "    ref="logs" v-if="logs">
-    
-    <div :height="panelHeight"   >
-      <v-btn
+  <v-card
+        class="mx-auto; " style="overflow-y: auto; width: 100%; right: 2%" :height="panelHeight" v-if="logs"
+    >
+      <v-btn class="ml-8"
           icon-and-text
           color="secondary" small
           @click="open(link)"
@@ -21,13 +21,11 @@
         </v-icon>
         Open Log Folder 
       </v-btn>
-        <div   v-if="logs"   style="  border: none; overflow-y:auto; ">
-            
-            <pre v-for="(line, index) in logs"  v-bind:key="index" >{{ pretty(line) }}</pre>
+        <div      class="ml-8"  style="padding-bottom: 20px; overflow-y:scroll; ">
+            <pre v-for="(line, index) in formattedLogs"  v-bind:key="index" >{{ pretty(line) }}</pre>
         </div>
-    </div> 
     
-  </div> 
+  </v-card> 
   
 </template>
 
@@ -51,6 +49,9 @@ export default defineComponent({
 	computed: {
     link() {
       return this.env.logDir
+    },
+    formattedLogs(){
+      return this.logs.reverse()
     }
   },
   props: {
@@ -96,9 +97,10 @@ export default defineComponent({
   mounted() {
     window.electronAPI.requestLogs()
     this.logs = []
+
     window.electronAPI.getLog((event: any, log: string | string[]) => {
-       this.logs.unshift(...log)
-      this.logs = this.logs.slice(0, 200)
+      this.logs.push(...log)
+      this.logs = this.logs.slice(-200)
     });
   },
 });

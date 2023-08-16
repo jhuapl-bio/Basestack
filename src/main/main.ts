@@ -151,6 +151,13 @@ app.whenReady().then(() => {
     ipcMain.handle('fetchDependencies', async (event, message) => {
         client.mainWindow.webContents.send('getDependencies', client.dependencies.dependencies)
     }) 
+    ipcMain.handle('selectDir', async (event: any) => {
+        const { filePaths } = await dialog.showOpenDialog({
+            properties: ['openDirectory']
+        })
+        return filePaths ? filePaths[0] : null
+        
+    }) 
     ipcMain.handle('selectFile', async (event: any) => {
         const { filePaths } = await dialog.showOpenDialog({
             properties: ['openFile']

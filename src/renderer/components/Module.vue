@@ -6,8 +6,8 @@
                 <v-list>
 
                     <NewVariable ></NewVariable>
-                    <v-list-item v-for="[key, variable] in Object.entries(selectedChoice.variables)" :key="`${key}-listvar`"  >
-                        <div class="input-wrapper " v-if="! variable['output']">
+                    <v-list-item class="mb-0 pb-0" v-for="[key, variable] in Object.entries(selectedChoice.variables)" :key="`${key}-listvar`"  >
+                        <div class="input-wrapper mb-0 pb-0" v-if="! variable['output']">
                             <v-tooltip 
                                 v-if="variable['custom']" 
                                 location="top"
@@ -22,7 +22,7 @@
                                 :is="components[variable['element']]" 
                                 :data="variable['data']"
                                 :params="variable"
-                                :variable="moduleVariables[key]"
+                                :variable="selectedChoice.variables[key].value"
                                 :default="selectedChoice.variables[key].target"
                                 :editMode="editMode"
                                 :choices="selectedChoice.variables[key].choices"
@@ -106,6 +106,22 @@
                         </template>
                         Run Pipeline
                     </v-tooltip>
+                    <v-tooltip
+                        top v-if="currentProcess &&  currentProcess.running"
+                    >
+                        <template #activator="{   props }">
+                            <v-btn  icon @click="removeProcess(currentProcess['id'])" class="mx-4"  v-bind="props"   style="background: #orange; color:white" >
+                                
+                                <v-icon
+                                    color="orange-lighten-1"
+                                    :icon="'mdi-delete'"
+                                    variant="text" 
+                                ></v-icon>
+                            </v-btn>
+                        </template>
+                        Stop
+                    </v-tooltip>
+                    
                 </template>
             </v-list-item>
             <!-- Print a progress linear bar in vuetify if the process is not null and process is running (attribute), otherwise dont show -->
@@ -272,6 +288,7 @@ import File from './inputs/File.vue';
 import List from './inputs/List.vue'
 import Outputs from './Outputs.vue';
 import Num from './inputs/Num.vue'
+import Dir from './inputs/Dir.vue'
 import Checkbox from './inputs/Checkbox.vue';
 import Requirements from './Requirements.vue'
 import Spreadsheet from './inputs/Spreadsheet.vue';
@@ -306,6 +323,7 @@ export default defineComponent({
         Outputs: markRaw(Outputs),
         Num: markRaw(Num),
         Checkbox: markRaw(Checkbox),
+        Dir: markRaw(Dir),
         Requirements: markRaw(Requirements),
     },
     setup(props, {emit}) {
@@ -326,7 +344,7 @@ export default defineComponent({
             "static-directory": Static,
             "checkbox": Checkbox, 
             // "files": Files,
-            // "dir": Dir,
+            "dir": Dir,
         })
         let dialogVariable = ref(null);
         const validationStates = reactive({});
@@ -340,26 +358,27 @@ export default defineComponent({
         const slicedLogs = computed(() => {
             return currentProcess.value.logs.slice(-3);
         })
-        const formatVariables = (params: object, variables: any) => {
+        const formatVariables = (params: object) => {
             // loop through the variables in variables, check if the value is null, if so, then set to empty string
             let formatted_variables = {}
-            for (let [key, value] of Object.entries(variables)) {
-                if (!value) {
+            for (let [key, value] of Object.entries(params)) {
+                if (!value.value) {
                     formatted_variables[key] = ""
                 }
                 else {
-                    formatted_variables[key] = value
+                    formatted_variables[key] = value.value
                 }
             }
             return formatted_variables
         }
         const updateCommand = () => {
-            let formatted_variables = formatVariables(selectedChoice.value.variables, moduleVariables)
-            let commandRef = resolveShorthand(selectedChoice.value, {
+            let formatted_variables = formatVariables(selectedChoice.value.variables)
+            let commandRef = resolveShorthand(selectedChoice.value.command, {
                 ...formatted_variables
             });
-            checkNewVariables()
-            command.value = commandRef.command;
+            console.log(formatted_variables)
+            // checkNewVariables()
+            command.value = commandRef 
         };
         const updateBaseCommand = () => {
             command.value = selectedChoice.value.command;
@@ -399,10 +418,10 @@ export default defineComponent({
             // if enablewsl is true, then iterate through all files, directories, etc and convert C:, F:, E:, etc to /mnt/c, /mnt/f, /mnt/e, etc, the drive must be lowercase in /mnt/c from C:, and convert \ to /
             if (newValue.value){
                 Object.keys(moduleVariables).forEach((key) => {
-                    if (moduleVariables[key]) {
+                    if (selectedChoice.value.variables[key]) {
                         try {
-                            moduleVariables[key] = moduleVariables[key].replace(/\\/g, "/")
-                            moduleVariables[key] = moduleVariables[key].replace(/([A-Z]):/g, (match, p1) => `/mnt/${p1.toLowerCase()}`)
+                            selectedChoice.value.variables[key] = selectedChoice.value.variables[key].replace(/\\/g, "/")
+                            selectedChoice.value.variables[key] = selectedChoice.value.variables[key].replace(/([A-Z]):/g, (match, p1) => `/mnt/${p1.toLowerCase()}`)
                         } catch (err) {
                             console.log(err)
                         }
@@ -418,10 +437,10 @@ export default defineComponent({
                 }
             } else {
                 Object.keys(moduleVariables).forEach((key) => {
-                    if (moduleVariables[key]) {
+                    if (selectedChoice.value.variables[key]) {
                         try {
-                            moduleVariables[key] = moduleVariables[key].replace(/\\/g, "/")
-                            moduleVariables[key] = moduleVariables[key].replace(/\/mnt\/([a-z])/g, (match, p1) => `${p1.toUpperCase()}:`)
+                            selectedChoice.value.variables[key] = selectedChoice.value.variables[key].replace(/\\/g, "/")
+                            selectedChoice.value.variables[key] = selectedChoice.value.variables[key].replace(/\/mnt\/([a-z])/g, (match, p1) => `${p1.toUpperCase()}:`)
                         } catch (err) {
                             console.log(err)
                         }
@@ -444,7 +463,7 @@ export default defineComponent({
             // validate all of the variables, iterate through them, check if file or not 
             if (!editMode.value){
                 for (let  key of Object.keys(moduleVariables)){
-                    let value = moduleVariables[key]
+                    let value = selectedChoice.value.variables[key]
                     let idx = selectedChoice.value.variables[key]
                     if (idx){
                         if (idx.element  == "file"){
@@ -467,7 +486,7 @@ export default defineComponent({
                     if (variable['output']){
                         variables.push({
                             ...variable,
-                            value: moduleVariables[key]
+                            value: selectedChoice.value.variables[key]
                         })
                     }
                 }
@@ -491,7 +510,7 @@ export default defineComponent({
                         if (idx == -1 ){
                             if (!oldMatchedItems.value.includes(newVariable) && idx == -1) {
                                  window.electronAPI.addedVariableRequest(newVariable)
-                                // moduleVariables[newVariable] = null;
+                                // selectedChoice.value.variables[newVariable] = null;
                                 // recordhistory(newVariable, "variable");
                             }
                         }
@@ -502,7 +521,7 @@ export default defineComponent({
                     
                     oldMatchedItems.value.forEach(oldVariable => {
                         if (!newMatchedItems.includes(oldVariable)) {
-                            delete moduleVariables[oldVariable];
+                            delete selectedChoice.value.variables[oldVariable];
                             // recordhistory(oldVariable, "variable");
                         }
                     });
@@ -517,7 +536,7 @@ export default defineComponent({
             let index = props.module.choices.findIndex((choice) => choice ===  newValue.value)
             selectedChoiceIndex.value = index
             
-            setOutputVariables()
+            // setOutputVariables()
             checkNewVariables()
             updateSelectedChoiceIndex()
         }, {deep: true});
@@ -530,7 +549,7 @@ export default defineComponent({
             command.value = "";
             // delete all of the keys in moduleVariables
             Object.keys(moduleVariables).forEach(key => {
-                delete moduleVariables[key];
+                delete selectedChoice.value.variables[key];
             });
             refresh();
         }, {deep: true});
@@ -555,21 +574,20 @@ export default defineComponent({
                 command.value = selectedChoice.value.command
                 if (selectedChoice.value.variables){
                     for (let [key, variable] of Object.entries(selectedChoice.value.variables)){
-                        moduleVariables[key] = Array.isArray(variable['target']) ? variable['target'][0] : variable['target'];
+                        // selectedChoice.value.variables[key] = Array.isArray(variable['value']) ? variable['value'][0] : variable['value'];
                         validationStates[key] = null;
-                        changeVariable(key, moduleVariables[key], true);
                     }
                    
                 }
-                updateCommand();
+                // updateCommand();
             }
         };
         // add getRun, which updates the variables and command
         window.electronAPI.getRun((event, res) => {
             Object.keys(res.value.variables).forEach(key => {
                 // get index from variables
-                moduleVariables[key] = res.value.variables[key]
-                changeVariable(key, moduleVariables[key], true)
+                selectedChoice.value.variables[key] = res.value.variables[key]
+                changeVariable(key, selectedChoice.value.variables[key], true)
 
             })
             // update the command
@@ -579,6 +597,9 @@ export default defineComponent({
             updateCommand()
         });
         let runningProcess = -1
+        const removeProcess = async (id: string) => {
+            window.electronAPI.removeProcess(id)
+        }
         const run = async () => {
             if (!selectedChoice.value)
                 return;
@@ -644,7 +665,7 @@ export default defineComponent({
             let indx = selectedChoice.value.variables[key]
             if (indx){
                 delete selectedChoice.value.variables[key]
-                delete moduleVariables[key]
+                delete selectedChoice.value.variables[key]
             }
             // recordhistory(key, "variable");
         };
@@ -675,7 +696,7 @@ export default defineComponent({
                     validationStates[key] = "File does not exist";
                 }
                 else {
-                    moduleVariables[key] = filePath;
+                    selectedChoice.value.variables[key] = filePath;
                 }
             });
         };
@@ -688,68 +709,83 @@ export default defineComponent({
             
             // // Update the variable
             // // Record History
-            if (!ignoreHistory) {
-                recordhistory(variableKey, "variable", newValue);
-            }
+            // if (!ignoreHistory) {
+            //     recordhistory(variableKey, "variable", newValue);
+            // }
             if (editMode.value){
-                selectedChoice.value.variables[variableKey].target = newValue;
-                varr.target = newValue
+                // selectedChoice.value.variables[variableKey].target = newValue;
+                // varr.target = newValue
                 
-                let interpolatedValue = resolveShorthand(newValue, {
-                    ...selectedChoice.value,
-                    ...moduleVariables,
-                });
-                moduleVariables[variableKey] = interpolatedValue;
-            } else {
-                if (!selectedChoice.value.variables[variableKey].target){
-                    selectedChoice.value.variables[variableKey] = newValue;
-                }    
-                if (varr.element == 'checkbox'){
-                    moduleVariables[variableKey] = newValue ? varr.if : varr.else
-                } else {
-                    moduleVariables[variableKey] = newValue 
-                }
                 // let interpolatedValue = resolveShorthand(newValue, {
                 //     ...selectedChoice.value,
                 //     ...moduleVariables,
                 // });
-                
-                
+                // selectedChoice.value.variables[variableKey] = interpolatedValue;
+            } else {
+                if (!selectedChoice.value.variables[variableKey].target){
+                    selectedChoice.value.variables[variableKey].target = newValue;
+                }    
+                if (varr.element == 'checkbox'){
+                    varr.target = newValue ? varr.if : varr.else
+                    let parsed = {}
+                    // iterate through values,items of selectedChoice.value.variables and if the value is a variable, add as key, value to parsed
+                    Object.keys(selectedChoice.value.variables).forEach((key)=>{
+                        let value = selectedChoice.value.variables[key]
+                        if (value.element == "variable"){
+                            parsed[key] = value.target
+                        }
+                    })
+                    let interpolatedValue = resolveShorthand(varr.target, {
+                        ...parsed,
+                    });
+                    selectedChoice.value.variables[variableKey].value = interpolatedValue
+                } else {
+                    selectedChoice.value.variables[variableKey].value = newValue 
+                }
+                if (varr.target && !newValue){
+                    let interpolatedValue = resolveShorthand(varr.target, {
+                        ...selectedChoice.value.variables,
+                    });
+                }                
             }
  
             
-            if (varr.element == "file") {
-                validateFile(variableKey, moduleVariables[variableKey]);
-            }
-            else {
-                validateText(variableKey);
-            }
+            // if (varr.element == "file") {
+            //     validateFile(variableKey, selectedChoice.value.variables[variableKey]);
+            // }
+            // else {
+            //     validateText(variableKey);
+            // }
             
 
 
-            // // Interpolation
-            // let conditions = conditionalSets(params)
-            // selectedChoice.value.command = conditions.command
+            // // // Interpolation
+            // // let conditions = conditionalSets(params)
+            // // selectedChoice.value.command = conditions.command
             let variables_not = Object.keys(params.variables).filter((f: string) => {
-                return f !== variableKey && params.variables[f]['output'];
+                return f !== variableKey && 
+                    params.variables[f]['target'] 
             })
+            console.log(variables_not)
+            
             
             variables_not.map((key: string)=>{
                 let varr = params.variables[key]
                 let interpolatedValue = resolveShorthand(varr.target, {
-                    ...selectedChoice.value,
-                    ...moduleVariables
-                });
-                moduleVariables[key] = interpolatedValue;
+                    ...selectedChoice.value.variables
+                });  
+                // selectedChoice.value.variables[key] = interpolatedValue;
+                console.log(interpolatedValue, key)
+               
             })
             
-            setOutputVariables()
+            // setOutputVariables()
             // // // Re-interpolate command
             updateCommand();
         };
         window.electronAPI.getVariable((event, params: object) => {
             editMode.value = params['default']
-            // moduleVariables[params['variable']] = params['value']
+            // selectedChoice.value.variables[params['variable']] = params['value']
             changeVariable(params['variable'], params['value'], true)
         });
 
@@ -781,7 +817,7 @@ export default defineComponent({
             const variable = selectedChoice.value.variables[key]
             if (variable && !variable.output) {
                 if (variable.pattern) {
-                    validationStates[key] =   validateInput(variable.pattern, moduleVariables[key])  
+                    validationStates[key] =   validateInput(variable.pattern, selectedChoice.value.variables[key])  
                 }
                 else {
                     validationStates[key] = true;
@@ -923,6 +959,7 @@ export default defineComponent({
             command,
             dialogVariable,
             run,
+            removeProcess, 
             changeVariable,
             exportYAML,
             editMode,
