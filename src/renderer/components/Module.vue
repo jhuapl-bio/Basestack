@@ -377,7 +377,7 @@ export default defineComponent({
                 ...formatted_variables
             });
             console.log(formatted_variables)
-            // checkNewVariables()
+            checkNewVariables()
             command.value = commandRef 
         };
         const updateBaseCommand = () => {
@@ -401,7 +401,7 @@ export default defineComponent({
                     module: props.module.name,
                     type: "run",
                     value: {
-                        variables: toRaw(moduleVariables),
+                        variables: toRaw(selectedChoice.value.variables),
                         choice: toRaw(selectedChoice.value)
                     }
                 });
@@ -417,14 +417,15 @@ export default defineComponent({
         watch(() => enableWsl, (newValue, oldValue) => {
             // if enablewsl is true, then iterate through all files, directories, etc and convert C:, F:, E:, etc to /mnt/c, /mnt/f, /mnt/e, etc, the drive must be lowercase in /mnt/c from C:, and convert \ to /
             if (newValue.value){
-                Object.keys(moduleVariables).forEach((key) => {
-                    if (selectedChoice.value.variables[key]) {
+                Object.keys(selectedChoice.value.variables).forEach((key) => {
+                    if (selectedChoice.value.variables[key].value) {
                         try {
-                            selectedChoice.value.variables[key] = selectedChoice.value.variables[key].replace(/\\/g, "/")
-                            selectedChoice.value.variables[key] = selectedChoice.value.variables[key].replace(/([A-Z]):/g, (match, p1) => `/mnt/${p1.toLowerCase()}`)
+                            selectedChoice.value.variables[key].value = selectedChoice.value.variables[key].value.replace(/\\/g, "/")
+                            selectedChoice.value.variables[key].value = selectedChoice.value.variables[key].value.replace(/([A-Z]):/g, (match, p1) => `/mnt/${p1.toLowerCase()}`)
                         } catch (err) {
                             console.log(err)
                         }
+                        
                     }
                 })
                 updateCommand()
@@ -436,11 +437,11 @@ export default defineComponent({
                     selectedChoice.value.requirements[idx] = idxwsl
                 }
             } else {
-                Object.keys(moduleVariables).forEach((key) => {
-                    if (selectedChoice.value.variables[key]) {
+                Object.keys(selectedChoice.value.variables).forEach((key) => {
+                    if (selectedChoice.value.variables[key].value) {
                         try {
-                            selectedChoice.value.variables[key] = selectedChoice.value.variables[key].replace(/\\/g, "/")
-                            selectedChoice.value.variables[key] = selectedChoice.value.variables[key].replace(/\/mnt\/([a-z])/g, (match, p1) => `${p1.toUpperCase()}:`)
+                            selectedChoice.value.variables[key].value = selectedChoice.value.variables[key].value.replace(/\\/g, "/")
+                            selectedChoice.value.variables[key].value = selectedChoice.value.variables[key].value.replace(/\/mnt\/([a-z])/g, (match, p1) => `${p1.toUpperCase()}:`)
                         } catch (err) {
                             console.log(err)
                         }
@@ -462,7 +463,7 @@ export default defineComponent({
         watch (() => editMode, (newValue, oldValue )=>{
             // validate all of the variables, iterate through them, check if file or not 
             if (!editMode.value){
-                for (let  key of Object.keys(moduleVariables)){
+                for (let  key of Object.keys(selectedChoice.value.variables)){
                     let value = selectedChoice.value.variables[key]
                     let idx = selectedChoice.value.variables[key]
                     if (idx){
@@ -478,18 +479,15 @@ export default defineComponent({
         }, {deep: true})
         const setOutputVariables = () => {
             let variables = [] 
-            selectedChoice.value.variables = _.cloneDeep(props.module.variables)
-            if (props.module.variables){
-                let key: keyof typeof props.module.variables;
-                for (key in props.module.variables) {
-                    let variable = props.module.variables[key]
+            if (selectedChoice.value.variables){
+                let key: keyof typeof selectedChoice.value.variables
+                for (key in selectedChoice.value.variables) {
+                    let variable = selectedChoice.value.variables[key]
                     if (variable['output']){
-                        variables.push({
-                            ...variable,
-                            value: selectedChoice.value.variables[key]
-                        })
+                        variables.push(selectedChoice.value.variables[key])
                     }
                 }
+                console.log(outputVariables)
                 
                 outputVariables.value = variables
             }
@@ -536,7 +534,7 @@ export default defineComponent({
             let index = props.module.choices.findIndex((choice) => choice ===  newValue.value)
             selectedChoiceIndex.value = index
             
-            // setOutputVariables()
+            setOutputVariables()
             checkNewVariables()
             updateSelectedChoiceIndex()
         }, {deep: true});
@@ -548,7 +546,7 @@ export default defineComponent({
             originalChoice.value = null; 
             command.value = "";
             // delete all of the keys in moduleVariables
-            Object.keys(moduleVariables).forEach(key => {
+            Object.keys(selectedChoice.value.variables).forEach(key => {
                 delete selectedChoice.value.variables[key];
             });
             refresh();
@@ -579,7 +577,8 @@ export default defineComponent({
                     }
                    
                 }
-                // updateCommand();
+                updateCommand();
+                setOutputVariables()
             }
         };
         // add getRun, which updates the variables and command
@@ -604,7 +603,7 @@ export default defineComponent({
             if (!selectedChoice.value)
                 return;
             let commandr = toRaw(command.value);
-            let vars = JSON.parse(JSON.stringify(moduleVariables))
+            let vars = JSON.parse(JSON.stringify(selectedChoice.value.variables))
             // iterate through vars, but attach the type of the variable from the selectedChoice.variables
             Object.keys(vars).map((key) => {
                 let idx = selectedChoice.value.variables[key]
@@ -675,7 +674,7 @@ export default defineComponent({
             let val = selectedChoice["value"];
             let obj = {
                 ...props.module,
-                variables: moduleVariables,
+                variables: selectedChoice.value.variables,
                 choices: [val],
                 defaultchoice: 0
             };
@@ -709,9 +708,9 @@ export default defineComponent({
             
             // // Update the variable
             // // Record History
-            // if (!ignoreHistory) {
-            //     recordhistory(variableKey, "variable", newValue);
-            // }
+            if (!ignoreHistory) {
+                recordhistory(variableKey, "variable", newValue);
+            }
             if (editMode.value){
                 // selectedChoice.value.variables[variableKey].target = newValue;
                 // varr.target = newValue
@@ -750,12 +749,12 @@ export default defineComponent({
             }
  
             
-            // if (varr.element == "file") {
-            //     validateFile(variableKey, selectedChoice.value.variables[variableKey]);
-            // }
-            // else {
-            //     validateText(variableKey);
-            // }
+            if (varr.element == "file") {
+                validateFile(variableKey, selectedChoice.value.variables[variableKey].value);
+            }
+            else {
+                validateText(variableKey);
+            }
             
 
 
@@ -766,7 +765,6 @@ export default defineComponent({
                 return f !== variableKey && 
                     params.variables[f]['target'] 
             })
-            console.log(variables_not)
             
             
             variables_not.map((key: string)=>{
@@ -779,7 +777,7 @@ export default defineComponent({
                
             })
             
-            // setOutputVariables()
+            setOutputVariables()
             // // // Re-interpolate command
             updateCommand();
         };
@@ -817,7 +815,7 @@ export default defineComponent({
             const variable = selectedChoice.value.variables[key]
             if (variable && !variable.output) {
                 if (variable.pattern) {
-                    validationStates[key] =   validateInput(variable.pattern, selectedChoice.value.variables[key])  
+                    validationStates[key] =   validateInput(variable.pattern, selectedChoice.value.variables[key].value)  
                 }
                 else {
                     validationStates[key] = true;
@@ -864,7 +862,7 @@ export default defineComponent({
         const saveModuleCustom  = async () =>{
             let obj = {
                 ...props.module,
-                variables: Object.values(moduleVariables).map((f:any)=>{ return toRaw(f)}),
+                variables: Object.values(selectedChoice.value.variables).map((f:any)=>{ return toRaw(f)}),
                 choices: [toRaw(selectedChoice.value)],
                 defaultchoice: 0
             };

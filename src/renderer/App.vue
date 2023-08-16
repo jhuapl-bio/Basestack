@@ -195,7 +195,7 @@ export default defineComponent({
     //Set default name if you want
 
     const name = ref('ncbi_scrubber')
-    let installationSelected = ref(true)
+    let installationSelected = ref(false)
 
     const fetch_environment = async () => {
       let envt = await window.electronAPI.requestEnv() 
