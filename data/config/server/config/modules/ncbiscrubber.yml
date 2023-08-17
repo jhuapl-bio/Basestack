@@ -1,0 +1,66 @@
+- name: ncbi_scrubber
+  title: "NCBI Scrubber"
+  icon: "mdi-magic-staff"
+  version: 1.2
+  schema_version: 1
+  basestack_released: 2.0
+  description: "Remove human reads using NCBI scrubber"
+  url: https://github.com/nanoporetech/medaka
+  module: True
+  tags: 
+    - "scrubber"
+    - "human"
+    - "genomics"
+  tooltip: "Run human read scrubber"
+  procedures:
+    - name: ncbi_scrubber #Top level is the left-hand selection of the menu and the major module to install 
+      title: "NCBI scrubber"
+      icon: "mdi-microscope"
+      module: True
+      init: false 
+      dependencies:
+        - target: "ncbi/sra-human-scrubber"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "human read removal"
+        - "genomics"
+      variables:
+        interleaved:
+          label: "File is compressed?"
+          target: False
+          source: False
+          element: "checkbox"
+          define: 
+            interleaved: " -s "
+        out:
+          label: "Trimmed/filtered reads"
+          type: file
+          pattern: "*.fastq*"
+          output: true
+          source: "%{variables.input.bind.from}/medaka"
+          path:   "%{variables.input.bind.from}/medaka"
+        input:
+          label: "Input Sequencing Data"
+          hint: "Must be in Fastq format. This is(are) the input sequencing file(s)"
+          element: "file"
+        # decompress:
+        #   label: "File is compressed?"
+        #   target: False
+        #   source: False
+        #   element: "checkbox"
+        #   define: 
+        #     decompress: " -d "
+      services:
+        - name: ncbi_scrubber
+          label: "NCBI Scrubber"
+          image: "ncbi/sra-human-scrubber"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "
+              /opt/scrubber/scripts/scrub.sh  -i $input -o $out  $interleaved
+            "]
+   
