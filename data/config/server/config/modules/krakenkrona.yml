@@ -16,7 +16,7 @@
     - metagenomics
   procedures:
     - name: kraken2_to_krona
-      title: Kraken2 Mytax2
+      title: Kraken2 and Krona
       icon: binoculars
       init: false
       tooltip: >-
