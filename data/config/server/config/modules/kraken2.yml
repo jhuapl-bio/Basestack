@@ -182,6 +182,13 @@
           target: "/opt/data2/<<basename(%{variables.file2.source})>>"
           class: "wb-100  p-3 mb-1"
           source: null
+        compressed:
+          label: "Compressed"
+          element: "checkbox"
+          source: true
+          hint: "Are your files compressed?"
+          define: 
+            compressed: "--gzip-compressed"
         paired:
           label: "Paired end reads"
           element: "checkbox"
@@ -287,4 +294,4 @@
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report} ${memory_mapping} ${classified_out} ${unclassified_out} ${paired} "${file}" "${file2}" ']
+          command: ['bash', '-c', ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out ${compressed}  --report ${report} ${memory_mapping} ${classified_out} ${unclassified_out} ${paired} "${file}" "${file2}" ']
