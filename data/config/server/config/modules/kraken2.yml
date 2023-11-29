@@ -182,7 +182,7 @@
           target: "/opt/data2/<<basename(%{variables.file2.source})>>"
           class: "wb-100  p-3 mb-1"
           source: null
-        compressed:
+        compressed_input:
           label: "Compressed"
           element: "checkbox"
           source: true
