@@ -25,9 +25,7 @@
           format: "docker"
         - source: 
             url: "https://ftp.ncbi.nlm.nih.gov/pub/nawrocki/vadr-models/sarscov2/1.3-2/vadr-models-sarscov2-1.3-2.tar.gz"
-            type: "file"
-            user: anonymous 
-            protocol: "https"
+            type: "file" 
             remove: true
             target: "${writePath}/workflows/vadr/vadr-models-sarscov2-1.3-2.tar.gz"
           label: "Vadr model for SARS-CoV-2-1.3.2"

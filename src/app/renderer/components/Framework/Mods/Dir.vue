@@ -38,7 +38,7 @@
             </v-dialog>
             <v-tooltip bottom v-if="directory">
                     <template v-slot:activator="{ on }">
-                        <v-icon small v-on="on"  @click="this.$electron.shell.openPath(directory)" class="configure" color="primary">$archive
+                        <v-icon small v-on="on"  @click="electronOpenDir(directory)" class="configure" color="primary">$archive
                         </v-icon>
                     </template>
                     {{  directory    }}

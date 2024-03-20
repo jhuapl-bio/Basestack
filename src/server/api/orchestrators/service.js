@@ -5,7 +5,7 @@ const os = require("os")
 /*
    - # **********************************************************************
    - # Copyright (C) 2020 Johns Hopkins University Applied Physics Laboratory
-   - #
+   - #  
    - # All Rights Reserved.  
    - # For any other permission, please contact the Legal Office at JHU/APL.
    - # **********************************************************************
@@ -161,8 +161,8 @@ export class Service {
                 if (dependency.type == 'service' && dependency.id in store.modules){
                     $this.dependencies.push(store.services[dependency.id])
                 }
-            })
-        }
+            }) 
+        } 
     }
     async setOptions(){
         const $this = this
@@ -241,7 +241,19 @@ export class Service {
                         store.logger.error("Err in stopping container %o", err)
                     }
                 }
-                
+                // let index = procedures.dependencies.findIndex((f)=>{
+                //     return f.fulltarget == service.config.image
+                // })
+                // try{
+                //     if (autocheck){
+                //         console.log("buidling")
+                //         await procedures.build(false, index, true)
+                //         console.log("doen building")
+                //     }
+                // } catch (err){
+                //     store.logger.error(`${err} error in autopulling docker image`)
+                // }
+                    
                 $this.container = null
                 let skip = false 
                 skip = await $this.start(params, wait)
@@ -333,13 +345,13 @@ export class Service {
         let source = selected_option.source 
         // let target = selected_option.target  
         let target = selected_option.target  
-        
+          
         return [source, target] 
-    } 
+    }   
     updatePorts(ports, options){ 
         const $this = this 
         options.HostConfig.PortBindings = {}
-        options.ExposedPorts = {}
+        options.ExposedPorts = {} 
         ports.forEach((port)=>{
             if (!Array.isArray(port)){
                 options = $this.port_bind(port, options)
@@ -479,36 +491,33 @@ export class Service {
         let volumes = []
         const $this = this
         let seenTargetTos = []
-        function formatVolume(source, target){
-            return `${source}:${target}`
-        }
         async function formatBind(source, target, element){
-            
             let exists = await checkExists(source)
             let returnable = {
                 Source: `${source}`, 
                 Type: "bind", 
                 Target: `${target}`
             }
-            
             if (exists && exists.exists){
                 store.logger.info(`${source} exists, skipping creation`)
-                return returnable
+                
             } else { 
                 store.logger.info(`${source} source does not exist, creating folder`)
                 if (element !== "file"){
                     await writeFolder(source)
                 }
-                return  returnable
+                
             }
             
-       }   
+            return  returnable
+            
+        }   
         let defaultVariables = this.config.variables   
         
         let promises  = [] 
         if ($this.config.bind){ 
             if (Array.isArray($this.config.bind) || Array.isArray($this.config.bind.from)){   
-                let bnd = ( $this.config.bind.from ? $this.config.bind.from : $this.config.bind)   
+                let bnd = ($this.config.bind.from ? $this.config.bind.from : $this.config.bind)  
                     bnd.forEach((b)=>{
                         if (typeof b == 'object' && b.from){
                             promises.push(formatBind(
@@ -537,7 +546,6 @@ export class Service {
             } 
         } 
         if (this.config.orchestrator){
-            // binds.push(`${path.join(store.system.writePath,  "workflows", this.name, "docker") }:/var/lib/docker`)
             binds.push(`basestack-docker-${$this.name}:/var/lib/docker`)
         } 
          
@@ -546,11 +554,10 @@ export class Service {
                 if (selected_option.options){
                     selected_option = {... selected_option.options[(selected_option.option ? selected_option.option : 0)]}
                 }
-                
                 if (typeof selected_option == 'object' && selected_option.bind){
                     let from = selected_option.source
                     let to = selected_option.target 
-                    
+                     
                     if (selected_option.bind && selected_option.bind.from){
                         from = selected_option.bind.from  
                     }
@@ -558,54 +565,64 @@ export class Service {
                         to  = selected_option.bind.to
                     }  
                     if (!from){
-                        continue
+                        continue 
                     }
                     if (from == '.'){
                         from = null
                     }  
+                    
                     if (Array.isArray(selected_option.source) && selected_option.element != 'list'){
                         let s = from   
-                        s.forEach((directory,i)=>{ 
+                        s.forEach((directory,i)=>{  
                             let finalpath = to[i]    
                             if (seenTargetTos.indexOf(finalpath) == -1 && directory){
                                 finalpath = $this.removeQuotes(finalpath)
-                                promises.push(formatBind(
-                                    path.resolve(directory), 
-                                    this.reformatPath(finalpath)),
-                                    selected_option.element
-                                
-                                )
-                                
-                                // binds.push(`${path.resolve(directory)}:${this.reformatPath(finalpath)}`) 
+                                promises.push(formatBind(path.resolve(directory), this.reformatPath(finalpath),selected_option.element))
                             }   
+                            
                             seenTargetTos.push(finalpath)
                         })  
                     } else { 
-                        if (selected_option.bind == 'directory'){
+                        if (selected_option.bind == 'directory' || selected_option.bind == 'dir'){
                             let finalpath = path.dirname(to)
                             if (seenTargetTos.indexOf(finalpath) == -1 && from){
                                 finalpath = $this.removeQuotes(finalpath)
+                                
                                 promises.push(formatBind(
                                         path.resolve(path.dirname(from)), 
                                         this.reformatPath(finalpath),
                                         selected_option.element
-                                    )
+                                    ) 
                                 )
+                                
                                 // binds.push(`${path.resolve(path.dirname(from))}:${this.reformatPath(finalpath)}`) 
                             } 
                             seenTargetTos.push(finalpath)
                         } else if (typeof selected_option.bind == 'object' && from){
-                            
-                            selected_option.bind.to = $this.removeQuotes(selected_option.bind.to, selected_option.bind.from)
-                            promises.push(formatBind( 
-                                path.resolve(selected_option.bind.from),
-                                this.reformatPath(selected_option.bind.to),
-                                selected_option.element
+                            console.log("asdasddasd", selected_option.bind)
+                            if (Array.isArray(selected_option.bind)){
+                                 selected_option.bind.forEach((bd)=>{
+                                    bd.to = $this.removeQuotes(bd.to, bd.from)
+                                    promises.push(formatBind( 
+                                        path.resolve(bd.from),
+                                        this.reformatPath(bd.to),
+                                        selected_option.element
 
-                            )) 
+                                    )) 
+                                 }) 
+                            } else {
+                                selected_option.bind.to = $this.removeQuotes(selected_option.bind.to, selected_option.bind.from)
+                                promises.push(formatBind( 
+                                    path.resolve(selected_option.bind.from),
+                                    this.reformatPath(selected_option.bind.to),
+                                    selected_option.element 
+
+                                )) 
+                            }
+                            
                             // binds.push(`${path.resolve(selected_option.bind.from)}:${this.reformatPath(selected_option.bind.to)}`) 
                             seenTargetTos.push(selected_option.bind.to)
-                        }  else {    
+                        }  else {      
                             if (seenTargetTos.indexOf(to) == -1 && from){ 
                                 to = $this.removeQuotes(to)
                                 promises.push(
@@ -615,7 +632,7 @@ export class Service {
                                 )
                                 
                                 )
-                            }  
+                            }   
                             
                             seenTargetTos.push(to)
                         } 
@@ -624,17 +641,18 @@ export class Service {
                     
                       
                 }
-            }
+            } 
         }
         // this.binds.push(...binds)
         let promiseMounts = await Promise.allSettled(promises)
         store.logger.info("Done creating all mounts")
-        promiseMounts.forEach((f)=>{
-            if (f.status == 'fulfilled'){
-                mounts.push(f.value)
+        promiseMounts.forEach((f)=>{      
+            if (f.status == 'fulfilled'  ){
+                if (f.value.Source && f.value.Target){
+                    mounts.push(f.value)
+                }
             }
         }) 
-        // this.volumes.push(...binds)
         this.mounts.push(...mounts) 
         return   
     }     
@@ -683,7 +701,7 @@ export class Service {
                 }   
                 if (selected_option.create){
                     if (selected_option.create.type == 'list' && selected_option.source.length > 0){
-                        console.log("create content!")
+                        console.log("create content!", selected_option.create.target)
                         let output = $this.createContentOutput(selected_option.target, selected_option.create.sep, selected_option.header, selected_option.append_newline, selected_option.create.header,'list', selected_option.resolve)
                         promises.push(writeFile(  selected_option.create.target, output ).catch((err)=>{
                             logger.error(err)  
@@ -712,6 +730,7 @@ export class Service {
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
                 if (selected_option.set && (!selected_option.manifest.source || selected_option.manifest.source.length == 0 ) ){
+                    
                     for (let i = 0; i < selected_option.set.length; i++){
                         let set  = selected_option.set[i]
                         let exists = await fs.existsSync(set.source)
@@ -737,7 +756,7 @@ export class Service {
                                     })
                                     updates.push(rowupdate)   
                                 }) 
-                                 
+                                
                                 nestedProperty.set($this.config, set.target, updates)
                                 set.target = updates 
                             } catch (err){
@@ -746,9 +765,9 @@ export class Service {
                         }
                     }
                 }
-            }
-            
-            return
+            } 
+             
+            return 
         }
     }
     async defineReads(){
@@ -757,19 +776,19 @@ export class Service {
         let defaultVariables = this.config.variables 
         if (defaultVariables){
             for (let [name, selected_option ] of Object.entries(defaultVariables)){
-                if (selected_option.define_columns){
+                if (selected_option.define_columns){  
                     let defined = selected_option.define_columns
                     let defined_keys = []
+
                     for (let [key, column] of Object.entries(defined)){
                         if (typeof column != 'object') {
                             continue
                         }
-                        
                         if (!Array.isArray(column.element)){
                             column.element = [column.element]
-                        }
+                        } 
                         
-                        let tr = false
+                        let tr = false 
                         column.element.map((F)=>{
                             if (['directory','dir', 'file'].indexOf(F) > -1){
                                 tr=true
@@ -782,6 +801,7 @@ export class Service {
                     selected_option.source
                         .forEach((read)=>{
                         try{ 
+                            
                             defined_keys.forEach((key)=>{
                                 let bind = {
                                     Source: "",
@@ -792,23 +812,18 @@ export class Service {
                                 let row = read[key]
                                 let column = defined[key]
                                 if(row !== '' && row){ 
-                                    // if (row && !path.isAbsolute(row)){
-                                    //     row = path.join(path.dirname(read.source), row)
-                                    // }  
-                                    // if (column.element == 'file'){
-                                    //     bind.Source = path.resolve(path.dirname(row))
-                                    //     bind.Target = path.dirname(this.reformatPath(row))
-                                    // } else {  
-                                        // bind = `${row[read.column]}:"${this.reformatPath(row[read.column])}"`
+                                    
                                     bind.Source = path.resolve(`${row}`)
-                                    console.log(row,"<<")
                                     bind.Target = this.reformatPath(row)
-                                    // }
+                                    
                                     if( row && binds.indexOf(bind) == -1){
-                                        
                                         if (column.element == 'directory' || column.element == 'dir'){
                                             binds.push(bind)
                                         } else {
+                                            if (column.binddir){
+                                                bind.Source = path.dirname(bind.Source)
+                                                bind.Target = path.dirname(bind.Target)
+                                            }
                                             binds.push(bind)
                                         }
                                     }  
@@ -828,12 +843,12 @@ export class Service {
         }
         
     }
-   
     
-    defineEnv(){
+    
+    defineEnv(){ 
         let env = []   
         let bind = []    
-        const $this = this;  
+        const $this = this;    
         let seenTargetTos = []  
         let defaultVariables = $this.config.variables  
         if (defaultVariables){   
@@ -851,7 +866,7 @@ export class Service {
                                 env.push(`${key}=${( selected_option.target ? selected_option.target : selected_option.source)}`)                         
                             } 
                         } else {
-                            
+                             
                             if (selected_option.target ){
                                 let su  = selected_option.target.join( (selected_option.bindChar ? selected_option.bindChar : " " ) )
 
@@ -867,42 +882,55 @@ export class Service {
                         env.push(`${key}=${selected_option}`)
                     }
                 }
-                if (selected_option.define && selected_option.source){
-                    for( let [key, value] of Object.entries(selected_option.define)){
-                        if (value){
-                            if (typeof value == 'object' && value.path){
-                                env.push(`${key}=${$this.reformatPath(value.target)}`)
-                            } else {
-                                env.push(`${key}=${value}`)
+                if ((selected_option.define || full_item.define) && selected_option.source){
+                    if (full_item.define){
+                        for( let [key, value] of Object.entries(full_item.define)){
+                            if (value){
+                                if (typeof value == 'object' && value.path){
+                                    env.push(`${key}=${$this.reformatPath(value.target)}`)
+                                } else {
+                                    env.push(`${key}=${value}`)
+                                }
+                                
                             }
-                            
+                        }  
+                    } else {
+                        for( let [key, value] of Object.entries(selected_option.define)){
+                            if (value){
+                                if (typeof value == 'object' && value.path){
+                                    env.push(`${key}=${$this.reformatPath(value.target)}`)
+                                } else {
+                                    env.push(`${key}=${value}`)
+                                }
+                                
+                            } 
                         }
                     }
                     
                 }  
-                if (full_item.define && full_item.source){
+                // if (full_item.define && full_item.source){
                     
-                    for( let [key, value] of Object.entries(full_item.define)){
-                        if (value){
-                            if (typeof value == 'object' && value.path){
-                                env.push(`${key}=${$this.reformatPath(value.target)}`)
-                            } else {
-                                env.push(`${key}=${value}`)
-                            }
+                //     for( let [key, value] of Object.entries(full_item.define)){
+                //         if (value){
+                //             if (typeof value == 'object' && value.path){
+                //                 env.push(`${key}=${$this.reformatPath(value.target)}`)
+                //             } else {
+                //                 env.push(`${key}=${value}`)
+                //             }
                             
-                        }
-                    }  
-                }  
+                //         }
+                //     }  
+                // }  
                 
                 
-              
+               
             } 
-        }  
+        }    
            
         this.env.push(...env)
         return 
     }  
-
+ 
     async start(params, wait){  
 		const $this = this
         this.status.error = null
@@ -926,21 +954,19 @@ export class Service {
                     if (cmd){  
                         options.Cmd = $this.config.command
                     } 
-                    let promises = [];  
-                    let promisesInside = []
-                    let values = [] 
+                    let promises = [];       
+                    let promisesInside =  []  
+                    let values = []    
                     options = cloneDeep($this.updateConfig(options))
                     /////////////////////////////////////////////////
                     let custom_variables = params.variables 
-                    let defaultVariables = {}     
-                    let seenTargetTos = []    
-                    let seenTargetFrom = []     
-                         
-                    // $this.config.variables = defaultVariables  
-                    let envs = {}   
-                    // $this.setTarget()
+                    let defaultVariables = {}      
+                              
+                    // $this.config.variable s = defaultVariables  
+                    let envs = {}       
+                    // $this.setTarget()  
                     defaultVariables = $this.config.variables 
-                    if ($this.config.serve ){      
+                    if ($this.config.serve  ){      
                         let variable_port = defaultVariables[$this.config.serve] 
                         options  = $this.updatePorts([`${variable_port.bind.to}:${variable_port.bind.from}`],options) 
                     }   
@@ -949,7 +975,7 @@ export class Service {
                     
                     let mounts = await $this.defineReads()
                     
-                    store.logger.info("define reads done")
+                    store.logger.info("define reads done  ")
                     // await $this.defineSet() 
                     
                     store.logger.info("define set done")
@@ -1052,7 +1078,7 @@ export class Service {
                     if (! options.Image ){ 
                         throw new Error("No Image available")  
                     }   
-                         
+                          
                     if (typeof options.Cmd == "string"){    
                         options.Cmd = ['bash', '-c', options.Cmd]  
                     }     
@@ -1066,11 +1092,10 @@ export class Service {
                     options.Env = [...options.Env, ...$this.env ]  
                     options.HostConfig.Binds = [...options.HostConfig.Binds, ...$this.binds ]
                     options.HostConfig.Binds = Array.from(new Set(options.HostConfig.Binds))
+                    options.Tty = true
                     let seen = {}
-                    mounts.forEach((m)=>{
+                    mounts.forEach((m)=>{ 
                         if (!seen[m.Target]){ 
-                            // m.Target = `"${m.Target}"`
-                            // m.Source = `"${m.Source}"`
                             options.HostConfig.Mounts.push(m)
                             seen[m.Target] = m.Source
                         }
@@ -1082,8 +1107,24 @@ export class Service {
                             seen[m.Target] = m.Source
                         }
                     })
+                    if ($this.config.gpu){
+                        options.HostConfig.DeviceRequests = [
+                            { 
+                                "Driver": "",
+                                "Count": -1,
+                                "DeviceIDs": null, 
+                                "Capabilities": [   
+                                    [
+                                        "gpu"
+                                    ] 
+                                ], 
+                                "Options":  {} 
+                            } 
+                        ]
+                    }
+                    // store.logger.info("%o", $this.config)
                     store.logger.info("%o _____ ",options)
-                    logger.info(`starting the container ${options.name} `)
+                    // logger.info(`starting the container ${options.name} `)
                     if ($this.config.dry){ 
                         resolve()  
                     } else {
@@ -1111,11 +1152,11 @@ export class Service {
                                     return new Promise((resolve, reject)=>{
                                         container.inspect((err, inspection)=>{
                                             try{
-                                                if (err){
+                                                if (err){ 
                                                     logger.error(`${err}, error in container finalization of exit code: ${$this.name}`)
                                                     $this.status.error  = err
-                                                } else if (!inspection){
-                                                    $this.status.complete= true
+                                                } else if (!inspection){  
+                                                    $this.status.complete= true 
                                                     $this.status.running = false
                                                 } else if (inspection.State.exited) {
                                                     logger.info(`${$this.name}, container finalized with exit code: ${inspection.State.ExitCode} ${inspection.State.Error}`)
@@ -1159,28 +1200,28 @@ export class Service {
                                             if (err.json && err.json.message){
                                                 $this.status.error = err.json.message
                                             } else {
-                                                $this.status.error = err
+                                                $this.status.error = err.message
                                             } 
+                                            $this.status.running = false
+                                            $this.status.complete = false
                                             reject(err)  
                                         }  
+                                        // resolve()
                                         if (!wait || $this.config.continuous){
-                                            resolve( false )
-                                        } else {   
-                                            
-                                            // if (process.platform == 'win32'){
+                                            resolve( true )
+                                        } else {                                               
                                             let ended = false
                                             $this.jobInterval = setInterval(()=>{
                                                 if (ended){
                                                     clearInterval($this.jobInterval)
-                                                }  
+                                                }    
                                                 if ($this.status.complete){
-                                                    ended = true
+                                                    ended = true 
                                                     clearInterval($this.jobInterval)
                                                     if ($this.status.error){
                                                         resolve(true)
                                                     } else {
                                                         resolve(false)
-    
                                                     }
                                                 }
                                             },1000)

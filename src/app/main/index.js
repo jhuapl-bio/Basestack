@@ -69,7 +69,7 @@ if (process.env.NODE_ENV !== 'development') {
 process.env.resourcesPath = process.resourcesPath
   
 // Import the confiugrations object for downstream use 
-var {define_configuration } = require("../../shared/definitions.js")
+var {define_configuration, importDependencies } = require("../../shared/definitions.js")
 const { Client } = require("./client.js") // Import main client class
 const client = new Client(app)
  
@@ -78,10 +78,6 @@ if (process.env.NODE_ENV === 'production'){
     // Since dev is separate in starting app and server, we prepackage the server in prod mode
     // Import the function to start the server and then run it later .
     create_server = require("../../server/index.server.js").create_server
-    // close_server = require("../../server/server.js").close_server
-    // const { 
-    //   cancel_container
-    //  } = require('../modules/server/api/controllers/index.js')
 }
 
   
@@ -124,6 +120,9 @@ client.app.on('ready', async () => {
       // Set up the logging object for rendering to console AND filesystem log files 
       logger = require("./logger.js").logger(config.logs.error, config.logs.logfile)
       process.env.logfile = config.logs.logfile
+      importDependencies(store.system).then((results)=>{
+        
+      })
       process.env.errorfile = config.logs.error
       client.logger = logger;
       if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdates()

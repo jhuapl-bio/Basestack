@@ -216,18 +216,20 @@ export var loadImage = function(obj){
 }
 
 
-export var pullImage  = function(name){
+export var pullImage  = async function(name){
+	
 	return new Promise(function(resolve,reject){
-	console.log(name,"<<<< name pull")
     store.docker.pull(name)
       .then((stream, error)=>{
         if(error){
           reject(error)
         }
+		
+		// store.docker.modem.followProgress(stream,  logger.info, logger.info)
         resolve(stream)
       }).catch((errStream)=>{
         store.logger.error("Err in pulling image %s", name)
-        reject(errStream)
+        reject(errStream) 
       });
     })
 }

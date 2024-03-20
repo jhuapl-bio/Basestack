@@ -27,7 +27,7 @@ class FileService {
   updateCacheServiceVariable(params) { // Used
     return Api().post(`${baseEndpoint.get()}/session/cache/service/variable`, params)    
   }
-  getDefaults(){ // USed
+  getDefaults(){ // USed  
     return Api().get(`${baseEndpoint.get()}/defaults/get`)    
   }
   setRemoteModule(params){ // Used
@@ -36,7 +36,7 @@ class FileService {
   saveRemoteModule(params){  //Used
     return Api().post(`${baseEndpoint.get()}/remote/save/modules`, params)    
   }
-  
+   
   getModule(param){ //Used
     return Api().get(`${baseEndpoint.get()}/catalog/get/${param.catalog}`)    
   }
@@ -56,7 +56,7 @@ class FileService {
     return Api().post(`${baseEndpoint.get()}/procedure/build/dependency`, params)    
   }
   getProcedure(params){ // used
-    return Api().get(`${baseEndpoint.get()}/procedure/get/${params.catalog}/${params.procedure}/${params.token}`)    
+    return Api().get(`${baseEndpoint.get()}/procedure/get/${params.catalog}/${params.version}/${params.procedure}/${params.token}`)    
   }
   getProcedures(params){ // used
     return Api().get(`${baseEndpoint.get()}/procedures/get/${params.catalog}/${params.token}`)    
@@ -67,7 +67,8 @@ class FileService {
   getJobStatus(params){ // Used
     return Api().get(`${baseEndpoint.get()}/job/status/${params.catalog}/${params.procedure}`)    
   }
-  startJob(params){ // Used
+  startJob(params) { // Used
+    console.log("job start", params)
     return Api().post(`${baseEndpoint.get()}/job/start`, params)    
   }
   cancelJob(params){ // Used
@@ -121,7 +122,8 @@ class FileService {
   cancelProcedureDependency(params){
     return Api().post(`${baseEndpoint.get()}/procedure/build/cancel/dependency`, params)    
   }
-  fetchRemoteCatalog(target, name){ // Used
+  fetchRemoteCatalog(target, name) { // Used
+    console.log(target,name)
     return Api().get(`${baseEndpoint.get()}/remote/get/${target}/${name}`)
   }
   getInstallStatus(params){ // Used

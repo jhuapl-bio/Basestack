@@ -10,6 +10,7 @@
   
   <v-row>
     <v-col sm="12" >
+      
     <v-toolbar   cyan width="100%" class=" elevation-12 "> 
       <v-toolbar-title>{{title}}</v-toolbar-title>
       <v-divider vertical inset class="ml-4 mr-8"></v-divider>
@@ -25,24 +26,40 @@
         Customize
       </v-btn>
       
-      
-      
       <v-autocomplete 
         v-model="selectedVersion"
-        :items="libraryVersions" 
-        @change="updateStagedVersion($event)"
+        :items="libraryVersions"  
+        @change="updateStagedVersion"
         item-text="version"
-        item-value="idx"
-        clearable dense
+        :item-value="['id']"
+        dense
         class="mx-auto "
+        auto-select-first
         style="max-width: 50%;"
         label="Select Item"
         :return-object="true"
-        single-line
+        single-line 
       >
-        <template v-slot:selection="{ item }">
-            <v-list-item-title >{{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}</v-list-item-title>
+        <template v-slot:selection="{  item }">
+            <v-list-item-title >{{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}  {{ item.remote   ? "Remote" : "Local"}}</v-list-item-title>
             <v-list-item-subtitle>v{{ item.version }}</v-list-item-subtitle>
+            <v-tooltip top class="ml-2" :key="`${item.imported}-importedkey`" v-if="item.removable && item.imported">
+              <template v-slot:activator="{ on }">
+                <v-btn @click="removeModule(item.id)" v-on="on" icon >
+                  <v-icon color="orange" medium>
+                    $trash-alt
+                  </v-icon>
+                </v-btn>
+              </template>
+              Remove saved module
+            </v-tooltip>
+            <v-tooltip top class="ml-2" >
+              <template v-slot:activator="{ on }">
+                <v-icon  v-on="on" @click="importVersion(item.id)" medium color="primary">$download</v-icon>
+              </template>
+              Import module for offline use
+            </v-tooltip>
+            
         </template>
         <template v-slot:item="{ item }">
           <v-list-item-avatar
@@ -53,8 +70,8 @@
             </v-icon>
           </v-list-item-avatar>
           <v-list-item-content>
-            <v-list-item-title >{{`v${item.version}`}}, {{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}</v-list-item-title>
-            <v-list-item-subtitle v-text="(!item.imported && !item.local ? 'Not imported from remote or not pre-packaged' : ( item.imported && !item.local ? 'Imported from remote database' : 'Pre-packaged default with Basestack' )  )"></v-list-item-subtitle>
+            <v-list-item-title > {{`v${item.version}`}}, {{ ( item.version != latest ? "Not Latest" : 'Latest' ) }}</v-list-item-title>
+            <v-list-item-subtitle v-text="( item.imported && item.local ? 'Imported from remote and not base version' : ( item.remote ? 'Imported from REMOTE database, not downloaded' : 'Pre-packaged default with Basestack' )  )"></v-list-item-subtitle>
           </v-list-item-content>
           <v-list-item-action>
             <v-list-item-subtitle v-if="item.local">
@@ -63,17 +80,10 @@
             <v-list-item-subtitle v-else>
               Not Base Version
             </v-list-item-subtitle>
+            
           </v-list-item-action>
         </template>
-        <template v-slot:append>
-          <v-tooltip top class="ml-2" >
-            <template v-slot:activator="{ on }">
-              <v-icon  v-on="on" @click="importVersion" medium color="primary">$download</v-icon>
-            </template>
-            Import module for offline use
-          </v-tooltip>
-          
-        </template>
+      
         <template v-slot:prepend>
           <v-subheader>Version</v-subheader>
           <v-icon medium color="primary">$tags</v-icon>
@@ -94,6 +104,7 @@
       <template v-slot:extension >
         <v-subheader>Procedures
         </v-subheader>
+        
         <v-tabs
           v-model="procedureIdx"
           align-with-title 
@@ -110,6 +121,16 @@
             {{index}}. {{ item.title }}
           </v-tab>
         </v-tabs>
+        <v-switch
+          v-model="gpu" :label="`GPU`" @click="snackbar=gpu" class="mx-2" v-if="os == 'linux' "
+        >
+        </v-switch>
+        <v-switch
+          v-model="autocheck" :label="`Autopull Images`" class="mx-2" 
+        >
+        </v-switch>
+        
+        <v-spacer></v-spacer>
         <v-btn
           color="primary"
           class="text-caption"
@@ -118,9 +139,10 @@
           <v-icon class="mr-3" small color="primary lighten-2" >
               $cog 
           </v-icon>
-          Reset Default
+          Reset
         </v-btn>
         
+        <v-spacer></v-spacer>
         <v-dialog
           transition="dialog-bottom-transition"
           max-width="80vh" v-model="dialogLog"
@@ -135,7 +157,7 @@
                   medium class="mr-3"
                 >$comment
               </v-icon>
-              Log Viewer
+              Job Logs
             </v-btn>
           </template>
           <template v-slot:default="dialogLog">
@@ -161,26 +183,19 @@
         </v-dialog>
       </template>
       
-      <v-tooltip top class="ml-2" :key="`${selectedVersion.imported}-importedkey`" v-if="selectedVersion.removable && selectedVersion.imported">
-        <template v-slot:activator="{ on }">
-          <v-btn @click="removeModule(selectedVersion.idx, selectedVersion.name)" v-on="on" icon >
-            <v-icon color="orange" medium>
-              $trash-alt
-            </v-icon>
-          </v-btn>
-        </template>
-        Remove saved module
-      </v-tooltip>
+      
       <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-              <v-icon v-on="on" medium color="indigo "  v-on:click="fetchRemoteCatalog(selectedVersion.name)" style="text-align:right" class="configure ml-2 mr-3">$external-link-alt</v-icon>
+              <v-btn v-on="on" fab  v-on:click="fetchRemoteCatalog(selectedVersion.name)" class="mx-2">
+                <v-icon  medium color="indigo "   style="text-align:right" class="configure">$external-link-alt</v-icon>          
+              </v-btn>
           </template>
           Fetch Versions for Module
       </v-tooltip>
       <v-divider vertical inset ></v-divider>
       <v-tooltip top>
           <template v-slot:activator="{ on }">
-              <v-btn v-on="on" icon @click="start_procedure()">
+              <v-btn v-on="on"  class="mx-2" fab  @click="start_procedure()">
                   <v-icon   color="primary" medium>
                       $play-circle
                   </v-icon>
@@ -190,7 +205,7 @@
       </v-tooltip>
       <v-tooltip top v-if="job && job.running">
           <template v-slot:activator="{ on }">
-              <v-btn v-on="on" medium icon @click="cancel_procedure()" >
+              <v-btn v-on="on" fab    class="mx-2"  @click="cancel_procedure()" >
                   <v-icon color="orange darken-2" medium>
                   $times
                   </v-icon>
@@ -258,8 +273,10 @@
       </v-navigation-drawer>
      
     <v-col sm="3" class="shrink">
+      <Docker :mini="true"></Docker>
       <v-dialog 
           transition="dialog-bottom-transition"
+          v-model="librarydialog"
       >
       <template v-slot:activator="{ on, attrs }">
           <v-card
@@ -282,29 +299,44 @@
             <v-card-title v-else class="text-h5">
               Module Status
             </v-card-title>
-            <v-card-subtitle>{{showInstalled}} up-to-date dependencies</v-card-subtitle>
+            <v-card-subtitle>{{showInstalled.required}} Required installed and usable</v-card-subtitle>
+            <v-card-subtitle>{{showInstalled.all}} Usable and installed dependencies</v-card-subtitle>
             <v-card-text class="text-h6 my-0 py-0" v-if="installStatus.fully_installed">All dependencies installed</v-card-text>
             <v-card-text class="text-h6 my-0 py-0" v-else>Missing 1 or more dependencies</v-card-text>
             <v-card-text  class="text-h6 my-0 py-0">Total Space Used: ~{{totalSpaceUsed}}</v-card-text>
+            <v-card-text>
+              <v-btn
+                  v-on="on" v-bind="attrs"
+                  class="text-caption" color="secondary" icon-and-text
+                  dark small @click="buildModule(true)"
+              >
+                Build Required Only
+                <v-icon small class="ml-3"
+                >
+                  $download
+                </v-icon>
+              </v-btn>
+            </v-card-text>
             <v-card-actions>
               <v-btn
                   v-on="on" v-bind="attrs"
                   class="text-caption"
-                  dark small 
+                  light small 
               >
                 Check
                 <looping-rhombuses-spinner  
                   :animation-duration="6000" v-if="installStatus.building"
                   :size="3" class="ml-1"
-                  :color="'white'"
+                  :color="'black'"
                   />  
               </v-btn>
+              <v-spacer></v-spacer>
               <v-btn
                   v-on="on" v-bind="attrs"
                   class="text-caption" color="primary" icon-and-text
                   dark small @click="buildModule()"
               >
-                Build
+                Build All
                 <v-icon small class="ml-3"
                 >
                   $download
@@ -336,109 +368,129 @@
         </v-tooltip>
         {{ ( latest ? 'A newer version is available' : 'Could not fetch latest version' ) }}
       </v-banner>
+      
     </v-col>
     <v-col sm="9">
-      <v-subheader class="overflow-x-visible mx-4 indigo lighten-5" v-if="selectedVersion.description">{{selectedVersion.description}}</v-subheader>
-      <v-stepper  v-model="el" class="pb-0" v-if="services" >
-          <v-stepper-header
-              class="configure"
+      <v-snackbar
+        v-model="snackbar" multi-line
+        :timeout="22000" location="center"
+      >
+        Allow GPU access inside Docker Containers on Linux ONLY<br>
+        Ensure that <code>nvidia-container-toolkit</code> is installed and <code>Docker</code> then restarted with <br>
+        <code>`sudo systemctl restart docker`</code>
+        <v-btn
+          color="blue"
+          @click="openExternalURL('https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#step-2-install-nvidia-container-toolkit')" 
+        >
+          See Instructions for <code>nvidia-container-toolkit</code> (REQUIRED)
+        </v-btn>
+        <template v-slot:action="{ attrs }">
+          <v-btn
+            color="blue"
+            text
+            v-bind="attrs"
+            @click="snackbar = false"
           >
-            <template v-for="(entry, key) in services"  >
-              
-                <v-stepper-step
-                    :complete="(status[key] ? status[key].success : false)"
-                    :key="key+'-entry'"
-                    :disabled="true"
-                    complete-icon="$check"
-                    :rules="[()=>{
-                        return (status[key] && status[key].error ? !status[key].error : true) 
-                    }]"
-                    error-icon="$times-circle"
-                    @click="el = key+1"
-                    :step="key+1"
+            Close
+          </v-btn>  
+        </template>
+      </v-snackbar>
+      <v-subheader class="overflow-x-visible mx-4 indigo lighten-5" v-if="selectedVersion.description">{{selectedVersion.description}}</v-subheader>
+     
+      <v-stepper  v-model="el"  v-if="services" > 
+          <v-stepper-header 
+          >      
+          <template  v-for="(entry, key) in services"  >
+            <v-stepper-step 
+                :complete="(status[key] ? status[key].success : false)" 
+                :disabled="true"     complete-icon="$check"   
+                :rules="[()=>{ 
+                    return (status[key] && status[key].error ? !status[key].error : true) 
+                }]"  
+                error-icon="$times-circle" 
+                @click="el = key+1" 
+                :step="key+1"
+            >
+              {{ ( entry.label ? entry.label : entry.name ) }} 
+              <small class="">{{ services_to_use[key] >= 1 || !services_to_use[key] == null ? 'Enabled' : "Disabled" }}
+                <v-tooltip top   v-if="services_to_use[key] >= 1 || !services_to_use[key] == null" >
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on"  class="ml-2" small color="primary lighten-2" @click="services_to_use[key] = 0">
+                            $check
+                        </v-icon>
+                    </template>
+                    Click to Disable
+                </v-tooltip>
+                <v-tooltip top v-else >
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on"  class="ml-2" small color="warning lighten-1" @click="services_to_use[key] = 1">
+                            $slash
+                        </v-icon>
+                    </template>
+                    Click to Enable
+                </v-tooltip>
+                <v-tooltip top v-if="status && status[key] && status[key].error">
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on" class="ml-2"  small color="orange darken-2">
+                            $exclamation-triangle
+                        </v-icon>
+                    </template>
+                    {{status[key].error}}
+                </v-tooltip>
+                <v-tooltip top v-else-if="status && status[key] && status[key].cancelled">
+                    <template v-slot:activator="{ on }">
+                        <v-icon v-on="on"  class="ml-2" small color="orange darken-2">
+                            $ban
+                        </v-icon>
+                    </template>
+                    Cancelled!
+                </v-tooltip>
+                <v-dialog
+                  transition="dialog-bottom-transition"
+                  max-width="600"
                 >
-                    
-                    {{ ( entry.label ? entry.label : entry.name ) }} 
-                    <small class="">{{ services_to_use[key] >= 1 || !services_to_use[key] == null ? 'Enabled' : "Disabled" }}
-                      <v-tooltip top  :key="key+'-entryDi'" v-if="services_to_use[key] >= 1 || !services_to_use[key] == null" >
-                          <template v-slot:activator="{ on }">
-                              <v-icon v-on="on"  class="ml-2" small color="primary lighten-2" @click="services_to_use[key] = 0">
-                                  $check
-                              </v-icon>
-                          </template>
-                          Click to Disable
-                      </v-tooltip>
-                      <v-tooltip top :key="key+'-entryDi'" v-else >
-                          <template v-slot:activator="{ on }">
-                              <v-icon v-on="on"  class="ml-2" small color="warning lighten-1" @click="services_to_use[key] = 1">
-                                  $slash
-                              </v-icon>
-                          </template>
-                          Click to Enable
-                      </v-tooltip>
-                      <v-tooltip top v-if="status && status[key] && status[key].error">
-                          <template v-slot:activator="{ on }">
-                              <v-icon v-on="on" class="ml-2"  small color="orange darken-2">
-                                  $exclamation-triangle
-                              </v-icon>
-                          </template>
-                          {{status[key].error}}
-                      </v-tooltip>
-                      <v-tooltip top v-else-if="status && status[key] && status[key].cancelled">
-                          <template v-slot:activator="{ on }">
-                              <v-icon v-on="on"  class="ml-2" small color="orange darken-2">
-                                  $ban
-                              </v-icon>
-                          </template>
-                          Cancelled!
-                      </v-tooltip>
-                      <v-dialog
-                        transition="dialog-bottom-transition"
-                        max-width="600"
-                      >
-                        <template v-slot:activator="{ on,attrs }">                        
-                            <v-icon  v-bind="attrs" v-on="on" class="ml-2" small color="primary lighten-2" >
-                                $cog
-                            </v-icon>
-                        </template>
-                        <template v-slot:default="dialog">
-                          <v-card>
-                            <v-toolbar
-                              color="light"
-                              dark
-                            >Adjust Configuration for service: {{entry.label}}
-                            <v-spacer>
-                            </v-spacer>
-                            </v-toolbar>
-                            <v-card-text>
-                              <small>Default image: {{entry.image}}</small>
-                              <v-text-field
-                                label="Service Image to Use"
-                                v-model="custom_images[key]"
-                                single-line
-                              ></v-text-field>
-                              <v-btn
-                                text @click="custom_images[key]=entry.image"
-                              >Default</v-btn>
-                            </v-card-text>
-                            <v-card-actions class="justify-end">
-                              <v-btn
-                                text
-                                @click="dialog.value = false"
-                              >Close</v-btn>
-                            </v-card-actions>
-                          </v-card>
-                        </template>
-                      </v-dialog>
-                    </small>
-                </v-stepper-step>
-                <v-divider
-                    v-if="key !== services.length - 1"
-                    :key="key"
-                ></v-divider>
-            </template>
+                  <template v-slot:activator="{ on,attrs }">                        
+                      <v-icon  v-bind="attrs" v-on="on" class="ml-2" small color="primary lighten-2" >
+                          $cog
+                      </v-icon>
+                  </template>
+                  <template v-slot:default="dialog">
+                    <v-card>
+                      <v-toolbar
+                        color="light"
+                        dark
+                      >Adjust Configuration for service: {{entry.label}}
+                      <v-spacer>
+                      </v-spacer>
+                      </v-toolbar>
+                      <v-card-text>
+                        <small>Default image: {{entry.image}}</small>
+                        <v-text-field
+                          label="Service Image to Use"
+                          v-model="custom_images[key]"
+                          single-line
+                        ></v-text-field>
+                        <v-btn
+                          text @click="custom_images[key]=entry.image"
+                        >Default</v-btn>
+                      </v-card-text>
+                      <v-card-actions class="justify-end">
+                        <v-btn
+                          text
+                          @click="dialog.value = false"
+                        >Close</v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </template>
+                </v-dialog>
+              </small>
+            </v-stepper-step>
+            <v-divider
+              v-if="key !== services.length - 1"
+              :key="`${key}-dividerKey`"
+            ></v-divider>
+          </template>
         </v-stepper-header>
-          
       </v-stepper>
       <v-card  v-if="anyOutput" class="scroll ">
         <Progresses
@@ -500,84 +552,12 @@
       >
       </ListParams>
     </v-col>
-    <!-- <v-footer
-      v-bind="{
-        absolute: true,
-      }"
-      app
-      :padless="false"
-    >
-      <v-dialog
-        transition="dialog-bottom-transition"
-        max-width="80vh" v-model="dialogLog"
-      >
-        <template v-slot:activator="{ on, attrs }">
-          <v-card
-            flat
-            tile
-            width="100%"
-            class="red lighten-1 text-center"
-          >
-              <v-card-text>
-              <v-btn
-                icon
-                v-bind="attrs" class="justify-center text-center"
-                v-on="on"
-              >
-                <v-icon
-                  medium
-                >$comment
-                </v-icon>
-              </v-btn>
-            </v-card-text>
-          </v-card>
-        </template>
-        <template v-slot:default="dialogLog">
-          <v-card
-          >
-            <v-toolbar
-              color="indigo"
-              dark
-            >Log output</v-toolbar>
-            <v-card-text>
-              <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow> 
-            </v-card-text>
-            <v-card-actions class="justify-center">
-              <v-btn
-                text
-                @click="dialogLog.value = false"
-              >Close</v-btn>
-            </v-card-actions>
-          </v-card>
-          
-        </template>
-        
-      </v-dialog>
-    </v-footer> -->
-    <!-- <v-col :sm="!selectedProcedure.full_orientation ? 6 : 12" v-if="headers.length > 0 && procedure "  >
-      <v-card height="90vh" class="scroll fill-height"> -->
-        <!-- <Progresses
-          :progresses="procedure.watches"
-          :status="status"
-          :job="job"
-          :catalog="module"
-          :procedure="procedureIdx"
-          :removal_override="procedure.removal_override"
-          @removeCustomVariable="removeCustomVariable"
-          :defaultHeaders="outputHeaders"
-        >
-        </Progresses> -->
-        <!-- <LogWindow  v-if="job && job.stream  " :info="job.stream" ></LogWindow>  -->
-        
-      <!-- </v-card> -->
-    <!-- </v-col> -->
   </v-row>
 </template>
 
 <script>
 const cloneDeep = require("lodash.clonedeep");
 import nestedProperty from 'nested-property';
-
 import { Configuration } from '../../../../shared/configuration';
 import LogWindow from '@/components/Dashboard/DashboardDefaults/LogWindow.vue';
 import FileService from '@/services/File-service.js'
@@ -598,7 +578,6 @@ export default {
     Docker,
     SubLibrary,
     LoopingRhombusesSpinner,
-    FulfillingBouncingCircleSpinner,
   },
   beforeDestroy: function(){
     if (this.interval){
@@ -608,10 +587,20 @@ export default {
         console.error(err)
       }
     }
+    if (this.intervalFetchRemote){
+      try{
+        clearInterval(this.intervalFetchRemote)
+      } catch(err){
+        console.error(err)
+      }
+    }
   },
   methods: {
     setProcedure(event){
       this.procedure_selected_index = event
+    },
+    getIndex(evt){
+      console.log(evt,"<")
     },
     getUrl(link){
 			  let url 
@@ -621,10 +610,14 @@ export default {
         url  = `http://localhost:${link.source}`
       }
       if (link.suburl){
-				  url = url + link.suburl
-			  }
+				url = `${url}${link.suburl}`
+			}
+      console.log(url, ".....")
       return url
     },
+    openExternalURL(link){
+			this.$electron.shell.openExternal(link)
+		},
     openUrl(link){
 			this.$electron.shell.openExternal(this.getUrl(link))
 		},
@@ -632,18 +625,31 @@ export default {
 			e.stopPropagation()
 			this.openUrl(link)
     },
-    async buildModule(){
+    async buildModule(requiredOnly){
         const $this = this
         let procedureIdx  = this.procedureIdx
+        let indic = []
+        let names = []
+        if (requiredOnly){
+            this.dependencies.map((f,i)=>{
+                if(!f.optional){
+                    indic.push(i)
+                    names.push(f.label ? f.label : f.target)
+                }
+            })
+            names = names.join(", ")
+
+        }
         FileService.buildProcedure({
             catalog: $this.selectedVersion.name,
-            procedure: procedureIdx
+            procedure: procedureIdx, 
+            dependency: indic
         })
         .then((response)=>{
             this.$swal({
-                title: "Module Build Initiated",
-                text: "Please wait.. this may take some time",
-                icon: 'info',
+                title: `${$this.selectedVersion.name}`,
+                text: `Module Build Dependency Completed for ${names}`,
+                icon: 'success',
                 showConfirmButton: true,
                 allowOutsideClick: true
             });
@@ -653,12 +659,26 @@ export default {
                 position: 'center',
                 icon: 'error',
                 showConfirmButton:true,
-                title: err.response.data.message
+                title: err.response.data.message,
+                text: `Module Build Dependency Failed for ${names}`
             })
-            
         }) 
+        this.$swal({
+            title: `${$this.selectedVersion.name}`,
+            text: `Module Build Dependency Starting for ${names}`,
+            icon: 'info',
+            showConfirmButton: true,
+            allowOutsideClick: true
+        });
+         
     },
-    async removeModule(index,name){
+    async removeModule(item){
+      let index = this.libraryVersions.findIndex((f)=>{
+        return item == f.id
+      })
+      if (!index || index < 0){
+        index = 0
+      }
       this.$swal({
           title: 'Are you sure you want to remove this version?',
           type: 'warning',
@@ -668,9 +688,8 @@ export default {
           denyButtonText: `Remove from Imports`,
       }).then((res) => {
           if (res.value !='cancel' && res.isConfirmed){
-
               FileService.removeModule({
-                  catalog: name,
+                  catalog: this.selectedVersion.name,
                   index: index,
                   dependencies: true,
               }).then((response)=>{
@@ -680,7 +699,9 @@ export default {
                       showConfirmButton:true,
                       title:  response.data.message
                   })
-                  this.selectedVersion.imported=false
+                  this.libraryVersions.splice(index, 1)
+                  this.selectedVersion = this.libraryVersions[0]
+                  
               })
               .catch((err)=>{
                   console.error(err)
@@ -688,13 +709,14 @@ export default {
                       position: 'center',
                       icon: 'error',
                       showConfirmButton:true,
-                      title:  error.response.data.message
+                      title:  err.response.data.message
                   })
               }) 
+              
           }
           else if (res.value !='cancel' && res.isDenied){
               FileService.removeModule({
-                  catalog: name,
+                  catalog: this.selectedVersion.name,
                   index: index
               }).then((response)=>{
                   this.$swal.fire({
@@ -703,7 +725,8 @@ export default {
                       showConfirmButton:true,
                       title:  response.data.message
                   })
-                  this.selectedVersion.imported=false
+                  this.libraryVersions.splice(index, 1)
+                  this.selectedVersion = this.libraryVersions[0]
               })
               .catch((err)=>{
                   console.error(err)
@@ -711,7 +734,7 @@ export default {
                       position: 'center',
                       icon: 'error',
                       showConfirmButton:true,
-                      title:  error.response.data.message
+                      title:  err.response.data.message
                   })
               }) 
               
@@ -725,8 +748,10 @@ export default {
       return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
     },
     async getInstallStatus(){
+      let init = this.init
       FileService.getProcedure({
         procedure: this.procedureIdx, 
+        version: this.selected_version_index,
         catalog: this.selectedVersion.name,
         token: this.$store.token
       }).then((f)=>{
@@ -736,32 +761,31 @@ export default {
       })
       .catch((err)=>{
           console.error(err)
-          
-      }) 
+      }).finally((f)=>{
+        this.init = false
+        if (init && !this.installStatus.required_installed){
+            this.librarydialog = true
+        }
+      })
     },
-    async fetchRemoteCatalog(name){
+    async fetchRemoteCatalog(name, ignore){
            
-        const $this = this
-        FileService.fetchRemoteCatalog('stagedModules', name).then((f)=>{
-          this.getLibrary().then((f)=>{
-            let idx2 = this.selectedVersion.procedures.findIndex((f,i)=>{
-              return f.name == this.selectedProcedure.name
-            })
-            
-          }).catch((err)=>{
-            console.error(err)
+      const $this = this
+      try {
+        await FileService.fetchRemoteCatalog('stagedModules', name)
+        
+      } catch (err) {
+        if (!ignore) {
+          this.$swal.fire({
+            position: 'center',
+            icon: 'error',
+            showConfirmButton: true,
+            title: err.response.data.message
           })
-          
-        })
-        .catch((err)=>{
-            this.$swal.fire({
-                position: 'center',
-                icon: 'error',
-                showConfirmButton:true,
-                title: err.response.data.message
-            })
-            
-        }) 
+        }
+      } finally {
+        $this.getLibrary()
+      }
     },
     async getLibrary(){
       try{
@@ -769,12 +793,7 @@ export default {
         let libraryVersions = response.data.data
         let idx = libraryVersions.findIndex((f,i)=>{
           return f.version == this.selectedVersion.version
-        })
-        if (idx != null && idx !== -1 && this.selectedVersion){
-          this.selectedVersion = libraryVersions[idx]
-          
-          this.updates +=1
-        }
+        })       
         this.libraryVersions = libraryVersions
       }catch (Err){
         console.error(Err)
@@ -865,12 +884,7 @@ export default {
         catalog: $this.selected.name,
         token: $this.$store.token,
       }).then((response)=>{
-        this.$swal.fire({
-          position: 'center',
-          icon: 'success',
-          showConfirmButton:true,
-          title:  response.data.message
-        })
+     
       }).catch((error)=>{
         console.error(error)
         this.$swal.fire({
@@ -889,7 +903,6 @@ export default {
           title:  "Sent Procedure job to run..."
       })
       const $this = this;
-
       let services = Object.keys(this.services_to_use).filter((key, i)=>{
         return this.services_to_use[parseInt(key)] == 1
       })
@@ -926,7 +939,9 @@ export default {
         dry: $this.dry,
         services: services,
         command: custom_command,
+        gpu: $this.gpu,
         setUser: setUser,
+        autocheck: $this.autocheck,
         variables: variables
       }).then((response)=>{
         if (!response.data.skip){
@@ -961,6 +976,7 @@ export default {
       this.procedure.updates(value).then((f)=>{
         if (f){
           f.forEach((changed)=>{
+
             if ($this.procedure[changed.key]){
               $this.procedure.variables[changed.key] = changed.value.source
             }
@@ -1008,10 +1024,11 @@ export default {
     },
     updateStagedVersion(event){
       let index = 0
+      this.changeVersion()
     },
     async changeVersion(){
       await FileService.createModule({
-        index: this.selectedVersion.idx,
+        index: this.selected_version_index,
         catalog: this.name
       }).then((response)=>{
       }).catch((error)=>{
@@ -1039,27 +1056,34 @@ export default {
         this.intervalChecking = false
       }
     },
-    async importVersion(){
+    async importVersion(item){
+      let index = this.libraryVersions.findIndex((f)=>{
+        return item == f.id
+      })
+      if (!index || index < 0){
+        index = 0
+      }
       await FileService.importModule({
-        index: this.selectedVersion.idx,
+        index: index,
         catalog: this.name
       }).then((response)=>{
         this.$swal.fire({
           position: 'center',
           icon: 'success',
           showConfirmButton:true,
-          title:  response.data.message
+          title: `${this.name}-Imported Successfully`,
+          text:  response.data.message
         })
   			this.count +=1
         this.selectedVersion.imported = true
-        // this.getStatus()
       }).catch((error)=>{
         console.error(error)
         this.$swal.fire({
           position: 'center',
           icon: 'error',
           showConfirmButton:true,
-          title:  error.response.data.message
+          title: `${this.name}-Failed Import`,
+          text:  error.response.data.message
         })
       })
     },
@@ -1103,12 +1127,15 @@ export default {
     return{
       drawer: true,
       dialog: false,
+      gpu: false,
+      autocheck: true, 
+      librarydialog: false,
       dialogLog: false,
       customDrawer: false,
       totalSpaceUsed: "0 Bytes",
       dry: false,
       installStatus: {},
-      setUser: (process.env.platform_os == 'linux' ? true : false),
+      setUser: (process.env.platform_os == 'linux' ? false : false),
       stored: {},
       custom_images: {},
       mini: true,
@@ -1127,6 +1154,7 @@ export default {
       selectedNewVersion: null,
       custom_command: {},
       selected_index: 0,
+      init: true,
       logdialog: false,
       modules: [],
       factory: {
@@ -1140,11 +1168,13 @@ export default {
 
       },
       interval: null,
+      intervalFetchRemote: {},
       count:0,
       tab:0,
       defaultModule: 1,
       shared: [],
       status: {},
+      snackbar: false,
       module: {},
       job: null,
       tabService: 0,
@@ -1219,10 +1249,16 @@ export default {
     },
     selectedProcedure(newValue){
       const $this = this
+      this.init = true
       if (newValue){
         this.services_selected = newValue.services
         this.loadProcedure(newValue)
       }
+    },
+    selectedVersion(newVersion){
+      this.selectedProcedure = newVersion.procedures[0]
+      
+      this.defineProcedure()
     }
 
   },
@@ -1235,7 +1271,13 @@ export default {
       let installed = this.dependencies.filter((f)=>{
         return f.status.exists
       })
-      return `${installed.length} / ${this.dependencies.length}`
+      let required = this.dependencies.filter((f)=>{
+        return !f.optional && f.status.exists
+      })
+      return {
+        required: `Required: ${required.length} / ${this.dependencies.filter((f)=>{return !f.optional}).length}` ,
+        all: `Total: ${installed.length} / ${this.dependencies.length}`
+      }
     },
     serviceList(){
       let serviceList = []
@@ -1312,7 +1354,18 @@ export default {
       }
       return values
     },
-    
+    selected_version_index(){
+      if (this.module && this.selectedVersion.name){
+        let index  = this.libraryVersions.findIndex(data => data === this.selectedVersion)
+        if (index == -1){
+          return 0
+        } else{
+          return index
+        }
+      } else{
+        return 0
+      }
+    },
     selected_procedure_index(){
       if (this.module && this.selectedVersion.name){
         let index  = this.selectedVersion.procedures.findIndex(data => data === this.procedure)
@@ -1327,22 +1380,30 @@ export default {
     },
     
   },
-  mounted(){
+  async mounted(){
     const $this = this;
     if (this.interval){
         clearInterval(this.interval)
     }
+    if (this.intervalFetchRemote){
+        clearInterval(this.intervalFetchRemote) 
+    }
     this.selectedVersion = this.selected
     this.selectedProcedure = this.selected.procedures[0]
     $this.getJobStatus()
-    $this.getInstallStatus()
-    $this.getLibrary()
+    $this.getInstallStatus(this.init)
+    await this.fetchRemoteCatalog(this.selectedVersion.name, true)
+    
     $this.defineProcedure()
     this.interval = setInterval(()=>{
         $this.getJobStatus()
         $this.getInstallStatus()
-        // $this.getLibrary()
+        
     }, 2000)
+    this.intervalFetchRemote = setInterval(()=>{
+      this.fetchRemoteCatalog(this.selectedVersion.name, true)
+        
+    }, 300000)
 },
   
     

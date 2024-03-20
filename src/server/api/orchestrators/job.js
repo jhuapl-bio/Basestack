@@ -289,7 +289,7 @@ export  class Job {
                     if ($this.runningConfig.removal_override.source){
                         if(type == 'file') {
                             promises.push(removeFile($this.runningConfig.removal_override.source))
-                        }
+                        } 
                         else{
                             promises.push(removeFile($this.runningConfig.removal_override.source, 'dir'))
                         }
@@ -297,40 +297,37 @@ export  class Job {
                     
                 } else {
                     for (let i  = 0;  i < $this.status.watches.length; i++){
-                        let watch = $this.status.watches[i]
+                        let watch = $this.status.watches[i] 
                         if (typeof watch.source == 'string'){
                             promises.push(removeFile(watch.source))
                         } else { 
                             watch.source.forEach((w)=>{
                                 promises.push(removeFile(w))
-                            })
+                            }) 
                         }  
                     }
                 } 
             } 
             Promise.allSettled(promises).then((respo)=>{
-                resolve()  
-            }).catch((err)=>{  
-                reject(err)  
-            })
-        })
+                resolve()   
+            }).catch((err)=>{     
+                reject(err)   
+            })  
+        })   
     } 
     setParams(params){
         if (params.images){
-            params.images.forEach((service)=>{ 
+            params.images.forEach((service)=>{  
                 this.services[service.service].override.image = service.image 
-            })
-        }
+            })  
+        } 
         
-        this.services.forEach((service)=>{ 
+        this.services.forEach((service)=>{  
             service.config.dry = params.dry
         })
-        this.mergeInputs(params, 'mergedConfig'  )
+        this.mergeInputs(params, 'mergedConfig')
         return   
- 
- 
-
-    } 
+    }  
     updateCommand(service, command){ 
         const $this = this   
         if (command){
@@ -397,6 +394,7 @@ export  class Job {
                     }
                 }
                 service.config.setUser = params.setUser
+                service.config.gpu = params.gpu
                 $this.updateCommand(service, command)
                 this.services.push(service)
             }
@@ -444,7 +442,7 @@ export  class Job {
                 reject(err)
             } 
         }) 
-    }
+    }  
     async statusCheck(){
 		const $this = this; 
         let env = {}
@@ -508,47 +506,51 @@ export  class Job {
             }
         }) 
         let response = await Promise.allSettled(promises)
-        return 
-    }
-    async loopServices(autocheck){      
-        const $this  = this 
-        let cancelled_or_skip = false
-        let end = false  
-        try{ 
+        return   
+    }     
+    async loopServices(autocheck){       
+        const $this  = this         
+        let cancelled_or_skip = false 
+        let end = false   
+        try{   
             for (let i = 0; !end && i < $this.services.length; i++){
                 let service = $this.services[i]
                 try{  
                     let skip        
                     store.logger.info("%s, Starting a new job service %s", i, service.name)
-                    console.log(this.deployment,"<<")
                     let procedures = $this.procedure
                     if (this.deployment == 'native'){
                         console.log("is native, skipping")
-                    } else {
-
-                        let index = procedures.dependencies.findIndex((f)=>{
-                            return f.fulltarget == service.config.image
-                        })
-                        if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
-                            if (!autocheck){
-                                store.logger.info("Image doesnt exists %s", service.config.image, index)
-                            } else {
-                                store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                    } else { 
+                        try{
+                            let index = procedures.dependencies.findIndex((f)=>{
+                                return f.target == service.config.image
+                            })
+                            if (autocheck || index == -1 || index > -1 && !procedures.dependencies[index].status.exists){
+                                if (!autocheck){
+                                    store.logger.info("Image doesnt exists %s", service.config.image, index)
+                                } else {
+                                    store.logger.info("Image to be autochecked and built %s", service.config.image, index)
+                                }
+                                await procedures.build(false, index, true)
                             }
-                            await procedures.build(false, index, true)
+                        } catch (Err){
+                            store.logger.error(`${Err} error in checking image presence`)
                         }
                     } 
-                    skip = await service.check_then_start({ variables: $this.variables }, true)
+                    skip = await service.check_then_start({ variables: $this.variables, autocheck: autocheck }, true)
                     if (skip){ 
                         store.logger.info("skip %s", skip)
                         cancelled_or_skip = skip
                         end = true 
                     }
                 } catch(err){
-                    logger.error("%o Error in procedure: %s, key: %s", err, $this.name, i)
+                    logger.error("!!!!!!!!!!!!!!!!!Job Failure %o Error in procedure: %s, key: %s", err, $this.name, i)
                     end = true
                     cancelled_or_skip = true
                     $this.status.error = err
+                    $this.status.running = false
+                    // throw err
                 }
             }
             store.logger.info("Job completed or skipped/exited")
@@ -575,6 +577,9 @@ export  class Job {
             }
         }
     } 
+    async checkRequired(){
+
+    }
     async start(params){       
         const $this = this
         let services;  
@@ -589,7 +594,7 @@ export  class Job {
         store.logger.info("%s setting variables", $this.baseConfig.name)
         // this.mergeInputs(params, 'mergedConfig'  )
         this.runningConfig = this.defineConfiguration(this.mergedConfig)
-        this.setVariables(params.variables) 
+        this.setVariables(params.variables)  
         store.logger.info("%s closing existing streams if existent", $this.name)
         this.promises.forEach((service)=>{
             if (service && service.streamObj){
@@ -604,10 +609,24 @@ export  class Job {
         
         store.logger.info("Job starting: %s", $this.name)
         try{
-            this.loopServices(autocheck)
-            return 
+            store.logger.info("Checking if all required dependencies are installed")
+            if (this.procedure.status.fully_installed){
+                store.logger.info("All required dependencies installed")
+
+            } else {
+                store.logger.info("Not all deps required are installed, exiting")
+                throw new Error("Not all required dependencies are installed")
+
+            }
+            // await this.checkRequired()
         } catch (err){
             store.logger.error(err)
+            throw err
+        }
+        try{
+            await this.loopServices(autocheck)
+        } catch (err){
+            store.logger.error( `${err} error in loopservices`)
             throw err
         }
         

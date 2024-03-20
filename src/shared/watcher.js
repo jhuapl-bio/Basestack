@@ -90,7 +90,6 @@ export  var module_status = async function(params, key){
 					let files_complete = [];
 					if (exists){
 						let files = await getFiles(params.source)
-						
 						let count = 0;
 						for (let j = 0; j < files.length; j++){ // if any files match the regex 
 							var re = new RegExp( params.pattern, 'g' ); // match a pattern based on the pattern described in the yaml file

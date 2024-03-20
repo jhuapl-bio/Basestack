@@ -1,12 +1,12 @@
 {
   "name": "Basestack",
-  "version": "2.3.8",
+  "version": "2.4.7",
   "repository": {
     "type": "git",
     "url": "https://github.com/Merritt-Brian/Basestack"
   },
   "author": "Brian Merritt <Brian.Merritt@jhuapl.edu>",
-  "description": ": Basestack analyzes and generates reports from Nanopore-based consensus",
+  "description": ": Basestack is a framework for analyzing genomics data using a variety of open-source bioinformatics tools",
   "license": "GPLv3.0",
   "main": "./dist/electron/main.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "build:mac-dmg": "node .electron-vue/build.js && electron-builder --mac  dmg",
     "build:mac": "node .electron-vue/build.js && electron-builder --mac",
     "build:macOffline": "node .electron-vue/build.js && cross-env offline=true electron-builder --mac dmg",
-    "build:macOfflineSign": "node .electron-vue/build.js && cross-env electron-builder --mac dmg -p never",
+    "build:macOfflineSign": "node .electron-vue/build.js && cross-env offline=true electron-builder --mac dmg -p never",
     "build:win": "node .electron-vue/build.js && electron-builder --win; rm build/win-unpacked.zip; zip -r build/win-unpacked.zip build/win-unpacked",
     "build:winOffline": "node .electron-vue/build.js && electron-builder --win -p never",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",

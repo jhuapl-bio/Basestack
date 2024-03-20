@@ -33,14 +33,14 @@
 						<v-list-item-action>
               <v-badge   dot left v-if="entry.status && !entry.status.latest_installed " color="orange darken-2">
                 <v-tooltip top>
-                <template v-slot:activator="{ on }">
+                <template v-slot:activator="{  }">
                   <v-icon  :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
                 </template>
                 {{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
                 </v-tooltip>
               </v-badge>
               <v-tooltip top v-else>
-              <template v-slot:activator="{ on }">
+              <template v-slot:activator="{  }">
                 <v-icon  :color="getColor(key, 0.8)" class="" medium>{{ ( entry.icon  ? '$' + entry.icon : '$cog' ) }}</v-icon>
               </template>
               {{ ( entry.tooltip ? entry.tooltip : entry.title ) }}
@@ -177,6 +177,12 @@
           <v-btn color="cyan" @click="selected == 'defaults'; tab=1">Library</v-btn>
           to import your first one
         </v-alert>
+        <!-- <v-btn @click="downloadDependency(0)"  >
+          Conda
+          <v-icon color="red" medium>
+            $download
+          </v-icon>
+        </v-btn> -->
         <v-row  v-if="!runningServer">
           <v-alert type="warning" shaped icon="$exclamation-triangle"
             text > Server is not Running at specified port: {{selectedPort}}
@@ -214,9 +220,11 @@
             </component>
           </v-col>
         </v-row>
-       
+        
 			</v-container>
+      
 		</v-main>
+    
 		<v-footer
 			 absolute inset app
        class=""
@@ -226,7 +234,31 @@
 				color="primary"
 				class="lighten-1 text-center "
 			>
-				<v-card-text class="white--text">
+				
+        <v-card-actions>
+          <v-expansion-panels  v-model="panel" style="padding:0; margin:0; background-color: #1976d2" >
+            <v-expansion-panel   style="padding:0; margin:0; background-color: #1976d2" 
+            > 
+              <v-expansion-panel-header   class="hoverheader"  style="color: white">
+                Logs: {{logs[logs.length-1]}}
+                <template v-slot:actions>
+                  <v-icon color="white">
+                    $arrow-alt-circle-up
+                  </v-icon>
+                </template>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content >
+                <LogDashboard   :logs="logs.slice().reverse()"></LogDashboard> 
+                
+                <v-icon color="white" :hidden="panel" class="mt-5" @click="panel=[]">
+                  $arrow-alt-circle-down
+                </v-icon>
+              
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </v-card-actions>
+        <v-card-text class="white--text">
 				{{  version  }} — <strong>Basestack</strong>
 				</v-card-text>
 			</v-card>
@@ -312,6 +344,8 @@ export default {
     return {
       tab: 0,
 			mini:true,
+      panel: [],
+      logs:["Initializing Logs"],
       defaultModule: {},
       latestLibrary: {},
       stagedLatest: null,
@@ -320,7 +354,7 @@ export default {
 			sel: 0,
       catalog: {},
       importedLibrary: {},
-      selectedCatalogName: "nfcore_taxtriage",
+      selectedCatalogName: "mytax2",
       selectedCatalog: null,
       selectedLibrary: null,
       selectedLibraries: {},
@@ -344,9 +378,7 @@ export default {
       ready:false,
       interval: null,
       catalogInterval: null,
-      modules: false,
       services: false,
-      procedures: false,
       defaults: [],
       runningServer: false, 
       running: false
@@ -360,6 +392,7 @@ export default {
       $this.runningServer = false
       $this.createPingInterval()
     })
+    
     
     this.$vuetify.icons.dropdown = 'fas fa-square'
     try{
@@ -383,6 +416,38 @@ export default {
     
 	},
   methods: {
+    async downloadDependency(index){
+      console.log("install index: ", index, process.env)
+      this.$electron.ipcRenderer.send("downloadDependency", { platform: process.env.os.platform, arch: process.env.os.arch } )
+      // this.$electron.ipcRenderer.on('dockerDownloadStatus', (evt, message)=>{
+      //   this.$swal.fire({
+      //     position: 'center',
+      //     icon: (message.type ? message.type : 'info'),
+      //     showConfirmButton:true,
+      //     title:  message.message,
+      //     text:  message.info
+      //   })
+
+      // })
+
+    },
+    getLogs(){
+      try{
+        const $this = this
+        if (!this.checkingLog){
+          $this.checkingLog = true
+          FileService.fetchLogs().then((response)=>{
+            $this.logs = response.data.data
+            $this.checkingLog = false
+            }).catch((err)=>{
+              console.error(err)
+              $this.checkingLog = false
+            })
+        }
+      } catch (err){
+        console.error(err)
+      }
+    },
     clearAll(){
       this.modules = []
       this.services = []
@@ -573,7 +638,7 @@ export default {
       if (this.selectedCatalog && this.selectedCatalog.name && !this.importedLibrary[this.selectedCatalog.name]){
         this.selected = 'defaults'
         this.tab = 1
-      }
+      } 
       return 
     },
     async getAllLatest(){
@@ -596,6 +661,7 @@ export default {
         this.moduleInterval = setInterval(()=>{
           this.getModules()
           this.getAllLatest()
+          this.getLogs()
         }, 5000)
         // this.catalog = catalog
         if (process.env.NODE_ENV == 'development'){
@@ -640,6 +706,14 @@ export default {
 }
 .mainPage{
   margin:auto;
+}
+.hoverheader:hover{
+  background-color: white;
+  color: black !important;
+}
+
+.hoverheader:hover  {
+  color:red
 }
 
 

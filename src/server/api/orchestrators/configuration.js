@@ -15,7 +15,6 @@ export  class Configuration {
     }   
     defineMapping(){ 
         let newTarget = this.findObjectByLabel(this, "(\%\{.+?\})") 
-        console.log("define mapping!")
         newTarget  = this.findObjectByTarget(this, "(\&\{.+?\})")
     }     
  

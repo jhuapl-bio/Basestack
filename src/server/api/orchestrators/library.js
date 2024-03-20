@@ -21,154 +21,81 @@ export  class Library {
         this.locals = store.config.imported
         this.customs = {}
         const $this = this
-        
-        Object.defineProperty(this, "all", {
-            enumerable: true,   
-            get: function(){
-                let base = {}
-                let seen = {}
-                for (let [key,value] of Object.entries(this.remotes)){
-                    if (!base[key]){
-                        base[key] = {
-                            choices: []
-                        }
-                    }
-                    seen[key] = 1
-                    value.forEach((choice)=>{
-                        let idx = base[key].choices.findIndex((f)=>{
-                            return f.version == choice.version
-                        })
-                        
-                        // if (idx == -1){
-                            base[key].choices.push(choice)
-                        // } else {
-                        //     base[key].choices[idx] = choice
-                        // }
-                    })
-                }
+        this.all = {}
+
+        // Object.defineProperty(this, "all", {
+        //     enumerable: true,   
+        //     get: function(){
+        //         let base = {}
+        //         let seen = {}
                 
-                for (let [key,value] of Object.entries($this.locals)){
-                    if (!base[key]){
-                        base[key] = {
-                            choices: []
-                        }
-                    }
-                    seen[key] = 1
-                    
-                    value.forEach((choice)=>{
-                        let idx = base[key].choices.findIndex((f)=>{
-                            return f.version == choice.version
-                        }) 
-                        
-                        // if (idx == -1){
-                            base[key].choices.push(choice)
-                        // } else {
+        //         for (let [name,t] of Object.entries(this.all)){
+        //             if (!base[name]){
+        //                 base[name] = {
+        //                     choices: []
+        //                 }
+        //             } 
+        //             let value = t.choices
+        //             value.forEach((choice)=>{
+        //                 let idx = base[name].choices.findIndex((f)=>{
+        //                     return f.version == choice.version
+        //                 })                        
+        //                 base[name].choices.push(choice)
+        //             })
+        //             Object.defineProperty(base[name], "imported", {
+        //                 enumerable: true,   
+        //                 get: function(){ 
+        //                     let any = base[name].choices.some((a)=>{
+        //                         return a.imported
+        //                     })
+        //                     return any 
+        //                 }
+        //             })
+        //             Object.defineProperty(base[name], 'selected', {
+        //                 enumerable: true,   
+        //                 get: function(){
+        //                     let base2 = $this.getIndexVersion(name)
                             
-                            // choice.imported = true
-                            // base[key].choices[idx] = choice 
-                        // }
-                    })
-                }
-                for (let [key,value] of Object.entries($this.imported)){
-                    if (!base[key]){
-                        base[key] = {
-                            choices: []
-                        }
-                    }
-                    seen[key] = 1
-                    value.forEach((choice)=>{
-                        let idx = base[key].choices.findIndex((f)=>{
-                            return f.version == choice.version
-                        })
-                        
-                        // if (idx == -1){
-                            base[key].choices.push(choice)
-                        // } else {
-                        //     base[key].choices[idx] = choice
-                        // }  
-                    })   
-                    
-                } 
-                
-                
-                
-                for (let [key,value] of Object.entries(this.customs)){
-                    if (!base[key]){
-                        base[key] = {
-                            choices: []
-                        }
-                    } 
-                    seen[key] = 1
-                    
-                    value.forEach((choice)=>{
-                        let idx = base[key].choices.findIndex((f)=>{
-                            return f.version == choice.version
-                        })
-                        // if (idx == -1){ 
-                            base[key].choices.push(choice)
-                        // }  
-                    })
-                    
-                }
-                
-                for (let [key, value] of Object.entries(base)  ){
-                    base[key].choices = base[key].choices.sort((a,b)=>{
-                        if (!a.version){ 
-                            a.version = 0
-                        }
-                        if (!b.version){
-                            b.version = 0
-                        }
-                        return b.version - a.version
-                    }) 
-                       
-                }
-                for (let [key, value] of Object.entries(base)  ){
-                    base[key].choices = base[key].choices.map((f,i)=>{
-                        f.idx = i
-                        return f
-                    }) 
-                }
-                for (let [name, module] of Object.entries(seen)){
-                    const $this = this
-                    Object.defineProperty(base[name], "latest", {
-                        enumerable: true,   
-                        get: function(){
-                            let sorted  = base[name].choices.sort((a,b)=>{
-                                b.version - a.version
-                            })
-                            return sorted[0]
-                            
-                        }
-                    })
-                    Object.defineProperty(base[name], "imported", {
-                        enumerable: true,   
-                        get: function(){ 
-                            let any = base[name].choices.some((a)=>{
-                                return a.imported
-                            })
-                            return any 
-                        }
-                    })
-                    Object.defineProperty(base[name], 'selected', {
-                        enumerable: true,   
-                        get: function(){
-                            let base2 = $this.getIndexVersion(name)
-                            // for (let [key,value] of Object.entries(base[name].choices)){
-                            //     base2[key] = 
-                                
-                            // }
-                            return base2
+        //                     return base2
             
-                        }
-                    })
-                }
-                return base
+        //                 }
+        //             })
+        //         }
+        //         return  base
+        //     }
+        // })
+        
+        // }
+        //         return base
                 
-            },
-        }) 
+        //     },
+        // }) 
     }  
-    getSortedImported(name){
+    getLatest(name){
+        let any = this.all[name].choices.some((a)=>{
+            return a.latest
+        })
+        return any 
+    }
+    getImported(name){
+        let any = this.all[name].choices.some((a)=>{
+            return a.imported 
+        }) 
+        return any 
+    } 
+    sorting(a,b){
+        if (a.version < b.version){
+            return 1
+        } else if (a.version > b.version){
+            return -1
+        } else if (a.remote){
+            return -1
+        } else {
+            return 1 
+        }
+    }
+    getSortedImported(name){ 
+        const $this = this
         if (!name){
             let base ={}
             for (let [key,value] of Object.entries(this.all)){
@@ -178,27 +105,16 @@ export  class Library {
             }
             for (let [key, value] of Object.entries(base)  ){
                 base[key].choices = base[key].choices.sort((a,b)=>{
-                    if (!a.version){
-                        a.version = 0
-                    }
-                    if (!b.version){
-                        b.version = 0
-                    }
-                    return b.version - a.version
+                    return $this.sorting(a,b)
                 })
                 
             }
             return base
-        } else {
+        } else { 
             let base = this.all[name].choices
             base = base.sort((a,b)=>{
-                if (!a.version){
-                    a.version = 0
-                }
-                if (!b.version){
-                    b.version = 0
-                }
-                return b.version - a.version
+                $this.sorting(a,b)
+                
             })   
             return base             
         }
@@ -235,15 +151,16 @@ export  class Library {
     }
     addImported(config, name, removable){
         
-        if (!this.imported[name]){
-            this.imported[name]  =[]
-            const $this = this
-        }
+        const $this = this
+        if (!this.all[name]){
+            this.defineEntry(name)
+        } 
         if (Array.isArray(config)){
-            let maxIdx = this.imported[name].length - 1
+            let maxIdx = this.all[name].choices.length - 1
             config.forEach((con)=>{
-                let idx = this.imported[name].findIndex((f)=>{
-                    return f.version == con.version
+                
+                let idx = this.all[name].choices.findIndex((f)=>{
+                    return f.version == con.version && f.imported
                 })
                 
                 if (idx == -1){
@@ -251,38 +168,46 @@ export  class Library {
                     maxIdx +=1
                     con.removable = removable
                     con.imported = true
+                    con.local =true
                     this.imported[name].push(con)
+                    this.all[name].choices.push(con)
                 } else {
                     con.idx = maxIdx + 1
                     maxIdx +=1
                     config.removable = removable
+                    con.local =true
                     con.imported = true
                     this.imported[name][idx] = con
+                    this.all[name][idx] = con
+
                 }
                   
-            })
+            }) 
             
         } else { 
-            let maxIdx = this.imported[name].length - 1
-            let idx = this.imported[name].findIndex((f)=>{
-                return f.version == config.version
+            let maxIdx = this.all[name].choices.length - 1
+            let idx = this.all[name].choices.findIndex((f)=>{
+                return f.version == config.version && f.imported
             })
             if (idx == -1){
                 config.idx = maxIdx + 1
                 config.imported = true 
                 config.removable = removable
-                this.imported[name].push(config) 
+                config.local = true
+                this.all[name].choices.push(config)
             } else {
                 config.idx = maxIdx + 1
                 config.removable = removable
+                config.local = true
                 config.imported = true 
-                this.imported[name][idx] = config
-            }
+                this.all[name][idx] = config
+            } 
             
         }   
+        
         return
     }
-    create_module(module, key){
+    async create_module(module, key){
         try{    
             let found= nestedProperty.get(store.library.catalog, module.name)
             if (found){ 
@@ -296,7 +221,6 @@ export  class Library {
 
             modl.initProcedures()  
              
-            
             if (!store.library.catalog[module.name]){
                 store.logger.info("%s making catalog", module.name)
                 store.library.catalog[module.name] = new Catalog(module)
@@ -319,140 +243,155 @@ export  class Library {
                     }
                 })
             } 
+            
             store.logger.info("Returning module now... %s", module.name)
-            return modl
+            return modl 
         } catch(err){
             store.logger.error("%s %o", "error in init module", err)  
             throw err 
-        }  
+        }   
+    }
+    defineEntry(name){
+        const $this = this
+        if (!this.all[name]){
+            this.all[name] = {
+                choices: []
+            }
+            const $this = this
+            Object.defineProperty($this.all[name], "imported", {
+                enumerable: true,   
+                get: function(){ 
+                    let any = $this.all[name].choices.some((a)=>{
+                        return a.imported
+                    })
+                    return any 
+                }
+            })
+            Object.defineProperty($this.all[name], 'selected', {
+                enumerable: true,   
+                get: function(){
+                    let base2 = $this.getIndexVersion(name)
+                    
+                    return base2
+    
+                }
+            })
+            Object.defineProperty($this.all[name], "latest", {
+                enumerable: true,   
+                get: function(){
+                    let sorted  = $this.all[name].choices.sort((a,b)=>{
+                        b.version - a.version
+                    })
+                    return sorted[0]
+                }
+            })
+        } 
     }
     addLocal(config,name){
-        if (!this.locals[name]){
-            this.locals[name] = []
+        if (!this.all[name]){
+            this.defineEntry(name)
         }
         if (Array.isArray(config)){
-            let maxIdx = this.locals[name].length - 1
+            let maxIdx = this.all[name].choices.length - 1
             config.forEach((con)=>{
-                let idx = this.locals[name].findIndex((f)=>{
-                    return f.version == con.version
+                let idx = this.all[name].choices.findIndex((f)=>{
+                    return f.version == con.version && !f.imported && f.local
                 })
-                
+
                 con.idx = maxIdx + 1
                 maxIdx +=1
                 con.imported = false
                 con.local = true
                 con.remote = false 
                 con.removable = false
-                this.locals[name].push(con)
-                // if (idx == -1){
-                //     con.idx = maxIdx + 1
-                //     maxIdx +=1
-                //     con.imported = false
-                //     con.local = true
-                //     con.remote = false 
-                //     con.removable = false
-                //     this.locals[name].push(con)
-                // } else {
-                //     con.idx = maxIdx + 1
-                //     maxIdx +=1
-                //     con.imported = false
-                //     con.local = true
-                //     con.removable = false
-                //     con.remote = false
-                //     this.locals[name][idx] = con
-                // }
-                
-                  
+                con.id = `${con.path}-${con.version}-${con.imported}-${con.removable}-${con.name}-${con.remote}-local`
+                this.all[name].choices.unshift(con)
             })
             
         } else { 
-            let maxIdx = this.locals[name].length - 1
-            let idx = this.locals[name].findIndex((f)=>{
-                return f.version == config.version
-            })
+            
+            let maxIdx = this.all[name].choices.length - 1
+            let idx = this.all[name].choices.findIndex((f)=>{
+                return f.version == config.version  && !f.imported && f.local
+            }) 
             // if (idx == -1){
             config.idx = maxIdx + 1
             config.imported = false 
             config.remote = false
             config.removable = false
             config.local = true
-            this.locals[name].push(config) 
-            // } else {
-            //     config.idx = maxIdx + 1
-            //     config.imported = false 
-            //     config.local = true
-            //     config.remote = false
-            //     config.removable = false
-            //     this.locals[name][idx] = config
-            // }
+            config.id = `${config.path}-${config.version}-${config.imported}-${config.removable}-${config.name}-${config.remote}-local`
+            this.all[name].choices.unshift(config) 
+            
+         
         }  
     }
-    addRemote(config, name){
-        if (!this.remotes[name]){
-            this.remotes[name] = []
+    addRemote(config, name) {
+        if (!this.all[name]){
+            this.defineEntry(name)
         }
-        if (Array.isArray(config)){
-            let maxIdx = this.remotes[name].length - 1
-            config.forEach((con)=>{
-                let idx = this.remotes[name].findIndex((f)=>{
-                    return f.version == con.version
+        if (Array.isArray(config)) {
+            
+            let maxIdx = this.all[name].choices.length - 1
+            config.forEach((con) => {
+                let idx = this.all[name].choices.findIndex((f)=>{
+                    return f.version == con.version && !f.local && !f.imported && f.remote
                 })
                 
-                // if (idx == -1){
                     con.idx = maxIdx + 1
                     maxIdx +=1
                     con.imported = false
                     con.remote = true
                     con.removable = false
-                    this.remotes[name].push(con)
-                // } else {
-                //     con.idx = maxIdx + 1
-                //     maxIdx +=1
-                //     con.imported = false
-                //     con.removable = false
-                //     con.remote = true
-                //     this.remotes[name][idx] = con
-                // }
+                    con.id = `${con.path}-${con.version}-${con.imported}-${con.removable}-${con.name}-${con.remote}-remote`
+                    if (idx > -1){
+                        this.all[name][idx] = con
+                    } else { 
+                        if (process.env.NODE_ENV == 'development'){
+                            this.all[name].choices.push(con) 
+                        } else {
+                            this.all[name].choices.unshift(con) 
+                        }
+                    }
+                    
+             
             })            
         } else { 
-            let maxIdx = this.remotes[name].length - 1
-            let idx = this.remotes[name].findIndex((f)=>{
-                return f.version == config.version
+            let maxIdx = this.all[name].choices.length - 1
+            let idx = this.all[name].choices.findIndex((f)=>{
+                return f.version == config.version && !f.local && !f.imported && f.remote
             })
-            // if (idx == -1){
-                config.idx = maxIdx + 1
-                config.imported = false 
+                config.idx = maxIdx + 1  
+                config.imported = false  
                 config.remote = true
                 config.removable = false
-                this.remotes[name].push(config) 
-            // } else {
-            //     config.idx = maxIdx + 1
-            //     config.imported = false 
-            //     config.removable = false
-            //     config.remote = true
-            //     this.remotes[name][idx] = config
-            // }
-            
+                config.id = `${config.path}-${config.version}-${config.imported}-${config.removable}-${config.name}-${config.remote}`
+                if (idx > -1){ 
+                    this.all[name][idx] = config    
+                } else { 
+                    if (process.env.NODE_ENV == 'development'){
+                        this.all[name].choices.push(config) 
+                    } else {
+                        this.all[name].choices.unshift(config) 
+                    }
+                }
         }   
-        return
-    }
+        return   
+    } 
     async getRemotes(target, catalog){
         const $this = this;
-        // let modules = await fetch_external_config(target)
-        let modules = await fetch_external_yamls()
-        // modules = parseConfigVariables(JSON.stringify(modules), store.system)
-        console.log(modules,"..............................")
-        modules.forEach((module)=>{
-            if (module ){
-                this.addRemote(module, module.name)
-            } else {  
-                store.logger.info("No modules found at remote location")
-            }  
-        })
-        console.log($this.remotes)
-        return $this.remotes
-       
-        
+        let modules = await fetch_external_yamls(catalog)
+        if (modules && modules.length > 0){
+            modules.forEach((f) => {
+                this.addRemote(f, f.name)    
+            })
+        } else {  
+            store.logger.info("No modules found at remote location")
+        }  
+        this.getSortedImported(catalog) 
+        return modules
+         
+         
     }
     removeDependencies(choices){
         let targets = []
@@ -464,17 +403,18 @@ export  class Library {
                     })
                     if (idx == -1){
                         targets.push(parseConfigVariables(JSON.stringify(u), store.system))
-                    }
+                    } 
                 })
-            })
-        })
+            }) 
+        })  
         let promises = []
-        targets.forEach((target)=>{
+        targets.forEach((target)=>{ 
             promises.push(removeDep(target))
         })
         
     }
     async removeModule(name, idx, dependencies){
+        
         if (dependencies && this.all[name].choices){
             try{ 
                 if (idx >=0 ){
@@ -489,29 +429,34 @@ export  class Library {
         try{  
             if (idx >=0 && this.all[name] ){
                 try{ 
-                    if (this.all[name] && 
+                    if (this.all[name] &&  
                         this.all[name].choices[idx] && 
                         this.all[name].choices[idx].path && 
                         this.all[name].choices[idx].removable
                     ){ 
+                        
                         removeFile(this.all[name].choices[idx].path)
-                        this.all[name].choices[idx].path = null
-                        this.all[name].choices[idx].imported = false
+                        this.all[name].choices.splice(idx, 1)
+                        
                     }
                      
                 } catch(er){
-                    store.logger.error("%s error in removing path to yaml file %s", er, name)
+                    store.logger.error("%o error in removing path to yaml file %s", er, name)
                 } 
             } else if (this.all[name]) {   
                 try{  
+                    let indices = []
                     this.all[name].choices.forEach((m,i)=>{
+                        
                         if (m && m.path && m.path && m.removable){ 
                             removeFile(m.path) 
                             m.path = null
                             m.imported = false
+                            indices.push(i)
                         }
-                         
+                        
                     })   
+                   
                 } catch(er){
                     store.logger.error("%s error in removing path to yaml file %s", er, name)
                 }
@@ -555,8 +500,11 @@ export  class Library {
                         d.custom = module_paths.savedPaths[index].custom
                         d.remote = module_paths.savedPaths[index].remote
                         d.version = version 
-                         
-                        this.addLocal(d, d.name)
+                        try{
+                            this.addLocal(d, d.name)
+                        } catch (err){
+                            store.logger.error(err)
+                        }
                     })
                     
                     
@@ -575,12 +523,8 @@ export  class Library {
                             return f.version == config.version
                         })
                     }
-                    // if (localIdx == -1){
-                        this.addImported(config, config.name,  true)
-                    // } 
-                    // else {
-                    //     this.addImported(this.locals[config.name][localIdx], config.name, false)
-                    // } 
+                    this.addImported(config, config.name,  true)
+                    
                 })  
             }
         })

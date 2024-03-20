@@ -112,7 +112,7 @@ function build () {
 function pack (config) {
   return new Promise((resolve, reject) => {
     config.mode = 'production'
-    console.log(config.entry)
+    console.log(config.entry,"<<<<<<<<")
     webpack(config, (err, stats) => {
       if (err) reject(err.stack || err)
       else if (stats.hasErrors()) {

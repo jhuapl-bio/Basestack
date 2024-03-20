@@ -1,4 +1,4 @@
-- version: 2.01
+- version: 2.02
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -8,7 +8,7 @@
   description: Real time reporting dashboard for kraken2 classifications
   member: mytax2
   hint: Mytax2 Module 
-  icon: chart-pie
+  icon: mdi-chart-pie
   name: mytax2
   tags:
     - kraken2
@@ -18,7 +18,7 @@
   procedures:
     - name: mytax2
       title: Kraken2 Mytax2
-      icon: binoculars
+      icon: mdi-binoculars
       init: false
       full_orientation: true
       tooltip: >-
@@ -33,7 +33,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.2.6
+          version: v2.2.7
           type: docker
           format: docker
         - target: "bitnami/git"
@@ -42,7 +42,7 @@
           optional: false
           format: "docker"
         - source:
-            url: https://github.com/jhuapl-bio/mytax/blob/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz?raw=true
+            url: https://raw.githubusercontent.com/jhuapl-bio/mytax/master/databases/marine_mammal_mitochondrion-refseq-20210629.tar.gz
             type: file
             remove: true
             target: "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629.tar.gz"
@@ -72,7 +72,7 @@
           label: 2021 Flukraken database
           target: "${writePath}/workflows/mytax/flukraken2"
           overwrite: true
-          size_estimate: "180 MB"
+          size_estimate: "5 GB"
         - source:
             url: https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20201202.tar.gz
             type: file
@@ -146,7 +146,7 @@
                 "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE",
                 "${writePath}/workflows/mytax/flukraken2",
                 "${writePath}/workflows/mytax/marine_mammal_mitochondrion-refseq-20210629",
-                "${writePath}/workflows/mytax/16S_Greengenes_k2db",
+                "${writePath}/workflows/mytax/16S_Greengenes13.5_20200326",
                 "${writePath}/workflows/mytax/k2_viral_20201202"
             ]  
             demux: 
@@ -257,7 +257,7 @@
           bind: self
           target: "/opt/custom_config.toml"
           append:
-            command: " cp /opt/custom_config.toml /opt/ont-guppy/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ; cp /opt/custom_config.toml /opt/ont-guppy-gpu/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ;   "
+            command: " cp /opt/custom_config.toml /opt/ont-guppy/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ;  "
             position: "start" 
             placement: 2
             services: 
@@ -270,7 +270,7 @@
           bind: self
           target: "/opt/custom_fasta.fasta"
           append:
-            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy/data/barcoding/barcodes_masked.fasta; cat /opt/custom_fasta.fasta >> /opt/ont-guppy-gpu/data/barcoding/barcodes_masked.fasta;  "
+            command: " cat /opt/custom_fasta.fasta >> /opt/ont-guppy/data/barcoding/barcodes_masked.fasta;  "
             position: "start"
             placement: 2
             services: 
@@ -301,7 +301,7 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.2.6
+          image: jhuaplbio/basestack_mytax2:v2.2.7
           workingdir: /
           orchestrated: false
           init: false

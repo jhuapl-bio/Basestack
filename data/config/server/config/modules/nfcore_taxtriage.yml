@@ -1,10 +1,10 @@
 - name: nfcore_taxtriage
   title: "TaxTriage"
   icon: "virus"
-  version: 1.2
+  version: 1.3
   basestack_released: 2.0
   module: True
-  url: https://nf-co.re/viralrecon
+  url: https://github.com/jhuapl-bio/taxtriage
   # description: "nf-core/viralrecon is a bioinformatics analysis pipeline used to perform assembly and intra-host/low-frequency variant calling for viral samples."
   tags: 
     - "Nextflow"
@@ -14,7 +14,7 @@
   shared:
     services:
       orchestrator:
-        label: "Orchestrator"
+        label: "Docker Orchestrator"
         name: "orchestrator"
         image: "jhuaplbio/basestack_orchestrator:v1.0.0"
         workingdir: "/opt/data"
@@ -27,7 +27,7 @@
         command: []
   procedures: 
     - name: nfcore_taxtriage #Top level is the left-hand selection of the menu and the major module to install 
-      title: "TaxTriage"
+      title: "TaxTriage Pipeline"
       icon: "virus"
       module: True
       full_orientation: true
@@ -45,21 +45,19 @@
           label: "TaxTriage Volume"
           type: "volume"
         - source:
-            url: ftp.ccb.jhu.edu
+            url: https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz
             type: file
-            user: anonymous
-            path: /pub/data/kraken2_dbs/old/minikraken2_v2_8GB_201904.tgz
-            password: null
-            protocol: ftp
             remove: false
-            target: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
+            target: "${writePath}/workflows/mytax/minikraken2.tar.gz"
           label: Minikraken2
+          size_estimate: "7 GB"
+          optional: true
           type: download
           format: dir
           decompress:
             format: tgz
-            source: "${writePath}/workflows/taxtriage/minikraken2.tar.gz"
-          target: "${writePath}/workflows/taxtriage/minikraken2_v2_8GB_201904_UPDATE"
+            source: "${writePath}/workflows/mytax/minikraken2.tar.gz"
+          target: "${writePath}/workflows/mytax/minikraken2_v2_8GB_201904_UPDATE"
           overwrite: true
       tags: 
         - "Nextflow"
@@ -176,6 +174,13 @@
           hint: "Skip De Novo Assembly"
           define: 
             skip_assembly: "--skip_assembly"
+        low_memory:
+          label: "Low Memory Mode"
+          element: "checkbox"
+          source: true
+          hint: "Don't load kraken2 database into memory, read directly. Slower but less memory intensive"
+          define: 
+            low_memory: "--low_memory"
         skip_plots:
           label: "Skip QC Plotting"
           element: "checkbox"
@@ -271,7 +276,7 @@
           bind: 
             - from: "${writePath}/workflows/taxtriage/workingdir"
               to: "${writePath}/workflows/taxtriage/workingdir"
-          label: "TaxTriage"
+          label: "TaxTriage Pipeline"
           image: "jhuaplbio/basestack_orchestrator:v1.0.0"
           workingdir:  "/wokringdir"
           warning: "This process requires internet in its current state"
@@ -280,7 +285,7 @@
              nextflow run 'https://github.com/jhuapl-bio/taxtriage'
               --input ${csv}
               --db ${db}  -r ${mark_branch} ${marklatest}
-              --outdir ${outdir}
+              --outdir ${outdir} --trim ${low_memory}
               --max_memory ${maxMemory}GB --max_cpus ${maxCPUs} 
               -profile ${profile} ${skip_plots} ${skip_assembly} ${taxids_to_remove}
               ${assembly} --demux 

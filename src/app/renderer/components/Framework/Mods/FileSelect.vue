@@ -38,7 +38,7 @@
       </v-file-input >
         <v-tooltip bottom v-if="filepath">
             <template v-slot:activator="{ on }">
-                <v-icon small v-on="on"  @click="this.$electron.shell.openPath(path.dirname(filepath))" class="configure" color="primary">$archive
+                <v-icon small v-on="on"  @click="electronOpenDir((filepath))" class="configure" color="primary">$archive
                 </v-icon>
             </template>
             {{  filepath    }}
@@ -88,7 +88,12 @@ export default {
         },
         
         updateValidity() {
-        }
+        },
+        electronOpenDir(key){
+            const $this = this
+            
+            this.$electron.shell.openPath(path.dirname(key))
+		}, 
     },
     props: ["source", "variable"],
     mounted() {

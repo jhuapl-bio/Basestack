@@ -62,7 +62,7 @@
                 </v-btn>
                 
               </template>
-              {{item.path ? item.path : item.source}}
+              {{ ( item.optionValue ? ( item.optionValue.path ? item.optionValue.path : item.optionValue.source  ) :  item.path ? item.path : item.source    ) }}
             </v-tooltip>
             <v-tooltip bottom v-if="item.openSelf && item.source">
               <template v-slot:activator="{ on }">
@@ -156,14 +156,14 @@ export default {
         determineOpen(item, self){
           if (item.element != 'file'){
             if (typeof item.source =='string'){
-                this.$electron.shell.openPath(path.dirname(item.source))
+                this.$electron.shell.openPath(path.dirname(path.resolve(item.source)))
             } else {
               if (item.path){
-                this.$electron.shell.openPath(item.path)
+                this.$electron.shell.openPath(path.resolve(item.path))
               } else if (item.target) {
-                this.$electron.shell.openPath(item.target)
+                this.$electron.shell.openPath(path.resolve(item.target))
               } else {
-                this.$electron.shell.openPath(path.dirname(item.source[0]))
+                this.$electron.shell.openPath(path.dirname(path.resolve(item.source[0])))
               }
             }
           } else{

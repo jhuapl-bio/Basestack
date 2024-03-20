@@ -1,7 +1,7 @@
 - name: irma
   title: "IRMA"
   icon: "eye-dropper"
-  version: 1.2
+  version: 1.3
   basestack_released: 2.0
   module: True
   description: "IRMA was designed for the robust assembly, variant calling, and phasing of highly variable RNA viruses. Currently IRMA is deployed with modules for influenza, ebolavirus and coronavirus"
@@ -25,14 +25,10 @@
         - "cdc"
         - "consensus"
       dependencies: 
-        - target: "jhuaplbio/irma:v1.0.0"
-          label: jhuaplbio/irma
-          type: "docker-local"
-          build: 
-            path: ${configPath}/modules/irma/Dockerfile
-            file: Dockerfile
-          format: "dockerfile"
-      
+        - target: "staphb/irma"
+          version: "1.0.3"
+          type: "docker"      
+          format: "docker"
       variables:
         
         fastqs:
@@ -78,7 +74,7 @@
           hint: "Output Directory containing figures of QC, stats, and consensus .fa files"
           bind_parent_dir: false
           type: file
-          pattern: ".fasta"
+          pattern: ".fa"
           source: "%{variables.outputDir.source}/%{variables.samplename.source}"
           target: "%{variables.outputDir.source}/%{variables.samplename.source}"
           path: "%{variables.outputDir.source}/%{variables.samplename.source}"
@@ -88,6 +84,7 @@
           label: "Target"
           options: 
             - FLU
+            - FLU-minion
             - EBOLA
             - CoV
             - FLU-utr
@@ -95,7 +92,7 @@
             - FLU-pgm
       services:
         - name: "consensus" 
-          image: "jhuaplbio/irma:v1.0.0"
+          image: "staphb/irma:1.0.3"
           orchestrated: false #orchestrated means it r
           init: false
           hideStatus: false

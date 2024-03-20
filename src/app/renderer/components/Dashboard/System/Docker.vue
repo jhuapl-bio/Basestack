@@ -1,5 +1,5 @@
 <template>
-      <v-list dense >
+      <v-list dense class="py-0; my-0">
         <v-alert type="error" icon="$times-circle" shaped
           text v-if="!docker ">Docker is not connected or installed
         </v-alert>
@@ -12,18 +12,21 @@
           @click="installDocker()"
         >Install Docker
         </v-btn>
-        <v-list-item
-          v-for="entry in fields_docker"
-          :key="entry.key"
-          class="entry"
-        >
-            <v-list-item-content v-if="docker">
-              <v-list-item-title v-text="entry.label "></v-list-item-title>
-              <v-list-item-subtitle v-if="entry.key == 'MemTotal'" v-text="convert_gb(docker[entry.key]  , 'B')"></v-list-item-subtitle>
-              <v-list-item-subtitle v-else v-text="docker[entry.key]  " ></v-list-item-subtitle>
-            </v-list-item-content>
-        </v-list-item>
-        <v-text-field
+        <div v-if="docker && !mini">
+          <v-list-item
+            v-for="entry in fields_docker"
+            :key="entry.key"
+            class="entry"
+          >
+              <v-list-item-content v-if="docker">
+                <v-list-item-title v-text="entry.label "></v-list-item-title>
+                <v-list-item-subtitle v-if="entry.key == 'MemTotal'" v-text="convert_gb(docker[entry.key]  , 'B')"></v-list-item-subtitle>
+                <v-list-item-subtitle v-else v-text="docker[entry.key]  " ></v-list-item-subtitle>
+              </v-list-item-content>
+          </v-list-item>
+        </div>
+          
+        <v-text-field v-if="!mini"
           label="Docker Socket" 
           v-model="dockerSocket" dense
           persistent-hint solo
@@ -32,7 +35,7 @@
           <template v-slot:append-outer>
             <v-tooltip left  >
               <template v-slot:activator="{ on }">
-                <v-icon  v-on="on"  class="configure" small @click="updateSocket()">$upload
+                <v-icon  v-on="on"  class="configure" small @click="updateSocketSend()">$upload
                 </v-icon>
               </template>
               Submit new socket designation
@@ -46,7 +49,7 @@
 <script>
   import FileService from '@/services/File-service.js'
   export default {
-    props: ['serverStatus', "resources"],
+    props: ['serverStatus', "resources", "mini"],
     beforeDestroy: function(){
       if (this.intervalDocker){
         try{
@@ -118,7 +121,6 @@
     mounted(){
       const $this = this;
       this.getDockerStats()
-      console.log(this.resources)
       this.intervalDocker = setInterval(()=>{
         if (!$this.checkingDocker){
           $this.checkingDocker = true
@@ -130,7 +132,6 @@
     },
     methods: {
       async installDocker(){
-        console.log("install docker")
         this.$electron.ipcRenderer.send("downloadDocker", { platform: this.resources.os.platform, arch: this.resources.os.arch } )
         this.$electron.ipcRenderer.on('dockerDownloadStatus', (evt, message)=>{
           this.$swal.fire({
@@ -160,9 +161,6 @@
         FileService.getDockerStats().then((status)=>{
           $this.docker = status.data.data
           $this.checkingDocker= false
-          // if (!this.dockerSocket && response.data.data.Socket){
-          //   $this.dockerSocket = response.data.data.Socket
-          // }
           return 
         }).catch((err)=>{
           $this.checkingDocker = false
@@ -178,7 +176,7 @@
           return (size / 1000000000).toFixed(2)
         }
       },
-      async updateSocket(socket){
+      async updateSocketSend(socket){
         const $this = this;
         try{
           let response = await FileService.updateSocket({

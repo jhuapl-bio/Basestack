@@ -1,0 +1,15 @@
+{
+    "eslint.validate": [
+        "vue",
+        "javascript",
+        "javascriptreact"
+      ],
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+      },
+      "vetur.validation.template": false,
+      "editor.formatOnPaste": true,
+      "editor.formatOnType": true,
+      "editor.formatOnSave": false,
+      "files.eol": "\n"
+}

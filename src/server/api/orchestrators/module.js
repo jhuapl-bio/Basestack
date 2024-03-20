@@ -93,7 +93,13 @@ export  class Module {
         }) 
 	}
     cleanup(){
+        console.log("cleanup module")
         clearInterval(this.interval.interval) 
+        if (this.procedures){
+            this.procedures.forEach((proc)=>{
+                proc.cleanup()
+            })
+        }
         return
     } 
     async initProcedures(){  

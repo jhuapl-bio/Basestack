@@ -2,18 +2,18 @@
 const path = require("path")  
 var  { store }  = require("../../config/store/index.js") 
   
-export class Catalog { 
+export class Catalog {   
     constructor(config){  
         this.icon = (config.icon ? config.icon : 'cog'),
-        this.title = config.title      
-        this.name = config.name  
+        this.title = config.title       
+        this.name = config.name   
         this.tags = []
-        this.modules = []  
+        this.modules = []    
         this.interval = {
             checking: false, 
             
         }    
-        this.create_interval() 
+        this.create_interval()  
         this.status =  {    
             installed: false, // At least one module is installed in this catalog specification
             latest: null,    

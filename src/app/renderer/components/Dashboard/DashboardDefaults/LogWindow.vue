@@ -7,9 +7,9 @@
   - # **********************************************************************
   -->
 <template>
-  <div id="logs" class="mt-3" ref="logs" v-if="info">
-    <span class="center-align-icon configure"  
-        style="float:right" 
+  <div id="logs" class="mt-3 mx-5" ref="logs" v-if="info">
+    <!-- <span class=" configure"  
+        style="float:left" 
         v-tooltip="{
             content: (scroll ? 'Autoscroll Enabled' : 'Autoscroll Disabled'),
             placement: 'top',
@@ -18,7 +18,7 @@
             targetClasses: ['it-has-a-tooltip'],
         }" @click="scroll=!scroll">
             <font-awesome-icon :icon="(scroll ? 'comment' : 'comment-slash')"/>
-    </span>	
+    </span>	 -->
     <v-btn
         icon-and-text
         color="secondary" small
@@ -30,9 +30,10 @@
     Open Log Folder
     </v-btn>
     <div class="logWindow" >
-        <div v-if="info" class="logDiv" style="max-height: 900px; overflow-y:auto; ">
-            <code >
-                <p v-for="(line, index) in info"  v-bind:key="index">{{ line }}</p>
+        <div v-if="info" class="logDiv" style="max-height: 50vh; border: none; overflow-y:auto; ">
+            <code v-for="(line, index) in info"  v-bind:key="index" class="align-start">
+                {{ line }}
+                <v-divider></v-divider>
             </code>
         </div>
     </div> 
@@ -72,9 +73,9 @@ export default {
 		
 	},
 	updated: function(){
-		this.$nextTick(()=>{
-            this.scroll ? this.$el.querySelector('.logDiv').scrollTop = this.$el.querySelector('.logDiv').scrollHeight : ''
-		})
+		// this.$nextTick(()=>{
+    //         this.scroll ? this.$el.querySelector('.logDiv').scrollTop = this.$el.querySelector('.logDiv').scrollHeight : ''
+		// })
 	},
 	mounted() {
     },

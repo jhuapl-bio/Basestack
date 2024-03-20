@@ -1,0 +1,206 @@
+- name: guppy_demux
+  title: "Guppy Demux"
+  icon: "magic"
+  version: 1.0
+  schema_version: 1
+  basestack_released: 2.0
+  description: "Guppy Demux suite for Oxford Nanopore Runs post-processing"
+  url: https://nanoporetech.com/how-it-works/basecalling
+  module: True
+  shared:
+    variables:
+      custom_barcode_fasta:
+        optional: true
+        label: Custom FASTA barcode
+        element: file
+        source: null
+        bind: self
+        target: "/opt/custom_fasta.fasta"
+        append:
+          command: " cat /opt/custom_fasta.fasta >> /opt/ont/guppy/data/barcoding/barcodes_masked.fasta;  "
+          position: "start" 
+          placement: 2
+          services: 
+            - 0
+      custom_configuration:
+        optional: true
+        label: Custom Barcode Cfg file
+        element: file
+        source: null
+        bind: self
+        target: "/opt/custom_config.toml"
+        append:
+          command: " cp /opt/custom_config.toml /opt/ont/guppy/data/barcoding/barcoding_arrangements/custom_config.basestack.toml ;  "
+          position: "start" 
+          placement: 2
+          services: 
+            - 0
+      kits: 
+        custom: true
+        label: "Barcode Kit Name"
+        options: [
+          "EXP-NBD103",
+          "EXP-NBD104",
+          "EXP-NBD114",
+          "EXP-NBD196",
+          "CUSTOM-FLU",
+          "EXP-PBC001",
+          "EXP-PBC096",
+          "OND-SQK-LP0096M",
+          "OND-SQK-LP0096MA",
+          "OND-SQK-LP0096S",
+          "OND-SQK-LP0768L",
+          "OND-SQK-RP0096M",
+          "OND-SQK-RP0096MA",
+          "OND-SQK-RP0384L",
+          "SQK-16S024",
+          "SQK-LWB001",
+          "SQK-MLK110-96-XL",
+          "SQK-MLK111-96-XL",
+          "SQK-NBD110-24",
+          "SQK-NBD110-96",
+          "SQK-NBD111-24",
+          "SQK-NBD111-96",
+          "SQK-NBD112-24",
+          "SQK-NBD112-96",
+          "SQK-PBK004",
+          "SQK-PCB109",
+          "SQK-PCB110",
+          "SQK-PCB111-24",
+          "SQK-RAB201",
+          "SQK-RAB204",
+          "SQK-RBK001",
+          "SQK-RBK004",
+          "SQK-RBK110-96",
+          "SQK-RBK111-24",
+          "SQK-RBK111-96",
+          "SQK-RBK112-24",
+          "SQK-RBK112-96",
+          "SQK-RLB001",
+          "SQK-RPB004",
+          "VSK-PTC001",
+          "VSK-VMK001",
+          "VSK-VMK002",
+          "VSK-VMK003"
+        ]
+  tags: 
+    - "basecalling"
+    - "demux"
+    - "sequencing"
+    - "genomics"
+  tooltip: "Run either guppy (cpu/gpu) basecalling or demultiplexing tool(s)"
+  procedures:
+    - name: guppy_demux_cpu #Top level is the left-hand selection of the menu and the major module to install 
+      title: "Demux CPU"
+      icon: "magic"
+      init: false 
+      dependencies:
+        - target: "genomicpariscentre/guppy:6.4.6"
+          type: "docker"
+          optional: false
+          format: "docker"
+      tags: 
+        - "guppy"
+        - "long reads"
+        - "demultiplexing"
+      variables:
+        kits:
+          shared: True
+          target: '%{shared.variables.kits}'
+        custom_barcode_fasta:
+          shared: True
+          target: '%{shared.variables.custom_barcode_fasta}'
+        custom_configuration:
+          shared: True
+          target: '%{shared.variables.custom_configuration}'
+        savepath:
+          label: "Demuxed files"
+          type: files
+          pattern: "barcode[0-9]+"
+          output: true
+          bind: self
+          target: "<<directory(%{variables.input.source})>>/demuxed"
+          source: "<<directory(%{variables.input.source})>>/demuxed"
+          path:  "<<directory(%{variables.input.source})>>/demuxed"
+        input:
+          label: "Input directory of fastq files"
+          hint: "Must be in FASTQ format (Compressed or otherwise)"
+          element: "dir" 
+          bind: "self"
+          source: null
+          validations:
+            - type: "contains"
+              target: 
+                type: "value"
+                value: ".*(fq|fastq|fq.gz|fastq.gz)$"
+          target: "/opt/inputfastqs/<<basename(%{variables.input.source})>>"
+      tooltip: "Run demux on fastq files"
+      services:
+        - name: guppy_demux_cpu
+          label: "CPU Demuxing"
+          image: "genomicpariscentre/guppy:6.4.6"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "guppy_barcoder  --compress_fastq --disable_pings -s ${savepath} -i ${input}  --barcode_kits \"${kits}\" "]
+    # - name: guppy_basecaller_gpu #Top level is the left-hand selection of the menu and the major module to install 
+    #   title: "Basecaller GPU"
+    #   icon: "magic"
+    #   init: false 
+    #   dependencies:
+    #     - target: "genomicpariscentre/guppy-gpu:6.4.6"
+    #       type: "docker"
+    #       optional: true
+    #       format: "docker"
+    #   tags: 
+    #     - "guppy"
+    #     - "basecalling"
+    #     - "long reads"
+    #     - "demultiplexing"
+    #   variables:
+    #     kits:
+    #       shared: True
+    #       target: '%{shared.variables.kits}'
+    #     fastqs:
+    #       label: "Basecalled files"
+    #       output: True
+    #       openSelf: False
+    #       type: files
+    #       pattern: ".fastq*" 
+    #       target: "<<directory(%{variables.input.source})>>/basecalled/pass"
+    #       source: "<<directory(%{variables.input.source})>>/basecalled/pass"
+    #       path:  "<<directory(%{variables.input.source})>>/basecalled/pass"
+    #     savepath:
+    #       label: "Basecalled savepath"
+    #       type: dir
+    #       hidden: true
+    #       bind: self
+    #       target: "<<directory(%{variables.input.source})>>/basecalled"
+    #       source: "<<directory(%{variables.input.source})>>/basecalled"
+    #       path:  "<<directory(%{variables.input.source})>>/basecalled"
+    #     input:
+    #       label: "Input directory of fast5 files"
+    #       hint: "Must be in FASTA format. This is the genome you want to align your sequences against"
+    #       element: "dir" 
+    #       bind: "self"
+    #       source: null
+    #       validations:
+    #         - type: "contains"
+    #           target: 
+    #             type: "value"
+    #             value: ".*(f5|fast5)$"
+    #       target: "/opt/inputfast5s/<<basename(%{variables.input.source})>>"
+    #   tooltip: "Run basecalling on fast5 files"
+    #   services:
+    #     - name: guppy_basecaller_gpu
+    #       label: "GPU basecaller"
+    #       image: "genomicpariscentre/guppy-gpu:6.4.6"
+    #       workingdir: "/opt/data"
+    #       orchestrated: false #orchestrated means it r
+    #       init: false
+    #       force_restart: false
+    #       force_init: false
+    #       command: ["bash","-c", "guppy_basecaller -s ${savepath} -i ${input} -x cuda:0 -c ${config}"]
+    
