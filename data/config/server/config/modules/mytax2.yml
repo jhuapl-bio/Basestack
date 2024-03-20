@@ -1,4 +1,4 @@
-- version: 2.01
+- version: 2.02
   basestack_released: 2.2.4
   supported: 2.2.4
   schema_version: 1
@@ -33,7 +33,7 @@
         - metagenome
       dependencies:
         - target: jhuaplbio/basestack_mytax2
-          version: v2.2.6
+          version: v2.2.7
           type: docker
           format: docker
         - target: "bitnami/git"
@@ -301,7 +301,7 @@
       services:
         - name: mytax_kraken2_report2
           label: Kraken2 Report2
-          image: jhuaplbio/basestack_mytax2:v2.2.6
+          image: jhuaplbio/basestack_mytax2:v2.2.7
           workingdir: /
           orchestrated: false
           init: false
