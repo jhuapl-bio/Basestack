@@ -6,7 +6,7 @@
     "url": "https://github.com/Merritt-Brian/Basestack"
   },
   "author": "Brian Merritt <Brian.Merritt@jhuapl.edu>",
-  "description": ": Basestack analyzes and generates reports from Nanopore-based consensus",
+  "description": ": Basestack is a framework for analyzing genomics data using a variety of open-source bioinformatics tools",
   "license": "GPLv3.0",
   "main": "./dist/electron/main.js",
   "scripts": {

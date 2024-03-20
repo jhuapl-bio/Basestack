@@ -1,7 +1,7 @@
 - name: minimap2
   title: "Minimap2"
   icon: "magic"
-  version: 1.0
+  version: 1.1
   schema_version: 1
   basestack_released: 2.0
   description: "A versatile pairwise aligner for genomic and spliced nucleotide sequences"
@@ -54,9 +54,6 @@
           label: "FASTA/Q File"
           element: "file"
           bind: "directory"
-          # bind: 
-          #   from: "%{variables.file.source}"
-          #   to: "/opt/data"
           class: "wb-100  p-3 mb-1"
           source: null
           target: "/opt/data/<<basename(%{variables.file.source})>>"
@@ -139,14 +136,22 @@
         - "short reads"
         - "genomics"
       variables:
-        files:
-          label: "FASTA/Q File Paired-end files"
-          element: "files"
+        file1:
+          label: "FASTA/Q File Paired-end file 1"
+          element: "file"
           bind_parent_dir: true
           bind: "directory"
           class: "wb-100  p-3 mb-1"
           source: null
-          target: "/opt/data/<<basename(%{variables.files.source})>>"
+          target: "/opt/data/<<basename(%{variables.file1.source})>>"
+        file2:
+          label: "FASTA/Q File Paired-end file 2"
+          element: "file"
+          bind_parent_dir: true
+          bind: "directory"
+          class: "wb-100  p-3 mb-1"
+          source: null
+          target: "/opt/data/<<basename(%{variables.file2.source})>>"
         output:
           label: "Output Base Name"
           element: "string"
@@ -185,28 +190,9 @@
             output: True
             openSelf: True
             element: "file"
-            source: "%{variables.outputDir.source}/%{variables.output.source}.sam"
+            source: "<<directory(%{variables.file1.source})>>/alignment.sam"
             target: "/opt/output/%{variables.output.source}.sam"
             bind: "directory"
-        bam:
-          label: "BAM File"
-          element: "file"
-          hint: "Compressed BAM file from SAM format"
-          bind_parent_dir: true
-          output: True
-          bind: "directory"
-          class: "wb-100  p-3 mb-1"
-          source: "%{variables.outputDir.source}/%{variables.output.source}.bam"
-          target: "/opt/output/%{variables.output.source}.bam"
-        bai:
-          label: "BAI File"
-          hint: "BAI index file generated from an alignment and sorted"
-          watch: True
-          output: True
-          element: "file"
-          source: "%{variables.outputDir.source}/%{variables.output.source}.bai"
-          target: "/opt/output/%{variables.output.source}.bai"
-          bind: "directory"
       tooltip: "Run a Paired end set of fastq files using Minimap2 Alignment against reference FASTA files"
       services:
         - name: minimap2
@@ -217,7 +203,7 @@
           init: false
           force_restart: false
           force_init: false
-          command: ["bash","-c", "minimap2  -ax sr   ${ref} ${files} -a -o ${sam}"]
+          command: ["bash","-c", "minimap2  -ax sr   ${ref} ${file1} ${file2} -a -o ${sam}"]
         - target: samtools_view_sam_to_bam_minimap2
           shared: True
         - target: samtools_index_minimap2

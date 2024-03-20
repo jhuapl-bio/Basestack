@@ -1,4 +1,4 @@
-- version: 1.0
+- version: 2.00
   basestack_released: 2.2.6
   supported: 2.2.6
   schema_version: 1
@@ -16,7 +16,7 @@
     - metagenomics
   procedures:
     - name: kraken2_to_krona
-      title: Kraken2 Mytax2
+      title: Kraken2 and Krona
       icon: binoculars
       init: false
       tooltip: >-
@@ -96,7 +96,7 @@
           label: 2021 Flukraken database
           target: "${writePath}/workflows/mytax/flukraken2"
           overwrite: true
-          size_estimate: "4 GB"
+          size_estimate: "180 MB"
         - source:
             url: https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20201202.tar.gz
             type: file
@@ -197,6 +197,13 @@
           target: "/opt/data2/<<basename(%{variables.file2.source})>>"
           class: "wb-100  p-3 mb-1"
           source: null
+        compressed_input:
+          label: "Compressed"
+          element: "checkbox"
+          source: true
+          hint: "Are your files compressed?"
+          define: 
+            compressed: "--gzip-compressed"
         paired:
           label: "Paired end reads"
           element: "checkbox"
@@ -324,7 +331,7 @@
           init: false
           force_restart: false
           force_init: false
-          command: ['bash', '-c', ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out  --report ${report} ${memory_mapping} ${paired} "${file}" "${file2}" ']
+          command: ['bash', '-c', ' export KRAKEN2_DEFAULT_DB=${db} && ls -lht; kraken2  --output ${report}.out ${compressed}  --report ${report} ${memory_mapping} ${paired} "${file}" "${file2}" ']
         - name: krona
           label: "KRONA"
           image: "biocontainers/krona:v2.7.1_cv1"
