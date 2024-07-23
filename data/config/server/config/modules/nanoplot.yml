@@ -41,7 +41,7 @@
       services:
         - name: nanoplot
           label: "Nanoplot"
-          image: "nanozoo/nanoplot:1.40.0"
+          image: "staphb/nanoplot:1.40.0"
           workingdir: "/opt/databases"
           orchestrated: false #orchestrated means it r
           init: false
