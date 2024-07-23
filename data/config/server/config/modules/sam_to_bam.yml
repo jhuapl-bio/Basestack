@@ -2,7 +2,7 @@
   title: "Samtools"
   icon: "binoculars"
   schema_version: 1
-  version: 1.0
+  version: 1.1
   basestack_released: 2.0
   module: True
   tags: 
@@ -11,6 +11,50 @@
     - "BAM"
   tooltip: "Download the samtools suite"
   procedures: 
+    - name: bamsort #Top level is the left-hand selection of the menu and the major module to install 
+      title: "BAM Sort"
+      icon: "dna"
+      module: True
+      init: false 
+      dependencies:
+        - target: "staphb/samtools"
+          label: "staphb/samtools"
+          type: "docker"
+          format: "docker"
+      tags: 
+        - "SAM"
+        - "alignment"
+        - "BAM"
+      tooltip: "Generate sorted BAM file from unsorted BAM file"
+      variables:
+        bamsorted:
+          label: "BAM Sorted File"
+          element: "file"
+          hint: "Compressed sorted BAM file"
+          bind_parent_dir: true
+          output: True
+          bind: "directory"
+          class: "wb-100  p-3 mb-1"
+          source: "<<trim(%{variables.bam.source})>>.sorted.bam"
+          target: "<<trim(%{variables.bam.target})>>.sorted.bam"
+        bam:
+          label: "BAM File"
+          element: "file"
+          bind: "directory"
+          hint: "Alignment BAM file to be converted to sorted BAM"
+          target: "/opt/data/<<basename(%{variables.bam.source})>>"
+          class: "wb-100  p-3 mb-1"
+          source: null
+      services:
+        - name: samtools_sort_bam
+          label: "Samtools sorted BAM from unsorted BAM"
+          image: "staphb/samtools"
+          workingdir: "/opt/data"
+          orchestrated: false #orchestrated means it r
+          init: false
+          force_restart: false
+          force_init: false
+          command: ["bash","-c", "samtools sort ${bam} > ${bamsorted}"]
     - name: sam2bam #Top level is the left-hand selection of the menu and the major module to install 
       title: "SAM2BAM"
       icon: "dna"
