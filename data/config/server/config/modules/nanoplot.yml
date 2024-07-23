@@ -20,10 +20,10 @@
       module: True
       init: false 
       dependencies:
-        - target: "staphb/nanoplot"
-          label: "staphb/nanoplot"
+        - target: "nanozoo/nanoplot"
+          label: "nanozoo/nanoplot"
           type: "docker"
-          version: "1.40.0"
+          version: "1.42.0--547049c"
           format: "docker"
         - source: 
             url: "https://raw.githubusercontent.com/wdecoster/NanoPlot/master/scripts/add_barcodes_to_summary.py"
@@ -41,7 +41,7 @@
       services:
         - name: nanoplot
           label: "Nanoplot"
-          image: "staphb/nanoplot:1.40.0"
+          image: "nanozoo/nanoplot:1.42.0--547049c"
           workingdir: "/opt/databases"
           orchestrated: false #orchestrated means it r
           init: false
