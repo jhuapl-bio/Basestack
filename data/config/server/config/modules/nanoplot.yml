@@ -161,7 +161,24 @@
                 command: " --bam ${input} "
                 placement: 2
                 services: 
-                  - 0                
+                  - 0  
+            - name: "Unaligned BAM file"
+              hint: "Data is in one or more sorted bam file(s)."
+              bind_parent_dir: true
+              element: "file"
+              bind: 
+                from: "<<directory(%{variables.input.source})>>"
+                to: "/opt/data"
+              class: "wb-100  p-3 mb-1"
+              source: null
+              target: "/opt/data/<<basename(%{variables.input.source})>>"
+              define:
+                outdir: "<<directory(%{variables.input.target})>>/NanoPlot"  
+              append:
+                command: " --ubam ${input} "
+                placement: 2
+                services: 
+                  - 0   
         output:
           label: "Output Plots"
           element: "file"
